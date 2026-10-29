@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import AppLayout from "@/components/AppLayout";
 import StatusBadge from "@/components/StatusBadge";
 import KPICard from "@/components/KPICard";
+import CreateLeadModal from "@/components/CreateLeadModal";
 import { Users2, Play, Plus, Building, DollarSign, Check, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
@@ -18,6 +19,7 @@ export default function CrmLeadsPage() {
   const [user, setUser] = useState<any>(null);
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
 
   // Test Runner state
   const [testResult, setTestResult] = useState<any>(null);
@@ -147,11 +149,11 @@ export default function CrmLeadsPage() {
             <p className="text-sm font-bold text-[#174A3A]">Rp {totalPipeline.toLocaleString("id-ID")}</p>
           </div>
           <button
-            onClick={() => alert("Formulir Lead Baru (Gunakan API POST /api/crm/leads)")}
-            className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-[#174A3A] hover:bg-[#11382C] text-white rounded-lg text-xs font-semibold shadow-xs transition-colors"
+            onClick={() => setCreateModalOpen(true)}
+            className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-[#174A3A] hover:bg-[#11382C] active:bg-[#0f3328] text-white rounded-lg text-xs font-semibold shadow-xs transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>Lead Baru</span>
+            <span>+ Lead Baru</span>
           </button>
         </div>
       }
@@ -224,74 +226,86 @@ export default function CrmLeadsPage() {
         })}
       </div>
 
-      {/* QA Test Runner for T-07 & T-08 */}
-      <div className="bg-[#103429] text-white rounded-xl shadow-md p-6 border border-[#C6A15B]/30 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
+      {/* Collapsible QA Test Runner for T-07 & T-08 */}
+      <details className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
+        <summary className="cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white select-none">
+          <div className="flex items-center space-x-2">
+            <span className="px-2 py-0.5 rounded-md bg-[#C6A15B] text-slate-900 font-bold text-[10px] uppercase">
+              Developer Tool
+            </span>
+            <span>🛠️ Panel Pengujian Otomatis Rubrik (T-07 & T-08)</span>
+          </div>
+          <span className="text-[11px] text-slate-400 group-open:rotate-180 transition-transform">
+            ▼
+          </span>
+        </summary>
+
+        <div className="pt-4 mt-3 border-t border-slate-800 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <p className="text-xs text-slate-300">
+                Verifikasi tampilan lead LD0003 dan validasi minimum data (SR-16) saat perpindahan tahap.
+              </p>
+            </div>
             <div className="flex items-center space-x-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#C6A15B] text-[#103429]">
-                Automation Test Runner
-              </span>
-              <span className="text-xs text-[#DCE8DF] font-semibold">T-07 & T-08 Suite</span>
-            </div>
-            <h3 className="text-base font-bold mt-1 text-white">
-              Verifikasi Pengujian: Validasi Minimum Data CRM & Tahap Qualified
-            </h3>
-            <p className="text-xs text-[#DCE8DF]/80">
-              Uji tampilan lead LD0003 dan validasi minimum data (SR-16) saat berpindah tahapan.
-            </p>
-          </div>
-
-          <div className="flex items-center flex-wrap gap-2">
-            <button
-              onClick={runTestT07}
-              disabled={testing}
-              className="px-3.5 py-2 text-xs font-semibold rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white flex items-center space-x-1.5 shadow-xs transition-colors disabled:opacity-50"
-            >
-              <Play className="w-3.5 h-3.5" />
-              <span>Uji T-07 (Normal LD0003)</span>
-            </button>
-
-            <button
-              onClick={runTestT08}
-              disabled={testing}
-              className="px-3.5 py-2 text-xs font-semibold rounded-lg bg-rose-700 hover:bg-rose-600 text-white flex items-center space-x-1.5 shadow-xs transition-colors disabled:opacity-50"
-            >
-              <Play className="w-3.5 h-3.5" />
-              <span>Uji T-08 (Incomplete Lead Edge Case)</span>
-            </button>
-          </div>
-        </div>
-
-        {testResult && (
-          <div className="bg-[#081B15] border border-[#C6A15B]/40 rounded-xl p-4.5 space-y-2.5 text-xs animate-in fade-in">
-            <div className="flex items-center justify-between border-b border-white/10 pb-2.5">
-              <div className="flex items-center space-x-2">
-                <span className="font-bold text-[#C6A15B] font-mono text-sm">[{testResult.id}]</span>
-                <span className="font-semibold text-white">{testResult.name}</span>
-              </div>
-              <span
-                className={`px-3 py-0.5 rounded-full font-bold font-mono text-xs ${
-                  testResult.status === "PASS" ? "bg-emerald-500 text-gray-950" : "bg-rose-500 text-white"
-                }`}
+              <button
+                onClick={runTestT07}
+                disabled={testing}
+                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center space-x-1.5 shadow-xs transition-all"
               >
-                {testResult.status}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px] pt-1">
-              <div className="space-y-1">
-                <span className="text-[#ADB2AA] font-semibold block">Ekspektasi:</span>
-                <p className="text-[#DCE8DF] leading-relaxed">{testResult.expected}</p>
-              </div>
-              <div className="space-y-1">
-                <span className="text-[#ADB2AA] font-semibold block">Hasil Aktual:</span>
-                <p className="text-emerald-300 font-mono leading-relaxed">{testResult.actual}</p>
-              </div>
+                <Play className="w-3.5 h-3.5" />
+                <span>Jalankan T-07</span>
+              </button>
+              <button
+                onClick={runTestT08}
+                disabled={testing}
+                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-rose-600 hover:bg-rose-500 text-white flex items-center space-x-1.5 shadow-xs transition-all"
+              >
+                <Play className="w-3.5 h-3.5" />
+                <span>Jalankan T-08</span>
+              </button>
             </div>
           </div>
-        )}
-      </div>
+
+          {testResult && (
+            <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-2 text-xs">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                <span className="font-bold text-[#C6A15B]">
+                  [{testResult.id}] {testResult.name}
+                </span>
+                <span
+                  className={`px-2.5 py-0.5 rounded-full font-bold text-xs ${
+                    testResult.status === "PASS"
+                      ? "bg-emerald-500 text-slate-950"
+                      : "bg-rose-500 text-white"
+                  }`}
+                >
+                  {testResult.status}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px] pt-1">
+                <div>
+                  <span className="text-slate-400 block font-semibold">Ekspektasi:</span>
+                  <p className="text-slate-200 mt-0.5">{testResult.expected}</p>
+                </div>
+                <div>
+                  <span className="text-slate-400 block font-semibold">Hasil Aktual:</span>
+                  <p className="text-emerald-400 font-mono mt-0.5">{testResult.actual}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </details>
+
+      {/* Modal Tambah Lead Baru */}
+      <CreateLeadModal
+        isOpen={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        onLeadCreated={async () => {
+          await fetchLeads();
+        }}
+      />
     </AppLayout>
   );
 }

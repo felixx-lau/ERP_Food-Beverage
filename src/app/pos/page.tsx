@@ -42,6 +42,12 @@ export default function PointOfSalePage() {
   const [paymentMethod, setPaymentMethod] = useState("QRIS / Bank");
   const [tableInfo, setTableInfo] = useState("Takeaway");
 
+  // Manual / Custom Item Input State
+  const [manualModalOpen, setManualModalOpen] = useState(false);
+  const [manualItemName, setManualItemName] = useState("");
+  const [manualItemQty, setManualItemQty] = useState<number>(1);
+  const [manualItemPrice, setManualItemPrice] = useState<number>(25000);
+
   // Close Session Modal
   const [closeModalOpen, setCloseModalOpen] = useState(false);
   const [closingCashInput, setClosingCashInput] = useState<number>(0);
@@ -132,7 +138,44 @@ export default function PointOfSalePage() {
     );
   };
 
+  const removeCartItem = (sku: string) => {
+    setCart((prev) => prev.filter((item) => item.sku !== sku));
+  };
+
   const clearCart = () => setCart([]);
+
+  // Tambah item kustom / ketik manual
+  const handleAddManualItem = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!manualItemName.trim()) return;
+
+    const trimmed = manualItemName.trim();
+    const matched = products.find(
+      (p) => p.name.toLowerCase() === trimmed.toLowerCase() || p.sku.toLowerCase() === trimmed.toLowerCase()
+    );
+
+    const cleanSlug = trimmed.toUpperCase().replace(/[^A-Z0-9]/g, "-").slice(0, 12);
+    const sku = matched ? matched.sku : `CUSTOM-${cleanSlug || "ITEM"}-${Math.floor(100 + Math.random() * 900)}`;
+    const finalPrice = Number(manualItemPrice) >= 0 ? Number(manualItemPrice) : (matched?.salesPrice || 25000);
+    const finalQty = Math.max(1, Number(manualItemQty) || 1);
+
+    setCart((prev) => {
+      const existing = prev.find((item) => item.name.toLowerCase() === trimmed.toLowerCase() || item.sku === sku);
+      if (existing) {
+        return prev.map((item) =>
+          item.sku === existing.sku
+            ? { ...item, qty: item.qty + finalQty, price: finalPrice }
+            : item
+        );
+      }
+      return [...prev, { sku, name: trimmed, qty: finalQty, price: finalPrice }];
+    });
+
+    setManualModalOpen(false);
+    setManualItemName("");
+    setManualItemQty(1);
+    setManualItemPrice(25000);
+  };
 
   // Calculations
   const subtotalNet = cart.reduce((sum, item) => sum + item.qty * item.price, 0);
@@ -162,6 +205,7 @@ export default function PointOfSalePage() {
           paymentMethod,
           lines: cart.map((item) => ({
             productSku: item.sku,
+            productName: item.name,
             quantity: item.qty,
             unitPrice: item.price,
           })),
@@ -227,20 +271,23 @@ export default function PointOfSalePage() {
 
   // Filtered products
   const filteredProducts = useMemo(() => {
-    return products
-      .filter((p) => p.sku.startsWith("COF-") || p.sku.startsWith("COOKIE-") || p.sku.startsWith("TEA-") || p.sku.startsWith("JUICE-"))
-      .filter((p) => {
-        const matchSearch =
-          p.name.toLowerCase().includes(searchProduct.toLowerCase()) ||
-          p.sku.toLowerCase().includes(searchProduct.toLowerCase());
-        const matchCat =
-          categoryFilter === "ALL" ||
-          (categoryFilter === "COFFEE" && p.sku.startsWith("COF-")) ||
-          (categoryFilter === "TEA" && p.sku.startsWith("TEA-")) ||
-          (categoryFilter === "BAKERY" && p.sku.startsWith("COOKIE-")) ||
-          (categoryFilter === "BEVERAGE" && p.sku.startsWith("JUICE-"));
-        return matchSearch && matchCat;
-      });
+    return products.filter((p) => {
+      const matchSearch =
+        p.name.toLowerCase().includes(searchProduct.toLowerCase()) ||
+        p.sku.toLowerCase().includes(searchProduct.toLowerCase());
+      const isCoffee = p.sku.startsWith("COF-") || p.name.toLowerCase().includes("kopi") || p.name.toLowerCase().includes("coffee");
+      const isTea = p.sku.startsWith("TEA-") || p.name.toLowerCase().includes("tea") || p.name.toLowerCase().includes("teh");
+      const isBakery = p.sku.startsWith("COOKIE-") || p.sku.startsWith("BAKE-") || p.name.toLowerCase().includes("cookie") || p.name.toLowerCase().includes("roti") || p.name.toLowerCase().includes("croissant");
+      const isBeverage = p.sku.startsWith("JUICE-") || p.sku.startsWith("BEV-") || p.name.toLowerCase().includes("jus") || p.name.toLowerCase().includes("juice");
+
+      const matchCat =
+        categoryFilter === "ALL" ||
+        (categoryFilter === "COFFEE" && isCoffee) ||
+        (categoryFilter === "TEA" && isTea) ||
+        (categoryFilter === "BAKERY" && isBakery) ||
+        (categoryFilter === "BEVERAGE" && isBeverage);
+      return matchSearch && matchCat;
+    });
   }, [products, searchProduct, categoryFilter]);
 
   // Run Test T-27
@@ -483,18 +530,29 @@ export default function PointOfSalePage() {
                     <Store className="w-4 h-4 text-[#174A3A]" />
                     <span>Katalog Menu Gerai CAFE-JKT</span>
                   </h2>
-                  <p className="text-xs text-[#758078] mt-0.5">Klik menu untuk menambah cepat ke keranjang</p>
+                  <p className="text-xs text-[#758078] mt-0.5">Pilih menu di bawah atau ketik nama menu sendiri</p>
                 </div>
 
-                <div className="relative">
-                  <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#758078]" />
-                  <input
-                    type="text"
-                    placeholder="Cari kopi, pastry, dll..."
-                    value={searchProduct}
-                    onChange={(e) => setSearchProduct(e.target.value)}
-                    className="pl-8 pr-3 py-1.5 text-xs bg-[#F7F8F5] border border-[#DCE8DF] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#174A3A] text-[#202824]"
-                  />
+                <div className="flex items-center space-x-2">
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#758078]" />
+                    <input
+                      type="text"
+                      placeholder="Cari menu..."
+                      value={searchProduct}
+                      onChange={(e) => setSearchProduct(e.target.value)}
+                      className="pl-8 pr-3 py-1.5 text-xs bg-[#F7F8F5] border border-[#DCE8DF] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#174A3A] text-[#202824]"
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setManualModalOpen(true)}
+                    className="px-3 py-1.5 bg-[#174A3A] hover:bg-[#103429] text-white rounded-lg text-xs font-bold flex items-center space-x-1.5 shadow-xs transition-colors shrink-0"
+                  >
+                    <Plus className="w-3.5 h-3.5 text-[#C6A15B]" />
+                    <span>+ Ketik Menu</span>
+                  </button>
                 </div>
               </div>
 
@@ -636,16 +694,26 @@ export default function PointOfSalePage() {
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-xs font-bold text-[#202824] uppercase tracking-wider flex items-center space-x-1.5">
                   <ShoppingBag className="w-3.5 h-3.5 text-[#174A3A]" />
-                  <span>④ Keranjang Belanja (Basket)</span>
+                  <span>④ Keranjang Belanja</span>
                 </h3>
-                {cart.length > 0 && (
+                <div className="flex items-center space-x-2">
                   <button
-                    onClick={clearCart}
-                    className="text-[11px] text-rose-600 hover:text-rose-800 font-semibold"
+                    type="button"
+                    onClick={() => setManualModalOpen(true)}
+                    className="text-[11px] font-bold text-[#174A3A] hover:text-[#103429] bg-[#DCE8DF]/70 hover:bg-[#DCE8DF] px-2 py-0.5 rounded transition-colors flex items-center space-x-1"
                   >
-                    Kosongkan
+                    <Plus className="w-3 h-3" />
+                    <span>+ Ketik Manual</span>
                   </button>
-                )}
+                  {cart.length > 0 && (
+                    <button
+                      onClick={clearCart}
+                      className="text-[11px] text-rose-600 hover:text-rose-800 font-semibold"
+                    >
+                      Kosongkan
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
@@ -653,7 +721,7 @@ export default function PointOfSalePage() {
                   <div className="text-center py-8 text-[#758078] text-xs space-y-1">
                     <ShoppingBag className="w-6 h-6 mx-auto text-[#DCE8DF]" />
                     <p>Keranjang masih kosong.</p>
-                    <p className="text-[11px]">Pilih menu di sebelah kiri untuk memesan.</p>
+                    <p className="text-[11px]">Pilih menu di sebelah kiri atau klik &quot;+ Ketik Manual&quot;.</p>
                   </div>
                 ) : (
                   cart.map((item) => (
@@ -661,13 +729,13 @@ export default function PointOfSalePage() {
                       key={item.sku}
                       className="flex items-center justify-between p-2.5 rounded-lg bg-[#F7F8F5] border border-[#DCE8DF] text-xs"
                     >
-                      <div>
-                        <span className="font-bold text-[#202824] block">{item.name}</span>
+                      <div className="min-w-0 pr-2">
+                        <span className="font-bold text-[#202824] block truncate">{item.name}</span>
                         <span className="text-[10px] text-[#758078] font-mono">
                           {item.sku} • Rp{item.price.toLocaleString("id-ID")}
                         </span>
                       </div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2 shrink-0">
                         <div className="flex items-center border border-[#DCE8DF] rounded-lg bg-white font-mono shadow-2xs overflow-hidden">
                           <button
                             onClick={() => updateCartQty(item.sku, -1)}
@@ -688,6 +756,14 @@ export default function PointOfSalePage() {
                         <span className="font-mono font-bold text-[#202824] w-16 text-right">
                           Rp{(item.qty * item.price).toLocaleString("id-ID")}
                         </span>
+                        <button
+                          type="button"
+                          onClick={() => removeCartItem(item.sku)}
+                          className="p-1 text-slate-400 hover:text-rose-600 transition-colors"
+                          title="Hapus baris"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     </div>
                   ))
@@ -743,6 +819,125 @@ export default function PointOfSalePage() {
             </div>
           </div>
         </div>
+
+        {/* Modal Ketik Menu Manual / Bebas */}
+        {manualModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-2xs p-4 animate-in fade-in">
+            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-[#DCE8DF]">
+              <div className="flex items-center justify-between border-b border-[#DCE8DF] pb-3">
+                <div className="flex items-center space-x-2">
+                  <span className="w-8 h-8 rounded-lg bg-[#174A3A]/10 text-[#174A3A] flex items-center justify-center font-bold">
+                    <Plus className="w-4 h-4 text-[#174A3A]" />
+                  </span>
+                  <div>
+                    <h2 className="text-sm font-bold text-[#202824]">
+                      Ketik Item / Menu Manual
+                    </h2>
+                    <p className="text-[11px] text-[#758078]">
+                      Ketik nama produk, kuantitas, dan harga sesuai kebutuhan
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setManualModalOpen(false)}
+                  className="text-[#758078] hover:text-[#202824] p-1 rounded-md"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <form onSubmit={handleAddManualItem} className="space-y-3.5 text-xs">
+                <div>
+                  <label className="font-semibold text-[#202824] block mb-1">
+                    Nama Menu / Produk <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    list="pos-manual-suggestions"
+                    placeholder="Contoh: Es Kopi Gula Aren, Croissant..."
+                    value={manualItemName}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setManualItemName(val);
+                      // If matches a known product, suggest its price
+                      const match = products.find((p) => p.name.toLowerCase() === val.trim().toLowerCase());
+                      if (match) {
+                        setManualItemPrice(match.salesPrice);
+                      }
+                    }}
+                    className="w-full border border-[#DCE8DF] rounded-lg p-2.5 font-semibold text-xs text-[#202824] focus:outline-none focus:ring-2 focus:ring-[#174A3A]"
+                  />
+                  <datalist id="pos-manual-suggestions">
+                    {products.map((p) => (
+                      <option key={p.sku} value={p.name}>
+                        {p.sku} — Rp{p.salesPrice?.toLocaleString("id-ID")}
+                      </option>
+                    ))}
+                  </datalist>
+                  <span className="text-[10px] text-[#758078]">Pilih dari daftar atau ketik nama menu baru secara bebas</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-semibold text-[#202824] block mb-1">
+                      Kuantitas <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min={1}
+                      value={manualItemQty}
+                      onChange={(e) => setManualItemQty(Math.max(1, Number(e.target.value) || 1))}
+                      className="w-full border border-[#DCE8DF] rounded-lg p-2.5 font-mono font-bold text-xs text-[#202824] focus:outline-none focus:ring-2 focus:ring-[#174A3A]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-semibold text-[#202824] block mb-1">
+                      Harga Satuan (Rp) <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min={0}
+                      step={500}
+                      value={manualItemPrice}
+                      onChange={(e) => setManualItemPrice(Math.max(0, Number(e.target.value) || 0))}
+                      className="w-full border border-[#DCE8DF] rounded-lg p-2.5 font-mono font-bold text-xs text-[#202824] focus:outline-none focus:ring-2 focus:ring-[#174A3A]"
+                    />
+                  </div>
+                </div>
+
+                {/* Subtotal Preview */}
+                <div className="p-3 bg-[#F7F8F5] rounded-xl border border-[#DCE8DF] flex justify-between items-center text-xs">
+                  <span className="text-[#758078] font-medium">Subtotal Item:</span>
+                  <span className="font-mono font-bold text-sm text-[#174A3A]">
+                    Rp{((Number(manualItemQty) || 0) * (Number(manualItemPrice) || 0)).toLocaleString("id-ID")}
+                  </span>
+                </div>
+
+                <div className="flex justify-end space-x-2 pt-3 border-t border-[#DCE8DF]">
+                  <button
+                    type="button"
+                    onClick={() => setManualModalOpen(false)}
+                    className="px-4 py-2 border border-[#DCE8DF] rounded-lg text-xs font-semibold text-[#758078] hover:bg-[#F7F8F5]"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-[#174A3A] hover:bg-[#103429] text-white rounded-lg text-xs font-bold flex items-center space-x-1.5 shadow-xs"
+                  >
+                    <Plus className="w-3.5 h-3.5 text-[#C6A15B]" />
+                    <span>Tambahkan ke Keranjang</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
         {/* Modal Tutup Sesi */}
         {closeModalOpen && (
@@ -815,75 +1010,83 @@ export default function PointOfSalePage() {
           </div>
         )}
 
-        {/* QA Automated Test Runner: T-27 & T-28 */}
-        <div className="bg-[#103429] text-white rounded-xl shadow-lg border border-[#174A3A] p-5 space-y-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#174A3A]/60 pb-4">
-            <div>
-              <div className="flex items-center space-x-2">
-                <Play className="w-4 h-4 text-[#C6A15B]" />
-                <h2 className="text-sm font-bold tracking-wide uppercase text-white">
-                  QA Automation Runner: Point of Sale Restoran (T-27 & T-28)
-                </h2>
-              </div>
-              <p className="text-xs text-[#DCE8DF]/80 mt-1">
-                Memverifikasi penjualan gerai CAFE-JKT, evaluasi batas stok fisik (SR-04), dan penutupan sesi kasir idempotent (SR-14 / F-16 / F-17).
-              </p>
-            </div>
+        {/* Collapsible QA Automated Test Runner: T-27 & T-28 */}
+        <details className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
+          <summary className="cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white select-none">
             <div className="flex items-center space-x-2">
-              <button
-                onClick={runTestT27}
-                disabled={testing}
-                className="px-3.5 py-1.5 bg-[#C6A15B] hover:bg-[#b08e4d] text-[#103429] rounded-lg text-xs font-bold flex items-center space-x-1.5 transition-colors disabled:opacity-50"
-              >
-                <Play className="w-3.5 h-3.5 fill-current" />
-                <span>Uji T-27 (Normal Flow)</span>
-              </button>
-              <button
-                onClick={runTestT28}
-                disabled={testing}
-                className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold flex items-center space-x-1.5 transition-colors disabled:opacity-50"
-              >
-                <ShieldAlert className="w-3.5 h-3.5" />
-                <span>Uji T-28 (Edge Case)</span>
-              </button>
+              <span className="px-2 py-0.5 rounded-md bg-[#C6A15B] text-slate-900 font-bold text-[10px] uppercase">
+                Developer Tool
+              </span>
+              <span>🛠️ Panel Pengujian Otomatis Rubrik (T-27 & T-28)</span>
             </div>
-          </div>
+            <span className="text-[11px] text-slate-400 group-open:rotate-180 transition-transform">
+              ▼
+            </span>
+          </summary>
 
-          {testResult && (
-            <div
-              className={`p-4 rounded-xl border text-xs space-y-2.5 ${
-                testResult.status === "PASS"
-                  ? "bg-[#174A3A]/70 border-emerald-500/50 text-[#DCE8DF]"
-                  : "bg-rose-950/60 border-rose-500/50 text-rose-200"
-              }`}
-            >
-              <div className="flex items-center justify-between font-bold">
-                <span className="flex items-center space-x-2">
-                  <span
-                    className={`px-2 py-0.5 rounded text-[10px] uppercase font-mono ${
-                      testResult.status === "PASS"
-                        ? "bg-emerald-500 text-white"
-                        : "bg-rose-500 text-white"
-                    }`}
-                  >
-                    {testResult.status}
-                  </span>
-                  <span className="text-white text-sm">
-                    {testResult.id} — {testResult.name}
-                  </span>
-                </span>
+          <div className="pt-4 mt-3 border-t border-slate-800 space-y-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <p className="text-xs text-slate-300">
+                  Memverifikasi penjualan kasir gerai CAFE-JKT, batas stok fisik (SR-04), dan penutupan sesi kasir (SR-14).
+                </p>
               </div>
-              <div className="space-y-1">
-                <p>
-                  <strong className="text-[#C6A15B]">Ekspektasi:</strong> {testResult.expected}
-                </p>
-                <p className="font-mono">
-                  <strong className="text-white">Hasil Aktual:</strong> {testResult.actual}
-                </p>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={runTestT27}
+                  disabled={testing}
+                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-all disabled:opacity-50"
+                >
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span>Jalankan T-27</span>
+                </button>
+                <button
+                  onClick={runTestT28}
+                  disabled={testing}
+                  className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-all disabled:opacity-50"
+                >
+                  <ShieldAlert className="w-3.5 h-3.5" />
+                  <span>Jalankan T-28</span>
+                </button>
               </div>
             </div>
-          )}
-        </div>
+
+            {testResult && (
+              <div
+                className={`p-4 rounded-xl border text-xs space-y-2.5 ${
+                  testResult.status === "PASS"
+                    ? "bg-slate-950 border-emerald-500/50 text-slate-200"
+                    : "bg-rose-950/60 border-rose-500/50 text-rose-200"
+                }`}
+              >
+                <div className="flex items-center justify-between font-bold">
+                  <span className="flex items-center space-x-2">
+                    <span
+                      className={`px-2 py-0.5 rounded text-[10px] uppercase font-mono ${
+                        testResult.status === "PASS"
+                          ? "bg-emerald-500 text-slate-950 font-bold"
+                          : "bg-rose-500 text-white"
+                      }`}
+                    >
+                      {testResult.status}
+                    </span>
+                    <span className="text-white text-sm">
+                      {testResult.id} — {testResult.name}
+                    </span>
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  <p>
+                    <strong className="text-[#C6A15B]">Ekspektasi:</strong> {testResult.expected}
+                  </p>
+                  <p className="font-mono">
+                    <strong className="text-white">Hasil Aktual:</strong> {testResult.actual}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </details>
       </div>
     </AppLayout>
   );

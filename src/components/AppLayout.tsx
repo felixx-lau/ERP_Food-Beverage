@@ -53,6 +53,8 @@ export default function AppLayout({
       if (res.ok) {
         const data = await res.json();
         setUser(data.user);
+      } else if (res.status === 401) {
+        window.location.href = "/login";
       }
     } catch (err) {
       console.error("Failed to fetch session:", err);
@@ -123,21 +125,21 @@ export default function AppLayout({
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
           {/* Optional unified page header if title is passed */}
           {title && (
-            <div className="bg-white rounded-xl shadow-xs border border-[#E5E9E4] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="bg-white rounded-2xl shadow-xs border border-slate-100 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex items-center space-x-2.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#174A3A]" />
-                  <h1 className="text-xl font-bold tracking-tight text-[#202824]">
+                  <h1 className="text-xl font-bold tracking-tight text-slate-800">
                     {title}
                   </h1>
                   {wireframe && (
-                    <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#F2F7F4] text-[#174A3A] border border-[#C4DBD0]">
+                    <span className="hidden sm:inline-block px-2 py-0.5 rounded-full text-[10px] font-mono text-slate-400 bg-slate-100">
                       {wireframe}
                     </span>
                   )}
                 </div>
                 {subtitle && (
-                  <p className="text-xs text-[#758078]">
+                  <p className="text-xs text-slate-500">
                     {subtitle}
                   </p>
                 )}

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import AppLayout from "@/components/AppLayout";
 import StatusBadge from "@/components/StatusBadge";
 import KPICard from "@/components/KPICard";
+import CreatePurchaseOrderModal from "@/components/CreatePurchaseOrderModal";
 import { Play, Truck, CheckCircle2, Lock, Plus, Building, RefreshCw, Calendar, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 
@@ -12,6 +13,7 @@ export default function PurchaseOrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
 
   // Test Runner state
   const [testResult, setTestResult] = useState<any>(null);
@@ -154,6 +156,13 @@ export default function PurchaseOrdersPage() {
       wireframe="Wireframe S-08"
       actions={
         <div className="flex items-center space-x-2">
+          <button
+            onClick={() => setCreateModalOpen(true)}
+            className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold bg-[#174A3A] hover:bg-[#134032] active:bg-[#0f3328] text-white rounded-lg shadow-xs transition-all"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>+ Pesanan Beli Baru</span>
+          </button>
           <span className="text-xs font-semibold text-[#758078] hidden sm:inline">Pilih Dokumen PO:</span>
           <select
             value={selectedOrder?.id || ""}
@@ -288,74 +297,87 @@ export default function PurchaseOrdersPage() {
         </div>
       )}
 
-      {/* QA Test Runner for T-15 & T-16 */}
-      <div className="bg-[#103429] text-white rounded-xl shadow-md p-6 border border-[#C6A15B]/30 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
+      {/* Collapsible QA Test Runner for T-15 & T-16 */}
+      <details className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
+        <summary className="cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white select-none">
+          <div className="flex items-center space-x-2">
+            <span className="px-2 py-0.5 rounded-md bg-[#C6A15B] text-slate-900 font-bold text-[10px] uppercase">
+              Developer Tool
+            </span>
+            <span>🛠️ Panel Pengujian Otomatis Rubrik (T-15 & T-16)</span>
+          </div>
+          <span className="text-[11px] text-slate-400 group-open:rotate-180 transition-transform">
+            ▼
+          </span>
+        </summary>
+
+        <div className="pt-4 mt-3 border-t border-slate-800 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <p className="text-xs text-slate-300">
+                Verifikasi pembuatan RFQ, konfirmasi PO tanpa penambahan stok fisik prematur, dan idempotensi konfirmasi berulang.
+              </p>
+            </div>
             <div className="flex items-center space-x-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#C6A15B] text-[#103429]">
-                Automation Test Runner
-              </span>
-              <span className="text-xs text-[#DCE8DF] font-semibold">T-15 & T-16 Suite</span>
-            </div>
-            <h3 className="text-base font-bold mt-1 text-white">
-              Verifikasi Pengujian: RFQ, Konfirmasi PO Tanpa Penambahan Stok & Idempotency
-            </h3>
-            <p className="text-xs text-[#DCE8DF]/80">
-              Uji pembuatan RFQ, konfirmasi PO (tanpa penambahan stok fisik sebelum GR), dan idempotency konfirmasi berulang (SR-13).
-            </p>
-          </div>
-
-          <div className="flex items-center flex-wrap gap-2">
-            <button
-              onClick={runTestT15}
-              disabled={testing}
-              className="px-3.5 py-2 text-xs font-semibold rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white flex items-center space-x-1.5 shadow-xs transition-colors disabled:opacity-50"
-            >
-              <Play className="w-3.5 h-3.5" />
-              <span>Uji T-15 (Normal RFQ & PO V03)</span>
-            </button>
-
-            <button
-              onClick={runTestT16}
-              disabled={testing}
-              className="px-3.5 py-2 text-xs font-semibold rounded-lg bg-[#C6A15B] hover:bg-[#A88544] text-[#103429] font-bold flex items-center space-x-1.5 shadow-xs transition-colors disabled:opacity-50"
-            >
-              <Play className="w-3.5 h-3.5" />
-              <span>Uji T-16 (Idempotent PO Retry)</span>
-            </button>
-          </div>
-        </div>
-
-        {testResult && (
-          <div className="bg-[#081B15] border border-[#C6A15B]/40 rounded-xl p-4.5 space-y-2.5 text-xs animate-in fade-in">
-            <div className="flex items-center justify-between border-b border-white/10 pb-2.5">
-              <div className="flex items-center space-x-2">
-                <span className="font-bold text-[#C6A15B] font-mono text-sm">[{testResult.id}]</span>
-                <span className="font-semibold text-white">{testResult.name}</span>
-              </div>
-              <span
-                className={`px-3 py-0.5 rounded-full font-bold font-mono text-xs ${
-                  testResult.status === "PASS" ? "bg-emerald-500 text-gray-950" : "bg-rose-500 text-white"
-                }`}
+              <button
+                onClick={runTestT15}
+                disabled={testing}
+                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center space-x-1.5 shadow-xs transition-all"
               >
-                {testResult.status}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px] pt-1">
-              <div className="space-y-1">
-                <span className="text-[#ADB2AA] font-semibold block">Ekspektasi:</span>
-                <p className="text-[#DCE8DF] leading-relaxed">{testResult.expected}</p>
-              </div>
-              <div className="space-y-1">
-                <span className="text-[#ADB2AA] font-semibold block">Hasil Aktual:</span>
-                <p className="text-emerald-300 font-mono leading-relaxed">{testResult.actual}</p>
-              </div>
+                <Play className="w-3.5 h-3.5" />
+                <span>Jalankan T-15</span>
+              </button>
+              <button
+                onClick={runTestT16}
+                disabled={testing}
+                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-[#C6A15B] hover:bg-[#b5924f] text-slate-900 flex items-center space-x-1.5 shadow-xs transition-all"
+              >
+                <Play className="w-3.5 h-3.5" />
+                <span>Jalankan T-16</span>
+              </button>
             </div>
           </div>
-        )}
-      </div>
+
+          {testResult && (
+            <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-2 text-xs">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                <span className="font-bold text-[#C6A15B]">
+                  [{testResult.id}] {testResult.name}
+                </span>
+                <span
+                  className={`px-2.5 py-0.5 rounded-full font-bold text-xs ${
+                    testResult.status === "PASS"
+                      ? "bg-emerald-500 text-slate-950"
+                      : "bg-rose-500 text-white"
+                  }`}
+                >
+                  {testResult.status}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px] pt-1">
+                <div>
+                  <span className="text-slate-400 block font-semibold">Ekspektasi:</span>
+                  <p className="text-slate-200 mt-0.5">{testResult.expected}</p>
+                </div>
+                <div>
+                  <span className="text-slate-400 block font-semibold">Hasil Aktual:</span>
+                  <p className="text-emerald-400 font-mono mt-0.5">{testResult.actual}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </details>
+
+      {/* Modal Buat Pesanan Pembelian Baru */}
+      <CreatePurchaseOrderModal
+        isOpen={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        onOrderCreated={async (newOrder) => {
+          await fetchOrders();
+          if (newOrder) setSelectedOrder(newOrder);
+        }}
+      />
     </AppLayout>
   );
 }

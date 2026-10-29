@@ -37,10 +37,70 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Pelanggan dan minimal satu baris item wajib diisi." }, { status: 400 });
     }
 
+    // Process each line item; if user typed a custom product name, auto-provision it
+    const processedLines = [];
+    for (const line of lines) {
+      const inputSku = line.productSku ? String(line.productSku).trim() : "";
+      const rawName = line.productName ? String(line.productName).trim() : inputSku;
+
+      // 1. Try finding by SKU
+      let variant = inputSku
+        ? await prisma.productVariant.findUnique({ where: { sku: inputSku } })
+        : null;
+
+      // 2. If not found by SKU, try finding by Name
+      if (!variant && rawName) {
+        variant = await prisma.productVariant.findFirst({
+          where: {
+            name: { equals: rawName },
+          },
+        });
+      }
+
+      // 3. If still not found, auto-create product variant with default stock
+      if (!variant) {
+        const cleanSlug = (rawName || inputSku || "PROD")
+          .toUpperCase()
+          .replace(/[^A-Z0-9]/g, "-")
+          .replace(/-+/g, "-")
+          .slice(0, 15);
+        const autoSku = `${cleanSlug}-${Math.floor(100 + Math.random() * 900)}`;
+
+        const price = Math.max(1000, Number(line.unitPrice) || 25000);
+        const cost = Math.round(price * 0.6);
+
+        variant = await prisma.productVariant.create({
+          data: {
+            sku: autoSku,
+            name: rawName || autoSku,
+            size: "Regular",
+            color: "Original",
+            unit: "porsi",
+            salesPrice: price,
+            standardCost: cost,
+            defaultVendorId: "V01",
+            stockLevels: {
+              create: [
+                { locationCode: "WH-JKT", onHand: 100, reserved: 0 },
+                { locationCode: "CAFE-JKT", onHand: 50, reserved: 0 },
+              ],
+            },
+          },
+        });
+      }
+
+      processedLines.push({
+        productSku: variant.sku,
+        quantity: Math.max(1, Number(line.quantity) || 1),
+        unitPrice: line.unitPrice !== undefined ? Number(line.unitPrice) : variant.salesPrice,
+        discountPercent: Number(line.discountPercent) || 0,
+      });
+    }
+
     const order = await createSalesQuotation({
       contactId,
       leadId,
-      lines,
+      lines: processedLines,
       paymentTerms,
       actor: user,
     });

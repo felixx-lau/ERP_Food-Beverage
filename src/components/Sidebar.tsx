@@ -41,49 +41,49 @@ interface NavGroup {
 
 const NAVIGATION_GROUPS: NavGroup[] = [
   {
-    group: "Ringkasan & Analitik",
+    group: "Ringkasan",
     items: [
-      { name: "Beranda & Apps", href: "/", icon: Home, roles: ["OWNER", "SALES", "WAREHOUSE", "PROCUREMENT", "FINANCE", "CASHIER"], wireframe: "S-01" },
-      { name: "Executive Dashboard", href: "/dashboard", icon: BarChart3, roles: ["OWNER", "FINANCE", "SALES", "WAREHOUSE", "PROCUREMENT"], wireframe: "S-16" },
+      { name: "Beranda", href: "/", icon: Home, roles: ["OWNER", "SALES", "WAREHOUSE", "PROCUREMENT", "FINANCE", "CASHIER"], wireframe: "S-01" },
+      { name: "Dashboard Eksekutif", href: "/dashboard", icon: BarChart3, roles: ["OWNER", "FINANCE", "SALES", "WAREHOUSE", "PROCUREMENT"], wireframe: "S-16" },
     ],
   },
   {
     group: "Penjualan & CRM",
     items: [
-      { name: "CRM Leads Kanban", href: "/crm/leads", icon: Users2, roles: ["OWNER", "SALES"], wireframe: "S-02" },
-      { name: "Kontak & Limit Kredit", href: "/sales/contacts", icon: Contact2, roles: ["OWNER", "SALES"], wireframe: "S-03" },
-      { name: "Sales Orders", href: "/sales/orders", icon: ShoppingCart, roles: ["OWNER", "SALES"], wireframe: "S-04" },
+      { name: "Peluang CRM (Leads)", href: "/crm/leads", icon: Users2, roles: ["OWNER", "SALES"], wireframe: "S-02" },
+      { name: "Pelanggan & Vendor", href: "/sales/contacts", icon: Contact2, roles: ["OWNER", "SALES"], wireframe: "S-03" },
+      { name: "Pesanan Penjualan (SO)", href: "/sales/orders", icon: ShoppingCart, roles: ["OWNER", "SALES"], wireframe: "S-04" },
     ],
   },
   {
     group: "Persediaan & Gudang",
     items: [
-      { name: "15 SKU Produk Master", href: "/inventory/products", icon: Package, roles: ["OWNER", "WAREHOUSE", "PROCUREMENT"], wireframe: "S-05" },
-      { name: "Delivery Orders", href: "/inventory/delivery", icon: Truck, roles: ["OWNER", "WAREHOUSE"], wireframe: "S-06" },
-      { name: "Transfer Antar Lokasi", href: "/inventory/transfers", icon: ArrowLeftRight, roles: ["OWNER", "WAREHOUSE"], wireframe: "S-07" },
+      { name: "Produk & Menu", href: "/inventory/products", icon: Package, roles: ["OWNER", "WAREHOUSE", "PROCUREMENT"], wireframe: "S-05" },
+      { name: "Pengiriman (Delivery)", href: "/inventory/delivery", icon: Truck, roles: ["OWNER", "WAREHOUSE"], wireframe: "S-06" },
+      { name: "Transfer Gudang", href: "/inventory/transfers", icon: ArrowLeftRight, roles: ["OWNER", "WAREHOUSE"], wireframe: "S-07" },
       { name: "Penerimaan Barang", href: "/inventory/receipts", icon: PackageCheck, roles: ["OWNER", "WAREHOUSE"], wireframe: "S-09" },
-      { name: "Retur & Credit Note", href: "/inventory/returns", icon: RotateCcw, roles: ["OWNER", "WAREHOUSE"], wireframe: "S-15" },
+      { name: "Retur Barang", href: "/inventory/returns", icon: RotateCcw, roles: ["OWNER", "WAREHOUSE"], wireframe: "S-15" },
     ],
   },
   {
-    group: "Pengadaan (Procurement)",
+    group: "Pengadaan",
     items: [
-      { name: "Purchase Orders (RFQ)", href: "/purchase/orders", icon: ShoppingBag, roles: ["OWNER", "PROCUREMENT"], wireframe: "S-08" },
+      { name: "Pesanan Pembelian (PO)", href: "/purchase/orders", icon: ShoppingBag, roles: ["OWNER", "PROCUREMENT"], wireframe: "S-08" },
     ],
   },
   {
-    group: "Keuangan & Akuntansi",
+    group: "Keuangan",
     items: [
-      { name: "Customer Invoices", href: "/accounting/invoices", icon: Receipt, roles: ["OWNER", "FINANCE", "SALES"], wireframe: "S-10" },
-      { name: "Vendor Bills (3-Way)", href: "/accounting/vendor-bills", icon: FileText, roles: ["OWNER", "FINANCE"], wireframe: "S-11" },
-      { name: "Pembayaran & Kas", href: "/accounting/payments", icon: CreditCard, roles: ["OWNER", "FINANCE"], wireframe: "S-12" },
-      { name: "General Ledger & Jurnal", href: "/accounting/journal-entries", icon: BookOpen, roles: ["OWNER", "FINANCE"], wireframe: "S-13" },
+      { name: "Faktur Tagihan (Invoice)", href: "/accounting/invoices", icon: Receipt, roles: ["OWNER", "FINANCE", "SALES"], wireframe: "S-10" },
+      { name: "Tagihan Vendor (Bills)", href: "/accounting/vendor-bills", icon: FileText, roles: ["OWNER", "FINANCE"], wireframe: "S-11" },
+      { name: "Pembayaran Kas & Bank", href: "/accounting/payments", icon: CreditCard, roles: ["OWNER", "FINANCE"], wireframe: "S-12" },
+      { name: "Buku Besar & Jurnal", href: "/accounting/journal-entries", icon: BookOpen, roles: ["OWNER", "FINANCE"], wireframe: "S-13" },
     ],
   },
   {
     group: "Point of Sale",
     items: [
-      { name: "Kasir POS CAFE-JKT", href: "/pos", icon: Store, roles: ["OWNER", "CASHIER"], wireframe: "S-14" },
+      { name: "Kasir POS", href: "/pos", icon: Store, roles: ["OWNER", "CASHIER"], wireframe: "S-14" },
     ],
   },
 ];

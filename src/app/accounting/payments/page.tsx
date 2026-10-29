@@ -552,75 +552,83 @@ export default function RegisterPaymentPage() {
           </div>
         </div>
 
-        {/* QA Automated Test Runner: T-23 & T-24 */}
-        <div className="bg-[#103429] text-white rounded-xl shadow-lg border border-[#174A3A] p-5 space-y-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#174A3A]/60 pb-4">
-            <div>
-              <div className="flex items-center space-x-2">
-                <Play className="w-4 h-4 text-[#C6A15B]" />
-                <h2 className="text-sm font-bold tracking-wide uppercase text-white">
-                  QA Automation Runner: Pembayaran & Overpayment (T-23 & T-24)
-                </h2>
-              </div>
-              <p className="text-xs text-[#DCE8DF]/80 mt-1">
-                Memvalidasi pelunasan parsial, saldo piutang buku besar (1020 A/R), dan penolakan kelebihan bayar sesuai spesifikasi SR-19 / F-15.
-              </p>
-            </div>
+        {/* Collapsible QA Automated Test Runner: T-23 & T-24 */}
+        <details className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
+          <summary className="cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white select-none">
             <div className="flex items-center space-x-2">
-              <button
-                onClick={runTestT23}
-                disabled={testing}
-                className="px-3.5 py-1.5 bg-[#C6A15B] hover:bg-[#b08e4d] text-[#103429] rounded-lg text-xs font-bold flex items-center space-x-1.5 transition-colors disabled:opacity-50"
-              >
-                <Play className="w-3.5 h-3.5 fill-current" />
-                <span>Uji T-23 (Normal Flow)</span>
-              </button>
-              <button
-                onClick={runTestT24}
-                disabled={testing}
-                className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold flex items-center space-x-1.5 transition-colors disabled:opacity-50"
-              >
-                <ShieldAlert className="w-3.5 h-3.5" />
-                <span>Uji T-24 (Edge Case SR-19)</span>
-              </button>
+              <span className="px-2 py-0.5 rounded-md bg-[#C6A15B] text-slate-900 font-bold text-[10px] uppercase">
+                Developer Tool
+              </span>
+              <span>🛠️ Panel Pengujian Otomatis Rubrik (T-23 & T-24)</span>
             </div>
-          </div>
+            <span className="text-[11px] text-slate-400 group-open:rotate-180 transition-transform">
+              ▼
+            </span>
+          </summary>
 
-          {testResult && (
-            <div
-              className={`p-4 rounded-xl border text-xs space-y-2.5 ${
-                testResult.status === "PASS"
-                  ? "bg-[#174A3A]/70 border-emerald-500/50 text-[#DCE8DF]"
-                  : "bg-rose-950/60 border-rose-500/50 text-rose-200"
-              }`}
-            >
-              <div className="flex items-center justify-between font-bold">
-                <span className="flex items-center space-x-2">
-                  <span
-                    className={`px-2 py-0.5 rounded text-[10px] uppercase font-mono ${
-                      testResult.status === "PASS"
-                        ? "bg-emerald-500 text-white"
-                        : "bg-rose-500 text-white"
-                    }`}
-                  >
-                    {testResult.status}
-                  </span>
-                  <span className="text-white text-sm">
-                    {testResult.id} — {testResult.name}
-                  </span>
-                </span>
+          <div className="pt-4 mt-3 border-t border-slate-800 space-y-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <p className="text-xs text-slate-300">
+                  Memvalidasi pelunasan invoice, saldo buku besar piutang, dan penolakan kelebihan bayar (SR-19).
+                </p>
               </div>
-              <div className="space-y-1">
-                <p>
-                  <strong className="text-[#C6A15B]">Ekspektasi:</strong> {testResult.expected}
-                </p>
-                <p className="font-mono">
-                  <strong className="text-white">Hasil Aktual:</strong> {testResult.actual}
-                </p>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={runTestT23}
+                  disabled={testing}
+                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-all disabled:opacity-50"
+                >
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span>Jalankan T-23</span>
+                </button>
+                <button
+                  onClick={runTestT24}
+                  disabled={testing}
+                  className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-all disabled:opacity-50"
+                >
+                  <ShieldAlert className="w-3.5 h-3.5" />
+                  <span>Jalankan T-24</span>
+                </button>
               </div>
             </div>
-          )}
-        </div>
+
+            {testResult && (
+              <div
+                className={`p-4 rounded-xl border text-xs space-y-2.5 ${
+                  testResult.status === "PASS"
+                    ? "bg-slate-950 border-emerald-500/50 text-slate-200"
+                    : "bg-rose-950/60 border-rose-500/50 text-rose-200"
+                }`}
+              >
+                <div className="flex items-center justify-between font-bold">
+                  <span className="flex items-center space-x-2">
+                    <span
+                      className={`px-2 py-0.5 rounded text-[10px] uppercase font-mono ${
+                        testResult.status === "PASS"
+                          ? "bg-emerald-500 text-slate-950 font-bold"
+                          : "bg-rose-500 text-white"
+                      }`}
+                    >
+                      {testResult.status}
+                    </span>
+                    <span className="text-white text-sm">
+                      {testResult.id} — {testResult.name}
+                    </span>
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  <p>
+                    <strong className="text-[#C6A15B]">Ekspektasi:</strong> {testResult.expected}
+                  </p>
+                  <p className="font-mono">
+                    <strong className="text-white">Hasil Aktual:</strong> {testResult.actual}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </details>
       </div>
     </AppLayout>
   );

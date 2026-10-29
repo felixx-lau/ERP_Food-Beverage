@@ -13,6 +13,7 @@ import {
   Sparkles,
   Users2,
   UserPlus,
+  LogOut,
 } from "lucide-react";
 import ManageTeamModal from "@/components/ManageTeamModal";
 
@@ -89,6 +90,14 @@ export default function Topbar({
     } finally {
       setSwitching(false);
       setRoleMenuOpen(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } finally {
+      window.location.href = "/login";
     }
   };
 
@@ -290,8 +299,8 @@ export default function Topbar({
                     )}
                   </div>
 
-                  {/* Manage Team Action */}
-                  <div className="p-2 border-t border-[#E5E9E4] bg-[#F7F8F5]">
+                  {/* Manage Team & Logout Actions */}
+                  <div className="p-2 border-t border-[#E5E9E4] bg-[#F7F8F5] space-y-1.5">
                     <button
                       onClick={() => {
                         setRoleMenuOpen(false);
@@ -301,6 +310,13 @@ export default function Topbar({
                     >
                       <UserPlus className="w-3.5 h-3.5 text-[#C6A15B]" />
                       <span>+ Tambah / Kelola Anggota Tim</span>
+                    </button>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full py-2 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 transition-all border border-rose-200"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                      <span>Keluar dari Sistem (Logout)</span>
                     </button>
                   </div>
                 </div>

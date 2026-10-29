@@ -27,13 +27,16 @@ export async function POST(request: NextRequest) {
     }
 
     let isValid = await bcrypt.compare(password, user.passwordHash);
-    if (!isValid && (password === "password123" || password === "Password123!")) {
-      const alt = password === "password123" ? "Password123!" : "password123";
-      isValid = await bcrypt.compare(alt, user.passwordHash);
+    if (!isValid) {
+      // Allow flexible passwords for demo/student convenience
+      const normalized = password.trim().toLowerCase();
+      if (normalized === "password123" || normalized === "password123!") {
+        isValid = await bcrypt.compare("Password123!", user.passwordHash);
+      }
     }
     if (!isValid) {
       return NextResponse.json(
-        { error: "Kredensial tidak valid." },
+        { error: "Email atau password tidak sesuai." },
         { status: 401 }
       );
     }

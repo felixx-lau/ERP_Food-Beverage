@@ -1,4 +1,5 @@
 import { prisma } from "../src/lib/prisma";
+import { executeSeed } from "../src/lib/seedData";
 import { getOperationalDashboardMetrics, getFinancialReconciliation } from "../src/lib/dashboardEngine";
 
 async function runPhase8Tests() {
@@ -21,6 +22,9 @@ async function runPhase8Tests() {
   }
 
   try {
+    console.log("--- 0. Restoring Fresh Baseline Seed ---");
+    await executeSeed(prisma);
+    console.log("✅ Baseline Seed restored successfully.\n");
     // -------------------------------------------------------------------------
     // TEST SUITE T-31: Dashboard Operasional & Integritas KPI Terintegrasi
     // -------------------------------------------------------------------------
