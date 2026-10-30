@@ -50,7 +50,11 @@ export default function CreateContactModal({
 
       const data = await res.json();
       if (!res.ok) {
-        setErrorMsg(data.error || "Gagal membuat kontak.");
+        if (res.status === 401 || data.error === "Unauthorized") {
+          setErrorMsg("Sesi login Anda tidak aktif atau telah berakhir. Silakan login kembali.");
+        } else {
+          setErrorMsg(data.error || "Gagal membuat kontak.");
+        }
         return;
       }
 

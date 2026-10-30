@@ -92,7 +92,11 @@ export const prisma = new Proxy({} as PrismaClient, {
             return await (client as any).$transaction(...args);
           } catch (err: any) {
             if (err?.message?.includes("Prisma Client promises")) {
-              return await Promise.all(args[0]);
+              const results = [];
+              for (const op of args[0]) {
+                results.push(await op);
+              }
+              return results;
             }
             throw err;
           }

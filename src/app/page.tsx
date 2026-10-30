@@ -7,6 +7,7 @@ import CreateProductModal from "@/components/CreateProductModal";
 import CreateContactModal from "@/components/CreateContactModal";
 import CreateSalesOrderModal from "@/components/CreateSalesOrderModal";
 import CreatePurchaseOrderModal from "@/components/CreatePurchaseOrderModal";
+import CreateCompanyModal from "@/components/CreateCompanyModal";
 import { 
   Building2, 
   MapPin, 
@@ -49,6 +50,7 @@ export default function HomePage() {
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [salesOrderModalOpen, setSalesOrderModalOpen] = useState(false);
   const [purchaseOrderModalOpen, setPurchaseOrderModalOpen] = useState(false);
+  const [companyModalOpen, setCompanyModalOpen] = useState(false);
 
   // Test Runner State for T-01 and T-02
   const [testResult, setTestResult] = useState<{
@@ -166,13 +168,13 @@ export default function HomePage() {
       title={`Sistem ERP ${activeCompany?.name || "PT Rasa Aruna Bersama"}`}
       subtitle={`Platform Manajemen Operasional ${activeCompany?.brand || "Rasa Aruna Kitchen"} Terpadu`}
       actions={
-        <div className="flex items-center space-x-1 bg-[#F7F8F5] p-1 rounded-xl border border-slate-200">
+        <div className="flex items-center space-x-1 glass-3 p-1 rounded-2xl border border-white/80 shadow-xs">
           <button
             onClick={() => setActiveTab("kanban")}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
               activeTab === "kanban"
-                ? "bg-white text-[#174A3A] shadow-xs"
-                : "text-slate-500 hover:text-slate-900"
+                ? "bg-[#174A3A] text-white shadow-xs"
+                : "text-[var(--glass-text-secondary)] hover:text-[#174A3A]"
             }`}
           >
             <LayoutGrid className="w-3.5 h-3.5" />
@@ -180,10 +182,10 @@ export default function HomePage() {
           </button>
           <button
             onClick={() => setActiveTab("list")}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
               activeTab === "list"
-                ? "bg-white text-[#174A3A] shadow-xs"
-                : "text-slate-500 hover:text-slate-900"
+                ? "bg-[#174A3A] text-white shadow-xs"
+                : "text-[var(--glass-text-secondary)] hover:text-[#174A3A]"
             }`}
           >
             <List className="w-3.5 h-3.5" />
@@ -193,24 +195,24 @@ export default function HomePage() {
       }
     >
       {/* Welcome & Quick Action Hub */}
-      <div className="bg-gradient-to-r from-[#174A3A] to-[#245D4B] rounded-2xl p-6 sm:p-7 text-white shadow-sm space-y-5">
+      <div className="glass-1 bg-gradient-to-br from-[#174A3A]/90 via-[#1d5947]/85 to-[#245D4B]/90 rounded-3xl p-6 sm:p-7 text-white border border-white/30 shadow-glass-1 backdrop-blur-xl space-y-5 relative overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/15 text-emerald-200">
+            <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-white/20 text-emerald-100 border border-white/30 backdrop-blur-xs">
               <Sparkles className="w-3 h-3 text-[#C6A15B]" />
               <span>Pusat Input & Aksi Cepat</span>
             </span>
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white mt-2">
+            <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white mt-2">
               Halo, {user?.name || "Pengguna"}! Ingin input data apa hari ini?
             </h2>
-            <p className="text-xs sm:text-sm text-emerald-100/90 mt-1 max-w-2xl">
+            <p className="text-xs sm:text-sm text-emerald-100/90 mt-1 max-w-2xl font-medium">
               Klik salah satu tombol di bawah untuk langsung menambah data baru tanpa harus berpindah halaman.
             </p>
           </div>
           <div className="shrink-0 flex items-center space-x-2">
             <button
               onClick={() => router.push("/pos")}
-              className="inline-flex items-center space-x-2 px-4 py-2.5 bg-[#C6A15B] hover:bg-[#b5924f] text-[#174A3A] font-bold text-xs rounded-xl shadow-xs transition-all active:scale-95"
+              className="inline-flex items-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-[#C6A15B] to-[#b5924f] hover:from-[#b5924f] hover:to-[#a3803f] text-[#174A3A] font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95 border border-white/30"
             >
               <Store className="w-4 h-4" />
               <span>Buka Kasir POS</span>
@@ -218,20 +220,20 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* 4 Primary Input Buttons */}
+        {/* 4 Primary Input Buttons with Rich Glass Hover Animation */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
           <button
             onClick={() => setProductModalOpen(true)}
-            className="flex items-center space-x-3 p-3.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-left transition-all group"
+            className="btn-glass-tile flex items-center space-x-3 p-4 rounded-2xl text-left group cursor-pointer"
           >
-            <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-300 group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/30 flex items-center justify-center text-emerald-100 group-hover:scale-115 group-hover:rotate-6 transition-all duration-300 border border-emerald-300/40 shadow-xs shrink-0">
               <Package className="w-5 h-5" />
             </div>
             <div className="min-w-0">
-              <span className="text-xs font-bold text-white block group-hover:text-emerald-200">
+              <span className="text-xs font-black text-white block group-hover:text-emerald-200 tracking-wide">
                 + Tambah Produk
               </span>
-              <span className="text-[11px] text-emerald-100/70 truncate block">
+              <span className="text-[11px] text-white/90 font-bold truncate block group-hover:text-white">
                 Menu baru & stok awal
               </span>
             </div>
@@ -239,16 +241,16 @@ export default function HomePage() {
 
           <button
             onClick={() => setSalesOrderModalOpen(true)}
-            className="flex items-center space-x-3 p-3.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-left transition-all group"
+            className="btn-glass-tile flex items-center space-x-3 p-4 rounded-2xl text-left group cursor-pointer"
           >
-            <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-300 group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-blue-500/30 flex items-center justify-center text-blue-100 group-hover:scale-115 group-hover:rotate-6 transition-all duration-300 border border-blue-300/40 shadow-xs shrink-0">
               <ShoppingCart className="w-5 h-5" />
             </div>
             <div className="min-w-0">
-              <span className="text-xs font-bold text-white block group-hover:text-blue-200">
+              <span className="text-xs font-black text-white block group-hover:text-blue-200 tracking-wide">
                 + Buat Penjualan (SO)
               </span>
-              <span className="text-[11px] text-emerald-100/70 truncate block">
+              <span className="text-[11px] text-white/90 font-bold truncate block group-hover:text-white">
                 Pesanan catering & resto
               </span>
             </div>
@@ -256,16 +258,16 @@ export default function HomePage() {
 
           <button
             onClick={() => setContactModalOpen(true)}
-            className="flex items-center space-x-3 p-3.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-left transition-all group"
+            className="btn-glass-tile flex items-center space-x-3 p-4 rounded-2xl text-left group cursor-pointer"
           >
-            <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-300 group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/30 flex items-center justify-center text-amber-100 group-hover:scale-115 group-hover:rotate-6 transition-all duration-300 border border-amber-300/40 shadow-xs shrink-0">
               <UserPlus className="w-5 h-5" />
             </div>
             <div className="min-w-0">
-              <span className="text-xs font-bold text-white block group-hover:text-amber-200">
+              <span className="text-xs font-black text-white block group-hover:text-amber-200 tracking-wide">
                 + Tambah Pelanggan
               </span>
-              <span className="text-[11px] text-emerald-100/70 truncate block">
+              <span className="text-[11px] text-white/90 font-bold truncate block group-hover:text-white">
                 Customer & vendor baru
               </span>
             </div>
@@ -273,16 +275,16 @@ export default function HomePage() {
 
           <button
             onClick={() => setPurchaseOrderModalOpen(true)}
-            className="flex items-center space-x-3 p-3.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-left transition-all group"
+            className="btn-glass-tile flex items-center space-x-3 p-4 rounded-2xl text-left group cursor-pointer"
           >
-            <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-300 group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-purple-500/30 flex items-center justify-center text-purple-100 group-hover:scale-115 group-hover:rotate-6 transition-all duration-300 border border-purple-300/40 shadow-xs shrink-0">
               <ShoppingBag className="w-5 h-5" />
             </div>
             <div className="min-w-0">
-              <span className="text-xs font-bold text-white block group-hover:text-purple-200">
+              <span className="text-xs font-black text-white block group-hover:text-purple-200 tracking-wide">
                 + Buat Pesanan Beli
               </span>
-              <span className="text-[11px] text-emerald-100/70 truncate block">
+              <span className="text-[11px] text-white/90 font-bold truncate block group-hover:text-white">
                 Pengadaan PO ke vendor
               </span>
             </div>
@@ -292,65 +294,76 @@ export default function HomePage() {
 
       {/* 3 Identity KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl shadow-xs border border-slate-100 p-5 flex items-center space-x-4">
-          <div className="w-11 h-11 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-[#174A3A] shrink-0">
-            <Building2 className="w-5 h-5" />
+        <div className="glass-2 glass-2-interactive rounded-2xl border border-white/70 p-5 shadow-glass-2 flex items-center justify-between">
+          <div className="flex items-center space-x-4 min-w-0 pr-2">
+            <div className="w-11 h-11 rounded-2xl glass-3 border border-emerald-500/25 flex items-center justify-center text-[#174A3A] shrink-0 shadow-xs">
+              <Building2 className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <span className="text-[11px] font-black text-slate-800 uppercase tracking-wider block">
+                Perusahaan Aktif
+              </span>
+              <h3 className="text-sm font-black text-[#0A110E] truncate">
+                {activeCompany?.name || "PT Rasa Aruna Bersama"}
+              </h3>
+              <p className="text-xs text-slate-700 font-semibold truncate">
+                Brand: {activeCompany?.brand || "Rasa Aruna Kitchen"} ({activeCompany?.city || "Jakarta"})
+              </p>
+            </div>
           </div>
-          <div className="min-w-0">
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
-              Perusahaan Aktif
-            </span>
-            <h3 className="text-sm font-bold text-slate-800 truncate">
-              {activeCompany?.name || "PT Rasa Aruna Bersama"}
-            </h3>
-            <p className="text-xs text-slate-500 truncate">
-              Brand: {activeCompany?.brand || "Rasa Aruna Kitchen"} ({activeCompany?.city || "Jakarta"})
-            </p>
-          </div>
+          <button
+            type="button"
+            onClick={() => setCompanyModalOpen(true)}
+            className="shrink-0 px-3 py-1.5 rounded-xl bg-[#174A3A]/10 hover:bg-[#174A3A]/20 text-[#174A3A] font-black text-xs border border-[#174A3A]/25 transition-all flex items-center space-x-1 hover:scale-105 cursor-pointer shadow-xs"
+            title="Tambah atau Kelola Multi-Company"
+          >
+            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+            <span className="hidden sm:inline">Tambah</span>
+          </button>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xs border border-slate-100 p-5 flex items-center space-x-4">
-          <div className="w-11 h-11 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-700 shrink-0">
+        <div className="glass-2 glass-2-interactive rounded-2xl border border-white/70 p-5 shadow-glass-2 flex items-center space-x-4">
+          <div className="w-11 h-11 rounded-2xl glass-3 border border-emerald-500/25 flex items-center justify-center text-emerald-700 shrink-0 shadow-xs">
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              <span className="text-[11px] font-black text-slate-800 uppercase tracking-wider">
                 Pengguna Aktif
               </span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] uppercase font-bold bg-[#174A3A] text-white">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] uppercase font-black bg-[#174A3A] text-white shadow-xs">
                 {user?.role || "GUEST"}
               </span>
             </div>
-            <h3 className="text-sm font-bold text-slate-800 truncate mt-0.5">
+            <h3 className="text-sm font-black text-[#0A110E] truncate mt-0.5">
               {user?.name || "Memuat..."}
             </h3>
-            <p className="text-xs text-slate-500 font-mono truncate">{user?.email}</p>
+            <p className="text-xs text-slate-700 font-mono font-bold truncate">{user?.email}</p>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xs border border-slate-100 p-5 flex items-center space-x-4">
-          <div className="w-11 h-11 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-[#C6A15B] shrink-0">
+        <div className="glass-2 glass-2-interactive rounded-2xl border border-white/70 p-5 shadow-glass-2 flex items-center space-x-4">
+          <div className="w-11 h-11 rounded-2xl glass-3 border border-amber-500/25 flex items-center justify-center text-[#C6A15B] shrink-0 shadow-xs">
             <MapPin className="w-5 h-5" />
           </div>
           <div className="min-w-0">
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+            <span className="text-[11px] font-black text-slate-800 uppercase tracking-wider block">
               Lokasi Operasional
             </span>
-            <h3 className="text-sm font-bold text-slate-800 truncate">WH-JKT (Gudang Utama)</h3>
-            <p className="text-xs text-slate-500 truncate">Gerai POS: CAFE-JKT (Kasir)</p>
+            <h3 className="text-sm font-black text-[#0A110E] truncate">WH-JKT (Gudang Utama)</h3>
+            <p className="text-xs text-slate-700 font-semibold truncate">Gerai POS: CAFE-JKT (Kasir)</p>
           </div>
         </div>
       </div>
 
       {/* Akses Modul / Aplikasi */}
-      <div className="bg-white rounded-2xl shadow-xs border border-slate-100 overflow-hidden">
-        <div className="px-6 py-4 bg-slate-50/70 border-b border-slate-100 flex items-center justify-between">
+      <div className="glass-2 rounded-3xl border border-white/70 shadow-glass-2 overflow-hidden">
+        <div className="px-6 py-4.5 bg-white/40 border-b border-black/5 flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-bold text-slate-800 tracking-wide uppercase">
+            <h2 className="text-sm font-black text-[#0A110E] tracking-wider uppercase">
               Modul & Aplikasi Utama
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-slate-700 font-semibold mt-0.5">
               Pilih modul untuk mengelola alur operasional sesuai wewenang role <strong>{user?.role || "GUEST"}</strong>.
             </p>
           </div>
@@ -380,41 +393,41 @@ export default function HomePage() {
                     else if (app.key === "pos") router.push("/pos");
                     else if (app.key === "dashboard") router.push("/dashboard");
                   }}
-                  className={`rounded-2xl border p-5 transition-all relative flex flex-col justify-between cursor-pointer ${
+                  className={`rounded-2xl border p-5 transition-all relative flex flex-col justify-between cursor-pointer group ${
                     hasAccess
-                      ? "bg-white border-slate-200/80 hover:border-[#174A3A]/40 hover:shadow-md hover:-translate-y-0.5"
-                      : "bg-slate-50 border-dashed border-slate-200 opacity-60"
+                      ? "glass-2 glass-2-interactive border-white/80 hover:border-[#174A3A]/40"
+                      : "glass-3 opacity-60 border-dashed border-black/15"
                   }`}
                 >
                   <div>
                     <div className="flex items-center justify-between mb-3.5">
                       <div
-                        className={`w-10 h-10 rounded-xl flex items-center justify-center text-white ${app.color} shadow-xs`}
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center text-white ${app.color} shadow-xs border border-white/30 group-hover:scale-110 group-hover:shadow-md transition-all duration-300`}
                       >
                         <IconComponent className="w-5 h-5" />
                       </div>
                       {hasAccess ? (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center space-x-1">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black glass-badge-success flex items-center space-x-1">
                           <CheckCircle2 className="w-3 h-3" />
                           <span>Aktif</span>
                         </span>
                       ) : (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-50 text-rose-700 border border-rose-200 flex items-center space-x-1">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black glass-badge-danger flex items-center space-x-1">
                           <Lock className="w-3 h-3" />
                           <span>Terkunci</span>
                         </span>
                       )}
                     </div>
 
-                    <h4 className="font-bold text-sm text-slate-800">{app.name}</h4>
-                    <p className="text-xs text-slate-500 mt-1 leading-relaxed line-clamp-2">
+                    <h4 className="font-black text-sm text-[#0A110E] group-hover:text-[#174A3A] transition-colors">{app.name}</h4>
+                    <p className="text-xs text-slate-700 font-semibold mt-1 leading-relaxed line-clamp-2">
                       {app.desc}
                     </p>
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                    <span className="text-slate-400 font-medium">Buka Menu:</span>
-                    <span className="font-semibold text-[#174A3A] flex items-center space-x-1">
+                  <div className="mt-4 pt-3 border-t border-black/5 flex items-center justify-between text-xs">
+                    <span className="text-slate-600 font-bold">Buka Menu:</span>
+                    <span className="font-black text-[#174A3A] flex items-center space-x-1 group-hover:translate-x-1.5 transition-transform">
                       <span>{app.destination}</span>
                       <ChevronRight className="w-3.5 h-3.5" />
                     </span>
@@ -426,8 +439,8 @@ export default function HomePage() {
         ) : (
           /* List View Mode */
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-800">
-              <thead className="bg-slate-50 text-slate-500 font-semibold uppercase tracking-wider text-[11px] border-b border-slate-100">
+            <table className="w-full text-left text-xs text-slate-900">
+              <thead className="bg-white/60 text-slate-800 font-extrabold uppercase tracking-wider text-[11px] border-b border-black/10">
                 <tr>
                   <th className="px-6 py-3.5">Aplikasi</th>
                   <th className="px-6 py-3.5">Halaman Tujuan</th>
@@ -436,29 +449,29 @@ export default function HomePage() {
                   <th className="px-6 py-3.5 text-right">Aksi</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-black/5">
                 {APPS_CATALOG.map((app) => {
                   const hasAccess = user ? app.roles.includes(user.role) : false;
                   return (
-                    <tr key={app.key} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-3.5 font-bold text-slate-800 flex items-center space-x-2.5">
-                        <span className={`w-3 h-3 rounded-md ${app.color}`} />
+                    <tr key={app.key} className="hover:bg-emerald-500/10 transition-colors duration-150">
+                      <td className="px-6 py-3.5 font-black text-slate-900 flex items-center space-x-2.5">
+                        <span className={`w-3.5 h-3.5 rounded-md ${app.color} shadow-xs`} />
                         <span>{app.name}</span>
                       </td>
-                      <td className="px-6 py-3.5 text-slate-600 font-medium">{app.destination}</td>
-                      <td className="px-6 py-3.5 font-mono text-[11px] text-slate-500">
+                      <td className="px-6 py-3.5 text-slate-800 font-bold">{app.destination}</td>
+                      <td className="px-6 py-3.5 font-mono text-[11px] text-slate-700 font-semibold">
                         {app.roles.join(", ")}
                       </td>
                       <td className="px-6 py-3.5">
                         {hasAccess ? (
-                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 inline-flex items-center space-x-1">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                            <span>Diizinkan</span>
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black glass-badge-success inline-flex items-center space-x-1">
+                            <CheckCircle2 className="w-3 h-3" />
+                            <span>Tersedia</span>
                           </span>
                         ) : (
-                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-800 border border-rose-200 inline-flex items-center space-x-1">
-                            <Lock className="w-3.5 h-3.5 text-rose-600" />
-                            <span>Dibatasi</span>
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black glass-badge-danger inline-flex items-center space-x-1">
+                            <Lock className="w-3 h-3" />
+                            <span>Terkunci</span>
                           </span>
                         )}
                       </td>
@@ -466,7 +479,7 @@ export default function HomePage() {
                         <button
                           onClick={() => {
                             if (!hasAccess) {
-                              alert(`Akses Dibatasi untuk role ${user?.role}`);
+                              alert(`Akses Dibatasi: Modul ${app.name} memerlukan role: ${app.roles.join(", ")}.`);
                               return;
                             }
                             if (app.key === "sales") router.push("/sales/orders");
@@ -478,9 +491,10 @@ export default function HomePage() {
                             else if (app.key === "pos") router.push("/pos");
                             else if (app.key === "dashboard") router.push("/dashboard");
                           }}
-                          className="text-xs font-semibold text-[#174A3A] hover:underline"
+                          className="text-xs font-black text-[#174A3A] hover:translate-x-1 transition-transform inline-flex items-center space-x-0.5"
                         >
-                          Buka Modul &rarr;
+                          <span>Buka Modul</span>
+                          <span>&rarr;</span>
                         </button>
                       </td>
                     </tr>
@@ -591,6 +605,12 @@ export default function HomePage() {
         onOrderCreated={(order) => {
           if (order) router.push("/purchase/orders");
         }}
+      />
+
+      <CreateCompanyModal
+        isOpen={companyModalOpen}
+        onClose={() => setCompanyModalOpen(false)}
+        currentUser={user}
       />
     </AppLayout>
   );

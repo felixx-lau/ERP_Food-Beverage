@@ -21,7 +21,7 @@ export default function CreateCompanyModal({
   const [brand, setBrand] = useState("");
   const [city, setCity] = useState("Jakarta");
   const [description, setDescription] = useState("");
-  const [cloneMode, setCloneMode] = useState<"clean" | "sample">("clean");
+  const [cloneMode, setCloneMode] = useState<"clean" | "sample">("sample");
   const [adminName, setAdminName] = useState(currentUser?.name || "Pemilik Usaha");
   const [adminEmail, setAdminEmail] = useState(currentUser?.email || "owner@perusahaanbaru.com");
 
@@ -58,41 +58,41 @@ export default function CreateCompanyModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
-      <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in">
+      <div className="relative w-full max-w-lg glass-modal rounded-3xl shadow-2xl border border-white/80 overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="px-6 py-5 bg-[#174A3A] text-white flex items-center justify-between">
+        <div className="px-6 py-5 bg-gradient-to-r from-[#174A3A] to-[#1e5846] text-white flex items-center justify-between border-b border-white/20">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-[#C6A15B] flex items-center justify-center text-slate-900 shadow-md">
-              <Building2 className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#C6A15B] to-[#b5924f] flex items-center justify-center text-slate-900 shadow-md border border-white/40 shrink-0">
+              <Building2 className="w-5 h-5 text-slate-950 stroke-[2.5]" />
             </div>
             <div>
-              <h2 className="text-base font-bold">Tambah Perusahaan Baru</h2>
-              <p className="text-xs text-[#DCE8DF]">
+              <h2 className="text-base font-black tracking-wide text-white">Tambah Perusahaan Baru</h2>
+              <p className="text-xs text-emerald-100/90 font-medium">
                 Multi-Company Workspace · Database Mandiri & Terpisah
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+            className="p-1.5 rounded-xl text-white/80 hover:text-white hover:bg-white/20 transition-all cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
           {errorMsg && (
-            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center space-x-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
+            <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center space-x-2 font-bold shadow-xs">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
               <span>{errorMsg}</span>
             </div>
           )}
 
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-slate-700">
-              Nama Resmi Perusahaan <span className="text-rose-500">*</span>
+          <div className="space-y-1.5">
+            <label className="text-xs font-black text-slate-900 block">
+              Nama Resmi Perusahaan <span className="text-rose-600">*</span>
             </label>
             <input
               type="text"
@@ -103,13 +103,13 @@ export default function CreateCompanyModal({
                 if (!brand) setBrand(e.target.value);
               }}
               placeholder="Contoh: PT Kopi Bahagia Nusantara"
-              className="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-[#174A3A]/20 focus:border-[#174A3A]"
+              className="w-full px-4 py-2.5 text-xs font-bold text-slate-900 rounded-xl bg-white/80 border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-[#174A3A] focus:border-[#174A3A] focus:bg-white transition-all shadow-xs"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-slate-700">
+            <div className="space-y-1.5">
+              <label className="text-xs font-black text-slate-900 block">
                 Nama Merek / Brand Usaha
               </label>
               <input
@@ -117,12 +117,12 @@ export default function CreateCompanyModal({
                 value={brand}
                 onChange={(e) => setBrand(e.target.value)}
                 placeholder="Contoh: Kopi Bahagia"
-                className="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-[#174A3A]/20 focus:border-[#174A3A]"
+                className="w-full px-4 py-2.5 text-xs font-bold text-slate-900 rounded-xl bg-white/80 border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-[#174A3A] focus:border-[#174A3A] focus:bg-white transition-all shadow-xs"
               />
             </div>
 
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-slate-700">
+            <div className="space-y-1.5">
+              <label className="text-xs font-black text-slate-900 block">
                 Kota Operasional
               </label>
               <input
@@ -130,82 +130,82 @@ export default function CreateCompanyModal({
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
                 placeholder="Contoh: Jakarta / Bandung"
-                className="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-[#174A3A]/20 focus:border-[#174A3A]"
+                className="w-full px-4 py-2.5 text-xs font-bold text-slate-900 rounded-xl bg-white/80 border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-[#174A3A] focus:border-[#174A3A] focus:bg-white transition-all shadow-xs"
               />
             </div>
           </div>
 
           {/* Mode Inisialisasi */}
-          <div className="space-y-2 pt-2 border-t border-slate-100">
-            <label className="text-xs font-semibold text-slate-700 block">
+          <div className="space-y-2 pt-2 border-t border-black/5">
+            <label className="text-xs font-black text-slate-900 block">
               Pilihan Inisialisasi Database:
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div
+                onClick={() => setCloneMode("sample")}
+                className={`cursor-pointer p-3.5 rounded-2xl border-2 transition-all shadow-xs ${
+                  cloneMode === "sample"
+                    ? "border-[#174A3A] bg-[#174A3A]/10 text-[#174A3A]"
+                    : "border-slate-200 hover:border-slate-300 bg-white/80"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center space-x-1.5">
+                    <Database className="w-4 h-4 text-[#C6A15B]" />
+                    <span className="text-xs font-black text-slate-900">Salin Data Contoh (Rekomendasi)</span>
+                  </div>
+                  {cloneMode === "sample" && <Check className="w-4 h-4 text-[#174A3A] stroke-[3]" />}
+                </div>
+                <p className="text-[11px] text-slate-700 font-semibold leading-tight mt-1">
+                  Menyalin 15 produk F&B dan data demo siap pakai agar Anda langsung bisa mendemokan POS, pesanan, dan grafik.
+                </p>
+              </div>
+
+              <div
                 onClick={() => setCloneMode("clean")}
-                className={`cursor-pointer p-3 rounded-xl border-2 transition-all ${
+                className={`cursor-pointer p-3.5 rounded-2xl border-2 transition-all shadow-xs ${
                   cloneMode === "clean"
-                    ? "border-[#174A3A] bg-[#E1EDE6]/30 text-[#174A3A]"
-                    : "border-slate-200 hover:border-slate-300 bg-white"
+                    ? "border-[#174A3A] bg-[#174A3A]/10 text-[#174A3A]"
+                    : "border-slate-200 hover:border-slate-300 bg-white/80"
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center space-x-1.5">
                     <Sparkles className="w-4 h-4 text-[#C6A15B]" />
-                    <span className="text-xs font-bold">Mulai dari Nol</span>
+                    <span className="text-xs font-black text-slate-900">Mulai dari Nol (Bersih)</span>
                   </div>
-                  {cloneMode === "clean" && <Check className="w-4 h-4 text-[#174A3A]" />}
+                  {cloneMode === "clean" && <Check className="w-4 h-4 text-[#174A3A] stroke-[3]" />}
                 </div>
-                <p className="text-[11px] text-slate-500 leading-tight">
-                  Database bersih (0 Produk, 0 Mitra, 0 Order). Anda bebas input katalog sendiri dari awal.
-                </p>
-              </div>
-
-              <div
-                onClick={() => setCloneMode("sample")}
-                className={`cursor-pointer p-3 rounded-xl border-2 transition-all ${
-                  cloneMode === "sample"
-                    ? "border-[#174A3A] bg-[#E1EDE6]/30 text-[#174A3A]"
-                    : "border-slate-200 hover:border-slate-300 bg-white"
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center space-x-1.5">
-                    <Database className="w-4 h-4 text-slate-500" />
-                    <span className="text-xs font-bold">Salin Data Contoh</span>
-                  </div>
-                  {cloneMode === "sample" && <Check className="w-4 h-4 text-[#174A3A]" />}
-                </div>
-                <p className="text-[11px] text-slate-500 leading-tight">
-                  Menyalin data produk dan transaksi demo agar Anda punya contoh referensi.
+                <p className="text-[11px] text-slate-700 font-semibold leading-tight mt-1">
+                  Database kosong (0 Produk, 0 Mitra, 0 Order). Anda bebas mendaftarkan katalog dan produk sendiri dari awal.
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="p-3 rounded-xl bg-amber-50 border border-amber-200/80 text-[11px] text-amber-900 leading-relaxed">
-            💡 <strong>Database Asli Tetap Aman:</strong> Perusahaan baru akan memiliki file database SQLite terpisah. Data perusahaan default (<em>PT Rasa Aruna Bersama</em>) beserta seluruh pengujian rubriknya <strong>tidak akan terhapus atau tertimpa</strong>. Anda dapat beralih antar-perusahaan kapan pun.
+          <div className="p-3.5 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-[11px] text-amber-950 font-bold leading-relaxed shadow-xs">
+            💡 <strong>Multi-Company Aman:</strong> Perusahaan baru memiliki database SQLite mandiri. Data perusahaan utama (<em>PT Rasa Aruna Bersama</em>) beserta seluruh tes otomatis <strong>tidak akan terganggu atau tertimpa</strong>. Anda dapat beralih antar-perusahaan kapan pun lewat tombol di atas.
           </div>
 
           {/* Action Buttons */}
-          <div className="pt-3 flex items-center justify-end space-x-2 border-t border-slate-100">
+          <div className="pt-3 flex items-center justify-end space-x-2.5 border-t border-black/5">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+              className="px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200/80 rounded-xl transition-colors cursor-pointer"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-5 py-2 text-xs font-bold text-white bg-[#174A3A] hover:bg-[#11382C] rounded-xl shadow-md transition-all flex items-center space-x-1.5 disabled:opacity-50"
+              className="btn-glass-primary px-5 py-2.5 text-xs font-black text-white rounded-xl shadow-md transition-all flex items-center space-x-2 disabled:opacity-50 cursor-pointer"
             >
               {loading ? (
                 <span>Menyiapkan Ruang Kerja...</span>
               ) : (
                 <>
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-4 h-4 stroke-[2.5]" />
                   <span>Buat & Beralih ke Perusahaan</span>
                 </>
               )}

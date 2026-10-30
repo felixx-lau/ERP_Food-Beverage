@@ -10,5 +10,29 @@
     "currency": "IDR",
     "taxRate": 10,
     "createdAt": "2026-10-20T00:00:00.000Z"
+  },
+  {
+    "id": "comp_pt-kuliner-nusantara_yqes",
+    "name": "PT Kuliner Nusantara",
+    "brand": "Kuliner Nusantara",
+    "dbFile": "companies/comp_pt-kuliner-nusantara_yqes.db",
+    "isDefault": false,
+    "city": "Jakarta",
+    "description": "Perusahaan Kustom: PT Kuliner Nusantara",
+    "currency": "IDR",
+    "taxRate": 10,
+    "createdAt": "2026-10-30T11:08:25.872Z"
+  },
+  {
+    "id": "comp_pt-resto-nusantara-b_lfr7",
+    "name": "PT Resto Nusantara Baru",
+    "brand": "Resto Nusantara",
+    "dbFile": "companies/comp_pt-resto-nusantara-b_lfr7.db",
+    "isDefault": false,
+    "city": "Jakarta",
+    "description": "Perusahaan Kustom: PT Resto Nusantara Baru",
+    "currency": "IDR",
+    "taxRate": 10,
+    "createdAt": "2026-10-30T11:11:54.710Z"
   }
 ]

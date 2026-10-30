@@ -215,24 +215,24 @@ export default function CreateSalesOrderModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 animate-in fade-in duration-150">
-      <div className="bg-white w-full max-w-2xl rounded-2xl shadow-xl border border-[#E5E9E4] overflow-hidden flex flex-col max-h-[92vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-4 animate-in fade-in duration-200">
+      <div className="glass-modal w-full max-w-2xl rounded-3xl shadow-glass-modal border border-white/80 overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="px-6 py-4 bg-[#174A3A] text-white flex items-center justify-between">
+        <div className="px-6 py-4 bg-white/40 border-b border-black/5 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
-              <ShoppingCart className="w-5 h-5 text-emerald-300" />
+            <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-[#174A3A]">
+              <ShoppingCart className="w-5 h-5 text-[#174A3A]" />
             </div>
             <div>
-              <h2 className="text-base font-bold tracking-tight">Buat Pesanan Penjualan (Sales Order)</h2>
-              <p className="text-xs text-emerald-100">
+              <h2 className="text-base font-black text-slate-900 tracking-tight">Buat Pesanan Penjualan (Sales Order)</h2>
+              <p className="text-xs text-slate-700 font-semibold">
                 Ketik nama menu, kuantitas, dan harga sesuai pesanan
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+            className="p-1.5 rounded-full hover:bg-white/80 text-slate-600 hover:text-slate-900 transition-colors shadow-xs"
           >
             <X className="w-5 h-5" />
           </button>
@@ -241,26 +241,26 @@ export default function CreateSalesOrderModal({
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4 flex-1">
           {errorMsg && (
-            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 font-medium">
+            <div className="p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-xs text-rose-900 font-bold">
               {errorMsg}
             </div>
           )}
           {successMsg && (
-            <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-medium flex items-center space-x-2">
-              <Check className="w-4 h-4 text-emerald-600" />
+            <div className="p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-xs text-emerald-950 font-bold flex items-center space-x-2">
+              <Check className="w-4 h-4 text-emerald-700" />
               <span>{successMsg}</span>
             </div>
           )}
 
           {/* Customer Selection */}
           <div>
-            <label className="block text-xs font-semibold text-[#202824] mb-1">
+            <label className="block text-xs font-black text-slate-800 mb-1">
               Pelanggan / Pemesan <span className="text-rose-500">*</span>
             </label>
             <select
               value={selectedContactId}
               onChange={(e) => setSelectedContactId(e.target.value)}
-              className="w-full text-xs px-3.5 py-2.5 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-[#174A3A] focus:outline-none"
+              className="w-full text-xs px-3.5 py-2.5 input-glass rounded-xl font-bold text-slate-900"
             >
               {contacts.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -388,34 +388,34 @@ export default function CreateSalesOrderModal({
           )}
 
           {/* Summary Box */}
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5 text-xs">
-            <div className="flex justify-between text-slate-600">
+          <div className="p-4 rounded-2xl glass-3 border border-white/80 space-y-2 text-xs shadow-xs">
+            <div className="flex justify-between text-slate-700 font-semibold">
               <span>Subtotal Net</span>
-              <span className="font-mono font-medium">Rp {calculations.subtotalNet.toLocaleString("id-ID")}</span>
+              <span className="font-mono font-black text-slate-900">Rp {calculations.subtotalNet.toLocaleString("id-ID")}</span>
             </div>
-            <div className="flex justify-between text-slate-600">
+            <div className="flex justify-between text-slate-700 font-semibold">
               <span>Pajak Restoran PBJT (10%)</span>
-              <span className="font-mono font-medium">Rp {calculations.pbjtTax.toLocaleString("id-ID")}</span>
+              <span className="font-mono font-black text-slate-900">Rp {calculations.pbjtTax.toLocaleString("id-ID")}</span>
             </div>
-            <div className="border-t border-slate-200 pt-1.5 flex justify-between font-bold text-sm text-[#202824]">
+            <div className="border-t border-black/10 pt-2 flex justify-between font-black text-sm text-slate-900">
               <span>Total Tagihan Pesanan</span>
-              <span className="font-mono text-[#174A3A]">Rp {calculations.totalGross.toLocaleString("id-ID")}</span>
+              <span className="font-mono text-[#174A3A] font-black text-base">Rp {calculations.totalGross.toLocaleString("id-ID")}</span>
             </div>
           </div>
 
           {/* Actions */}
-          <div className="pt-2 flex justify-end space-x-2 border-t border-slate-100">
+          <div className="pt-2 flex justify-end space-x-2 border-t border-black/5">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors"
+              className="px-4 py-2 text-xs font-black btn-glass-secondary rounded-xl hover:-translate-y-0.5 transition-all"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-5 py-2 text-xs font-bold bg-[#174A3A] hover:bg-[#134032] active:bg-[#0f3328] text-white rounded-xl shadow-xs transition-all flex items-center space-x-1.5"
+              className="px-5 py-2.5 text-xs font-black btn-glass-primary rounded-xl shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg flex items-center space-x-1.5"
             >
               {loading ? (
                 <span>Memproses...</span>

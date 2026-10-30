@@ -3,47 +3,302 @@
 @tailwind utilities;
 
 :root {
-  --background: #F7F8F5;
-  --foreground: #202824;
+  /* Brand palette */
+  --background: #F4F6F3;
+  --foreground: #151A18;
   --primary: #174A3A;
   --secondary: #DCE8DF;
   --accent: #C6A15B;
-  --border: #E5E9E4;
+  --border: rgba(255, 255, 255, 0.55);
+
+  /* Glass Level 1 (Hero, Sidebar, Topbar) - 45% white, 22px blur, 160% saturate */
+  --glass-1-bg: rgba(255, 255, 255, 0.48);
+  --glass-1-blur: 22px;
+  --glass-1-border: rgba(255, 255, 255, 0.60);
+  --glass-1-shadow: 0 8px 32px 0 rgba(23, 74, 58, 0.08), inset 0 1px 0 0 rgba(255, 255, 255, 0.85);
+
+  /* Glass Level 2 (Cards, Panels, KPI Cards) - 68% white, 16px blur, 150% saturate */
+  --glass-2-bg: rgba(255, 255, 255, 0.68);
+  --glass-2-blur: 16px;
+  --glass-2-border: rgba(255, 255, 255, 0.75);
+  --glass-2-shadow: 0 4px 20px -2px rgba(23, 74, 58, 0.06), 0 2px 6px -1px rgba(23, 74, 58, 0.04), inset 0 1px 0 0 rgba(255, 255, 255, 0.90);
+
+  /* Glass Level 3 (Dense Data: Tables, Forms, Modal Content) - 86% white, 10px blur */
+  --glass-3-bg: rgba(255, 255, 255, 0.86);
+  --glass-3-blur: 10px;
+  --glass-3-border: rgba(255, 255, 255, 0.85);
+  --glass-3-shadow: 0 2px 12px -1px rgba(23, 74, 58, 0.05), inset 0 1px 0 0 rgba(255, 255, 255, 0.95);
+
+  /* High-Contrast Text Tokens (Ultra Crisp WCAG AAA compliant) */
+  --glass-text-primary: #0A110E;   /* ~19:1 on glass */
+  --glass-text-secondary: #1A2620; /* ~13:1 on glass */
+  --glass-text-muted: #2E3E35;     /* ~8.5:1 on glass */
+
+  /* Translucent Tinted Glass Status Badges */
+  --glass-badge-success-bg: rgba(16, 185, 129, 0.12);
+  --glass-badge-success-border: rgba(16, 185, 129, 0.35);
+  --glass-badge-success-text: #065F46;
+
+  --glass-badge-warning-bg: rgba(245, 158, 11, 0.12);
+  --glass-badge-warning-border: rgba(245, 158, 11, 0.35);
+  --glass-badge-warning-text: #92400E;
+
+  --glass-badge-danger-bg: rgba(244, 63, 94, 0.12);
+  --glass-badge-danger-border: rgba(244, 63, 94, 0.35);
+  --glass-badge-danger-text: #9F1239;
+
+  --glass-badge-info-bg: rgba(59, 130, 246, 0.12);
+  --glass-badge-info-border: rgba(59, 130, 246, 0.35);
+  --glass-badge-info-text: #1E40AF;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
+  color: var(--glass-text-primary);
+  background-color: var(--background);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Rasa Aruna Enterprise subtle scrollbars */
+/* Subtle Glassmorphic Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #F1F3F0;
+  background: rgba(220, 232, 223, 0.3);
 }
 ::-webkit-scrollbar-thumb {
-  background: #BDD1C2;
-  border-radius: 4px;
+  background: rgba(189, 209, 194, 0.6);
+  border-radius: 9999px;
+  backdrop-filter: blur(4px);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #9DB9A4;
+  background: rgba(93, 142, 111, 0.8);
 }
 
-/* Custom utility classes */
-@layer utilities {
-  .bg-canvas {
-    background-color: #F7F8F5;
+@layer components {
+  /* Level 1: Hero, Sidebar, Topbar */
+  .glass-1 {
+    background-color: var(--glass-1-bg);
+    backdrop-filter: blur(var(--glass-1-blur)) saturate(160%);
+    -webkit-backdrop-filter: blur(var(--glass-1-blur)) saturate(160%);
+    border: 1px solid var(--glass-1-border);
+    box-shadow: var(--glass-1-shadow);
   }
-  .card-aruna {
+
+  /* Level 2: Card, Panel, KPI Card */
+  .glass-2 {
+    background-color: var(--glass-2-bg);
+    backdrop-filter: blur(var(--glass-2-blur)) saturate(150%);
+    -webkit-backdrop-filter: blur(var(--glass-2-blur)) saturate(150%);
+    border: 1px solid var(--glass-2-border);
+    box-shadow: var(--glass-2-shadow);
+    transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 220ms ease, border-color 220ms ease, background-color 220ms ease;
+  }
+
+  .glass-2-interactive {
+    cursor: pointer;
+    will-change: transform, box-shadow;
+  }
+  .glass-2-interactive:hover {
+    transform: translateY(-4px) scale(1.008);
+    border-color: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 16px 36px -4px rgba(23, 74, 58, 0.14), 0 6px 16px -2px rgba(23, 74, 58, 0.08), inset 0 1px 0 0 #FFFFFF;
+  }
+  .glass-2-interactive:active {
+    transform: translateY(-1px) scale(0.995);
+  }
+
+  /* Frosted Glass Tile Button inside Hero Banner */
+  .btn-glass-tile {
+    background-color: rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.38);
+    box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.08), inset 0 1px 0 0 rgba(255, 255, 255, 0.45);
+    transition: all 220ms cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform, box-shadow;
+  }
+  .btn-glass-tile:hover {
+    background-color: rgba(255, 255, 255, 0.38);
+    border-color: rgba(255, 255, 255, 0.85);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.20), inset 0 1px 0 0 #FFFFFF;
+  }
+  .btn-glass-tile:active {
+    transform: translateY(0) scale(0.99);
+  }
+
+  /* Level 3: Dense Data Areas (Tables, Forms, Modal Content) */
+  .glass-3 {
+    background-color: var(--glass-3-bg);
+    backdrop-filter: blur(var(--glass-3-blur)) saturate(130%);
+    -webkit-backdrop-filter: blur(var(--glass-3-blur)) saturate(130%);
+    border: 1px solid var(--glass-3-border);
+    box-shadow: var(--glass-3-shadow);
+  }
+
+  /* Modal Floating Glass Layer (Top Hierarchy) */
+  .glass-modal {
+    background-color: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.90);
+    box-shadow: 0 24px 60px -12px rgba(23, 74, 58, 0.22), 0 8px 24px -4px rgba(23, 74, 58, 0.10), inset 0 1px 0 0 #FFFFFF;
+  }
+
+  /* Translucent Tinted Status Badges */
+  .glass-badge-success {
+    background-color: var(--glass-badge-success-bg);
+    border: 1px solid var(--glass-badge-success-border);
+    color: var(--glass-badge-success-text);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .glass-badge-warning {
+    background-color: var(--glass-badge-warning-bg);
+    border: 1px solid var(--glass-badge-warning-border);
+    color: var(--glass-badge-warning-text);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .glass-badge-danger {
+    background-color: var(--glass-badge-danger-bg);
+    border: 1px solid var(--glass-badge-danger-border);
+    color: var(--glass-badge-danger-text);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .glass-badge-info {
+    background-color: var(--glass-badge-info-bg);
+    border: 1px solid var(--glass-badge-info-border);
+    color: var(--glass-badge-info-text);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .glass-badge-default {
+    background-color: rgba(107, 120, 113, 0.10);
+    border: 1px solid rgba(107, 120, 113, 0.25);
+    color: var(--glass-text-secondary);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  /* Glass Buttons */
+  .btn-glass-primary {
+    background: linear-gradient(135deg, #174A3A 0%, #205c49 100%);
+    color: #FFFFFF;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    box-shadow: 0 4px 14px 0 rgba(23, 74, 58, 0.22), inset 0 1px 0 0 rgba(255, 255, 255, 0.35);
+    transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .btn-glass-primary:hover {
+    background: linear-gradient(135deg, #11382C 0%, #174A3A 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px 0 rgba(23, 74, 58, 0.28), inset 0 1px 0 0 rgba(255, 255, 255, 0.50);
+  }
+  .btn-glass-primary:active {
+    transform: translateY(0);
+  }
+
+  .btn-glass-secondary {
+    background-color: rgba(255, 255, 255, 0.65);
+    color: #174A3A;
+    border: 1px solid rgba(23, 74, 58, 0.20);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 2px 8px 0 rgba(23, 74, 58, 0.05), inset 0 1px 0 0 rgba(255, 255, 255, 0.85);
+    transition: all 180ms ease;
+  }
+  .btn-glass-secondary:hover {
+    background-color: rgba(255, 255, 255, 0.88);
+    border-color: rgba(23, 74, 58, 0.35);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px 0 rgba(23, 74, 58, 0.08), inset 0 1px 0 0 #FFFFFF;
+  }
+
+  /* Glass Form Inputs */
+  .input-glass {
+    background-color: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(23, 74, 58, 0.18);
+    color: var(--glass-text-primary);
+    box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+    transition: all 180ms ease;
+  }
+  .input-glass:focus {
+    background-color: rgba(255, 255, 255, 0.96);
+    border-color: #174A3A;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(23, 74, 58, 0.15), inset 0 1px 2px 0 rgba(0, 0, 0, 0.02);
+  }
+}
+
+/* Fallback for browsers without backdrop-filter support */
+@supports not (backdrop-filter: blur(1px)) {
+  .glass-1 {
+    background-color: rgba(255, 255, 255, 0.92);
+  }
+  .glass-2 {
+    background-color: rgba(255, 255, 255, 0.95);
+  }
+  .glass-3 {
     background-color: #FFFFFF;
-    border: 1px solid #E5E9E4;
-    border-radius: 0.75rem;
-    box-shadow: 0 1px 3px 0 rgba(23, 74, 58, 0.04);
+  }
+  .glass-modal {
+    background-color: #FFFFFF;
+  }
+}
+
+/* Reduced transparency support */
+@media (prefers-reduced-transparency: reduce) {
+  .glass-1,
+  .glass-2,
+  .glass-3,
+  .glass-modal {
+    background-color: #FFFFFF !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+/* High contrast support */
+@media (prefers-contrast: more) {
+  .glass-1,
+  .glass-2,
+  .glass-3,
+  .glass-modal {
+    background-color: #FFFFFF !important;
+    border-color: #151A18 !important;
+    color: #000000 !important;
+  }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .glass-2,
+  .glass-2-interactive,
+  .btn-glass-primary,
+  .btn-glass-secondary {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* Mobile Performance Optimization */
+@media (max-width: 768px) {
+  .glass-1 {
+    backdrop-filter: blur(12px) saturate(140%);
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+  }
+  .glass-2 {
+    backdrop-filter: blur(10px) saturate(130%);
+    -webkit-backdrop-filter: blur(10px) saturate(130%);
+  }
+  .glass-3 {
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
   }
 }

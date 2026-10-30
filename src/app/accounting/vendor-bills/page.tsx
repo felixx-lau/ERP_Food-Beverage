@@ -168,11 +168,11 @@ export default function VendorBillsPage() {
       wireframe="Wireframe S-11"
       actions={
         <div className="flex items-center space-x-2">
-          <span className="text-xs font-semibold text-[#758078] hidden sm:inline">Pilih Tagihan Vendor:</span>
+          <span className="text-xs font-black text-slate-800 hidden sm:inline">Pilih Tagihan Vendor:</span>
           <select
             value={selectedBill?.id || ""}
             onChange={(e) => fetchBillDetail(e.target.value)}
-            className="text-xs font-mono font-bold bg-white border border-[#E5E9E4] text-[#202824] rounded-lg px-3 py-1.5 shadow-2xs focus:ring-1 focus:ring-[#174A3A]"
+            className="text-xs font-mono font-bold input-glass rounded-xl px-3 py-1.5 shadow-xs focus:ring-2 focus:ring-[#174A3A]"
           >
             {bills.map((b) => (
               <option key={b.id} value={b.id}>
@@ -185,21 +185,21 @@ export default function VendorBillsPage() {
     >
       {/* Selected Bill Detail */}
       {selectedBill && (
-        <div className="bg-white rounded-xl shadow-xs border border-[#E5E9E4] overflow-hidden">
+        <div className="glass-2 rounded-2xl shadow-glass-2 border border-white/80 overflow-hidden">
           {/* Status Bar */}
-          <div className="bg-[#F7F8F5] px-6 py-3 border-b border-[#E5E9E4] flex items-center justify-between">
+          <div className="bg-white/40 px-6 py-3.5 border-b border-black/5 flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <span className="text-xs font-bold text-[#758078] uppercase tracking-wider">Status Tagihan:</span>
-              <div className="inline-flex rounded-lg shadow-2xs overflow-hidden border border-[#E5E9E4]">
+              <span className="text-xs font-black text-slate-800 uppercase tracking-wider">Status Tagihan:</span>
+              <div className="inline-flex rounded-xl shadow-xs overflow-hidden border border-white/60">
                 {["DRAFT", "CONFIRMED", "DONE"].map((st) => {
                   const active = (selectedBill.status === "POSTED" && st === "DONE") || selectedBill.status === st;
                   return (
                     <span
                       key={st}
-                      className={`px-3 py-1 text-xs font-bold font-mono transition-colors ${
+                      className={`px-3 py-1 text-xs font-black font-mono transition-colors ${
                         active
-                          ? "bg-[#174A3A] text-white"
-                          : "bg-white text-[#758078]"
+                          ? "bg-[#174A3A] text-white shadow-xs"
+                          : "bg-white/60 text-slate-700"
                       }`}
                     >
                       {st}
@@ -210,17 +210,17 @@ export default function VendorBillsPage() {
             </div>
 
             <div className="flex items-center space-x-2 text-xs">
-              <span className="text-[#758078]">Pencocokan:</span>
-              <span className="font-semibold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+              <span className="text-slate-800 font-bold">Pencocokan:</span>
+              <span className="font-black text-emerald-950 bg-emerald-500/20 px-2.5 py-0.5 rounded-full border border-emerald-500/40 backdrop-blur-xs">
                 Three-Way Match Terverifikasi
               </span>
             </div>
           </div>
 
           {/* Document Header */}
-          <div className="p-6 border-b border-[#E5E9E4] grid grid-cols-1 sm:grid-cols-4 gap-6 bg-[#F7F8F5]/40">
+          <div className="p-6 border-b border-black/5 grid grid-cols-1 sm:grid-cols-4 gap-6 bg-white/30">
             <div>
-              <span className="text-[11px] font-semibold text-[#758078] uppercase tracking-wider block">
+              <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider block">
                 Nomor Vendor Bill
               </span>
               <h2 className="text-2xl font-black text-[#174A3A] font-mono mt-0.5">
@@ -229,31 +229,31 @@ export default function VendorBillsPage() {
             </div>
 
             <div>
-              <span className="text-[11px] font-semibold text-[#758078] uppercase tracking-wider block">
+              <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider block">
                 Pemasok / Vendor
               </span>
-              <p className="text-base font-bold text-[#202824] mt-0.5">
+              <p className="text-base font-black text-slate-900 mt-0.5">
                 {selectedBill.vendor?.name}
               </p>
-              <span className="text-xs text-[#758078] font-mono">
+              <span className="text-xs text-slate-700 font-bold font-mono">
                 ID: {selectedBill.vendorId}
               </span>
             </div>
 
             <div>
-              <span className="text-[11px] font-semibold text-[#758078] uppercase tracking-wider block">
+              <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider block">
                 Referensi Purchase Order
               </span>
-              <p className="text-sm font-bold text-[#174A3A] font-mono mt-0.5">
+              <p className="text-sm font-black text-[#174A3A] font-mono mt-0.5">
                 {selectedBill.purchaseOrder?.poNumber}
               </p>
             </div>
 
             <div>
-              <span className="text-[11px] font-semibold text-[#758078] uppercase tracking-wider block">
+              <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider block">
                 Pajak Vendor
               </span>
-              <p className="text-sm font-bold text-emerald-700 mt-0.5">
+              <p className="text-sm font-black text-emerald-800 mt-0.5">
                 0% (Fixture)
               </p>
             </div>
@@ -262,47 +262,63 @@ export default function VendorBillsPage() {
           {/* Lines Table */}
           <div className="p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-[#202824] uppercase tracking-wide flex items-center space-x-2">
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide flex items-center space-x-2">
                 <FileText className="w-4 h-4 text-[#174A3A]" />
                 <span>Pencocokan Tiga Arah: PO vs Receipt (Accepted) vs Tagihan Baru</span>
               </h3>
-              <span className="text-xs text-[#758078]">Mencegah penagihan berlebih atau barang ditolak</span>
+              <span className="text-xs text-slate-700 font-semibold">Mencegah penagihan berlebih atau barang ditolak</span>
             </div>
 
-            <div className="overflow-x-auto border border-[#E5E9E4] rounded-xl shadow-2xs">
+            <div className="overflow-x-auto border border-white/80 rounded-xl shadow-glass-1 glass-3">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#F7F8F5] font-semibold text-[#758078] uppercase tracking-wider text-[11px] border-b border-[#E5E9E4]">
+                <thead className="bg-white/60 font-black text-slate-900 uppercase tracking-wider text-[11px] border-b border-black/10">
                   <tr>
                     <th className="px-6 py-3.5">SKU Varian & Nama Produk</th>
                     <th className="px-6 py-3.5 text-right">Dipesan (PO)</th>
-                    <th className="px-6 py-3.5 text-right text-emerald-800">Diterima (Receipt)</th>
-                    <th className="px-6 py-3.5 text-right text-[#758078]">Sudah Ditagih</th>
-                    <th className="px-6 py-3.5 text-right text-[#174A3A] font-bold">Qty Tagihan Ini</th>
+                    <th className="px-6 py-3.5 text-right text-emerald-950 font-black">Diterima (Receipt)</th>
+                    <th className="px-6 py-3.5 text-right text-slate-700 font-bold">Sudah Ditagih</th>
+                    <th className="px-6 py-3.5 text-right text-[#174A3A] font-black">Qty Tagihan Ini</th>
                     <th className="px-6 py-3.5 text-right">Net Subtotal</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#E5E9E4] font-mono">
-                  {selectedBill.lines?.map((l: any) => (
-                    <tr key={l.id} className="hover:bg-[#F7F8F5] transition-colors">
-                      <td className="px-6 py-3.5 font-bold text-[#202824] font-sans">
-                        <span className="font-mono text-[#174A3A] mr-2">{l.productSku}</span>
-                        <span>{l.product?.name}</span>
-                      </td>
-                      <td className="px-6 py-3.5 text-right font-bold text-[#202824]">10</td>
-                      <td className="px-6 py-3.5 text-right font-black text-emerald-700 bg-emerald-50/40">8</td>
-                      <td className="px-6 py-3.5 text-right text-[#758078]">0</td>
-                      <td className="px-6 py-3.5 text-right font-black text-[#174A3A] bg-[#F2F7F4]">
-                        {l.quantity}
-                      </td>
-                      <td className="px-6 py-3.5 text-right font-bold text-[#202824]">
-                        Rp {l.totalAmount.toLocaleString("id-ID")}
-                      </td>
-                    </tr>
-                  ))}
+                <tbody className="divide-y divide-black/5 font-mono">
+                  {selectedBill.lines?.map((l: any) => {
+                    const poLine = selectedBill.purchaseOrder?.lines?.find((pol: any) => pol.productSku === l.productSku);
+                    const orderedQty = poLine?.orderedQty ?? l.quantity;
+                    
+                    let acceptedQty = 0;
+                    selectedBill.purchaseOrder?.receipts?.forEach((rc: any) => {
+                      rc.lines?.forEach((rcl: any) => {
+                        if (rcl.productSku === l.productSku) {
+                          acceptedQty += rcl.acceptedQty || 0;
+                        }
+                      });
+                    });
+                    if (acceptedQty === 0) acceptedQty = l.quantity;
+                    const alreadyBilled = Math.max(0, (poLine?.billedQty || l.quantity) - l.quantity);
+
+                    return (
+                      <tr key={l.id} className="hover:bg-emerald-500/10 transition-colors duration-150">
+                        <td className="px-6 py-3.5 font-black text-slate-900 font-sans">
+                          <span className="font-mono text-[#174A3A] mr-2 font-black">{l.productSku}</span>
+                          <span>{l.product?.name}</span>
+                        </td>
+                        <td className="px-6 py-3.5 text-right font-black text-slate-900">{orderedQty}</td>
+                        <td className="px-6 py-3.5 text-right font-black text-emerald-900 bg-emerald-500/15">{acceptedQty}</td>
+                        <td className="px-6 py-3.5 text-right text-slate-700 font-bold">{alreadyBilled}</td>
+                        <td className="px-6 py-3.5 text-right font-black text-[#174A3A] bg-emerald-500/15">
+                          {l.quantity}
+                        </td>
+                        <td className="px-6 py-3.5 text-right font-black text-slate-900">
+                          Rp {(l.totalAmount ?? 0).toLocaleString("id-ID")}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
-                <tfoot className="bg-[#F7F8F5] font-mono text-xs border-t-2 border-[#E5E9E4]">
+                <tfoot className="bg-white/60 font-mono text-xs border-t-2 border-black/10">
                   <tr>
-                    <td colSpan={5} className="px-6 py-3.5 text-right font-sans font-bold text-[#758078]">
+                    <td colSpan={5} className="px-6 py-3.5 text-right font-sans font-black text-slate-800">
                       Total Kewajiban Tagihan Vendor:
                     </td>
                     <td className="px-6 py-3.5 text-right font-black text-base text-[#174A3A]">

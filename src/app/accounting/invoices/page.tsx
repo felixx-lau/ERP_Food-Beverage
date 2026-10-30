@@ -267,7 +267,7 @@ export default function CustomerInvoicesPage() {
         <div className="flex items-center space-x-2">
           <button
             onClick={() => setShowCreateModal(true)}
-            className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-[#174A3A] hover:bg-[#11382C] text-white rounded-lg text-xs font-semibold shadow-xs transition-colors"
+            className="inline-flex items-center space-x-1.5 px-3.5 py-2 btn-glass-primary text-white rounded-xl text-xs font-black shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Buat Invoice Baru</span>
@@ -276,40 +276,40 @@ export default function CustomerInvoicesPage() {
       }
     >
       {/* Invoice Selector Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-[#E5E9E4] shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 glass-2 p-4 rounded-2xl border border-white/80 shadow-glass-2">
         <div className="flex items-center space-x-2">
-          <span className="text-xs font-semibold text-[#758078]">Pilih Faktur Pelanggan:</span>
+          <span className="text-xs font-black text-slate-800">Pilih Faktur Pelanggan:</span>
           <select
             value={selectedInvoice?.id || ""}
             onChange={(e) => fetchInvoiceDetail(e.target.value)}
-            className="text-xs font-mono font-bold bg-[#F7F8F5] border border-[#E5E9E4] rounded-lg px-3 py-1.5 text-[#202824] focus:ring-1 focus:ring-[#174A3A]"
+            className="text-xs font-mono font-bold input-glass rounded-xl px-3 py-1.5 text-slate-900 focus:ring-2 focus:ring-[#174A3A]"
           >
             {invoices.length === 0 && <option value="">(Belum ada invoice)</option>}
             {invoices.map((inv) => (
               <option key={inv.id} value={inv.id}>
-                {inv.invoiceNumber} — {inv.customer?.name} ({inv.status}) - Rp {inv.totalAmount?.toLocaleString("id-ID")}
+                {inv.invoiceNumber} — {inv.customer?.name} ({inv.status}) - Rp {(inv.totalGross ?? inv.totalAmount ?? 0).toLocaleString("id-ID")}
               </option>
             ))}
           </select>
         </div>
 
-        <div className="flex items-center space-x-2 text-xs text-[#758078]">
+        <div className="flex items-center space-x-2 text-xs text-slate-800 font-bold">
           <Link href="/accounting/vendor-bills" className="hover:text-[#174A3A] underline">Vendor Bills</Link>
-          <span>•</span>
+          <span className="text-black/30">•</span>
           <Link href="/accounting/payments" className="hover:text-[#174A3A] underline">Pembayaran</Link>
-          <span>•</span>
+          <span className="text-black/30">•</span>
           <Link href="/accounting/journal-entries" className="hover:text-[#174A3A] underline">General Ledger</Link>
         </div>
       </div>
 
       {/* Selected Invoice Detail */}
       {selectedInvoice && (
-        <div className="bg-white rounded-xl shadow-xs border border-[#E5E9E4] overflow-hidden">
+        <div className="glass-2 rounded-2xl shadow-glass-2 border border-white/80 overflow-hidden">
           {/* Status Ribbon */}
-          <div className="bg-[#F7F8F5] px-6 py-3 border-b border-[#E5E9E4] flex flex-wrap items-center justify-between gap-3">
+          <div className="bg-white/40 px-6 py-3.5 border-b border-black/5 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center space-x-3">
-              <span className="text-xs font-bold text-[#758078] uppercase tracking-wider">Status Faktur:</span>
-              <div className="inline-flex rounded-lg shadow-2xs overflow-hidden border border-[#E5E9E4]">
+              <span className="text-xs font-black text-slate-800 uppercase tracking-wider">Status Faktur:</span>
+              <div className="inline-flex rounded-xl shadow-xs overflow-hidden border border-white/60">
                 {["DRAFT", "CONFIRMED", "PAID"].map((st) => {
                   const isDraft = selectedInvoice.status === "DRAFT" && st === "DRAFT";
                   const isConfirmed = selectedInvoice.status === "CONFIRMED" && st === "CONFIRMED";
@@ -319,10 +319,10 @@ export default function CustomerInvoicesPage() {
                   return (
                     <span
                       key={st}
-                      className={`px-3 py-1 text-xs font-bold font-mono transition-colors ${
+                      className={`px-3 py-1 text-xs font-black font-mono transition-colors ${
                         active
-                          ? "bg-[#174A3A] text-white"
-                          : "bg-white text-[#758078]"
+                          ? "bg-[#174A3A] text-white shadow-xs"
+                          : "bg-white/60 text-slate-700"
                       }`}
                     >
                       {st}
@@ -330,12 +330,12 @@ export default function CustomerInvoicesPage() {
                   );
                 })}
               </div>
-              <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold ${
+              <span className={`text-xs px-2.5 py-0.5 rounded-full font-black ${
                 selectedInvoice.paymentStatus === "PAID"
-                  ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                  ? "glass-badge-success"
                   : selectedInvoice.paymentStatus === "PARTIAL"
-                  ? "bg-amber-50 text-amber-800 border border-amber-200"
-                  : "bg-[#F7F8F5] text-[#758078] border border-[#E5E9E4]"
+                  ? "glass-badge-warning"
+                  : "glass-badge-default"
               }`}>
                 Payment: {selectedInvoice.paymentStatus}
               </span>
@@ -346,7 +346,7 @@ export default function CustomerInvoicesPage() {
               {selectedInvoice.status === "DRAFT" && (
                 <button
                   onClick={() => handlePostInvoice(selectedInvoice.id)}
-                  className="px-4 py-1.5 bg-[#174A3A] hover:bg-[#11382C] text-white rounded-lg text-xs font-semibold flex items-center space-x-1.5 shadow-xs transition-colors"
+                  className="px-4 py-2 btn-glass-primary text-white rounded-xl text-xs font-black flex items-center space-x-1.5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
                 >
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   <span>Confirm / Post Invoice</span>
@@ -356,7 +356,7 @@ export default function CustomerInvoicesPage() {
               {selectedInvoice.status === "CONFIRMED" && selectedInvoice.paymentStatus !== "PAID" && (
                 <Link
                   href={`/accounting/payments?invoiceId=${selectedInvoice.id}`}
-                  className="px-4 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg text-xs font-semibold flex items-center space-x-1.5 shadow-xs transition-colors"
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black flex items-center space-x-1.5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
                 >
                   <Receipt className="w-3.5 h-3.5" />
                   <span>Register Payment</span>
@@ -366,51 +366,51 @@ export default function CustomerInvoicesPage() {
           </div>
 
           {/* Document Header */}
-          <div className="p-6 border-b border-[#E5E9E4] grid grid-cols-1 md:grid-cols-4 gap-6 bg-[#F7F8F5]/40">
+          <div className="p-6 border-b border-black/5 grid grid-cols-1 md:grid-cols-4 gap-6 bg-white/30">
             <div>
-              <span className="text-[11px] font-semibold text-[#758078] uppercase tracking-wider block">
+              <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider block">
                 Nomor Invoice
               </span>
-              <span className="text-xl font-extrabold text-[#174A3A] font-mono mt-0.5 block">
+              <span className="text-xl font-black text-[#174A3A] font-mono mt-0.5 block">
                 {selectedInvoice.invoiceNumber}
               </span>
-              <span className="text-xs text-[#758078] block mt-1">
+              <span className="text-xs text-slate-700 font-semibold block mt-1">
                 Tanggal: {new Date(selectedInvoice.invoiceDate).toLocaleDateString("id-ID")}
               </span>
             </div>
 
             <div>
-              <span className="text-[11px] font-semibold text-[#758078] uppercase tracking-wider block">
+              <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider block">
                 Pelanggan
               </span>
-              <span className="text-sm font-bold text-[#202824] block mt-0.5">
+              <span className="text-sm font-black text-slate-900 block mt-0.5">
                 {selectedInvoice.customer?.name}
               </span>
-              <span className="text-xs text-[#758078] font-mono">
-                Kode: {selectedInvoice.customer?.code} · {selectedInvoice.customer?.tier}
+              <span className="text-xs text-slate-700 font-bold font-mono">
+                ID: {selectedInvoice.customer?.id} · {selectedInvoice.customer?.customerType || selectedInvoice.customer?.city || "Customer"}
               </span>
             </div>
 
             <div>
-              <span className="text-[11px] font-semibold text-[#758078] uppercase tracking-wider block">
+              <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider block">
                 Referensi Sales Order
               </span>
-              <span className="text-sm font-bold text-[#174A3A] font-mono block mt-0.5">
+              <span className="text-sm font-black text-[#174A3A] font-mono block mt-0.5">
                 {selectedInvoice.salesOrder?.orderNumber}
               </span>
-              <span className="text-xs text-[#758078] block">
+              <span className="text-xs text-slate-700 font-semibold block">
                 Delivery Order: {selectedInvoice.deliveryOrderId || "Partial Batch"}
               </span>
             </div>
 
             <div>
-              <span className="text-[11px] font-semibold text-[#758078] uppercase tracking-wider block">
+              <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider block">
                 Kebijakan Pajak (Tax Policy)
               </span>
-              <span className="text-sm font-bold text-[#A88544] block mt-0.5">
+              <span className="text-sm font-black text-amber-900 block mt-0.5">
                 PBJT 10% (F-22 / SR-18)
               </span>
-              <span className="text-xs text-[#758078] block">
+              <span className="text-xs text-slate-700 font-semibold block">
                 Pajak Barang & Jasa Tertentu Restoran
               </span>
             </div>
@@ -419,43 +419,43 @@ export default function CustomerInvoicesPage() {
           {/* Lines Table & Totals */}
           <div className="p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-[#202824] uppercase tracking-wide flex items-center space-x-2">
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide flex items-center space-x-2">
                 <Receipt className="w-4 h-4 text-[#174A3A]" />
                 <span>Rincian Penagihan Kuantitas Terkirim (Delivered-Based)</span>
               </h3>
-              <span className="text-xs text-[#758078]">
+              <span className="text-xs text-slate-700 font-semibold">
                 Kebijakan SR-02: Tagihan hanya dibuat berdasarkan barang yang telah diterima pelanggan.
               </span>
             </div>
 
-            <div className="overflow-x-auto border border-[#E5E9E4] rounded-xl shadow-2xs">
+            <div className="overflow-x-auto border border-white/80 rounded-xl shadow-glass-1 glass-3">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#F7F8F5] border-b border-[#E5E9E4] text-[#758078] font-semibold uppercase tracking-wider text-[11px]">
+                <thead className="bg-white/60 border-b border-black/10 text-slate-900 font-black uppercase tracking-wider text-[11px]">
                   <tr>
-                    <th className="py-3 px-4">SKU</th>
-                    <th className="py-3 px-4">Deskripsi Produk</th>
-                    <th className="py-3 px-4 text-center">Invoiced Qty</th>
-                    <th className="py-3 px-4 text-right">Harga Satuan</th>
-                    <th className="py-3 px-4 text-right">Net Subtotal</th>
-                    <th className="py-3 px-4 text-right">PBJT 10%</th>
-                    <th className="py-3 px-4 text-right">Total Baris</th>
+                    <th className="py-3.5 px-4">SKU</th>
+                    <th className="py-3.5 px-4">Deskripsi Produk</th>
+                    <th className="py-3.5 px-4 text-center">Invoiced Qty</th>
+                    <th className="py-3.5 px-4 text-right">Harga Satuan</th>
+                    <th className="py-3.5 px-4 text-right">Net Subtotal</th>
+                    <th className="py-3.5 px-4 text-right">PBJT 10%</th>
+                    <th className="py-3.5 px-4 text-right">Total Baris</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#E5E9E4] font-mono">
+                <tbody className="divide-y divide-black/5 font-mono">
                   {selectedInvoice.lines?.map((line: any) => (
-                    <tr key={line.id} className="hover:bg-[#F7F8F5] transition-colors">
-                      <td className="py-3 px-4 font-bold text-[#174A3A]">{line.productSku}</td>
-                      <td className="py-3 px-4 font-sans text-[#202824] font-medium">{line.product?.name}</td>
-                      <td className="py-3 px-4 text-center font-bold text-[#202824]">{line.quantity}</td>
-                      <td className="py-3 px-4 text-right text-[#525B55]">Rp {line.unitPrice?.toLocaleString("id-ID")}</td>
-                      <td className="py-3 px-4 text-right text-[#202824] font-bold">
-                        Rp {line.subtotal?.toLocaleString("id-ID")}
+                    <tr key={line.id} className="hover:bg-emerald-500/10 transition-colors duration-150">
+                      <td className="py-3.5 px-4 font-black text-[#174A3A]">{line.productSku}</td>
+                      <td className="py-3.5 px-4 font-sans text-slate-900 font-black">{line.product?.name}</td>
+                      <td className="py-3.5 px-4 text-center font-black text-slate-900">{line.quantity}</td>
+                      <td className="py-3.5 px-4 text-right text-slate-800 font-bold">Rp {line.unitPrice?.toLocaleString("id-ID")}</td>
+                      <td className="py-3.5 px-4 text-right text-slate-900 font-black">
+                        Rp {(line.netPrice ?? line.subtotal ?? 0).toLocaleString("id-ID")}
                       </td>
-                      <td className="py-3 px-4 text-right text-[#A88544] font-semibold">
-                        Rp {line.taxAmount?.toLocaleString("id-ID")}
+                      <td className="py-3.5 px-4 text-right text-amber-900 font-black">
+                        Rp {(line.pbjtAmount ?? line.taxAmount ?? 0).toLocaleString("id-ID")}
                       </td>
-                      <td className="py-3 px-4 text-right text-[#174A3A] font-bold">
-                        Rp {line.totalAmount?.toLocaleString("id-ID")}
+                      <td className="py-3.5 px-4 text-right text-[#174A3A] font-black">
+                        Rp {(line.totalAmount ?? 0).toLocaleString("id-ID")}
                       </td>
                     </tr>
                   ))}
@@ -465,26 +465,32 @@ export default function CustomerInvoicesPage() {
 
             {/* Financial Totals Summary */}
             <div className="mt-6 flex justify-end">
-              <div className="w-full max-w-sm space-y-2 bg-[#F7F8F5] p-4.5 rounded-xl border border-[#E5E9E4] text-xs">
-                <div className="flex justify-between text-[#758078]">
+              <div className="w-full max-w-sm space-y-2 glass-3 p-4.5 rounded-xl border border-white/80 text-xs shadow-xs">
+                <div className="flex justify-between text-slate-700 font-bold">
                   <span>Subtotal Net:</span>
-                  <span className="font-mono font-semibold text-[#202824]">Rp {selectedInvoice.subtotal?.toLocaleString("id-ID")}</span>
+                  <span className="font-mono font-black text-slate-900">
+                    Rp {(selectedInvoice.subtotalNet ?? selectedInvoice.subtotal ?? 0).toLocaleString("id-ID")}
+                  </span>
                 </div>
-                <div className="flex justify-between text-[#A88544]">
+                <div className="flex justify-between text-amber-900 font-black">
                   <span>PBJT Restoran 10%:</span>
-                  <span className="font-mono font-semibold">Rp {selectedInvoice.taxAmount?.toLocaleString("id-ID")}</span>
+                  <span className="font-mono">
+                    Rp {(selectedInvoice.pbjtTax ?? selectedInvoice.taxAmount ?? 0).toLocaleString("id-ID")}
+                  </span>
                 </div>
-                <div className="border-t border-[#E5E9E4] pt-2 flex justify-between text-[#202824] font-bold text-sm">
+                <div className="border-t border-black/10 pt-2 flex justify-between text-slate-900 font-black text-sm">
                   <span>Total Tagihan (Gross):</span>
-                  <span className="font-mono text-[#174A3A]">Rp {selectedInvoice.totalAmount?.toLocaleString("id-ID")}</span>
+                  <span className="font-mono text-[#174A3A] text-base">
+                    Rp {(selectedInvoice.totalGross ?? selectedInvoice.totalAmount ?? 0).toLocaleString("id-ID")}
+                  </span>
                 </div>
-                <div className="border-t border-dashed border-[#E5E9E4] pt-2 flex justify-between text-emerald-700 font-semibold">
+                <div className="border-t border-dashed border-black/10 pt-2 flex justify-between text-emerald-900 font-black">
                   <span>Sudah Dibayar (Paid):</span>
-                  <span className="font-mono">Rp {selectedInvoice.paidAmount?.toLocaleString("id-ID")}</span>
+                  <span className="font-mono">Rp {(selectedInvoice.paidAmount ?? 0).toLocaleString("id-ID")}</span>
                 </div>
-                <div className="flex justify-between text-amber-800 font-bold">
+                <div className="flex justify-between text-amber-950 font-black">
                   <span>Sisa Piutang (Outstanding):</span>
-                  <span className="font-mono">Rp {selectedInvoice.outstandingAmount?.toLocaleString("id-ID")}</span>
+                  <span className="font-mono">Rp {(selectedInvoice.outstandingAmount ?? 0).toLocaleString("id-ID")}</span>
                 </div>
               </div>
             </div>
@@ -515,7 +521,7 @@ export default function CustomerInvoicesPage() {
                   <option value="">-- Pilih Sales Order --</option>
                   {salesOrders.map((so) => (
                     <option key={so.id} value={so.id}>
-                      {so.orderNumber} — {so.customer?.name} ({so.status})
+                      {so.orderNumber} — {so.contact?.name || so.customer?.name || "Pelanggan"} ({so.status})
                     </option>
                   ))}
                 </select>

@@ -95,7 +95,7 @@ export default function AppLayout({
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F8F5] text-[#202824] flex">
+    <div className="min-h-screen bg-transparent text-[var(--glass-text-primary)] flex">
       {/* Sidebar */}
       <Sidebar
         userRole={user?.role || "OWNER"}
@@ -126,21 +126,21 @@ export default function AppLayout({
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
           {/* Optional unified page header if title is passed */}
           {title && (
-            <div className="bg-white rounded-2xl shadow-xs border border-slate-100 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="glass-2 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex items-center space-x-2.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#174A3A]" />
-                  <h1 className="text-xl font-bold tracking-tight text-slate-800">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#174A3A] ring-4 ring-emerald-500/20" />
+                  <h1 className="text-xl font-bold tracking-tight text-[var(--glass-text-primary)]">
                     {title}
                   </h1>
                   {wireframe && (
-                    <span className="hidden sm:inline-block px-2 py-0.5 rounded-full text-[10px] font-mono text-slate-400 bg-slate-100">
+                    <span className="hidden sm:inline-block px-2.5 py-0.5 rounded-full text-[10px] font-mono font-medium text-emerald-800 bg-emerald-500/10 border border-emerald-500/20">
                       {wireframe}
                     </span>
                   )}
                 </div>
                 {subtitle && (
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-[var(--glass-text-secondary)] font-medium">
                     {subtitle}
                   </p>
                 )}

@@ -106,14 +106,14 @@ export default function Topbar({
 
   return (
     <>
-      <header className="bg-[#174A3A] text-white select-none sticky top-0 z-40 shadow-xs border-b border-[#11382C]">
+      <header className="glass-1 sticky top-0 z-40 text-[var(--glass-text-primary)] select-none border-b border-white/40 shadow-glass-1">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
           {/* Left: Mobile Toggle, Apps Launcher & Breadcrumbs */}
           <div className="flex items-center space-x-3 min-w-0">
             {/* Mobile Hamburger Toggle */}
             <button
               onClick={onToggleMobileSidebar}
-              className="lg:hidden flex items-center justify-center w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/25 transition-all text-[#DCE8DF] hover:text-white"
+              className="lg:hidden flex items-center justify-center w-8 h-8 rounded-xl bg-white/60 hover:bg-white/95 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition-all text-slate-800 hover:text-[#174A3A] border border-white/70 shadow-xs"
             >
               <Menu className="w-5 h-5" />
             </button>
@@ -122,7 +122,7 @@ export default function Topbar({
             <button
               onClick={onOpenAppSwitcher}
               title="App Switcher (▦ Apps)"
-              className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/25 transition-all text-[#DCE8DF] hover:text-white"
+              className="flex items-center justify-center w-8 h-8 rounded-xl bg-white/60 hover:bg-white/95 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition-all text-slate-800 hover:text-[#174A3A] border border-white/70 shadow-xs"
             >
               <LayoutGrid className="w-4 h-4" />
             </button>
@@ -131,27 +131,27 @@ export default function Topbar({
             <CompanySwitcher currentUser={currentUser} />
 
             {/* Breadcrumbs */}
-            <div className="hidden lg:flex items-center space-x-2 text-xs font-medium text-[#DCE8DF]/80 truncate">
-              <span className="text-white/70 truncate max-w-[140px]">
+            <div className="hidden lg:flex items-center space-x-2 text-xs font-semibold text-slate-800 truncate">
+              <span className="text-slate-900 font-black truncate max-w-[140px]">
                 {activeCompany?.name || "PT Rasa Aruna Bersama"}
               </span>
-              <span>/</span>
+              <span className="text-black/30">/</span>
               {breadcrumbs && breadcrumbs.length > 0 ? (
                 breadcrumbs.map((b, idx) => (
                   <React.Fragment key={idx}>
-                    {idx > 0 && <span>/</span>}
-                    <span className={idx === breadcrumbs.length - 1 ? "font-semibold text-white" : ""}>
+                    {idx > 0 && <span className="text-black/30">/</span>}
+                    <span className={idx === breadcrumbs.length - 1 ? "font-black text-[#174A3A]" : "text-slate-700 font-bold"}>
                       {b.label}
                     </span>
                   </React.Fragment>
                 ))
               ) : (
-                <span className="font-semibold text-white">Core ERP</span>
+                <span className="font-black text-[#174A3A]">Core ERP</span>
               )}
             </div>
 
             {/* Default location indicator */}
-            <div className="hidden md:inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#11382C] text-[#DCE8DF] border border-white/10">
+            <div className="hidden md:inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-emerald-500/15 text-emerald-950 border border-emerald-500/30 backdrop-blur-xs">
               <MapPin className="w-3 h-3 text-[#C6A15B]" />
               <span>WH-JKT</span>
             </div>
@@ -162,7 +162,7 @@ export default function Topbar({
             {/* Manage Team Shortcut */}
             <button
               onClick={() => setManageTeamOpen(true)}
-              className="hidden lg:inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium bg-white/10 hover:bg-white/20 rounded-lg text-white transition-all border border-white/10 shadow-xs"
+              className="hidden lg:inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold btn-glass-secondary hover:-translate-y-0.5 hover:shadow-md rounded-xl transition-all shadow-xs"
               title="Kelola Tim & Anggota Kelompok"
             >
               <Users2 className="w-3.5 h-3.5 text-[#C6A15B]" />
@@ -172,7 +172,7 @@ export default function Topbar({
             {/* Audit History Shortcut */}
             <button
               onClick={onOpenAuditDrawer}
-              className="hidden sm:inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium bg-white/10 hover:bg-white/20 rounded-lg text-white transition-all border border-white/10 shadow-xs"
+              className="hidden sm:inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold btn-glass-secondary hover:-translate-y-0.5 hover:shadow-md rounded-xl transition-all shadow-xs"
               title="Buka Log Audit & Security History (SR-15 / F-21)"
             >
               <ShieldAlert className="w-3.5 h-3.5 text-[#C6A15B]" />
@@ -182,7 +182,7 @@ export default function Topbar({
             {/* Reset Seed Button */}
             <button
               onClick={onOpenResetModal}
-              className="inline-flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-semibold bg-rose-600 hover:bg-rose-700 active:bg-rose-800 rounded-lg text-white transition-all shadow-xs"
+              className="inline-flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-black bg-rose-500/15 hover:bg-rose-500/25 active:bg-rose-500/35 hover:-translate-y-0.5 hover:shadow-md text-rose-800 rounded-xl transition-all border border-rose-500/30 shadow-xs backdrop-blur-xs"
               title="Reset Database ke Baseline Seed Skenario Tugas (Hanya Role Owner)"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -193,38 +193,38 @@ export default function Topbar({
             <div className="relative">
               <button
                 onClick={() => setRoleMenuOpen(!roleMenuOpen)}
-                className="flex items-center space-x-2 px-2.5 py-1.5 rounded-lg bg-[#11382C] hover:bg-[#0d2a21] border border-[#C6A15B]/30 text-white text-xs font-medium transition-all shadow-xs"
+                className="flex items-center space-x-2 px-2.5 py-1.5 rounded-xl glass-2 hover:bg-white/95 hover:-translate-y-0.5 hover:shadow-md border border-white/70 text-slate-900 text-xs font-bold transition-all shadow-xs"
               >
-                <div className="w-6 h-6 rounded-full bg-[#C6A15B] text-[#174A3A] font-bold text-xs flex items-center justify-center">
+                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#174A3A] to-[#205c49] text-white font-bold text-xs flex items-center justify-center shadow-xs">
                   {currentUser?.name ? currentUser.name.charAt(0) : "M"}
                 </div>
                 <div className="text-left hidden sm:block">
-                  <p className="font-semibold leading-tight text-white max-w-[110px] truncate">
+                  <p className="font-black leading-tight text-slate-900 max-w-[110px] truncate">
                     {currentUser?.name || "Memuat..."}
                   </p>
-                  <p className="text-[10px] text-[#C6A15B] font-bold uppercase tracking-wider">
+                  <p className="text-[10px] text-[#C6A15B] font-extrabold uppercase tracking-wider">
                     {currentUser?.role || "OWNER"}
                   </p>
                 </div>
-                <ChevronDown className="w-3.5 h-3.5 text-[#DCE8DF]" />
+                <ChevronDown className="w-3.5 h-3.5 text-slate-700" />
               </button>
 
               {/* Role Switcher Dropdown */}
               {roleMenuOpen && (
-                <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-dropdown py-2 z-50 text-[#202824] border border-[#E5E9E4] animate-in fade-in slide-in-from-top-1 duration-150">
-                  <div className="px-4 py-2.5 border-b border-[#E5E9E4] bg-[#F7F8F5]">
-                    <p className="text-[10px] font-bold text-[#758078] uppercase tracking-wider">
+                <div className="absolute right-0 mt-2 w-80 glass-modal rounded-2xl shadow-glass-modal py-2 z-dropdown text-[var(--glass-text-primary)] border border-white/80 animate-in fade-in slide-in-from-top-1 duration-150">
+                  <div className="px-4 py-2.5 border-b border-black/5 bg-white/40">
+                    <p className="text-[10px] font-bold text-[var(--glass-text-muted)] uppercase tracking-wider">
                       Simulasi Akun Role (SR-15)
                     </p>
-                    <p className="text-[11px] text-[#758078] mt-0.5">
+                    <p className="text-[11px] text-[var(--glass-text-secondary)] mt-0.5">
                       Pilih akun skenario atau anggota tim untuk menguji otorisasi RBAC.
                     </p>
                   </div>
 
-                  <div className="py-1 max-h-80 overflow-y-auto divide-y divide-[#E5E9E4]/60">
+                  <div className="py-1 max-h-80 overflow-y-auto divide-y divide-black/5">
                     {/* 6 Baseline Scenario Roles */}
                     <div>
-                      <p className="px-3.5 py-1 text-[10px] font-bold text-[#758078] bg-[#F7F8F5]/80 uppercase">
+                      <p className="px-3.5 py-1 text-[10px] font-bold text-[var(--glass-text-muted)] bg-white/30 uppercase">
                         6 Akun Skenario PDF Tugas:
                       </p>
                       {ROLES_LIST.map((r) => {
@@ -236,25 +236,25 @@ export default function Topbar({
                             disabled={switching}
                             className={`w-full text-left px-3.5 py-2 flex items-start space-x-2.5 text-xs transition-colors ${
                               isSelected
-                                ? "bg-[#F2F7F4] text-[#174A3A] font-semibold"
-                                : "hover:bg-[#F7F8F5] text-[#202824]"
+                                ? "bg-emerald-500/15 text-[#174A3A] font-bold"
+                                : "hover:bg-white/60 text-[var(--glass-text-primary)]"
                             }`}
                           >
                             <div className="mt-0.5">
                               {isSelected ? (
                                 <Check className="w-4 h-4 text-[#174A3A]" />
                               ) : (
-                                <div className="w-4 h-4 rounded-full border border-[#D5D8D3]" />
+                                <div className="w-4 h-4 rounded-full border border-black/20" />
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between">
-                                <span className="font-bold text-[#202824] truncate">{r.name}</span>
-                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#EBECE8] font-mono font-semibold text-[#525B55]">
+                                <span className="font-bold text-[var(--glass-text-primary)] truncate">{r.name}</span>
+                                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/70 font-mono font-bold text-[#174A3A] border border-white/60">
                                   {r.role}
                                 </span>
                               </div>
-                              <p className="text-[11px] text-[#758078] font-normal truncate">
+                              <p className="text-[11px] text-[var(--glass-text-muted)] font-normal truncate">
                                 {r.title}
                               </p>
                             </div>

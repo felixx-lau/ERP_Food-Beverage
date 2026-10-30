@@ -123,28 +123,28 @@ export default function AppSwitcherModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
-      <div className="bg-[#103429] border border-[#C6A15B]/30 w-full max-w-4xl rounded-2xl p-8 shadow-2xl text-white relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-4 animate-in fade-in duration-200">
+      <div className="glass-modal border border-white/80 w-full max-w-4xl rounded-3xl p-8 shadow-glass-modal relative animate-in zoom-in-95 duration-200">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-full hover:bg-white/10 text-[#DCE8DF] hover:text-white transition-colors"
+          className="absolute top-5 right-5 p-2 rounded-full hover:bg-white/80 text-slate-600 hover:text-slate-900 transition-colors shadow-xs"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Modal Title */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-white/10 text-xs font-semibold text-[#DCE8DF] mb-2 border border-white/10">
-            <span className="w-2 h-2 rounded-full bg-[#C6A15B]" />
+          <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-emerald-500/15 text-xs font-black text-[#174A3A] mb-2 border border-emerald-500/30">
+            <span className="w-2 h-2 rounded-full bg-[#174A3A]" />
             <span>PT Rasa Aruna Bersama — Rasa Aruna Kitchen</span>
           </div>
-          <h2 className="text-2xl font-bold tracking-tight text-white flex items-center justify-center space-x-2">
+          <h2 className="text-2xl font-black tracking-tight text-slate-900 flex items-center justify-center space-x-2">
             <span>Rasa Aruna Apps Hub</span>
           </h2>
-          <p className="text-xs text-[#DCE8DF]/80 mt-1">
+          <p className="text-xs text-slate-700 font-bold mt-1">
             Navigasi modul ERP terintegrasi · Role Aktif:{" "}
-            <span className="font-bold text-[#C6A15B] uppercase px-2 py-0.5 rounded bg-black/40 border border-white/10">
+            <span className="font-black text-[#174A3A] uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30">
               {userRole || "GUEST"}
             </span>
           </p>
@@ -160,32 +160,32 @@ export default function AppSwitcherModal({
               <button
                 key={app.key}
                 onClick={() => handleAppClick(app.key)}
-                className={`group flex flex-col items-center text-center p-4 rounded-xl border border-white/5 transition-all relative ${
+                className={`group flex flex-col items-center text-center p-4 rounded-2xl border transition-all relative ${
                   hasAccess
-                    ? "bg-white/5 hover:bg-white/10 hover:border-[#C6A15B]/40 hover:scale-[1.02] active:scale-95 cursor-pointer shadow-sm"
-                    : "opacity-40 hover:opacity-55 cursor-pointer bg-black/20"
+                    ? "glass-2 glass-2-interactive border-white/80 hover:border-[#174A3A]/40"
+                    : "glass-3 opacity-50 cursor-not-allowed border-dashed border-black/15"
                 }`}
               >
                 <div
-                  className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-md mb-3 ${app.color} transition-transform group-hover:scale-105`}
+                  className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-md mb-3 ${app.color} text-white transition-transform group-hover:scale-110 group-hover:shadow-lg`}
                 >
-                  <IconComponent className="w-7 h-7 text-white" />
+                  <IconComponent className="w-7 h-7" />
                 </div>
 
                 <div className="flex items-center space-x-1.5">
-                  <span className="font-bold text-sm tracking-wide text-white">
+                  <span className="font-black text-sm tracking-wide text-slate-900 group-hover:text-[#174A3A] transition-colors">
                     {app.name}
                   </span>
-                  {!hasAccess && <Lock className="w-3.5 h-3.5 text-[#C6A15B]" />}
+                  {!hasAccess && <Lock className="w-3.5 h-3.5 text-amber-700" />}
                 </div>
 
-                <span className="text-[11px] text-[#DCE8DF]/80 mt-1 line-clamp-2 leading-relaxed">
+                <span className="text-[11px] text-slate-700 font-semibold mt-1 line-clamp-2 leading-relaxed">
                   {app.destination}
                 </span>
 
                 {!hasAccess && (
-                  <span className="mt-2 text-[9px] font-semibold px-2 py-0.5 rounded-full bg-rose-950/80 text-rose-300 border border-rose-800/50">
-                    Restricted
+                  <span className="mt-2 text-[10px] font-black px-2 py-0.5 rounded-full glass-badge-danger">
+                    Terkunci
                   </span>
                 )}
               </button>

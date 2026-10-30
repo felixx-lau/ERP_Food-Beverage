@@ -150,7 +150,7 @@ export default function CrmLeadsPage() {
           </div>
           <button
             onClick={() => setCreateModalOpen(true)}
-            className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-[#174A3A] hover:bg-[#11382C] active:bg-[#0f3328] text-white rounded-lg text-xs font-semibold shadow-xs transition-colors"
+            className="inline-flex items-center space-x-1.5 px-3.5 py-2 btn-glass-primary text-white rounded-xl text-xs font-black shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>+ Lead Baru</span>
@@ -167,19 +167,19 @@ export default function CrmLeadsPage() {
           return (
             <div
               key={stg.key}
-              className={`bg-white rounded-xl border border-[#E5E9E4] shadow-xs overflow-hidden flex flex-col border-t-4 ${stg.border}`}
+              className={`glass-2 rounded-2xl border border-white/80 shadow-glass-2 overflow-hidden flex flex-col border-t-4 ${stg.border}`}
             >
               {/* Column Header */}
-              <div className="p-3.5 border-b border-[#E5E9E4] flex items-center justify-between bg-[#F7F8F5]">
+              <div className="p-3.5 border-b border-black/5 flex items-center justify-between bg-white/40">
                 <div>
-                  <h3 className="font-bold text-xs uppercase tracking-wide text-[#202824]">
+                  <h3 className="font-black text-xs uppercase tracking-wide text-slate-900">
                     {stg.label}
                   </h3>
-                  <span className="text-[11px] text-[#758078] font-mono font-medium">
+                  <span className="text-[11px] text-slate-700 font-mono font-bold">
                     Rp {stageTotal.toLocaleString("id-ID")}
                   </span>
                 </div>
-                <span className="w-5 h-5 rounded-full bg-white border border-[#D5D8D3] text-[#202824] flex items-center justify-center font-bold text-[10px]">
+                <span className="w-5 h-5 rounded-full bg-white/80 border border-white/80 text-slate-900 flex items-center justify-center font-black text-[10px] shadow-xs">
                   {stageLeads.length}
                 </span>
               </div>
@@ -187,33 +187,33 @@ export default function CrmLeadsPage() {
               {/* Cards Container */}
               <div className="p-3 space-y-3 flex-1 overflow-y-auto max-h-[500px]">
                 {stageLeads.length === 0 ? (
-                  <div className="text-center py-10 text-[#758078] text-xs italic">
+                  <div className="text-center py-10 text-slate-600 font-medium text-xs italic">
                     Belum ada lead di tahap ini.
                   </div>
                 ) : (
                   stageLeads.map((lead) => (
                     <div
                       key={lead.id}
-                      className="bg-white border border-[#E5E9E4] hover:border-[#174A3A]/40 rounded-xl p-3.5 shadow-2xs space-y-2.5 cursor-pointer transition-all hover:shadow-card hover:-translate-y-0.5"
+                      className="glass-3 border border-white/80 hover:border-[#174A3A]/40 rounded-xl p-3.5 shadow-xs space-y-2.5 cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-1 hover:bg-white/95"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-mono font-bold text-xs text-[#174A3A] bg-[#F2F7F4] px-2 py-0.5 rounded border border-[#C4DBD0]">
+                        <span className="font-mono font-black text-xs text-[#174A3A] bg-emerald-500/15 px-2 py-0.5 rounded-lg border border-emerald-500/30">
                           {lead.id}
                         </span>
-                        <span className="text-xs font-bold text-emerald-700 font-mono">
+                        <span className="text-xs font-black text-emerald-800 font-mono">
                           Rp {lead.expectedRevenue.toLocaleString("id-ID")}
                         </span>
                       </div>
 
-                      <h4 className="font-bold text-xs text-[#202824] leading-snug">
+                      <h4 className="font-black text-xs text-slate-900 leading-snug">
                         {lead.name}
                       </h4>
 
-                      <div className="pt-2 border-t border-[#EEF1ED] flex items-center justify-between text-[11px] text-[#758078]">
-                        <span className="truncate max-w-[130px] font-medium text-[#525B55]">
+                      <div className="pt-2 border-t border-black/5 flex items-center justify-between text-[11px] text-slate-700 font-semibold">
+                        <span className="truncate max-w-[130px] font-bold text-slate-800">
                           {lead.contact?.name || lead.contactId}
                         </span>
-                        <span className="font-mono text-[10px] bg-[#F7F8F5] px-1.5 py-0.5 rounded border border-[#E5E9E4]">
+                        <span className="font-mono text-[10px] font-bold bg-white/70 px-1.5 py-0.5 rounded border border-white/60">
                           {lead.contactId}
                         </span>
                       </div>

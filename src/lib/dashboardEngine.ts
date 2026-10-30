@@ -318,3 +318,384 @@ export async function getFinancialReconciliation(simulatedStockDiff: number = 0)
     },
   };
 }
+
+// -------------------------------------------------------------
+// Executive Charts & Analytics Engine (Fase 2)
+// -------------------------------------------------------------
+
+export interface LowStockItem {
+  sku: string;
+  name: string;
+  onHand: number;
+  minStock: number;
+  unit: string;
+}
+
+export interface DashboardChartData {
+  kpis: {
+    totalSales: number;
+    totalPurchases: number;
+    stockValuation: number;
+    lowStockCount: number;
+    lowStockProducts: LowStockItem[];
+    estimatedGrossProfit: number;
+    grossProfitMarginPercent: number;
+  };
+  salesTrend: {
+    period: "day" | "week" | "month";
+    labels: string[];
+    revenues: number[];
+    orderCounts: number[];
+  };
+  topProducts: {
+    labels: string[];
+    quantities: number[];
+    revenues: number[];
+  };
+  salesByCategory: {
+    labels: string[];
+    amounts: number[];
+    percentages: number[];
+  };
+  purchasesVsSalesMonthly: {
+    labels: string[];
+    sales: number[];
+    purchases: number[];
+  };
+  hasData: boolean;
+}
+
+export interface ChartFilterParams {
+  period?: "day" | "week" | "month";
+  startDate?: string;
+  endDate?: string;
+}
+
+export async function getDashboardChartMetrics(params: ChartFilterParams = {}): Promise<DashboardChartData> {
+  const period = params.period || "day";
+  const now = new Date();
+  
+  // Rentang tanggal default jika tidak diberikan: 30 hari terakhir
+  let start = params.startDate ? new Date(params.startDate) : new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  let end = params.endDate ? new Date(params.endDate) : new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+  if (isNaN(start.getTime())) {
+    start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  }
+  if (isNaN(end.getTime())) {
+    end = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  }
+
+  // 1. Ambil data penjualan dari Sales Orders & POS Orders
+  const [salesOrders, posOrders, purchaseOrders, allProducts, stockLevels] = await Promise.all([
+    prisma.salesOrder.findMany({
+      where: {
+        status: { in: ["CONFIRMED", "DONE"] },
+      },
+      include: {
+        lines: { include: { product: true } },
+      },
+    }),
+    prisma.posOrder.findMany({
+      where: {
+        status: "PAID",
+      },
+      include: {
+        lines: { include: { product: true } },
+      },
+    }),
+    prisma.purchaseOrder.findMany({
+      where: {
+        status: { in: ["CONFIRMED", "DONE"] },
+      },
+      include: {
+        lines: { include: { product: true } },
+      },
+    }),
+    prisma.productVariant.findMany(),
+    prisma.stockLevel.findMany({
+      include: { product: true },
+    }),
+  ]);
+
+  // 2. Perhitungan 5 Metrik Utama (KPI Cards)
+  let totalSales = 0;
+  let totalSalesCost = 0;
+  
+  salesOrders.forEach((so) => {
+    totalSales += so.totalGross || 0;
+    so.lines.forEach((l) => {
+      totalSalesCost += (l.quantity || 0) * (l.standardCost || l.product?.standardCost || 0);
+    });
+  });
+
+  posOrders.forEach((po) => {
+    totalSales += po.totalAmount || 0;
+    po.lines.forEach((l) => {
+      totalSalesCost += (l.quantity || 0) * (l.standardCost || l.product?.standardCost || 0);
+    });
+  });
+
+  let totalPurchases = 0;
+  purchaseOrders.forEach((po) => {
+    totalPurchases += po.total || 0;
+  });
+
+  // Nilai stok terkini
+  let stockValuation = 0;
+  const productStockMap = new Map<string, { onHand: number; name: string; unit: string }>();
+
+  stockLevels.forEach((sl) => {
+    stockValuation += sl.onHand * (sl.product?.standardCost || 0);
+    const existing = productStockMap.get(sl.productSku) || {
+      onHand: 0,
+      name: sl.product?.name || sl.productSku,
+      unit: sl.product?.unit || "unit",
+    };
+    existing.onHand += sl.onHand;
+    productStockMap.set(sl.productSku, existing);
+  });
+
+  // Ambang batas stok minimum F&B (standar: 20 unit per SKU)
+  const MIN_STOCK_THRESHOLD = 20;
+  const lowStockProducts: LowStockItem[] = [];
+
+  allProducts.forEach((p) => {
+    const info = productStockMap.get(p.sku);
+    const onHand = info ? info.onHand : 0;
+    if (onHand < MIN_STOCK_THRESHOLD) {
+      lowStockProducts.push({
+        sku: p.sku,
+        name: p.name,
+        onHand,
+        minStock: MIN_STOCK_THRESHOLD,
+        unit: p.unit,
+      });
+    }
+  });
+
+  const lowStockCount = lowStockProducts.length;
+  const estimatedGrossProfit = totalSales - totalSalesCost;
+  const grossProfitMarginPercent = totalSales > 0 ? (estimatedGrossProfit / totalSales) * 100 : 0;
+
+  // 3. LINE CHART: Tren Pendapatan / Penjualan
+  // Kumpulkan semua transaksi penjualan dengan tanggalnya
+  type SalesPoint = { date: Date; amount: number };
+  const allSalesPoints: SalesPoint[] = [];
+
+  salesOrders.forEach((so) => {
+    const d = new Date(so.orderDate || so.createdAt);
+    allSalesPoints.push({ date: d, amount: so.totalGross || 0 });
+  });
+
+  posOrders.forEach((po) => {
+    const d = new Date(po.orderDate || po.createdAt);
+    allSalesPoints.push({ date: d, amount: po.totalAmount || 0 });
+  });
+
+  // Filter berdasarkan range tanggal
+  const filteredSalesPoints = allSalesPoints.filter(
+    (pt) => pt.date >= start && pt.date <= end
+  );
+
+  // Fungsi pembentuk kunci periode
+  const getPeriodKey = (date: Date, p: "day" | "week" | "month"): string => {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+
+    if (p === "month") {
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+      return `${monthNames[date.getMonth()]} ${y}`;
+    }
+    if (p === "week") {
+      // Hitung awal minggu (Senin)
+      const day = date.getDay();
+      const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+      const monday = new Date(date.setDate(diff));
+      return `Mg ${monday.getDate()} ${["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"][monday.getMonth()]}`;
+    }
+    // Default harian: DD MMM
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+    return `${d} ${monthNames[date.getMonth()]}`;
+  };
+
+  const trendMap = new Map<string, { revenue: number; count: number }>();
+
+  // Urutkan transaksi dari terlama ke terbaru
+  filteredSalesPoints.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+  filteredSalesPoints.forEach((pt) => {
+    const key = getPeriodKey(pt.date, period);
+    const existing = trendMap.get(key) || { revenue: 0, count: 0 };
+    existing.revenue += pt.amount;
+    existing.count += 1;
+    trendMap.set(key, existing);
+  });
+
+  // Jika tidak ada data transaksi pada rentang filter
+  const trendLabels: string[] = [];
+  const trendRevenues: number[] = [];
+  const trendCounts: number[] = [];
+
+  trendMap.forEach((val, key) => {
+    trendLabels.push(key);
+    trendRevenues.push(Math.round(val.revenue));
+    trendCounts.push(val.count);
+  });
+
+  // 4. BAR CHART 1: Top 10 Produk Terlaris
+  const productSalesMap = new Map<string, { name: string; qty: number; revenue: number }>();
+
+  salesOrders.forEach((so) => {
+    so.lines.forEach((l) => {
+      const existing = productSalesMap.get(l.productSku) || {
+        name: l.product?.name || l.productSku,
+        qty: 0,
+        revenue: 0,
+      };
+      existing.qty += l.quantity || 0;
+      existing.revenue += l.totalAmount || (l.quantity * l.unitPrice) || 0;
+      productSalesMap.set(l.productSku, existing);
+    });
+  });
+
+  posOrders.forEach((po) => {
+    po.lines.forEach((l) => {
+      const existing = productSalesMap.get(l.productSku) || {
+        name: l.product?.name || l.productSku,
+        qty: 0,
+        revenue: 0,
+      };
+      existing.qty += l.quantity || 0;
+      existing.revenue += l.totalAmount || (l.quantity * l.unitPrice) || 0;
+      productSalesMap.set(l.productSku, existing);
+    });
+  });
+
+  const sortedProducts = Array.from(productSalesMap.entries())
+    .map(([sku, data]) => ({ sku, ...data }))
+    .sort((a, b) => b.qty - a.qty)
+    .slice(0, 10);
+
+  const topProductLabels = sortedProducts.map((p) => p.name);
+  const topProductQuantities = sortedProducts.map((p) => p.qty);
+  const topProductRevenues = sortedProducts.map((p) => Math.round(p.revenue));
+
+  // 5. BAR CHART 2: Penjualan per Kategori F&B
+  const categorizeProduct = (sku: string, name: string): string => {
+    const s = sku.toUpperCase();
+    const n = name.toLowerCase();
+
+    if (s.startsWith("RICE-") || n.includes("nasi") || n.includes("ayam") || n.includes("box")) {
+      return "Makanan Utama (Rice Box)";
+    }
+    if (s.startsWith("COF-") || s.startsWith("TEA-") || n.includes("latte") || n.includes("kopi") || n.includes("tea")) {
+      return "Kopi & Minuman Panas/Dingin";
+    }
+    if (s.startsWith("COOKIE-") || s.startsWith("BAKE-") || n.includes("cookie") || n.includes("roti")) {
+      return "Pastry & Camilan";
+    }
+    if (s.startsWith("JUICE-") || s.startsWith("BEV-") || n.includes("jus") || n.includes("juice")) {
+      return "Jus Buah Segar";
+    }
+    return "Menu Lainnya";
+  };
+
+  const categorySalesMap = new Map<string, number>();
+  let totalCategoryAmount = 0;
+
+  productSalesMap.forEach((data, sku) => {
+    const cat = categorizeProduct(sku, data.name);
+    const curr = categorySalesMap.get(cat) || 0;
+    categorySalesMap.set(cat, curr + data.revenue);
+    totalCategoryAmount += data.revenue;
+  });
+
+  const categoryLabels: string[] = [];
+  const categoryAmounts: number[] = [];
+  const categoryPercentages: number[] = [];
+
+  categorySalesMap.forEach((amount, cat) => {
+    categoryLabels.push(cat);
+    categoryAmounts.push(Math.round(amount));
+    const pct = totalCategoryAmount > 0 ? (amount / totalCategoryAmount) * 100 : 0;
+    categoryPercentages.push(Math.round(pct * 10) / 10);
+  });
+
+  // 6. BAR CHART 3: Perbandingan Pembelian vs Penjualan Bulanan
+  // Buat 6 bulan terakhir sebagai sumbu X
+  const monthlyDataMap = new Map<string, { sales: number; purchases: number }>();
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = `${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+    monthlyDataMap.set(key, { sales: 0, purchases: 0 });
+  }
+
+  // Agregasi Penjualan Bulanan
+  allSalesPoints.forEach((pt) => {
+    const key = `${monthNames[pt.date.getMonth()]} ${pt.date.getFullYear()}`;
+    if (monthlyDataMap.has(key)) {
+      const entry = monthlyDataMap.get(key)!;
+      entry.sales += pt.amount;
+    }
+  });
+
+  // Agregasi Pembelian Bulanan
+  purchaseOrders.forEach((po) => {
+    const d = new Date(po.orderDate || po.createdAt);
+    const key = `${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+    if (monthlyDataMap.has(key)) {
+      const entry = monthlyDataMap.get(key)!;
+      entry.purchases += po.total || 0;
+    }
+  });
+
+  const monthlyLabels: string[] = [];
+  const monthlySales: number[] = [];
+  const monthlyPurchases: number[] = [];
+
+  monthlyDataMap.forEach((val, key) => {
+    monthlyLabels.push(key);
+    monthlySales.push(Math.round(val.sales));
+    monthlyPurchases.push(Math.round(val.purchases));
+  });
+
+  const hasData = allSalesPoints.length > 0 || purchaseOrders.length > 0;
+
+  return {
+    kpis: {
+      totalSales: Math.round(totalSales),
+      totalPurchases: Math.round(totalPurchases),
+      stockValuation: Math.round(stockValuation),
+      lowStockCount,
+      lowStockProducts,
+      estimatedGrossProfit: Math.round(estimatedGrossProfit),
+      grossProfitMarginPercent: Math.round(grossProfitMarginPercent * 10) / 10,
+    },
+    salesTrend: {
+      period,
+      labels: trendLabels,
+      revenues: trendRevenues,
+      orderCounts: trendCounts,
+    },
+    topProducts: {
+      labels: topProductLabels,
+      quantities: topProductQuantities,
+      revenues: topProductRevenues,
+    },
+    salesByCategory: {
+      labels: categoryLabels,
+      amounts: categoryAmounts,
+      percentages: categoryPercentages,
+    },
+    purchasesVsSalesMonthly: {
+      labels: monthlyLabels,
+      sales: monthlySales,
+      purchases: monthlyPurchases,
+    },
+    hasData,
+  };
+}

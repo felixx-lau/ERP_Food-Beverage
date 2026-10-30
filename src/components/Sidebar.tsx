@@ -119,19 +119,19 @@ export default function Sidebar({
   const initials = getInitials(activeName);
 
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-[#174A3A] text-white select-none border-r border-[#11382C]">
+    <div className="flex flex-col h-full glass-1 text-[var(--glass-text-primary)] select-none border-r border-white/40 shadow-glass-1">
       {/* Brand Header */}
-      <div className="h-14 px-4 flex items-center justify-between border-b border-[#11382C]/80 bg-[#134032]">
+      <div className="h-14 px-4 flex items-center justify-between border-b border-white/30 bg-white/30 backdrop-blur-md">
         <Link href="/" className="flex items-center space-x-2.5 overflow-hidden">
-          <div className="w-8 h-8 rounded-lg bg-[#C6A15B] flex items-center justify-center text-[#174A3A] font-extrabold text-base flex-shrink-0 shadow-sm">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#C6A15B] to-[#b5924f] flex items-center justify-center text-[#174A3A] font-extrabold text-base flex-shrink-0 shadow-sm border border-white/40">
             {initials}
           </div>
           {!isCollapsed && (
             <div className="flex flex-col min-w-0">
-              <span className="font-bold text-sm tracking-wide text-white truncate">
+              <span className="font-black text-sm tracking-wide text-slate-900 truncate">
                 {activeBrand}
               </span>
-              <span className="text-[10px] text-[#DCE8DF] font-medium tracking-tight truncate">
+              <span className="text-[10px] text-slate-700 font-extrabold tracking-tight truncate">
                 {activeName}
               </span>
             </div>
@@ -141,7 +141,7 @@ export default function Sidebar({
         {/* Collapse toggle (desktop) */}
         <button
           onClick={onToggleCollapse}
-          className="hidden lg:flex items-center justify-center w-6 h-6 rounded-md hover:bg-white/10 text-[#DCE8DF] hover:text-white transition-colors"
+          className="hidden lg:flex items-center justify-center w-6 h-6 rounded-md hover:bg-white/60 text-[var(--glass-text-muted)] hover:text-[var(--glass-text-primary)] transition-colors"
           title={isCollapsed ? "Perluas Sidebar" : "Ciutkan Sidebar"}
         >
           {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
@@ -153,7 +153,7 @@ export default function Sidebar({
         {NAVIGATION_GROUPS.map((group) => (
           <div key={group.group} className="space-y-1">
             {!isCollapsed && (
-              <p className="px-2.5 text-[10px] font-bold text-[#DCE8DF]/60 uppercase tracking-wider">
+              <p className="px-2.5 text-[10px] font-black text-slate-700 uppercase tracking-widest">
                 {group.group}
               </p>
             )}
@@ -169,21 +169,21 @@ export default function Sidebar({
                   href={item.href}
                   onClick={onCloseMobile}
                   title={`${item.name} (${item.wireframe})`}
-                  className={`group flex items-center rounded-lg px-2.5 py-2 text-xs font-medium transition-all ${
+                  className={`group flex items-center rounded-xl px-2.5 py-2 text-xs transition-all duration-200 ${
                     isActive
-                      ? "bg-white/15 text-white font-semibold shadow-xs border-l-3 border-[#C6A15B]"
+                      ? "bg-gradient-to-r from-[#174A3A] to-[#1e5846] text-white font-extrabold shadow-md shadow-[#174A3A]/25 border border-white/30 transform translate-x-1"
                       : hasAccess
-                      ? "text-[#DCE8DF] hover:bg-white/10 hover:text-white"
-                      : "text-white/40 hover:bg-white/5"
+                      ? "text-slate-800 font-bold hover:bg-white/80 hover:text-[#174A3A] hover:translate-x-1.5 hover:shadow-xs"
+                      : "text-slate-400 font-medium hover:bg-white/20"
                   }`}
                 >
                   <Icon
-                    className={`w-4 h-4 flex-shrink-0 transition-colors ${
+                    className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 group-hover:scale-115 ${
                       isActive
                         ? "text-[#C6A15B]"
                         : hasAccess
-                        ? "text-[#DCE8DF] group-hover:text-white"
-                        : "text-white/30"
+                        ? "text-[#174A3A] group-hover:text-[#174A3A]"
+                        : "text-slate-400"
                     } ${!isCollapsed ? "mr-2.5" : "mx-auto"}`}
                   />
 
@@ -191,7 +191,7 @@ export default function Sidebar({
                     <div className="flex-1 flex items-center justify-between min-w-0">
                       <span className="truncate">{item.name}</span>
                       {!hasAccess && (
-                        <Lock className="w-3 h-3 text-[#C6A15B]/70 flex-shrink-0 ml-1.5" />
+                        <Lock className="w-3 h-3 text-[#C6A15B] flex-shrink-0 ml-1.5" />
                       )}
                     </div>
                   )}
@@ -204,13 +204,13 @@ export default function Sidebar({
 
       {/* Footer Info */}
       {!isCollapsed && (
-        <div className="p-3 border-t border-[#11382C]/80 bg-[#134032]/60 text-[11px] text-[#DCE8DF]/80">
-          <div className="flex items-center space-x-1.5 text-xs font-semibold text-white truncate">
+        <div className="p-3 border-t border-white/40 bg-white/40 text-[11px]">
+          <div className="flex items-center space-x-1.5 text-xs font-black text-slate-900 truncate">
             <ShieldCheck className="w-3.5 h-3.5 text-[#C6A15B] shrink-0" />
             <span className="truncate">{activeName}</span>
           </div>
-          <p className="text-[10px] text-[#DCE8DF]/60 mt-0.5">
-            Role Aktif: <span className="font-bold text-[#C6A15B] uppercase">{userRole}</span>
+          <p className="text-[10px] text-slate-700 mt-0.5 font-bold">
+            Role Aktif: <span className="font-black text-[#174A3A] uppercase">{userRole}</span>
           </p>
         </div>
       )}

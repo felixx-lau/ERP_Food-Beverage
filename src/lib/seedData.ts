@@ -196,41 +196,41 @@ export const SEED_ACCOUNTS = [
 export async function executeSeed(prisma: PrismaClient, actorName = "System", actorRole: Role = Role.OWNER) {
   // We execute all cleaning and seeding in a clean transaction or sequence
   // 1. Clean existing transactional and master data
-  await prisma.$transaction([
-    prisma.auditLog.deleteMany(),
-    prisma.internalTransferLine.deleteMany(),
-    prisma.internalTransfer.deleteMany(),
-    prisma.creditNoteLine.deleteMany(),
-    prisma.creditNote.deleteMany(),
-    prisma.returnRequestLine.deleteMany(),
-    prisma.returnRequest.deleteMany(),
-    prisma.posOrderLine.deleteMany(),
-    prisma.posOrder.deleteMany(),
-    prisma.posSession.deleteMany(),
-    prisma.payment.deleteMany(),
-    prisma.vendorBillLine.deleteMany(),
-    prisma.vendorBill.deleteMany(),
-    prisma.customerInvoiceLine.deleteMany(),
-    prisma.customerInvoice.deleteMany(),
-    prisma.goodsReceiptLine.deleteMany(),
-    prisma.goodsReceipt.deleteMany(),
-    prisma.purchaseOrderLine.deleteMany(),
-    prisma.purchaseOrder.deleteMany(),
-    prisma.deliveryOrderLine.deleteMany(),
-    prisma.deliveryOrder.deleteMany(),
-    prisma.salesOrderLine.deleteMany(),
-    prisma.salesOrder.deleteMany(),
-    prisma.crmLead.deleteMany(),
-    prisma.journalItem.deleteMany(),
-    prisma.journalEntry.deleteMany(),
-    prisma.stockMove.deleteMany(),
-    prisma.stockLevel.deleteMany(),
-    prisma.productVariant.deleteMany(),
-    prisma.warehouseLocation.deleteMany(),
-    prisma.account.deleteMany(),
-    prisma.contact.deleteMany(),
-    prisma.user.deleteMany(),
-  ]);
+  await prisma.$transaction(async (tx) => {
+    await tx.auditLog.deleteMany();
+    await tx.internalTransferLine.deleteMany();
+    await tx.internalTransfer.deleteMany();
+    await tx.creditNoteLine.deleteMany();
+    await tx.creditNote.deleteMany();
+    await tx.returnRequestLine.deleteMany();
+    await tx.returnRequest.deleteMany();
+    await tx.posOrderLine.deleteMany();
+    await tx.posOrder.deleteMany();
+    await tx.posSession.deleteMany();
+    await tx.payment.deleteMany();
+    await tx.vendorBillLine.deleteMany();
+    await tx.vendorBill.deleteMany();
+    await tx.customerInvoiceLine.deleteMany();
+    await tx.customerInvoice.deleteMany();
+    await tx.goodsReceiptLine.deleteMany();
+    await tx.goodsReceipt.deleteMany();
+    await tx.purchaseOrderLine.deleteMany();
+    await tx.purchaseOrder.deleteMany();
+    await tx.deliveryOrderLine.deleteMany();
+    await tx.deliveryOrder.deleteMany();
+    await tx.salesOrderLine.deleteMany();
+    await tx.salesOrder.deleteMany();
+    await tx.crmLead.deleteMany();
+    await tx.journalItem.deleteMany();
+    await tx.journalEntry.deleteMany();
+    await tx.stockMove.deleteMany();
+    await tx.stockLevel.deleteMany();
+    await tx.productVariant.deleteMany();
+    await tx.warehouseLocation.deleteMany();
+    await tx.account.deleteMany();
+    await tx.contact.deleteMany();
+    await tx.user.deleteMany();
+  });
 
   // 2. Seed Users with hashed password
   const defaultPasswordHash = await bcrypt.hash("Password123!", 10);

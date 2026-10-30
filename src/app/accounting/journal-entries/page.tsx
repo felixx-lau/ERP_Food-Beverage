@@ -322,7 +322,7 @@ export default function JournalEntriesPage() {
             </div>
 
             {/* Filter Bar & Entry Selection */}
-            <div className="card-aruna p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="glass-2 p-4 rounded-2xl border border-white/80 shadow-glass-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="flex flex-wrap items-center gap-1.5">
                 {[
                   { key: "ALL", label: "Semua Jurnal" },
@@ -335,10 +335,10 @@ export default function JournalEntriesPage() {
                   <button
                     key={tab.key}
                     onClick={() => setJournalFilter(tab.key)}
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
+                    className={`px-3 py-1.5 text-xs font-black rounded-xl transition-all duration-150 ${
                       journalFilter === tab.key
-                        ? "bg-[#174A3A] text-white"
-                        : "bg-[#F7F8F5] text-[#758078] hover:text-[#202824] hover:bg-[#DCE8DF]/50"
+                        ? "bg-[#174A3A] text-white shadow-xs"
+                        : "glass-3 text-slate-800 hover:text-slate-900 hover:bg-white/95"
                     }`}
                   >
                     {tab.label}
@@ -348,13 +348,13 @@ export default function JournalEntriesPage() {
 
               <div className="flex items-center space-x-3">
                 <div className="relative">
-                  <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#758078]" />
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
                   <input
                     type="text"
                     placeholder="Cari ref / nomor jurnal..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-8 pr-3 py-1.5 text-xs bg-[#F7F8F5] border border-[#DCE8DF] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#174A3A] text-[#202824]"
+                    className="pl-8 pr-3 py-1.5 text-xs input-glass rounded-xl font-bold text-slate-900"
                   />
                 </div>
 
@@ -364,7 +364,7 @@ export default function JournalEntriesPage() {
                     const sel = entries.find((x) => x.id === e.target.value);
                     if (sel) setSelectedEntry(sel);
                   }}
-                  className="text-xs font-mono font-bold bg-[#F7F8F5] border border-[#DCE8DF] rounded-lg px-3 py-1.5 text-[#202824] focus:outline-none focus:ring-1 focus:ring-[#174A3A]"
+                  className="text-xs font-mono font-bold input-glass rounded-xl px-3 py-1.5 text-slate-900 focus:ring-2 focus:ring-[#174A3A]"
                 >
                   {filteredEntries.map((e) => (
                     <option key={e.id} value={e.id}>
@@ -377,50 +377,50 @@ export default function JournalEntriesPage() {
 
             {/* Selected Entry Detail Card (Wireframe S-13) */}
             {selectedEntry && (
-              <div className="card-aruna overflow-hidden">
+              <div className="glass-2 rounded-2xl border border-white/80 shadow-glass-2 overflow-hidden">
                 {/* Section ③: Source, Journal, Posting State */}
-                <div className="p-6 border-b border-[#DCE8DF] grid grid-cols-1 md:grid-cols-4 gap-6 bg-white">
+                <div className="p-6 border-b border-black/5 grid grid-cols-1 md:grid-cols-4 gap-6 bg-white/30">
                   <div>
-                    <span className="text-[11px] font-semibold text-[#758078] uppercase tracking-wider block">
+                    <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider block">
                       Entry Number
                     </span>
-                    <span className="text-xl font-extrabold text-[#174A3A] font-mono block mt-1">
+                    <span className="text-xl font-black text-[#174A3A] font-mono block mt-1">
                       {selectedEntry.entryNumber}
                     </span>
-                    <span className="text-xs text-[#758078] block mt-1">
-                      Tanggal: {new Date(selectedEntry.entryDate).toLocaleDateString("id-ID")}
+                    <span className="text-xs text-slate-700 font-semibold block mt-1">
+                      Tanggal: {new Date(selectedEntry.date || selectedEntry.entryDate || selectedEntry.createdAt).toLocaleDateString("id-ID")}
                     </span>
                   </div>
 
                   <div>
-                    <span className="text-[11px] font-semibold text-[#758078] uppercase tracking-wider block">
+                    <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider block">
                       Source Document
                     </span>
-                    <span className="text-base font-bold text-[#202824] font-mono block mt-1">
+                    <span className="text-base font-black text-slate-900 font-mono block mt-1">
                       {selectedEntry.sourceDocument}
                     </span>
-                    <span className="text-xs text-[#758078] block mt-1">
-                      Tipe Jurnal: <strong className="text-[#174A3A]">{selectedEntry.journalType}</strong>
+                    <span className="text-xs text-slate-700 font-semibold block mt-1">
+                      Tipe Jurnal: <strong className="text-[#174A3A] font-black">{selectedEntry.journalType}</strong>
                     </span>
                   </div>
 
                   <div>
-                    <span className="text-[11px] font-semibold text-[#758078] uppercase tracking-wider block">
+                    <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider block">
                       Status Posting
                     </span>
                     <div className="mt-1 flex items-center space-x-2">
-                      <StatusBadge status={selectedEntry.postingStatus} />
-                      <span className="text-xs text-[#758078]">Double-Entry Posted</span>
+                      <StatusBadge status={selectedEntry.state || selectedEntry.postingStatus || "POSTED"} />
+                      <span className="text-xs text-slate-700 font-bold">Double-Entry Posted</span>
                     </div>
                   </div>
 
                   <div>
-                    <span className="text-[11px] font-semibold text-[#758078] uppercase tracking-wider block">
+                    <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider block">
                       Keseimbangan Debit / Credit
                     </span>
                     <div className="mt-1 flex items-center space-x-1.5">
-                      <Scale className={`w-4 h-4 ${selectedEntry.isBalanced ? "text-emerald-600" : "text-rose-600"}`} />
-                      <span className={`text-xs font-bold ${selectedEntry.isBalanced ? "text-emerald-700" : "text-rose-700"}`}>
+                      <Scale className={`w-4 h-4 ${selectedEntry.isBalanced ? "text-emerald-700" : "text-rose-700"}`} />
+                      <span className={`text-xs font-black ${selectedEntry.isBalanced ? "text-emerald-800" : "text-rose-800"}`}>
                         {selectedEntry.isBalanced ? "BALANCE (SEIMBANG)" : "UNBALANCED"}
                       </span>
                     </div>
@@ -430,50 +430,50 @@ export default function JournalEntriesPage() {
                 {/* Section ④: Debet-kredit dan hubungan stock */}
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xs font-bold text-[#202824] uppercase tracking-wider flex items-center space-x-2">
+                    <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center space-x-2">
                       <FileText className="w-4 h-4 text-[#174A3A]" />
                       <span>Rincian Baris Jurnal Double-Entry (F-14 / S-13)</span>
                     </h3>
-                    <span className="text-xs text-[#758078] font-mono">
+                    <span className="text-xs text-slate-700 font-bold font-mono">
                       {selectedEntry.items?.length || 0} akun terdampak
                     </span>
                   </div>
 
-                  <div className="overflow-x-auto border border-[#DCE8DF] rounded-xl shadow-2xs">
-                    <table className="w-full text-left text-xs">
-                      <thead className="bg-[#F7F8F5] border-b border-[#DCE8DF] text-[#758078] font-semibold uppercase tracking-wider">
+                  <div className="overflow-x-auto border border-white/80 rounded-xl shadow-glass-1 glass-3">
+                    <table className="w-full text-left text-xs text-slate-900">
+                      <thead className="bg-white/60 border-b border-black/10 text-slate-900 font-black uppercase tracking-wider text-[11px]">
                         <tr>
-                          <th className="py-3 px-4">Kode Akun</th>
-                          <th className="py-3 px-4">Nama Akun (Chart of Accounts)</th>
-                          <th className="py-3 px-4">Keterangan / Deskripsi</th>
-                          <th className="py-3 px-4 text-right">Debit (Rp)</th>
-                          <th className="py-3 px-4 text-right">Credit (Rp)</th>
+                          <th className="py-3.5 px-4">Kode Akun</th>
+                          <th className="py-3.5 px-4">Nama Akun (Chart of Accounts)</th>
+                          <th className="py-3.5 px-4">Keterangan / Deskripsi</th>
+                          <th className="py-3.5 px-4 text-right">Debit (Rp)</th>
+                          <th className="py-3.5 px-4 text-right">Credit (Rp)</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-[#DCE8DF] font-mono">
+                      <tbody className="divide-y divide-black/5 font-mono">
                         {selectedEntry.items?.map((item: any) => (
-                          <tr key={item.id} className="hover:bg-[#F7F8F5] transition-colors">
-                            <td className="py-3 px-4 font-bold text-[#174A3A]">
+                          <tr key={item.id} className="hover:bg-emerald-500/10 transition-colors duration-150">
+                            <td className="py-3.5 px-4 font-black text-[#174A3A]">
                               {item.account?.code}
                             </td>
-                            <td className="py-3 px-4 font-sans font-semibold text-[#202824]">
+                            <td className="py-3.5 px-4 font-sans font-black text-slate-900">
                               {item.account?.name}
                             </td>
-                            <td className="py-3 px-4 font-sans text-[#758078]">
+                            <td className="py-3.5 px-4 font-sans text-slate-700 font-semibold">
                               {item.description || "-"}
                             </td>
-                            <td className="py-3 px-4 text-right font-bold text-[#202824]">
+                            <td className="py-3.5 px-4 text-right font-black text-slate-900">
                               {item.debit > 0 ? `Rp${item.debit.toLocaleString("id-ID")}` : "—"}
                             </td>
-                            <td className="py-3 px-4 text-right font-bold text-[#202824]">
+                            <td className="py-3.5 px-4 text-right font-black text-slate-900">
                               {item.credit > 0 ? `Rp${item.credit.toLocaleString("id-ID")}` : "—"}
                             </td>
                           </tr>
                         ))}
                       </tbody>
-                      <tfoot className="bg-[#F7F8F5] font-mono font-extrabold border-t-2 border-[#DCE8DF]">
+                      <tfoot className="bg-white/60 font-mono font-black border-t-2 border-black/10">
                         <tr>
-                          <td colSpan={3} className="py-3.5 px-4 font-sans text-[#202824] uppercase text-right">
+                          <td colSpan={3} className="py-3.5 px-4 font-sans text-slate-900 uppercase text-right">
                             Total Saldo Jurnal:
                           </td>
                           <td className="py-3.5 px-4 text-right text-[#174A3A] text-sm">

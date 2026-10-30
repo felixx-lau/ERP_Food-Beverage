@@ -45,11 +45,9 @@ export default function StatusBadge({
   const norm = String(status || "").toUpperCase();
   const displayLabel = label || status;
 
-  // Determine color scheme based on semantic meaning
-  let bg = "bg-gray-100";
-  let text = "text-charcoal-700";
-  let border = "border-gray-200";
-  let dotColor = "bg-gray-400";
+  // Determine translucent tinted glass styling based on semantic meaning
+  let glassClass = "glass-badge-default";
+  let dotColor = "bg-[#5C6A63]";
 
   if (
     [
@@ -65,9 +63,7 @@ export default function StatusBadge({
       "VALIDATED",
     ].includes(norm)
   ) {
-    bg = "bg-emerald-50";
-    text = "text-emerald-800";
-    border = "border-emerald-200";
+    glassClass = "glass-badge-success";
     dotColor = "bg-emerald-500";
   } else if (
     [
@@ -82,9 +78,7 @@ export default function StatusBadge({
       "INSPECTION",
     ].includes(norm)
   ) {
-    bg = "bg-amber-50";
-    text = "text-amber-800";
-    border = "border-amber-200";
+    glassClass = "glass-badge-warning";
     dotColor = "bg-amber-500";
   } else if (
     [
@@ -97,22 +91,16 @@ export default function StatusBadge({
       "LOST",
     ].includes(norm)
   ) {
-    bg = "bg-rose-50";
-    text = "text-rose-800";
-    border = "border-rose-200";
+    glassClass = "glass-badge-danger";
     dotColor = "bg-rose-500";
   } else if (
     ["NEW", "LEAD", "PROPOSITION", "TRANSFER", "INTERNAL"].includes(norm)
   ) {
-    bg = "bg-blue-50";
-    text = "text-blue-800";
-    border = "border-blue-200";
+    glassClass = "glass-badge-info";
     dotColor = "bg-blue-500";
   } else if (["ACTIVE", "PRIMARY", "OWNER"].includes(norm)) {
-    bg = "bg-aruna-50";
-    text = "text-aruna-700";
-    border = "border-aruna-200";
-    dotColor = "bg-aruna-600";
+    glassClass = "glass-badge-success";
+    dotColor = "bg-emerald-600";
   }
 
   const sizeClasses = {
@@ -123,14 +111,14 @@ export default function StatusBadge({
 
   return (
     <span
-      className={`inline-flex items-center font-medium rounded-full border ${bg} ${text} ${border} ${sizeClasses} gap-1.5`}
+      className={`inline-flex items-center font-bold rounded-full shadow-xs ${glassClass} ${sizeClasses} gap-1.5 transition-transform duration-150 hover:scale-105 select-none`}
     >
       {dot && (
         <span
           className={`w-1.5 h-1.5 rounded-full ${dotColor} flex-shrink-0`}
         />
       )}
-      <span className="font-semibold">{displayLabel}</span>
+      <span className="truncate tracking-tight">{displayLabel}</span>
     </span>
   );
 }

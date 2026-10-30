@@ -59,17 +59,17 @@ export default function ResetSeedModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
-      <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden border border-[#E5E9E4]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-4 animate-in fade-in duration-200">
+      <div className="glass-modal w-full max-w-lg rounded-3xl shadow-glass-modal overflow-hidden border border-white/80 animate-in zoom-in-95 duration-200">
         {/* Modal Header */}
-        <div className="bg-rose-50/80 border-b border-rose-100 px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-2.5 text-rose-800">
-            <AlertTriangle className="w-5 h-5 text-rose-600 flex-shrink-0" />
-            <h3 className="font-bold text-base">Konfirmasi Reset Baseline Seed</h3>
+        <div className="bg-rose-500/15 border-b border-rose-500/25 px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center space-x-2.5 text-rose-900">
+            <AlertTriangle className="w-5 h-5 text-rose-700 flex-shrink-0" />
+            <h3 className="font-black text-base">Konfirmasi Reset Baseline Seed</h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-[#758078] hover:text-[#202824] hover:bg-white/60 transition-colors"
+            className="p-1 rounded-full text-slate-600 hover:text-slate-900 hover:bg-white/80 transition-colors shadow-xs"
           >
             <X className="w-5 h-5" />
           </button>
@@ -78,78 +78,78 @@ export default function ResetSeedModal({
         {/* Modal Body */}
         <div className="p-6 space-y-4">
           {!isOwner && (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-xs text-amber-900 flex items-start space-x-2.5">
-              <ShieldAlert className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+            <div className="bg-amber-500/15 border border-amber-500/30 rounded-2xl p-4 text-xs text-amber-950 flex items-start space-x-2.5 backdrop-blur-xs">
+              <ShieldAlert className="w-4 h-4 text-amber-700 mt-0.5 flex-shrink-0" />
               <div>
-                <span className="font-bold">Peringatan Akses Otoritas (SR-15):</span>
-                <p className="mt-0.5">
+                <span className="font-black">Peringatan Akses Otoritas (SR-15):</span>
+                <p className="mt-0.5 font-semibold">
                   Role aktif Anda adalah <strong>{currentUserRole}</strong>. Hanya role <strong>OWNER (Maya Prasetyo)</strong> yang diizinkan mereset database. Percobaan reset dari akun ini akan ditolak dan dicatat di Audit Log.
                 </p>
               </div>
             </div>
           )}
 
-          <p className="text-sm text-[#202824] leading-relaxed">
-            Tindakan ini akan mengembalikan seluruh database ke kondisi <strong>Baseline Seed awal</strong> sesuai spesifikasi tugas PDF:
+          <p className="text-sm text-slate-800 font-semibold leading-relaxed">
+            Tindakan ini akan mengembalikan seluruh database ke kondisi <strong className="text-slate-900 font-black">Baseline Seed awal</strong> sesuai spesifikasi tugas PDF:
           </p>
 
-          <div className="bg-[#F7F8F5] border border-[#E5E9E4] rounded-xl p-3.5 text-xs space-y-1.5 font-mono text-[#202824]">
+          <div className="glass-3 border border-white/80 rounded-2xl p-4 text-xs space-y-2 font-mono text-slate-900 shadow-xs">
             <div className="flex justify-between">
-              <span className="text-[#758078]">• Total Persediaan:</span>
-              <span className="font-bold text-[#174A3A]">616 Unit (WH: 410, CAFE: 206)</span>
+              <span className="text-slate-700 font-semibold">• Total Persediaan:</span>
+              <span className="font-black text-[#174A3A]">616 Unit (WH: 410, CAFE: 206)</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-[#758078]">• Valuasi Persediaan:</span>
-              <span className="font-bold text-[#174A3A]">Rp 12.214.000</span>
+              <span className="text-slate-700 font-semibold">• Valuasi Persediaan:</span>
+              <span className="font-black text-[#174A3A]">Rp 12.214.000</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-[#758078]">• Saldo Bank Awal:</span>
-              <span className="font-bold">Rp 20.000.000</span>
+              <span className="text-slate-700 font-semibold">• Saldo Bank Awal:</span>
+              <span className="font-black">Rp 20.000.000</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-[#758078]">• Jurnal Pembuka Seimbang:</span>
-              <span className="font-bold text-emerald-700">Dr = Cr = Rp 33.714.000</span>
+              <span className="text-slate-700 font-semibold">• Jurnal Pembuka Seimbang:</span>
+              <span className="font-black text-emerald-800">Dr = Cr = Rp 33.714.000</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-[#758078]">• Dokumen Bawaan:</span>
-              <span className="font-bold">LD0003, S00006 (Res 6), P00006</span>
+              <span className="text-slate-700 font-semibold">• Dokumen Bawaan:</span>
+              <span className="font-black">LD0003, S00006 (Res 6), P00006</span>
             </div>
           </div>
 
-          <p className="text-xs text-rose-600 font-medium">
+          <p className="text-xs text-rose-700 font-bold">
             ⚠️ Seluruh transaksi uji coba yang telah dibuat akan dihapus dan tidak dapat dikembalikan.
           </p>
 
           {error && (
-            <div className="bg-rose-50 border border-rose-200 text-rose-700 text-xs p-3 rounded-lg font-semibold">
+            <div className="bg-rose-500/15 border border-rose-500/30 text-rose-900 text-xs p-3 rounded-xl font-bold">
               {error}
             </div>
           )}
 
           {successMsg && (
-            <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs p-3 rounded-lg font-semibold flex items-center space-x-2">
-              <CheckCircle className="w-4 h-4 text-emerald-600" />
+            <div className="bg-emerald-500/15 border border-emerald-500/30 text-emerald-950 text-xs p-3 rounded-xl font-bold flex items-center space-x-2">
+              <CheckCircle className="w-4 h-4 text-emerald-700" />
               <span>{successMsg}</span>
             </div>
           )}
         </div>
 
         {/* Modal Actions */}
-        <div className="bg-[#F7F8F5] px-6 py-4 border-t border-[#E5E9E4] flex justify-end space-x-3">
+        <div className="bg-white/40 px-6 py-4 border-t border-black/5 flex justify-end space-x-3">
           <button
             onClick={onClose}
             disabled={loading}
-            className="px-4 py-2 text-xs font-semibold text-[#525B55] bg-white border border-[#D5D8D3] rounded-lg hover:bg-[#F7F8F5] transition-colors"
+            className="px-4 py-2 text-xs font-black btn-glass-secondary rounded-xl hover:-translate-y-0.5 transition-all"
           >
             Batal
           </button>
           <button
             onClick={handleConfirmReset}
             disabled={loading || !isOwner}
-            className={`px-4 py-2 text-xs font-bold text-white rounded-lg flex items-center space-x-1.5 shadow-xs transition-all ${
+            className={`px-4 py-2 text-xs font-black text-white rounded-xl flex items-center space-x-1.5 shadow-md transition-all duration-200 ${
               isOwner
-                ? "bg-rose-600 hover:bg-rose-700 active:scale-95"
-                : "bg-gray-400 cursor-not-allowed"
+                ? "bg-rose-600 hover:bg-rose-700 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0"
+                : "bg-slate-400 cursor-not-allowed opacity-50"
             }`}
           >
             <RotateCcw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />

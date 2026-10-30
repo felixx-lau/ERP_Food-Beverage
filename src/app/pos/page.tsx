@@ -229,11 +229,13 @@ export default function PointOfSalePage() {
   // Open New Session
   const handleOpenSession = async () => {
     try {
+      const nextSessionNum = sessions.length + 1;
+      const proposedCode = `POS${String(nextSessionNum).padStart(2, "0")}`;
       const res = await fetch("/api/pos/sessions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          sessionCode: "POS01",
+          sessionCode: proposedCode,
           locationCode: "CAFE-JKT",
           openingCash: 500000,
         }),
@@ -242,6 +244,8 @@ export default function PointOfSalePage() {
       if (res.ok) {
         setActiveSession(data.session);
         await fetchSessionsAndOrders();
+      } else {
+        alert(data.error || "Gagal membuka sesi baru");
       }
     } catch (e) {
       console.error(e);
@@ -443,18 +447,18 @@ export default function PointOfSalePage() {
     >
       <div className="space-y-6">
         {/* Module Header & Session Bar */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-[#DCE8DF] shadow-xs">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-2 p-5 rounded-2xl border border-white/80 shadow-glass-2">
           <div>
             <div className="flex items-center space-x-2">
               <span className="w-2.5 h-2.5 rounded-full bg-[#174A3A]" />
-              <h1 className="text-xl font-bold text-[#202824] tracking-tight">
+              <h1 className="text-xl font-black text-slate-900 tracking-tight">
                 Point of Sale Restoran (CAFE-JKT)
               </h1>
-              <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-[#DCE8DF] text-[#174A3A]">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-500/15 text-[#174A3A] border border-emerald-500/30">
                 Wireframe S-14
               </span>
             </div>
-            <p className="text-xs text-[#758078] mt-1">
+            <p className="text-xs text-slate-700 font-semibold mt-1">
               Kasir gerai cepat, sinkronisasi stok fisik instan, PBJT 10% & penutupan sesi kasir (F-16, F-17, SR-03, SR-04, SR-14).
             </p>
           </div>
@@ -463,15 +467,15 @@ export default function PointOfSalePage() {
             {activeSession?.status === "OPEN" ? (
               <button
                 onClick={() => setCloseModalOpen(true)}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold flex items-center space-x-1.5 shadow-xs transition-colors"
+                className="px-4 py-2 bg-rose-500/15 hover:bg-rose-500/25 active:bg-rose-500/35 text-rose-900 border border-rose-500/30 rounded-xl text-xs font-black flex items-center space-x-1.5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md backdrop-blur-xs"
               >
-                <Lock className="w-3.5 h-3.5" />
+                <Lock className="w-3.5 h-3.5 text-rose-800" />
                 <span>Tutup Sesi ({activeSession.sessionCode})</span>
               </button>
             ) : (
               <button
                 onClick={handleOpenSession}
-                className="px-4 py-2 bg-[#174A3A] hover:bg-[#103429] text-white rounded-lg text-xs font-bold flex items-center space-x-1.5 shadow-xs transition-colors"
+                className="px-4 py-2 btn-glass-primary rounded-xl text-xs font-black flex items-center space-x-1.5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
               >
                 <Plus className="w-3.5 h-3.5 text-[#C6A15B]" />
                 <span>Buka Sesi Kasir Baru</span>
@@ -480,7 +484,7 @@ export default function PointOfSalePage() {
 
             <button
               onClick={fetchSessionsAndOrders}
-              className="p-2 rounded-lg border border-[#DCE8DF] text-[#758078] hover:text-[#174A3A] hover:bg-[#F7F8F5] transition-colors"
+              className="p-2 rounded-xl btn-glass-secondary text-slate-700 hover:text-[#174A3A] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs"
               title="Refresh Data"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
@@ -489,23 +493,23 @@ export default function PointOfSalePage() {
         </div>
 
         {/* Active Session Status Bar (Wireframe S-14 Section ②) */}
-        <div className="card-aruna p-4 bg-[#F7F8F5] flex flex-wrap items-center justify-between gap-4">
+        <div className="glass-3 p-4 rounded-xl border border-white/80 shadow-xs flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <span className="text-xs font-bold text-[#758078] uppercase tracking-wider">Sesi Aktif:</span>
-              <span className="font-mono font-bold text-sm text-[#174A3A]">
+              <span className="text-xs font-black text-slate-800 uppercase tracking-wider">Sesi Aktif:</span>
+              <span className="font-mono font-black text-sm text-[#174A3A]">
                 {activeSession?.sessionCode || "POS01"}
               </span>
             </div>
-            <span className="text-[#DCE8DF]">|</span>
+            <span className="text-black/20">|</span>
             <div className="flex items-center space-x-2">
-              <span className="text-xs text-[#758078]">Lokasi Gerai:</span>
-              <span className="font-mono font-semibold text-xs text-[#202824]">CAFE-JKT</span>
+              <span className="text-xs font-bold text-slate-700">Lokasi Gerai:</span>
+              <span className="font-mono font-black text-xs text-slate-900">CAFE-JKT</span>
             </div>
-            <span className="text-[#DCE8DF]">|</span>
+            <span className="text-black/20">|</span>
             <div className="flex items-center space-x-2">
-              <span className="text-xs text-[#758078]">Modal Awal:</span>
-              <span className="font-mono font-semibold text-xs text-[#202824]">
+              <span className="text-xs font-bold text-slate-700">Modal Awal:</span>
+              <span className="font-mono font-black text-xs text-slate-900">
                 Rp{activeSession?.openingCash?.toLocaleString("id-ID") || "0"}
               </span>
             </div>
@@ -513,8 +517,8 @@ export default function PointOfSalePage() {
 
           <div className="flex items-center space-x-3">
             <StatusBadge status={activeSession?.status || "CLOSED"} />
-            <span className="text-xs text-[#758078]">
-              Kasir: <strong className="text-[#202824]">{currentUser?.name || "Citra Dewi"}</strong>
+            <span className="text-xs text-slate-700 font-bold">
+              Kasir: <strong className="text-slate-900 font-black">{currentUser?.name || "Citra Dewi"}</strong>
             </span>
           </div>
         </div>
@@ -523,32 +527,32 @@ export default function PointOfSalePage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column: Product Selection Catalog & Category Filters */}
           <div className="lg:col-span-2 space-y-4">
-            <div className="card-aruna p-5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-[#DCE8DF]">
+            <div className="glass-2 p-5 rounded-2xl border border-white/80 shadow-glass-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-black/5">
                 <div>
-                  <h2 className="text-sm font-bold text-[#202824] uppercase tracking-wider flex items-center space-x-2">
+                  <h2 className="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center space-x-2">
                     <Store className="w-4 h-4 text-[#174A3A]" />
                     <span>Katalog Menu Gerai CAFE-JKT</span>
                   </h2>
-                  <p className="text-xs text-[#758078] mt-0.5">Pilih menu di bawah atau ketik nama menu sendiri</p>
+                  <p className="text-xs text-slate-700 font-semibold mt-0.5">Pilih menu di bawah atau ketik nama menu sendiri</p>
                 </div>
 
                 <div className="flex items-center space-x-2">
                   <div className="relative">
-                    <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#758078]" />
+                    <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
                     <input
                       type="text"
                       placeholder="Cari menu..."
                       value={searchProduct}
                       onChange={(e) => setSearchProduct(e.target.value)}
-                      className="pl-8 pr-3 py-1.5 text-xs bg-[#F7F8F5] border border-[#DCE8DF] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#174A3A] text-[#202824]"
+                      className="pl-8 pr-3 py-1.5 text-xs input-glass rounded-xl font-bold text-slate-900"
                     />
                   </div>
 
                   <button
                     type="button"
                     onClick={() => setManualModalOpen(true)}
-                    className="px-3 py-1.5 bg-[#174A3A] hover:bg-[#103429] text-white rounded-lg text-xs font-bold flex items-center space-x-1.5 shadow-xs transition-colors shrink-0"
+                    className="px-3 py-1.5 btn-glass-primary rounded-xl text-xs font-black flex items-center space-x-1.5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 shrink-0"
                   >
                     <Plus className="w-3.5 h-3.5 text-[#C6A15B]" />
                     <span>+ Ketik Menu</span>
@@ -568,10 +572,10 @@ export default function PointOfSalePage() {
                   <button
                     key={cat.key}
                     onClick={() => setCategoryFilter(cat.key)}
-                    className={`px-3 py-1 text-xs font-semibold rounded-lg transition-colors ${
+                    className={`px-3 py-1.5 text-xs font-black rounded-xl transition-all duration-150 ${
                       categoryFilter === cat.key
-                        ? "bg-[#174A3A] text-white"
-                        : "bg-[#F7F8F5] text-[#758078] hover:text-[#202824] hover:bg-[#DCE8DF]/50"
+                        ? "bg-[#174A3A] text-white shadow-xs"
+                        : "glass-3 text-slate-800 hover:text-slate-900 hover:bg-white/95"
                     }`}
                   >
                     {cat.label}
@@ -585,24 +589,24 @@ export default function PointOfSalePage() {
                   <button
                     key={product.sku}
                     onClick={() => addToCart(product)}
-                    className="text-left p-3.5 rounded-xl border border-[#DCE8DF] hover:border-[#174A3A] hover:shadow-xs transition-all bg-[#F7F8F5]/60 hover:bg-white flex flex-col justify-between group"
+                    className="text-left p-3.5 rounded-2xl border border-white/70 hover:border-[#174A3A]/40 glass-2 glass-2-interactive flex flex-col justify-between group"
                   >
                     <div>
-                      <span className="text-[10px] font-mono font-bold text-[#174A3A] block">
+                      <span className="text-[10px] font-mono font-black text-[#174A3A] block">
                         {product.sku}
                       </span>
-                      <h4 className="text-xs font-bold text-[#202824] mt-1 line-clamp-1 group-hover:text-[#174A3A] transition-colors">
+                      <h4 className="text-xs font-black text-slate-900 mt-1 line-clamp-1 group-hover:text-[#174A3A] transition-colors">
                         {product.name}
                       </h4>
-                      <span className="text-[11px] text-[#758078] block mt-0.5">
+                      <span className="text-[11px] text-slate-700 font-semibold block mt-0.5">
                         {product.size || "Standard"} · {product.color || "Default"}
                       </span>
                     </div>
-                    <div className="mt-3 flex items-center justify-between border-t border-[#DCE8DF] pt-2">
-                      <span className="text-xs font-mono font-bold text-[#202824]">
+                    <div className="mt-3 flex items-center justify-between border-t border-black/5 pt-2">
+                      <span className="text-xs font-mono font-black text-slate-900">
                         Rp{product.salesPrice.toLocaleString("id-ID")}
                       </span>
-                      <span className="text-[11px] px-2 py-0.5 rounded bg-[#DCE8DF] text-[#174A3A] font-bold group-hover:bg-[#174A3A] group-hover:text-white transition-colors">
+                      <span className="text-[11px] px-2 py-0.5 rounded-lg bg-emerald-500/15 text-[#174A3A] font-black group-hover:bg-[#174A3A] group-hover:text-white transition-all">
                         + Tambah
                       </span>
                     </div>
@@ -612,41 +616,41 @@ export default function PointOfSalePage() {
             </div>
 
             {/* Recent Orders in Session */}
-            <div className="card-aruna p-5">
-              <h3 className="text-xs font-bold text-[#202824] uppercase tracking-wider mb-3 flex items-center space-x-2">
+            <div className="glass-2 p-5 rounded-2xl border border-white/80 shadow-glass-2">
+              <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider mb-3 flex items-center space-x-2">
                 <Receipt className="w-4 h-4 text-[#174A3A]" />
                 <span>Riwayat Pesanan Kasir Sesi Ini</span>
               </h3>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-[#F7F8F5] border-b border-[#DCE8DF] text-[#758078] font-semibold uppercase">
+              <div className="overflow-x-auto border border-white/80 rounded-xl shadow-glass-1 glass-3">
+                <table className="w-full text-left text-xs text-slate-900">
+                  <thead className="bg-white/60 border-b border-black/10 text-slate-900 font-black uppercase text-[11px]">
                     <tr>
-                      <th className="py-2.5 px-3">No. Struk POS</th>
-                      <th className="py-2.5 px-3">Waktu</th>
-                      <th className="py-2.5 px-3">Metode Bayar</th>
-                      <th className="py-2.5 px-3 text-right">Total Tagihan</th>
-                      <th className="py-2.5 px-3 text-center">Status</th>
+                      <th className="py-3 px-3">No. Struk POS</th>
+                      <th className="py-3 px-3">Waktu</th>
+                      <th className="py-3 px-3">Metode Bayar</th>
+                      <th className="py-3 px-3 text-right">Total Tagihan</th>
+                      <th className="py-3 px-3 text-center">Status</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#DCE8DF] font-mono">
+                  <tbody className="divide-y divide-black/5 font-mono">
                     {orders.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="py-6 text-center text-[#758078] font-sans">
+                        <td colSpan={5} className="py-6 text-center text-slate-700 font-bold font-sans">
                           Belum ada transaksi di sesi ini. Silakan tambahkan item ke keranjang dan checkout.
                         </td>
                       </tr>
                     ) : (
                       orders.slice(0, 5).map((o) => (
-                        <tr key={o.id} className="hover:bg-[#F7F8F5] transition-colors">
-                          <td className="py-2.5 px-3 font-bold text-[#174A3A]">{o.orderNumber}</td>
-                          <td className="py-2.5 px-3 font-sans text-[#758078]">
+                        <tr key={o.id} className="hover:bg-emerald-500/10 transition-colors duration-150">
+                          <td className="py-3 px-3 font-black text-[#174A3A]">{o.orderNumber}</td>
+                          <td className="py-3 px-3 font-sans text-slate-700 font-bold">
                             {new Date(o.orderDate).toLocaleTimeString("id-ID")}
                           </td>
-                          <td className="py-2.5 px-3 font-sans text-[#202824]">{o.paymentMethod}</td>
-                          <td className="py-2.5 px-3 text-right font-bold text-[#202824]">
+                          <td className="py-3 px-3 font-sans text-slate-900 font-extrabold">{o.paymentMethod}</td>
+                          <td className="py-3 px-3 text-right font-black text-slate-900">
                             Rp{o.totalAmount?.toLocaleString("id-ID")}
                           </td>
-                          <td className="py-2.5 px-3 text-center">
+                          <td className="py-3 px-3 text-center">
                             <StatusBadge status={o.status} />
                           </td>
                         </tr>
@@ -659,27 +663,27 @@ export default function PointOfSalePage() {
           </div>
 
           {/* Right Column: Basket, Totals, and Checkout (Wireframe S-14 Section ③ & ④) */}
-          <div className="card-aruna p-5 flex flex-col justify-between space-y-4">
+          <div className="glass-2 p-5 rounded-2xl border border-white/80 shadow-glass-2 flex flex-col justify-between space-y-4">
             <div>
               {/* S-14 Section ② & ③: Session & Modes */}
-              <div className="border-b border-[#DCE8DF] pb-3 mb-3">
+              <div className="border-b border-black/5 pb-3 mb-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-[#758078] uppercase tracking-wider">
+                  <span className="text-xs font-black text-slate-800 uppercase tracking-wider">
                     Sesi: {activeSession?.sessionCode || "POS01"}
                   </span>
                   <StatusBadge status={activeSession?.status || "CLOSED"} />
                 </div>
                 <div className="grid grid-cols-2 gap-3 mt-3 text-xs">
                   <div>
-                    <label className="text-[10px] font-semibold text-[#758078] uppercase block mb-1">Lokasi Stok</label>
-                    <span className="font-mono font-bold text-[#174A3A] text-xs">CAFE-JKT</span>
+                    <label className="text-[10px] font-black text-slate-700 uppercase block mb-1">Lokasi Stok</label>
+                    <span className="font-mono font-black text-[#174A3A] text-xs">CAFE-JKT</span>
                   </div>
                   <div>
-                    <label className="text-[10px] font-semibold text-[#758078] uppercase block mb-1">Layanan / Meja</label>
+                    <label className="text-[10px] font-black text-slate-700 uppercase block mb-1">Layanan / Meja</label>
                     <select
                       value={tableInfo}
                       onChange={(e) => setTableInfo(e.target.value)}
-                      className="w-full border border-[#DCE8DF] rounded-lg px-2.5 py-1 font-bold text-xs bg-white text-[#202824] focus:outline-none focus:ring-1 focus:ring-[#174A3A]"
+                      className="w-full input-glass rounded-xl px-2.5 py-1 font-bold text-xs text-slate-900"
                     >
                       <option value="Takeaway">Takeaway</option>
                       <option value="Meja 01">Meja 01</option>
@@ -692,7 +696,7 @@ export default function PointOfSalePage() {
 
               {/* Basket Items (Wireframe S-14 Section ④) */}
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-xs font-bold text-[#202824] uppercase tracking-wider flex items-center space-x-1.5">
+                <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center space-x-1.5">
                   <ShoppingBag className="w-3.5 h-3.5 text-[#174A3A]" />
                   <span>④ Keranjang Belanja</span>
                 </h3>
@@ -700,7 +704,7 @@ export default function PointOfSalePage() {
                   <button
                     type="button"
                     onClick={() => setManualModalOpen(true)}
-                    className="text-[11px] font-bold text-[#174A3A] hover:text-[#103429] bg-[#DCE8DF]/70 hover:bg-[#DCE8DF] px-2 py-0.5 rounded transition-colors flex items-center space-x-1"
+                    className="text-[11px] font-black text-[#174A3A] bg-emerald-500/15 hover:bg-emerald-500/25 px-2.5 py-1 rounded-lg transition-colors flex items-center space-x-1"
                   >
                     <Plus className="w-3 h-3" />
                     <span>+ Ketik Manual</span>
@@ -708,7 +712,7 @@ export default function PointOfSalePage() {
                   {cart.length > 0 && (
                     <button
                       onClick={clearCart}
-                      className="text-[11px] text-rose-600 hover:text-rose-800 font-semibold"
+                      className="text-[11px] text-rose-700 hover:text-rose-900 font-extrabold"
                     >
                       Kosongkan
                     </button>
@@ -718,42 +722,42 @@ export default function PointOfSalePage() {
 
               <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
                 {cart.length === 0 ? (
-                  <div className="text-center py-8 text-[#758078] text-xs space-y-1">
-                    <ShoppingBag className="w-6 h-6 mx-auto text-[#DCE8DF]" />
+                  <div className="text-center py-8 text-slate-600 font-bold text-xs space-y-1">
+                    <ShoppingBag className="w-6 h-6 mx-auto text-emerald-800/40" />
                     <p>Keranjang masih kosong.</p>
-                    <p className="text-[11px]">Pilih menu di sebelah kiri atau klik &quot;+ Ketik Manual&quot;.</p>
+                    <p className="text-[11px] text-slate-500 font-semibold">Pilih menu di sebelah kiri atau klik &quot;+ Ketik Manual&quot;.</p>
                   </div>
                 ) : (
                   cart.map((item) => (
                     <div
                       key={item.sku}
-                      className="flex items-center justify-between p-2.5 rounded-lg bg-[#F7F8F5] border border-[#DCE8DF] text-xs"
+                      className="flex items-center justify-between p-2.5 rounded-xl glass-3 border border-white/80 text-xs shadow-xs"
                     >
                       <div className="min-w-0 pr-2">
-                        <span className="font-bold text-[#202824] block truncate">{item.name}</span>
-                        <span className="text-[10px] text-[#758078] font-mono">
+                        <span className="font-black text-slate-900 block truncate">{item.name}</span>
+                        <span className="text-[10px] text-slate-700 font-bold font-mono">
                           {item.sku} • Rp{item.price.toLocaleString("id-ID")}
                         </span>
                       </div>
                       <div className="flex items-center space-x-2 shrink-0">
-                        <div className="flex items-center border border-[#DCE8DF] rounded-lg bg-white font-mono shadow-2xs overflow-hidden">
+                        <div className="flex items-center border border-white/80 rounded-xl bg-white/90 font-mono shadow-xs overflow-hidden">
                           <button
                             onClick={() => updateCartQty(item.sku, -1)}
-                            className="px-2 py-0.5 hover:bg-[#F7F8F5] text-[#202824] font-bold"
+                            className="px-2 py-0.5 hover:bg-white text-slate-900 font-black"
                           >
                             -
                           </button>
-                          <span className="px-2 py-0.5 font-bold text-[#174A3A] min-w-5 text-center">
+                          <span className="px-2 py-0.5 font-black text-[#174A3A] min-w-5 text-center">
                             {item.qty}
                           </span>
                           <button
                             onClick={() => updateCartQty(item.sku, 1)}
-                            className="px-2 py-0.5 hover:bg-[#F7F8F5] text-[#202824] font-bold"
+                            className="px-2 py-0.5 hover:bg-white text-slate-900 font-black"
                           >
                             +
                           </button>
                         </div>
-                        <span className="font-mono font-bold text-[#202824] w-16 text-right">
+                        <span className="font-mono font-black text-slate-900 w-16 text-right">
                           Rp{(item.qty * item.price).toLocaleString("id-ID")}
                         </span>
                         <button
@@ -772,36 +776,36 @@ export default function PointOfSalePage() {
             </div>
 
             {/* Financial Summary & Payment */}
-            <div className="space-y-3 pt-3 border-t border-[#DCE8DF] text-xs">
-              <div className="space-y-1.5 bg-[#F7F8F5] p-3.5 rounded-xl border border-[#DCE8DF]">
-                <div className="flex justify-between text-[#758078]">
+            <div className="space-y-3 pt-3 border-t border-black/5 text-xs">
+              <div className="space-y-1.5 glass-3 p-3.5 rounded-xl border border-white/80 shadow-xs">
+                <div className="flex justify-between text-slate-700 font-bold">
                   <span>Subtotal Net:</span>
-                  <span className="font-mono font-semibold text-[#202824]">
+                  <span className="font-mono font-black text-slate-900">
                     Rp{subtotalNet.toLocaleString("id-ID")}
                   </span>
                 </div>
-                <div className="flex justify-between text-[#174A3A]">
+                <div className="flex justify-between text-[#174A3A] font-extrabold">
                   <span>PBJT 10% Restoran:</span>
-                  <span className="font-mono font-semibold">
+                  <span className="font-mono font-black">
                     Rp{pbjtTax.toLocaleString("id-ID")}
                   </span>
                 </div>
-                <div className="border-t border-[#DCE8DF] pt-2 flex justify-between text-[#202824] font-extrabold text-sm">
+                <div className="border-t border-black/5 pt-2 flex justify-between text-slate-900 font-black text-sm">
                   <span>Total Tagihan:</span>
-                  <span className="font-mono text-[#174A3A] text-base">
+                  <span className="font-mono text-[#174A3A] text-base font-black">
                     Rp{totalGross.toLocaleString("id-ID")}
                   </span>
                 </div>
               </div>
 
               <div>
-                <label className="text-[10px] font-semibold text-[#758078] uppercase block mb-1">
+                <label className="text-[10px] font-black text-slate-700 uppercase block mb-1">
                   Metode Pembayaran
                 </label>
                 <select
                   value={paymentMethod}
                   onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="w-full border border-[#DCE8DF] rounded-lg p-2 font-mono font-bold text-xs bg-white text-[#202824] focus:outline-none focus:ring-1 focus:ring-[#174A3A]"
+                  className="w-full input-glass rounded-xl p-2 font-mono font-black text-xs text-slate-900"
                 >
                   <option value="QRIS / Bank">QRIS / Bank (BCA 1010)</option>
                   <option value="Cash / Kas">Cash / Kas Tunai (1010)</option>
@@ -811,7 +815,7 @@ export default function PointOfSalePage() {
               <button
                 onClick={handleCheckout}
                 disabled={cart.length === 0 || activeSession?.status !== "OPEN"}
-                className="w-full py-3 bg-[#174A3A] hover:bg-[#103429] text-white rounded-lg text-xs font-bold flex items-center justify-center space-x-2 shadow-xs transition-colors disabled:opacity-50"
+                className="w-full py-3 btn-glass-primary font-black rounded-xl text-xs flex items-center justify-center space-x-2 shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50"
               >
                 <Receipt className="w-4 h-4 text-[#C6A15B]" />
                 <span>Bayar Sekarang (Rp{totalGross.toLocaleString("id-ID")})</span>

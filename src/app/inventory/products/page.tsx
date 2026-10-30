@@ -5,7 +5,7 @@ import AppLayout from "@/components/AppLayout";
 import StatusBadge from "@/components/StatusBadge";
 import KPICard from "@/components/KPICard";
 import CreateProductModal from "@/components/CreateProductModal";
-import { Package, Play, Layers, Building, RefreshCw, MapPin, Tag, Plus } from "lucide-react";
+import { Package, Play, Layers, Building, RefreshCw, MapPin, Tag, Plus, List, LayoutGrid, AlertTriangle, CheckCircle2, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 export default function ProductsPage() {
@@ -15,6 +15,7 @@ export default function ProductsPage() {
   const [productDetail, setProductDetail] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"table" | "detail">("table");
 
   // Test Runner state
   const [testResult, setTestResult] = useState<any>(null);
@@ -175,60 +176,197 @@ export default function ProductsPage() {
       subtitle="Katalog 15 SKU Makanan & Minuman, Standar Biaya, dan Stok Multi-Lokasi WH-JKT & CAFE-JKT (F-03, SR-17)"
       wireframe="Wireframe S-05"
       actions={
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center flex-wrap gap-2">
+          {/* View mode toggle */}
+          <div className="flex items-center space-x-1 glass-3 p-1 rounded-xl border border-white/60">
+            <button
+              onClick={() => setViewMode("table")}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-150 ${
+                viewMode === "table"
+                  ? "bg-white/95 text-[#174A3A] shadow-xs font-black"
+                  : "text-slate-700 hover:text-slate-900"
+              }`}
+            >
+              <List className="w-3.5 h-3.5" />
+              <span>Tabel Ringkasan SKU</span>
+            </button>
+            <button
+              onClick={() => setViewMode("detail")}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-150 ${
+                viewMode === "detail"
+                  ? "bg-white/95 text-[#174A3A] shadow-xs font-black"
+                  : "text-slate-700 hover:text-slate-900"
+              }`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>Detail Varian</span>
+            </button>
+          </div>
+
           <button
             onClick={() => setCreateModalOpen(true)}
-            className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold bg-[#174A3A] hover:bg-[#134032] active:bg-[#0f3328] text-white rounded-lg shadow-xs transition-all"
+            className="flex items-center space-x-1.5 px-3.5 py-2 text-xs font-black btn-glass-primary rounded-xl shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>+ Produk Baru</span>
           </button>
-          <span className="text-xs font-semibold text-[#758078] hidden sm:inline">Pilih Varian SKU:</span>
-          <select
-            value={selectedSku}
-            onChange={(e) => setSelectedSku(e.target.value)}
-            className="text-xs font-mono font-bold bg-white border border-[#E5E9E4] text-[#202824] rounded-lg px-3 py-1.5 shadow-2xs focus:ring-1 focus:ring-[#174A3A]"
-          >
-            {products.map((p) => (
-              <option key={p.sku} value={p.sku}>
-                {p.sku} — {p.name} ({p.size})
-              </option>
-            ))}
-          </select>
+
+          {viewMode === "detail" && (
+            <select
+              value={selectedSku}
+              onChange={(e) => setSelectedSku(e.target.value)}
+              className="text-xs font-mono font-bold input-glass rounded-xl px-3 py-1.5 shadow-xs focus:ring-2 focus:ring-[#174A3A]"
+            >
+              {products.map((p) => (
+                <option key={p.sku} value={p.sku}>
+                  {p.sku} — {p.name} ({p.size})
+                </option>
+              ))}
+            </select>
+          )}
         </div>
       }
     >
       {/* Empty State when clean company */}
       {products.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-dashed border-slate-300 p-12 text-center space-y-4">
-          <div className="w-16 h-16 rounded-2xl bg-amber-50 text-[#C6A15B] flex items-center justify-center mx-auto shadow-xs">
+        <div className="glass-2 rounded-2xl border border-dashed border-slate-300 p-12 text-center space-y-4">
+          <div className="w-16 h-16 rounded-2xl bg-amber-500/15 text-[#C6A15B] flex items-center justify-center mx-auto shadow-xs border border-amber-500/30">
             <Package className="w-8 h-8" />
           </div>
           <div className="max-w-md mx-auto space-y-1">
-            <h3 className="text-base font-bold text-slate-800">
+            <h3 className="text-base font-black text-slate-900">
               Belum Ada Produk Terdaftar di Perusahaan Ini
             </h3>
-            <p className="text-xs text-slate-500 leading-relaxed">
+            <p className="text-xs text-slate-700 font-semibold leading-relaxed">
               Ruang kerja perusahaan ini masih bersih. Anda dapat mulai mendaftarkan menu dan produk buatan Anda sendiri beserta harga jual, modal awal, dan stok gudang.
             </p>
           </div>
           <button
             onClick={() => setCreateModalOpen(true)}
-            className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-[#174A3A] hover:bg-[#11382C] text-white text-xs font-bold shadow-md transition-all"
+            className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl btn-glass-primary text-xs font-black shadow-md transition-all duration-200 hover:-translate-y-0.5"
           >
             <Plus className="w-4 h-4" />
             <span>Tambah Produk Pertama Anda</span>
           </button>
         </div>
-      ) : productDetail && (
-        <div className="bg-white rounded-xl shadow-xs border border-[#E5E9E4] overflow-hidden">
-          <div className="p-6 border-b border-[#E5E9E4] grid grid-cols-1 md:grid-cols-2 gap-6 bg-[#F7F8F5]/60">
+      ) : viewMode === "table" ? (
+        /* Fitur 2: Tabel Ringkasan Seluruh 15 SKU Master Produk & Notifikasi Stok Minimum */
+        <div className="glass-2 rounded-2xl border border-white/80 shadow-glass-2 overflow-hidden space-y-4">
+          {/* Header Bar */}
+          <div className="p-5 border-b border-black/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/40">
             <div>
               <div className="flex items-center space-x-2">
-                <span className="text-[11px] font-semibold text-[#758078] uppercase tracking-wider">
+                <Package className="w-4 h-4 text-[#174A3A]" />
+                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide">
+                  Tabel Ringkasan Master 15 SKU Varian
+                </h3>
+              </div>
+              <p className="text-xs text-slate-700 font-semibold mt-0.5">
+                Monitoring multi-lokasi stok fisik On-Hand (WH-JKT vs CAFE-JKT), margin keuntungan, dan status ambang batas minimum (&lt; 20 unit)
+              </p>
+            </div>
+            <div className="flex items-center space-x-2 text-xs font-black">
+              <span className="px-2.5 py-1 rounded-full bg-white/70 text-slate-900 border border-white/60 shadow-xs">
+                Total {products.length} SKU
+              </span>
+              <span className="px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-950 border border-amber-500/40 flex items-center space-x-1 backdrop-blur-xs">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-700" />
+                <span>Min Stock Alert: &lt; 20 unit</span>
+              </span>
+            </div>
+          </div>
+
+          {/* Table Container */}
+          <div className="overflow-x-auto glass-3 border-t border-white/80">
+            <table className="w-full text-left text-xs text-slate-900">
+              <thead className="bg-white/60 text-slate-900 font-black uppercase tracking-wider text-[11px] border-b border-black/10">
+                <tr>
+                  <th className="px-5 py-3.5">SKU &amp; Nama Produk</th>
+                  <th className="px-4 py-3.5">Varian &amp; Satuan</th>
+                  <th className="px-4 py-3.5 text-right">WH-JKT</th>
+                  <th className="px-4 py-3.5 text-right">CAFE-JKT</th>
+                  <th className="px-4 py-3.5 text-right">Total On-Hand</th>
+                  <th className="px-4 py-3.5 text-center">Status Stok</th>
+                  <th className="px-4 py-3.5 text-right">Harga Jual</th>
+                  <th className="px-4 py-3.5 text-right">Biaya HPP</th>
+                  <th className="px-4 py-3.5 text-right">Margin</th>
+                  <th className="px-4 py-3.5 text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-black/5 font-mono">
+                {products.map((p) => {
+                  const isLow = (p.totalOnHand ?? 0) < 20;
+                  const marginPct = p.salesPrice > 0 ? Math.round(((p.salesPrice - p.standardCost) / p.salesPrice) * 100) : 0;
+
+                  return (
+                    <tr key={p.sku} className={`hover:bg-emerald-500/10 transition-colors duration-150 ${isLow ? "bg-amber-500/10" : ""}`}>
+                      <td className="px-5 py-3.5 font-sans font-black text-slate-900">
+                        <span className="font-mono text-[#174A3A] block text-[11px] font-black">{p.sku}</span>
+                        <span>{p.name}</span>
+                      </td>
+                      <td className="px-4 py-3.5 font-sans text-slate-800">
+                        <span className="font-extrabold text-slate-900">{p.size}</span>
+                        <span className="text-slate-700 block text-[10px] font-bold">{p.color} · {p.unit}</span>
+                      </td>
+                      <td className="px-4 py-3.5 text-right font-black text-slate-900">
+                        {p.whStock?.onHand ?? 0}
+                      </td>
+                      <td className="px-4 py-3.5 text-right font-black text-slate-900">
+                        {p.cafeStock?.onHand ?? 0}
+                      </td>
+                      <td className="px-4 py-3.5 text-right font-black text-slate-900 text-sm">
+                        {p.totalOnHand ?? 0}
+                      </td>
+                      <td className="px-4 py-3.5 text-center font-sans">
+                        {isLow ? (
+                          <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-black glass-badge-warning">
+                            <AlertTriangle className="w-3 h-3 text-amber-700 shrink-0" />
+                            <span>Stok Rendah</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-black glass-badge-success">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-700 shrink-0" />
+                            <span>Aman</span>
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3.5 text-right font-black text-slate-900">
+                        Rp {p.salesPrice?.toLocaleString("id-ID")}
+                      </td>
+                      <td className="px-4 py-3.5 text-right text-slate-700 font-bold">
+                        Rp {p.standardCost?.toLocaleString("id-ID")}
+                      </td>
+                      <td className="px-4 py-3.5 text-right font-black text-emerald-800">
+                        {marginPct}%
+                      </td>
+                      <td className="px-4 py-3.5 text-center font-sans">
+                        <button
+                          onClick={() => {
+                            setSelectedSku(p.sku);
+                            setViewMode("detail");
+                          }}
+                          className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl text-[11px] font-black btn-glass-secondary hover:-translate-y-0.5 hover:shadow-xs transition-all duration-150"
+                        >
+                          <span>Detail</span>
+                          <ArrowRight className="w-3 h-3" />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : productDetail && (
+        <div className="glass-2 rounded-2xl shadow-glass-2 border border-white/80 overflow-hidden">
+          <div className="p-6 border-b border-black/5 grid grid-cols-1 md:grid-cols-2 gap-6 bg-white/40">
+            <div>
+              <div className="flex items-center space-x-2">
+                <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider">
                   Variant SKU (SR-17)
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#E1EDE6] text-[#174A3A]">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-950 border border-emerald-500/40 backdrop-blur-xs">
                   Independent Stock
                 </span>
               </div>
@@ -237,35 +375,35 @@ export default function ProductsPage() {
               </h2>
 
               <div className="mt-3">
-                <span className="text-[11px] font-semibold text-[#758078] uppercase tracking-wider block">
+                <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider block">
                   Nama Produk
                 </span>
-                <p className="text-base font-bold text-[#202824] mt-0.5">
+                <p className="text-base font-black text-slate-900 mt-0.5">
                   {productDetail.name}
                 </p>
-                <p className="text-xs text-[#758078] mt-0.5">
-                  Ukuran/Varian: <strong className="text-[#202824]">{productDetail.size}</strong> · Varian Rasa/Suhu: <strong className="text-[#202824]">{productDetail.color}</strong> · Satuan: {productDetail.unit}
+                <p className="text-xs text-slate-700 font-semibold mt-0.5">
+                  Ukuran/Varian: <strong className="text-slate-900 font-black">{productDetail.size}</strong> · Varian Rasa/Suhu: <strong className="text-slate-900 font-black">{productDetail.color}</strong> · Satuan: {productDetail.unit}
                 </p>
               </div>
             </div>
 
             <div className="space-y-3">
-              <div className="flex justify-between items-center bg-white p-3.5 rounded-xl border border-[#E5E9E4]">
+              <div className="flex justify-between items-center glass-3 p-3.5 rounded-xl border border-white/80 shadow-xs">
                 <div className="flex items-center space-x-2">
                   <Tag className="w-4 h-4 text-[#174A3A]" />
-                  <span className="text-xs font-semibold text-[#202824]">Harga Jual (Sales Price):</span>
+                  <span className="text-xs font-black text-slate-900">Harga Jual (Sales Price):</span>
                 </div>
-                <span className="text-sm font-bold text-[#202824] font-mono">
+                <span className="text-sm font-black text-slate-900 font-mono">
                   Rp {productDetail.salesPrice.toLocaleString("id-ID")}
                 </span>
               </div>
 
-              <div className="flex justify-between items-center bg-white p-3.5 rounded-xl border border-[#E5E9E4]">
+              <div className="flex justify-between items-center glass-3 p-3.5 rounded-xl border border-white/80 shadow-xs">
                 <div className="flex items-center space-x-2">
                   <Package className="w-4 h-4 text-[#174A3A]" />
-                  <span className="text-xs font-semibold text-[#202824]">Biaya Standar (Standard Cost):</span>
+                  <span className="text-xs font-black text-slate-900">Biaya Standar (Standard Cost):</span>
                 </div>
-                <span className="text-sm font-bold text-[#174A3A] font-mono">
+                <span className="text-sm font-black text-[#174A3A] font-mono">
                   Rp {productDetail.standardCost.toLocaleString("id-ID")}
                 </span>
               </div>
@@ -275,39 +413,39 @@ export default function ProductsPage() {
           {/* Section 4: Produk, Nilai dan Stok Lokasi */}
           <div className="p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-[#202824] uppercase tracking-wide flex items-center space-x-2">
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide flex items-center space-x-2">
                 <Building className="w-4 h-4 text-[#174A3A]" />
                 <span>Distribusi Stok Antar Lokasi (WH-JKT vs CAFE-JKT)</span>
               </h3>
-              <span className="text-xs text-[#758078] font-mono">
-                Total Perusahaan: <strong className="text-[#174A3A]">{productDetail.companyOnHand} unit</strong> (Rp {productDetail.totalValuation.toLocaleString("id-ID")})
+              <span className="text-xs text-slate-700 font-bold font-mono">
+                Total Perusahaan: <strong className="text-[#174A3A] font-black">{productDetail.companyOnHand} unit</strong> (Rp {productDetail.totalValuation.toLocaleString("id-ID")})
               </span>
             </div>
 
-            <div className="overflow-x-auto border border-[#E5E9E4] rounded-xl shadow-2xs">
+            <div className="overflow-x-auto border border-white/80 rounded-xl shadow-glass-1 glass-3">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#F7F8F5] font-semibold text-[#758078] uppercase tracking-wider text-[11px] border-b border-[#E5E9E4]">
+                <thead className="bg-white/60 font-black text-slate-900 uppercase tracking-wider text-[11px] border-b border-black/10">
                   <tr>
                     <th className="px-6 py-3.5">Lokasi Gudang / Gerai</th>
                     <th className="px-6 py-3.5 text-right">Stok Fisik (On Hand)</th>
                     <th className="px-6 py-3.5 text-right">Stok Direservasi (SR-04)</th>
-                    <th className="px-6 py-3.5 text-right text-emerald-800">Tersedia (Available)</th>
+                    <th className="px-6 py-3.5 text-right text-emerald-950 font-black">Tersedia (Available)</th>
                     <th className="px-6 py-3.5 text-right">Valuasi Stok</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#E5E9E4] font-mono">
+                <tbody className="divide-y divide-black/5 font-mono">
                   {productDetail.locations.map((loc: any) => (
-                    <tr key={loc.locationCode} className="hover:bg-[#F7F8F5] transition-colors">
-                      <td className="px-6 py-3.5 font-bold text-[#202824] font-sans flex items-center space-x-2.5">
+                    <tr key={loc.locationCode} className="hover:bg-emerald-500/10 transition-colors duration-150">
+                      <td className="px-6 py-3.5 font-black text-slate-900 font-sans flex items-center space-x-2.5">
                         <MapPin className="w-4 h-4 text-[#174A3A]" />
                         <span>{loc.locationCode} — {loc.locationName}</span>
                       </td>
-                      <td className="px-6 py-3.5 text-right font-bold text-[#202824]">{loc.onHand}</td>
-                      <td className="px-6 py-3.5 text-right text-amber-700 font-bold">{loc.reserved}</td>
-                      <td className="px-6 py-3.5 text-right font-black text-emerald-700 bg-emerald-50/50">
+                      <td className="px-6 py-3.5 text-right font-black text-slate-900">{loc.onHand}</td>
+                      <td className="px-6 py-3.5 text-right text-amber-800 font-black">{loc.reserved}</td>
+                      <td className="px-6 py-3.5 text-right font-black text-emerald-900 bg-emerald-500/15">
                         {loc.available}
                       </td>
-                      <td className="px-6 py-3.5 text-right text-[#525B55]">
+                      <td className="px-6 py-3.5 text-right text-slate-800 font-bold">
                         Rp {loc.valuation.toLocaleString("id-ID")}
                       </td>
                     </tr>

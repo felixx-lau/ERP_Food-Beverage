@@ -33,69 +33,71 @@ export default function KPICard({
   className = "",
 }: KPICardProps) {
   const iconVariants = {
-    primary: "bg-aruna-50 text-aruna-600 border border-aruna-200/50",
-    gold: "bg-gold-50 text-gold-600 border border-gold-200/50",
-    sage: "bg-sage-100 text-aruna-700 border border-sage-300/50",
-    success: "bg-emerald-50 text-emerald-700 border border-emerald-200/50",
-    warning: "bg-amber-50 text-amber-700 border border-amber-200/50",
-    danger: "bg-rose-50 text-rose-700 border border-rose-200/50",
-    default: "bg-charcoal-100 text-charcoal-700 border border-charcoal-200/50",
+    primary: "text-[#174A3A] bg-emerald-500/15 border-emerald-500/30",
+    gold: "text-[#A88544] bg-amber-500/15 border-amber-500/30",
+    sage: "text-[#174A3A] bg-emerald-600/15 border-emerald-600/30",
+    success: "text-emerald-800 bg-emerald-500/15 border-emerald-500/30",
+    warning: "text-amber-800 bg-amber-500/15 border-amber-500/30",
+    danger: "text-rose-800 bg-rose-500/15 border-rose-500/30",
+    default: "text-slate-800 bg-black/5 border-black/15",
   }[variant];
 
   const badgeVariants = {
-    success: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    warning: "bg-amber-50 text-amber-700 border-amber-200",
-    danger: "bg-rose-50 text-rose-700 border-rose-200",
-    gold: "bg-gold-50 text-gold-800 border-gold-200",
-    sage: "bg-sage-100 text-aruna-800 border-sage-300",
-    default: "bg-charcoal-100 text-charcoal-700 border-charcoal-200",
+    success: "glass-badge-success font-black",
+    warning: "glass-badge-warning font-black",
+    danger: "glass-badge-danger font-black",
+    gold: "bg-amber-500/20 text-amber-950 border-amber-500/40 backdrop-blur-xs font-black",
+    sage: "bg-emerald-500/20 text-emerald-950 border-emerald-500/40 backdrop-blur-xs font-black",
+    default: "glass-badge-default font-black",
   }[badgeVariant];
 
   return (
     <div
       onClick={onClick}
-      className={`bg-white rounded-xl border border-charcoal-200/70 p-5 shadow-xs transition-all duration-200 ${
-        onClick ? "hover:border-aruna-300 hover:shadow-card cursor-pointer" : ""
+      className={`glass-2 glass-2-interactive group rounded-2xl p-5 border border-white/70 shadow-glass-2 relative overflow-hidden ${
+        onClick ? "cursor-pointer" : ""
       } ${className}`}
     >
       <div className="flex items-start justify-between">
-        <div className="space-y-1">
+        <div className="space-y-1.5">
           <div className="flex items-center space-x-2">
-            <p className="text-xs font-semibold text-charcoal-400 tracking-wide uppercase">
+            <p className="text-xs font-black text-slate-800 tracking-wider uppercase">
               {title}
             </p>
             {badgeText && (
               <span
-                className={`inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold border ${badgeVariants}`}
+                className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black border ${badgeVariants}`}
               >
                 {badgeText}
               </span>
             )}
           </div>
-          <p className="text-2xl font-bold tracking-tight text-charcoal-800">
+          <p className="text-2xl sm:text-3xl font-black tracking-tight text-[#0A110E]">
             {value}
           </p>
         </div>
-        <div className={`p-2.5 rounded-xl ${iconVariants} flex-shrink-0`}>
+        
+        {/* Glass Icon Bubble with Hover Scale */}
+        <div className={`w-11 h-11 rounded-2xl glass-3 flex items-center justify-center border shadow-xs flex-shrink-0 group-hover:scale-115 transition-transform duration-300 ${iconVariants}`}>
           <Icon className="w-5 h-5" />
         </div>
       </div>
 
       {(subtitle || trend) && (
-        <div className="mt-3.5 pt-3 border-t border-charcoal-100 flex items-center justify-between text-xs">
+        <div className="mt-4 pt-3 border-t border-black/5 flex items-center justify-between text-xs">
           {subtitle && (
-            <span className="text-charcoal-400 font-medium truncate">
+            <span className="text-slate-700 font-semibold truncate">
               {subtitle}
             </span>
           )}
           {trend && (
             <span
-              className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
                 trend.neutral
-                  ? "bg-charcoal-100 text-charcoal-600"
+                  ? "glass-badge-default"
                   : trend.positive
-                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                  : "bg-rose-50 text-rose-700 border border-rose-200"
+                  ? "glass-badge-success"
+                  : "glass-badge-danger"
               }`}
             >
               {trend.label}

@@ -133,16 +133,16 @@ export default function RegisterPaymentPage() {
     try {
       await handleSwitchRole("FINANCE");
 
-      let targetInv = invoices.find((inv) => inv.status === "CONFIRMED" && inv.outstandingAmount >= 100000);
+      let targetInv = invoices.find((inv) => (inv.status === "POSTED" || inv.status === "CONFIRMED") && (inv.outstandingAmount >= 100000 || inv.totalGross >= 100000));
 
       if (!targetInv) {
         const resInv = await fetch("/api/accounting/invoices");
         const dataInv = await resInv.json();
-        targetInv = dataInv.invoices?.find((i: any) => i.status === "CONFIRMED" && i.outstandingAmount >= 100000);
+        targetInv = dataInv.invoices?.find((i: any) => (i.status === "POSTED" || i.status === "CONFIRMED") && (i.outstandingAmount >= 100000 || i.totalGross >= 100000));
       }
 
       if (!targetInv) {
-        alert("Jalankan Uji T-19 terlebih dahulu untuk memastikan adanya Customer Invoice status CONFIRMED dengan nilai tagihan.");
+        alert("Jalankan Uji T-19 terlebih dahulu untuk memastikan adanya Customer Invoice status POSTED dengan nilai tagihan.");
         return;
       }
 
@@ -245,18 +245,18 @@ export default function RegisterPaymentPage() {
     >
       <div className="space-y-6">
         {/* Module Header & Sub-Nav */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-[#DCE8DF] shadow-xs">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-2 p-5 rounded-2xl border border-white/80 shadow-glass-2">
           <div>
             <div className="flex items-center space-x-2">
               <span className="w-2.5 h-2.5 rounded-full bg-[#174A3A]" />
-              <h1 className="text-xl font-bold text-[#202824] tracking-tight">
+              <h1 className="text-xl font-black text-slate-900 tracking-tight">
                 Register Payment & Cash Receipt
               </h1>
-              <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-[#DCE8DF] text-[#174A3A]">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-500/15 text-[#174A3A] border border-emerald-500/30">
                 Wireframe S-12
               </span>
             </div>
-            <p className="text-xs text-[#758078] mt-1">
+            <p className="text-xs text-slate-700 font-semibold mt-1">
               Pencatatan kas masuk, pelunasan piutang parsial & penegakan proteksi overpayment (SR-19 / F-15).
             </p>
           </div>
@@ -264,25 +264,25 @@ export default function RegisterPaymentPage() {
           <div className="flex flex-wrap items-center gap-2">
             <Link
               href="/accounting/invoices"
-              className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-[#DCE8DF] text-[#202824] hover:bg-[#F7F8F5] transition-colors"
+              className="text-xs font-black px-3.5 py-1.5 rounded-xl btn-glass-secondary text-slate-800 hover:-translate-y-0.5 hover:shadow-xs transition-all"
             >
               Customer Invoices
             </Link>
             <Link
               href="/accounting/vendor-bills"
-              className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-[#DCE8DF] text-[#202824] hover:bg-[#F7F8F5] transition-colors"
+              className="text-xs font-black px-3.5 py-1.5 rounded-xl btn-glass-secondary text-slate-800 hover:-translate-y-0.5 hover:shadow-xs transition-all"
             >
               Vendor Bills
             </Link>
             <Link
               href="/accounting/journal-entries"
-              className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-[#DCE8DF] text-[#202824] hover:bg-[#F7F8F5] transition-colors"
+              className="text-xs font-black px-3.5 py-1.5 rounded-xl btn-glass-secondary text-slate-800 hover:-translate-y-0.5 hover:shadow-xs transition-all"
             >
               General Ledger
             </Link>
             <button
               onClick={fetchPaymentsAndInvoices}
-              className="p-1.5 rounded-lg border border-[#DCE8DF] text-[#758078] hover:text-[#174A3A] hover:bg-[#F7F8F5] transition-colors"
+              className="p-2 rounded-xl btn-glass-secondary text-slate-700 hover:text-[#174A3A] transition-all hover:-translate-y-0.5"
               title="Refresh Data"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
@@ -291,12 +291,12 @@ export default function RegisterPaymentPage() {
         </div>
 
         {/* Selected Invoice Payment Card (Wireframe S-12 Sections ②, ③, ④) */}
-        <div className="card-aruna overflow-hidden">
+        <div className="glass-2 rounded-2xl border border-white/80 shadow-glass-2 overflow-hidden">
           {/* Section ②: Mode View / Status Breadcrumb */}
-          <div className="bg-[#F7F8F5] px-6 py-3.5 border-b border-[#DCE8DF] flex flex-wrap items-center justify-between gap-3">
+          <div className="bg-white/40 px-6 py-3.5 border-b border-black/5 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center space-x-3">
-              <span className="text-xs font-bold text-[#758078] uppercase tracking-wider">Tahap Pembayaran:</span>
-              <div className="inline-flex rounded-lg overflow-hidden border border-[#DCE8DF] bg-white shadow-2xs">
+              <span className="text-xs font-black text-slate-800 uppercase tracking-wider">Tahap Pembayaran:</span>
+              <div className="inline-flex rounded-xl overflow-hidden border border-white/60 bg-white/70 shadow-xs">
                 {["INVOICE", "PAYMENT", "RECONCILED"].map((st) => {
                   const isReconciled = selectedInvoice?.paymentStatus === "PAID";
                   const isPartial = selectedInvoice?.paymentStatus === "PARTIAL";
@@ -308,10 +308,10 @@ export default function RegisterPaymentPage() {
                   return (
                     <span
                       key={st}
-                      className={`px-3 py-1 text-xs font-bold font-mono transition-colors ${
+                      className={`px-3 py-1 text-xs font-black font-mono transition-colors ${
                         active
-                          ? "bg-[#174A3A] text-white"
-                          : "text-[#758078] hover:bg-gray-50"
+                          ? "bg-[#174A3A] text-white shadow-xs"
+                          : "text-slate-700 hover:bg-white/50"
                       }`}
                     >
                       {st}
@@ -321,8 +321,8 @@ export default function RegisterPaymentPage() {
               </div>
             </div>
 
-            <div className="text-xs text-[#758078]">
-              Kebijakan <strong className="text-[#174A3A]">SR-19</strong>: Pembayaran parsial diizinkan; overpayment dilarang keras.
+            <div className="text-xs text-slate-800 font-semibold">
+              Kebijakan <strong className="text-[#174A3A] font-black">SR-19</strong>: Pembayaran parsial diizinkan; overpayment dilarang keras.
             </div>
           </div>
 
@@ -343,31 +343,31 @@ export default function RegisterPaymentPage() {
                   </option>
                 ))}
               </select>
-              <span className="text-[11px] text-[#758078] block mt-1.5">
-                Customer: <strong className="text-[#202824]">{selectedInvoice?.customer?.name || "-"}</strong> ({selectedInvoice?.customer?.code || "-"})
+              <span className="text-[11px] text-slate-700 font-semibold block mt-1.5">
+                Customer: <strong className="text-slate-900 font-black">{selectedInvoice?.customer?.name || "-"}</strong> ({selectedInvoice?.customer?.code || "-"})
               </span>
             </div>
 
             <div>
-              <label className="text-[11px] font-semibold text-[#758078] uppercase tracking-wider block mb-1">
+              <label className="text-[11px] font-black text-slate-700 uppercase tracking-wider block mb-1">
                 Metode Pembayaran
               </label>
               <select
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
-                className="w-full text-xs font-mono font-bold bg-white border border-[#DCE8DF] rounded-lg p-2.5 text-[#202824] focus:outline-none focus:ring-2 focus:ring-[#174A3A]"
+                className="w-full text-xs font-mono font-bold input-glass rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-[#174A3A]"
               >
                 <option value="BANK">Bank BCA / Transfer (1010 Bank)</option>
                 <option value="CASH">Kas Tunai / Cash (1010 Cash)</option>
                 <option value="QRIS">QRIS Dinamis (1010 Bank)</option>
               </select>
-              <span className="text-[11px] text-[#758078] block mt-1.5">
-                Target GL: <span className="font-mono text-[#174A3A] font-semibold">1010 Kas & Setara Kas</span>
+              <span className="text-[11px] text-slate-700 font-semibold block mt-1.5">
+                Target GL: <span className="font-mono text-[#174A3A] font-black">1010 Kas & Setara Kas</span>
               </span>
             </div>
 
             <div>
-              <label className="text-[11px] font-semibold text-[#758078] uppercase tracking-wider block mb-1">
+              <label className="text-[11px] font-black text-slate-700 uppercase tracking-wider block mb-1">
                 Nominal Bayar (Rp)
               </label>
               <input
@@ -375,9 +375,9 @@ export default function RegisterPaymentPage() {
                 value={paymentAmount}
                 onChange={(e) => setPaymentAmount(Number(e.target.value))}
                 min={1}
-                className="w-full text-xs font-mono font-bold bg-white border border-[#DCE8DF] rounded-lg p-2.5 text-[#202824] focus:outline-none focus:ring-2 focus:ring-[#174A3A]"
+                className="w-full text-xs font-mono font-bold input-glass rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-[#174A3A]"
               />
-              <span className="text-[11px] text-[#758078] block mt-1.5">
+              <span className="text-[11px] text-slate-700 font-semibold block mt-1.5">
                 Contoh: Rp100.000 untuk pengujian T-23
               </span>
             </div>
@@ -385,7 +385,7 @@ export default function RegisterPaymentPage() {
             <div className="flex flex-col justify-end">
               <button
                 onClick={handleRegisterPayment}
-                className="w-full py-2.5 bg-[#174A3A] hover:bg-[#103429] text-white rounded-lg text-xs font-bold flex items-center justify-center space-x-2 shadow-xs transition-colors"
+                className="w-full py-2.5 btn-glass-primary text-white rounded-xl text-xs font-black flex items-center justify-center space-x-2 shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
               >
                 <Receipt className="w-4 h-4 text-[#C6A15B]" />
                 <span>Konfirmasi Pembayaran</span>
@@ -394,45 +394,45 @@ export default function RegisterPaymentPage() {
           </div>
 
           {/* Section ④: Pembayaran Parsial dan Sisa KPI Grid */}
-          <div className="p-6 bg-[#F7F8F5]">
-            <h3 className="text-xs font-bold text-[#202824] uppercase tracking-wider mb-4 flex items-center space-x-2">
+          <div className="p-6 bg-white/40">
+            <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider mb-4 flex items-center space-x-2">
               <DollarSign className="w-4 h-4 text-[#174A3A]" />
               <span>Ringkasan Saldo Pembayaran Parsial & Sisa Piutang (F-15 / S-12)</span>
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-white p-4 rounded-xl border border-[#DCE8DF] shadow-2xs">
-                <span className="text-[11px] font-semibold text-[#758078] uppercase tracking-wider block">
+              <div className="glass-3 p-4 rounded-xl border border-white/80 shadow-xs">
+                <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider block">
                   Nilai Tagihan (Gross + PBJT)
                 </span>
-                <span className="text-xl font-extrabold text-[#202824] font-mono block mt-1">
+                <span className="text-xl font-black text-slate-900 font-mono block mt-1">
                   Rp{selectedInvoice?.totalAmount?.toLocaleString("id-ID") || "0"}
                 </span>
-                <span className="text-xs text-[#758078] block mt-1">
+                <span className="text-xs text-slate-700 font-semibold block mt-1">
                   Net + PBJT 10%
                 </span>
               </div>
 
-              <div className="bg-white p-4 rounded-xl border border-emerald-200 shadow-2xs">
-                <span className="text-[11px] font-semibold text-emerald-700 uppercase tracking-wider block">
+              <div className="glass-3 p-4 rounded-xl border border-emerald-500/40 shadow-xs">
+                <span className="text-[11px] font-black text-emerald-950 uppercase tracking-wider block">
                   Sudah Terbayar (Paid Amount)
                 </span>
-                <span className="text-xl font-extrabold text-emerald-700 font-mono block mt-1">
+                <span className="text-xl font-black text-emerald-900 font-mono block mt-1">
                   Rp{selectedInvoice?.paidAmount?.toLocaleString("id-ID") || "0"}
                 </span>
-                <span className="text-xs text-[#758078] block mt-1">
+                <span className="text-xs text-slate-700 font-semibold block mt-1">
                   Akumulasi kas diterima
                 </span>
               </div>
 
-              <div className="bg-white p-4 rounded-xl border border-amber-200 shadow-2xs">
-                <span className="text-[11px] font-semibold text-amber-700 uppercase tracking-wider block">
+              <div className="glass-3 p-4 rounded-xl border border-amber-500/40 shadow-xs">
+                <span className="text-[11px] font-black text-amber-950 uppercase tracking-wider block">
                   Sisa Piutang (Outstanding Balance)
                 </span>
-                <span className="text-xl font-extrabold text-amber-800 font-mono block mt-1">
+                <span className="text-xl font-black text-amber-900 font-mono block mt-1">
                   Rp{selectedInvoice?.outstandingAmount?.toLocaleString("id-ID") || "0"}
                 </span>
-                <span className="text-xs text-[#758078] block mt-1">
+                <span className="text-xs text-slate-700 font-semibold block mt-1">
                   Sisa piutang akun 1020 Piutang Usaha
                 </span>
               </div>
@@ -462,33 +462,33 @@ export default function RegisterPaymentPage() {
         </div>
 
         {/* Payment History Table */}
-        <div className="card-aruna overflow-hidden">
-          <div className="p-5 border-b border-[#DCE8DF] flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white">
+        <div className="glass-2 rounded-2xl border border-white/80 shadow-glass-2 overflow-hidden">
+          <div className="p-5 border-b border-black/5 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/40">
             <div>
-              <h2 className="text-sm font-bold text-[#202824] tracking-wide uppercase">
+              <h2 className="text-sm font-black text-slate-900 tracking-wide uppercase">
                 Riwayat Pembayaran Terdaftar (Payment History)
               </h2>
-              <p className="text-xs text-[#758078] mt-0.5">
-                Total pembayaran terakumulasi: <strong className="text-[#174A3A]">Rp{totalCollected.toLocaleString("id-ID")}</strong> ({payments.length} transaksi)
+              <p className="text-xs text-slate-700 font-semibold mt-0.5">
+                Total pembayaran terakumulasi: <strong className="text-[#174A3A] font-black">Rp{totalCollected.toLocaleString("id-ID")}</strong> ({payments.length} transaksi)
               </p>
             </div>
 
             <div className="flex items-center space-x-3">
               <div className="relative">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#758078]" />
+                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
                 <input
                   type="text"
                   placeholder="Cari no. bayar / customer / invoice..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8 pr-3 py-1.5 text-xs bg-[#F7F8F5] border border-[#DCE8DF] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#174A3A] text-[#202824]"
+                  className="pl-8 pr-3 py-1.5 text-xs input-glass rounded-xl font-bold text-slate-900"
                 />
               </div>
 
               <select
                 value={methodFilter}
                 onChange={(e) => setMethodFilter(e.target.value)}
-                className="text-xs bg-[#F7F8F5] border border-[#DCE8DF] rounded-lg px-2.5 py-1.5 text-[#202824] focus:outline-none focus:ring-1 focus:ring-[#174A3A]"
+                className="text-xs input-glass rounded-xl px-2.5 py-1.5 font-bold text-slate-900"
               >
                 <option value="ALL">Semua Metode</option>
                 <option value="BANK">Bank Transfer</option>
@@ -498,50 +498,50 @@ export default function RegisterPaymentPage() {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-[#F7F8F5] border-b border-[#DCE8DF] text-[#758078] font-semibold uppercase tracking-wider">
+          <div className="overflow-x-auto border-t border-white/80 glass-3">
+            <table className="w-full text-left text-xs text-slate-900">
+              <thead className="bg-white/60 border-b border-black/10 text-slate-900 font-black uppercase tracking-wider text-[11px]">
                 <tr>
-                  <th className="py-3 px-4">No. Bukti Bayar</th>
-                  <th className="py-3 px-4">Tanggal</th>
-                  <th className="py-3 px-4">Customer / Partner</th>
-                  <th className="py-3 px-4">Invoice / Referensi</th>
-                  <th className="py-3 px-4">Metode</th>
-                  <th className="py-3 px-4 text-right">Nominal Bayar</th>
-                  <th className="py-3 px-4 text-center">Status</th>
+                  <th className="py-3.5 px-4">No. Bukti Bayar</th>
+                  <th className="py-3.5 px-4">Tanggal</th>
+                  <th className="py-3.5 px-4">Customer / Partner</th>
+                  <th className="py-3.5 px-4">Invoice / Referensi</th>
+                  <th className="py-3.5 px-4">Metode</th>
+                  <th className="py-3.5 px-4 text-right">Nominal Bayar</th>
+                  <th className="py-3.5 px-4 text-center">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#DCE8DF] font-mono">
+              <tbody className="divide-y divide-black/5 font-mono">
                 {filteredPayments.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-8 text-center text-[#758078] font-sans">
+                    <td colSpan={7} className="py-8 text-center text-slate-700 font-bold font-sans">
                       {loading ? "Memuat riwayat pembayaran..." : "Belum ada catatan pembayaran yang cocok dengan filter."}
                     </td>
                   </tr>
                 ) : (
                   filteredPayments.map((p) => (
-                    <tr key={p.id} className="hover:bg-[#F7F8F5] transition-colors">
-                      <td className="py-3 px-4 font-bold text-[#174A3A]">
+                    <tr key={p.id} className="hover:bg-emerald-500/10 transition-colors duration-150">
+                      <td className="py-3.5 px-4 font-black text-[#174A3A]">
                         {p.paymentNumber}
                       </td>
-                      <td className="py-3 px-4 font-sans text-[#758078]">
+                      <td className="py-3.5 px-4 font-sans text-slate-700 font-bold">
                         {new Date(p.paymentDate).toLocaleDateString("id-ID")}
                       </td>
-                      <td className="py-3 px-4 font-sans text-[#202824] font-semibold">
+                      <td className="py-3.5 px-4 font-sans text-slate-900 font-black">
                         {p.customer?.name || p.vendor?.name || "-"}
                       </td>
-                      <td className="py-3 px-4 text-[#174A3A]">
+                      <td className="py-3.5 px-4 text-[#174A3A] font-bold">
                         {p.invoice?.invoiceNumber || p.bill?.billNumber || "-"}
                       </td>
-                      <td className="py-3 px-4">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#DCE8DF] text-[#174A3A]">
+                      <td className="py-3.5 px-4">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/15 text-[#174A3A] border border-emerald-500/30">
                           {p.paymentMethod}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-right font-bold text-[#174A3A]">
+                      <td className="py-3.5 px-4 text-right font-black text-[#174A3A]">
                         Rp{p.amount?.toLocaleString("id-ID")}
                       </td>
-                      <td className="py-3 px-4 text-center">
+                      <td className="py-3.5 px-4 text-center">
                         <StatusBadge status={p.status || "CONFIRMED"} />
                       </td>
                     </tr>
