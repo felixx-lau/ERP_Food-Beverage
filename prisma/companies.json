@@ -1,0 +1,14 @@
+[
+  {
+    "id": "default",
+    "name": "PT Rasa Aruna Bersama",
+    "brand": "Rasa Aruna Kitchen",
+    "dbFile": "erp.db",
+    "isDefault": true,
+    "description": "Baseline Skenario Kuliah ERP F&B Group 03",
+    "city": "Jakarta",
+    "currency": "IDR",
+    "taxRate": 10,
+    "createdAt": "2026-10-20T00:00:00.000Z"
+  }
+]

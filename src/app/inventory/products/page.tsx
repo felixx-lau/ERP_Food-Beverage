@@ -34,7 +34,16 @@ export default function ProductsPage() {
       const res = await fetch("/api/products");
       if (res.ok) {
         const data = await res.json();
-        setProducts(data.products || []);
+        const list = data.products || [];
+        setProducts(list);
+        if (list.length > 0) {
+          if (!selectedSku || !list.find((p: any) => p.sku === selectedSku)) {
+            setSelectedSku(list[0].sku);
+          }
+        } else {
+          setSelectedSku("");
+          setProductDetail(null);
+        }
       }
     } finally {
       setLoading(false);
@@ -189,8 +198,29 @@ export default function ProductsPage() {
         </div>
       }
     >
-      {/* Selected Product Form View */}
-      {productDetail && (
+      {/* Empty State when clean company */}
+      {products.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-dashed border-slate-300 p-12 text-center space-y-4">
+          <div className="w-16 h-16 rounded-2xl bg-amber-50 text-[#C6A15B] flex items-center justify-center mx-auto shadow-xs">
+            <Package className="w-8 h-8" />
+          </div>
+          <div className="max-w-md mx-auto space-y-1">
+            <h3 className="text-base font-bold text-slate-800">
+              Belum Ada Produk Terdaftar di Perusahaan Ini
+            </h3>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Ruang kerja perusahaan ini masih bersih. Anda dapat mulai mendaftarkan menu dan produk buatan Anda sendiri beserta harga jual, modal awal, dan stok gudang.
+            </p>
+          </div>
+          <button
+            onClick={() => setCreateModalOpen(true)}
+            className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-[#174A3A] hover:bg-[#11382C] text-white text-xs font-bold shadow-md transition-all"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Tambah Produk Pertama Anda</span>
+          </button>
+        </div>
+      ) : productDetail && (
         <div className="bg-white rounded-xl shadow-xs border border-[#E5E9E4] overflow-hidden">
           <div className="p-6 border-b border-[#E5E9E4] grid grid-cols-1 md:grid-cols-2 gap-6 bg-[#F7F8F5]/60">
             <div>

@@ -8,6 +8,10 @@
 
 ## 1. Ringkasan Proyek
 
+> 📖 **PANDUAN LENGKAP ARSITEKTUR & ALUR BISNIS MUTLAK:**  
+> Agar siapa pun yang memodifikasi sistem ini tidak merusak aturan bisnis, formula akuntansi, atau alur kerja penilaian (T-01 s/d T-32), baca dokumen panduan resmi di:  
+> 👉 **[DOKUMENTASI_ALUR_DAN_ARSITEKTUR_SISTEM.md](./DOKUMENTASI_ALUR_DAN_ARSITEKTUR_SISTEM.md)**
+
 PT Rasa Aruna Bersama adalah perusahaan F&B di Jakarta yang mengoperasikan restoran cepat saji, layanan *takeaway*, pesanan katering korporat, dan paket makan siang perkantoran. Sistem ERP ini dibangun dengan pendekatan *vibe coding* dan rekayasa perangkat lunak berstandar industri untuk memecahkan 6 permasalahan operasional utama:
 1. Bentrok reservasi pesanan kantor dengan kasir gerai.
 2. Penagihan faktur atas barang yang belum dikirim.

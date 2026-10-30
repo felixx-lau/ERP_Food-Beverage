@@ -28,6 +28,7 @@ import {
   Info
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useCompany } from "@/context/CompanyContext";
 
 interface UserProfile {
   id: string;
@@ -38,6 +39,7 @@ interface UserProfile {
 
 export default function HomePage() {
   const router = useRouter();
+  const { activeCompany } = useCompany();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"kanban" | "list">("kanban");
@@ -161,8 +163,8 @@ export default function HomePage() {
       currentUser={user}
       onSwitchRole={handleSwitchRole}
       breadcrumbs={[{ label: "Beranda" }]}
-      title="Sistem ERP PT Rasa Aruna Bersama"
-      subtitle="Platform Manajemen Operasional Makanan & Minuman Terpadu"
+      title={`Sistem ERP ${activeCompany?.name || "PT Rasa Aruna Bersama"}`}
+      subtitle={`Platform Manajemen Operasional ${activeCompany?.brand || "Rasa Aruna Kitchen"} Terpadu`}
       actions={
         <div className="flex items-center space-x-1 bg-[#F7F8F5] p-1 rounded-xl border border-slate-200">
           <button
@@ -296,10 +298,14 @@ export default function HomePage() {
           </div>
           <div className="min-w-0">
             <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
-              Perusahaan
+              Perusahaan Aktif
             </span>
-            <h3 className="text-sm font-bold text-slate-800 truncate">PT Rasa Aruna Bersama</h3>
-            <p className="text-xs text-slate-500 truncate">Brand: Rasa Aruna Kitchen (Jakarta)</p>
+            <h3 className="text-sm font-bold text-slate-800 truncate">
+              {activeCompany?.name || "PT Rasa Aruna Bersama"}
+            </h3>
+            <p className="text-xs text-slate-500 truncate">
+              Brand: {activeCompany?.brand || "Rasa Aruna Kitchen"} ({activeCompany?.city || "Jakarta"})
+            </p>
           </div>
         </div>
 

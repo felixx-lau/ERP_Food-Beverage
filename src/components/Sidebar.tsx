@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useCompany } from "@/context/CompanyContext";
 import {
   Home,
   BarChart3,
@@ -104,6 +105,18 @@ export default function Sidebar({
   onCloseMobile,
 }: SidebarProps) {
   const pathname = usePathname();
+  const { activeCompany } = useCompany();
+
+  const getInitials = (name?: string) => {
+    if (!name) return "RA";
+    const words = name.replace(/^(pt|cv|ud)\.?\s+/i, "").trim().split(/\s+/);
+    if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
+    return name.slice(0, 2).toUpperCase();
+  };
+
+  const activeName = activeCompany?.name || "PT Rasa Aruna Bersama";
+  const activeBrand = activeCompany?.brand || "Rasa Aruna";
+  const initials = getInitials(activeName);
 
   const sidebarContent = (
     <div className="flex flex-col h-full bg-[#174A3A] text-white select-none border-r border-[#11382C]">
@@ -111,15 +124,15 @@ export default function Sidebar({
       <div className="h-14 px-4 flex items-center justify-between border-b border-[#11382C]/80 bg-[#134032]">
         <Link href="/" className="flex items-center space-x-2.5 overflow-hidden">
           <div className="w-8 h-8 rounded-lg bg-[#C6A15B] flex items-center justify-center text-[#174A3A] font-extrabold text-base flex-shrink-0 shadow-sm">
-            RA
+            {initials}
           </div>
           {!isCollapsed && (
             <div className="flex flex-col min-w-0">
               <span className="font-bold text-sm tracking-wide text-white truncate">
-                Rasa Aruna
+                {activeBrand}
               </span>
               <span className="text-[10px] text-[#DCE8DF] font-medium tracking-tight truncate">
-                Enterprise Kitchen ERP
+                {activeName}
               </span>
             </div>
           )}
@@ -192,9 +205,9 @@ export default function Sidebar({
       {/* Footer Info */}
       {!isCollapsed && (
         <div className="p-3 border-t border-[#11382C]/80 bg-[#134032]/60 text-[11px] text-[#DCE8DF]/80">
-          <div className="flex items-center space-x-1.5 text-xs font-semibold text-white">
-            <ShieldCheck className="w-3.5 h-3.5 text-[#C6A15B]" />
-            <span>PT Rasa Aruna Bersama</span>
+          <div className="flex items-center space-x-1.5 text-xs font-semibold text-white truncate">
+            <ShieldCheck className="w-3.5 h-3.5 text-[#C6A15B] shrink-0" />
+            <span className="truncate">{activeName}</span>
           </div>
           <p className="text-[10px] text-[#DCE8DF]/60 mt-0.5">
             Role Aktif: <span className="font-bold text-[#C6A15B] uppercase">{userRole}</span>

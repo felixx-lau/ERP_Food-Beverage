@@ -6,6 +6,7 @@ import Topbar from "@/components/Topbar";
 import AppSwitcherModal from "@/components/AppSwitcherModal";
 import ResetSeedModal from "@/components/ResetSeedModal";
 import AuditHistoryDrawer from "@/components/AuditHistoryDrawer";
+import { CompanyProvider } from "@/context/CompanyContext";
 
 interface AppLayoutProps {
   children: React.ReactNode;

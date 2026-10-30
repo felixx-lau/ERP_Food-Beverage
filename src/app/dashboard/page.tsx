@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import AppLayout from "@/components/AppLayout";
 import StatusBadge from "@/components/StatusBadge";
 import KPICard from "@/components/KPICard";
+import { useCompany } from "@/context/CompanyContext";
 import { 
   BarChart3, 
   Layers, 
@@ -30,6 +31,7 @@ import Link from "next/link";
 import { OperationalMetrics, FinancialReconciliation } from "@/lib/dashboardEngine";
 
 export default function DashboardPage() {
+  const { activeCompany } = useCompany();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState<OperationalMetrics | null>(null);
@@ -223,7 +225,7 @@ export default function DashboardPage() {
       onSwitchRole={handleSwitchRole}
       breadcrumbs={[{ label: "Analitik" }, { label: "Executive Dashboard" }]}
       title="Executive Operational & Financial Dashboard"
-      subtitle="PT Rasa Aruna Bersama · Dataset: Baseline Seed · Per Tanggal: 20 Okt 2026"
+      subtitle={`${activeCompany?.name || "PT Rasa Aruna Bersama"} · Brand: ${activeCompany?.brand || "Rasa Aruna Kitchen"} · Workspace Aktif`}
       wireframe="Wireframe S-16"
       actions={
         <div className="flex items-center flex-wrap gap-2">

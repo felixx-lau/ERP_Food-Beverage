@@ -16,6 +16,8 @@ import {
   LogOut,
 } from "lucide-react";
 import ManageTeamModal from "@/components/ManageTeamModal";
+import CompanySwitcher from "@/components/CompanySwitcher";
+import { useCompany } from "@/context/CompanyContext";
 
 interface TopbarProps {
   currentUser: {
@@ -52,6 +54,7 @@ export default function Topbar({
 }: TopbarProps) {
   const [roleMenuOpen, setRoleMenuOpen] = useState(false);
   const [manageTeamOpen, setManageTeamOpen] = useState(false);
+  const { activeCompany } = useCompany();
   const [switching, setSwitching] = useState(false);
   const [customUsers, setCustomUsers] = useState<any[]>([]);
 
@@ -124,9 +127,14 @@ export default function Topbar({
               <LayoutGrid className="w-4 h-4" />
             </button>
 
+            {/* Multi-Company Switcher */}
+            <CompanySwitcher currentUser={currentUser} />
+
             {/* Breadcrumbs */}
-            <div className="hidden sm:flex items-center space-x-2 text-xs font-medium text-[#DCE8DF]/80 truncate">
-              <span className="text-white/70">PT Rasa Aruna Bersama</span>
+            <div className="hidden lg:flex items-center space-x-2 text-xs font-medium text-[#DCE8DF]/80 truncate">
+              <span className="text-white/70 truncate max-w-[140px]">
+                {activeCompany?.name || "PT Rasa Aruna Bersama"}
+              </span>
               <span>/</span>
               {breadcrumbs && breadcrumbs.length > 0 ? (
                 breadcrumbs.map((b, idx) => (

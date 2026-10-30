@@ -64,9 +64,12 @@ export default function ContactsPage() {
       const res = await fetch("/api/contacts?type=CUSTOMER");
       if (res.ok) {
         const data = await res.json();
-        setContacts(data.contacts || []);
-        if (data.contacts?.length > 0) {
-          setSelectedContact(data.contacts[0]);
+        const list = data.contacts || [];
+        setContacts(list);
+        if (list.length > 0) {
+          setSelectedContact(list[0]);
+        } else {
+          setSelectedContact(null);
         }
       }
     } catch (e) {
@@ -192,8 +195,29 @@ export default function ContactsPage() {
         </div>
       }
     >
-      {/* Selected Customer Detail Card */}
-      {selectedContact && (
+      {/* Empty State when clean company */}
+      {contacts.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-dashed border-slate-300 p-12 text-center space-y-4">
+          <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-[#174A3A] flex items-center justify-center mx-auto shadow-xs">
+            <Building2 className="w-8 h-8" />
+          </div>
+          <div className="max-w-md mx-auto space-y-1">
+            <h3 className="text-base font-bold text-slate-800">
+              Belum Ada Pelanggan Terdaftar di Perusahaan Ini
+            </h3>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Ruang kerja perusahaan ini masih bersih. Anda dapat mulai mendaftarkan data pelanggan atau vendor mitra bisnis Anda beserta termin pembayaran dan batas kredit piutang.
+            </p>
+          </div>
+          <button
+            onClick={() => setCreateModalOpen(true)}
+            className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-[#174A3A] hover:bg-[#11382C] text-white text-xs font-bold shadow-md transition-all"
+          >
+            <UserPlus className="w-4 h-4" />
+            <span>Tambah Pelanggan Pertama Anda</span>
+          </button>
+        </div>
+      ) : selectedContact && (
         <div className="bg-white rounded-xl shadow-xs border border-[#E5E9E4] overflow-hidden">
           <div className="p-6 border-b border-[#E5E9E4] grid grid-cols-1 md:grid-cols-2 gap-6 bg-[#F7F8F5]/60">
             <div>
