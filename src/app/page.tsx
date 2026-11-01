@@ -166,74 +166,86 @@ export default function HomePage() {
       onSwitchRole={handleSwitchRole}
       breadcrumbs={[{ label: "Beranda" }]}
       title={`Sistem ERP ${activeCompany?.name || "PT Rasa Aruna Bersama"}`}
-      subtitle={`Platform Manajemen Operasional ${activeCompany?.brand || "Rasa Aruna Kitchen"} Terpadu`}
+      subtitle="Platform Manajemen Operasional Terpadu • Lokasi: WH-JKT (Gudang Utama)"
       actions={
-        <div className="flex items-center space-x-1 glass-3 p-1 rounded-2xl border border-white/80 shadow-xs">
+        <div className="flex items-center space-x-1 glass-3 p-1 rounded-2xl border border-white/80 shadow-xs" role="tablist" aria-label="Mode Tampilan Modul">
           <button
+            role="tab"
+            aria-selected={activeTab === "kanban"}
+            aria-label="Tampilan Grid Kartu"
             onClick={() => setActiveTab("kanban")}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all focus-visible:ring-2 focus-visible:ring-[#26493b] focus-visible:outline-none ${
               activeTab === "kanban"
-                ? "bg-[#174A3A] text-white shadow-xs"
-                : "text-[var(--glass-text-secondary)] hover:text-[#174A3A]"
+                ? "bg-[#26493b] text-white shadow-xs"
+                : "text-[var(--glass-text-secondary)] hover:text-[#26493b]"
             }`}
           >
-            <LayoutGrid className="w-3.5 h-3.5" />
+            <LayoutGrid className="w-3.5 h-3.5" aria-hidden="true" />
             <span>Tampilan Grid</span>
           </button>
           <button
+            role="tab"
+            aria-selected={activeTab === "list"}
+            aria-label="Tampilan Tabel Modul"
             onClick={() => setActiveTab("list")}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all focus-visible:ring-2 focus-visible:ring-[#26493b] focus-visible:outline-none ${
               activeTab === "list"
-                ? "bg-[#174A3A] text-white shadow-xs"
-                : "text-[var(--glass-text-secondary)] hover:text-[#174A3A]"
+                ? "bg-[#26493b] text-white shadow-xs"
+                : "text-[var(--glass-text-secondary)] hover:text-[#26493b]"
             }`}
           >
-            <List className="w-3.5 h-3.5" />
+            <List className="w-3.5 h-3.5" aria-hidden="true" />
             <span>Tampilan Tabel</span>
           </button>
         </div>
       }
     >
-      {/* Welcome & Quick Action Hub */}
-      <div className="glass-1 bg-gradient-to-br from-[#174A3A]/90 via-[#1d5947]/85 to-[#245D4B]/90 rounded-3xl p-6 sm:p-7 text-white border border-white/30 shadow-glass-1 backdrop-blur-xl space-y-5 relative overflow-hidden">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Welcome & Quick Action Hub (Compacted height per audit) */}
+      <section 
+        aria-label="Pusat Input dan Aksi Cepat"
+        className="glass-1 bg-gradient-to-br from-[#26493b] via-[#1f3f33] to-[#183329] rounded-3xl p-3.5 sm:p-4 text-white border border-white/20 shadow-glass-1 backdrop-blur-xl space-y-2.5 relative overflow-hidden"
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
           <div>
-            <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-white/20 text-emerald-100 border border-white/30 backdrop-blur-xs">
-              <Sparkles className="w-3 h-3 text-[#C6A15B]" />
+            <span className="inline-flex items-center space-x-1.5 px-3 py-0.5 rounded-full text-xs font-bold bg-[#d9f9e6] text-[#14281f] border border-[#a3e6be] shadow-xs">
+              <Sparkles className="w-3.5 h-3.5 text-[#8a6a28]" aria-hidden="true" />
               <span>Pusat Input & Aksi Cepat</span>
             </span>
-            <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white mt-2">
+            {/* Secondary heading clearly smaller than H1 */}
+            <h2 className="text-base sm:text-lg font-bold tracking-tight text-white mt-1">
               Halo, {user?.name || "Pengguna"}! Ingin input data apa hari ini?
             </h2>
-            <p className="text-xs sm:text-sm text-emerald-100/90 mt-1 max-w-2xl font-medium">
-              Klik salah satu tombol di bawah untuk langsung menambah data baru tanpa harus berpindah halaman.
+            <p className="text-xs text-[#f0f3f2] mt-0.5 max-w-2xl font-normal">
+              Pilih salah satu tombol di bawah untuk langsung menambah data baru tanpa harus berpindah halaman.
             </p>
           </div>
           <div className="shrink-0 flex items-center space-x-2">
             <button
               onClick={() => router.push("/pos")}
-              className="inline-flex items-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-[#C6A15B] to-[#b5924f] hover:from-[#b5924f] hover:to-[#a3803f] text-[#174A3A] font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95 border border-white/30"
+              aria-label="Buka Kasir POS (Point of Sale)"
+              className="inline-flex items-center space-x-2 px-4 py-2 bg-[#d4b36a] hover:bg-[#c4a259] active:bg-[#b3924a] text-[#14281f] font-extrabold text-xs rounded-xl shadow-xs transition-all active:scale-95 border border-[#14281f]/20 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none cursor-pointer"
             >
-              <Store className="w-4 h-4" />
+              <Store className="w-4 h-4 text-[#14281f]" aria-hidden="true" />
               <span>Buka Kasir POS</span>
             </button>
           </div>
         </div>
 
-        {/* 4 Primary Input Buttons with Rich Glass Hover Animation */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
+        {/* 4 Quick Input Tiles (WCAG AA Compliant contrast, consistent cream/white icons) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-0.5">
           <button
             onClick={() => setProductModalOpen(true)}
-            className="btn-glass-tile flex items-center space-x-3 p-4 rounded-2xl text-left group cursor-pointer"
+            aria-label="Tambah Produk Baru: Menu baru dan stok awal"
+            className="btn-glass-tile flex items-center space-x-3 p-3 rounded-2xl text-left group cursor-pointer focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
           >
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/30 flex items-center justify-center text-emerald-100 group-hover:scale-115 group-hover:rotate-6 transition-all duration-300 border border-emerald-300/40 shadow-xs shrink-0">
-              <Package className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center text-white group-hover:scale-110 transition-transform duration-200 border border-white/25 shadow-xs shrink-0">
+              <Package className="w-4 h-4 text-white" aria-hidden="true" />
             </div>
             <div className="min-w-0">
-              <span className="text-xs font-black text-white block group-hover:text-emerald-200 tracking-wide">
+              <span className="text-xs font-bold text-white block tracking-wide">
                 + Tambah Produk
               </span>
-              <span className="text-[11px] text-white/90 font-bold truncate block group-hover:text-white">
+              <span className="text-xs text-[#f0f3f2] font-normal truncate block mt-0.5">
                 Menu baru & stok awal
               </span>
             </div>
@@ -241,16 +253,17 @@ export default function HomePage() {
 
           <button
             onClick={() => setSalesOrderModalOpen(true)}
-            className="btn-glass-tile flex items-center space-x-3 p-4 rounded-2xl text-left group cursor-pointer"
+            aria-label="Buat Penjualan SO: Pesanan catering dan resto"
+            className="btn-glass-tile flex items-center space-x-3 p-3 rounded-2xl text-left group cursor-pointer focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
           >
-            <div className="w-10 h-10 rounded-xl bg-blue-500/30 flex items-center justify-center text-blue-100 group-hover:scale-115 group-hover:rotate-6 transition-all duration-300 border border-blue-300/40 shadow-xs shrink-0">
-              <ShoppingCart className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center text-white group-hover:scale-110 transition-transform duration-200 border border-white/25 shadow-xs shrink-0">
+              <ShoppingCart className="w-4 h-4 text-white" aria-hidden="true" />
             </div>
             <div className="min-w-0">
-              <span className="text-xs font-black text-white block group-hover:text-blue-200 tracking-wide">
+              <span className="text-xs font-bold text-white block tracking-wide">
                 + Buat Penjualan (SO)
               </span>
-              <span className="text-[11px] text-white/90 font-bold truncate block group-hover:text-white">
+              <span className="text-xs text-[#f0f3f2] font-normal truncate block mt-0.5">
                 Pesanan catering & resto
               </span>
             </div>
@@ -258,16 +271,17 @@ export default function HomePage() {
 
           <button
             onClick={() => setContactModalOpen(true)}
-            className="btn-glass-tile flex items-center space-x-3 p-4 rounded-2xl text-left group cursor-pointer"
+            aria-label="Tambah Pelanggan Baru: Customer dan vendor baru"
+            className="btn-glass-tile flex items-center space-x-3 p-3 rounded-2xl text-left group cursor-pointer focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
           >
-            <div className="w-10 h-10 rounded-xl bg-amber-500/30 flex items-center justify-center text-amber-100 group-hover:scale-115 group-hover:rotate-6 transition-all duration-300 border border-amber-300/40 shadow-xs shrink-0">
-              <UserPlus className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center text-white group-hover:scale-110 transition-transform duration-200 border border-white/25 shadow-xs shrink-0">
+              <UserPlus className="w-4 h-4 text-white" aria-hidden="true" />
             </div>
             <div className="min-w-0">
-              <span className="text-xs font-black text-white block group-hover:text-amber-200 tracking-wide">
+              <span className="text-xs font-bold text-white block tracking-wide">
                 + Tambah Pelanggan
               </span>
-              <span className="text-[11px] text-white/90 font-bold truncate block group-hover:text-white">
+              <span className="text-xs text-[#f0f3f2] font-normal truncate block mt-0.5">
                 Customer & vendor baru
               </span>
             </div>
@@ -275,161 +289,115 @@ export default function HomePage() {
 
           <button
             onClick={() => setPurchaseOrderModalOpen(true)}
-            className="btn-glass-tile flex items-center space-x-3 p-4 rounded-2xl text-left group cursor-pointer"
+            aria-label="Buat Pesanan Beli PO: Pengadaan PO ke vendor"
+            className="btn-glass-tile flex items-center space-x-3 p-3 rounded-2xl text-left group cursor-pointer focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
           >
-            <div className="w-10 h-10 rounded-xl bg-purple-500/30 flex items-center justify-center text-purple-100 group-hover:scale-115 group-hover:rotate-6 transition-all duration-300 border border-purple-300/40 shadow-xs shrink-0">
-              <ShoppingBag className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center text-white group-hover:scale-110 transition-transform duration-200 border border-white/25 shadow-xs shrink-0">
+              <ShoppingBag className="w-4 h-4 text-white" aria-hidden="true" />
             </div>
             <div className="min-w-0">
-              <span className="text-xs font-black text-white block group-hover:text-purple-200 tracking-wide">
+              <span className="text-xs font-bold text-white block tracking-wide">
                 + Buat Pesanan Beli
               </span>
-              <span className="text-[11px] text-white/90 font-bold truncate block group-hover:text-white">
+              <span className="text-xs text-[#f0f3f2] font-normal truncate block mt-0.5">
                 Pengadaan PO ke vendor
               </span>
             </div>
           </button>
         </div>
-      </div>
+      </section>
 
-      {/* 3 Identity KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="glass-2 glass-2-interactive rounded-2xl border border-white/70 p-5 shadow-glass-2 flex items-center justify-between">
-          <div className="flex items-center space-x-4 min-w-0 pr-2">
-            <div className="w-11 h-11 rounded-2xl glass-3 border border-emerald-500/25 flex items-center justify-center text-[#174A3A] shrink-0 shadow-xs">
-              <Building2 className="w-5 h-5" />
-            </div>
-            <div className="min-w-0">
-              <span className="text-[11px] font-black text-slate-800 uppercase tracking-wider block">
-                Perusahaan Aktif
-              </span>
-              <h3 className="text-sm font-black text-[#0A110E] truncate">
-                {activeCompany?.name || "PT Rasa Aruna Bersama"}
-              </h3>
-              <p className="text-xs text-slate-700 font-semibold truncate">
-                Brand: {activeCompany?.brand || "Rasa Aruna Kitchen"} ({activeCompany?.city || "Jakarta"})
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => setCompanyModalOpen(true)}
-            className="shrink-0 px-3 py-1.5 rounded-xl bg-[#174A3A]/10 hover:bg-[#174A3A]/20 text-[#174A3A] font-black text-xs border border-[#174A3A]/25 transition-all flex items-center space-x-1 hover:scale-105 cursor-pointer shadow-xs"
-            title="Tambah atau Kelola Multi-Company"
-          >
-            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-            <span className="hidden sm:inline">Tambah</span>
-          </button>
-        </div>
-
-        <div className="glass-2 glass-2-interactive rounded-2xl border border-white/70 p-5 shadow-glass-2 flex items-center space-x-4">
-          <div className="w-11 h-11 rounded-2xl glass-3 border border-emerald-500/25 flex items-center justify-center text-emerald-700 shrink-0 shadow-xs">
-            <ShieldCheck className="w-5 h-5" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-black text-slate-800 uppercase tracking-wider">
-                Pengguna Aktif
-              </span>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] uppercase font-black bg-[#174A3A] text-white shadow-xs">
-                {user?.role || "GUEST"}
-              </span>
-            </div>
-            <h3 className="text-sm font-black text-[#0A110E] truncate mt-0.5">
-              {user?.name || "Memuat..."}
-            </h3>
-            <p className="text-xs text-slate-700 font-mono font-bold truncate">{user?.email}</p>
-          </div>
-        </div>
-
-        <div className="glass-2 glass-2-interactive rounded-2xl border border-white/70 p-5 shadow-glass-2 flex items-center space-x-4">
-          <div className="w-11 h-11 rounded-2xl glass-3 border border-amber-500/25 flex items-center justify-center text-[#C6A15B] shrink-0 shadow-xs">
-            <MapPin className="w-5 h-5" />
-          </div>
-          <div className="min-w-0">
-            <span className="text-[11px] font-black text-slate-800 uppercase tracking-wider block">
-              Lokasi Operasional
-            </span>
-            <h3 className="text-sm font-black text-[#0A110E] truncate">WH-JKT (Gudang Utama)</h3>
-            <p className="text-xs text-slate-700 font-semibold truncate">Gerai POS: CAFE-JKT (Kasir)</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Akses Modul / Aplikasi */}
-      <div className="glass-2 rounded-3xl border border-white/70 shadow-glass-2 overflow-hidden">
-        <div className="px-6 py-4.5 bg-white/40 border-b border-black/5 flex items-center justify-between">
+      {/* Akses Modul / Aplikasi (3 Info Cards dihapus agar Modul tampak di atas lipatan layar 1440x900) */}
+      <section 
+        aria-label="Katalog Modul dan Aplikasi Utama"
+        className="glass-2 rounded-3xl border border-white/70 shadow-glass-2 overflow-hidden"
+      >
+        <div className="px-5 py-3 bg-white/40 border-b border-black/5 flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-black text-[#0A110E] tracking-wider uppercase">
+            <h2 className="text-sm font-extrabold text-[#0A110E] tracking-wider uppercase">
               Modul & Aplikasi Utama
             </h2>
-            <p className="text-xs text-slate-700 font-semibold mt-0.5">
-              Pilih modul untuk mengelola alur operasional sesuai wewenang role <strong>{user?.role || "GUEST"}</strong>.
+            <p className="text-xs text-slate-700 font-medium mt-0.5">
+              Pilih modul untuk mengelola alur operasional sesuai wewenang role <strong className="font-bold text-[#26493b]">{user?.role || "GUEST"}</strong>.
             </p>
           </div>
         </div>
 
         {activeTab === "kanban" ? (
           /* Kanban Mode */
-          <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {APPS_CATALOG.map((app) => {
               const hasAccess = user ? app.roles.includes(user.role) : false;
               const IconComponent = app.icon;
 
+              const handleNavigate = () => {
+                if (!hasAccess) {
+                  alert(`Akses Dibatasi: Modul ${app.name} memerlukan role: ${app.roles.join(", ")}.`);
+                  return;
+                }
+                if (app.key === "sales") router.push("/sales/orders");
+                else if (app.key === "crm") router.push("/crm/leads");
+                else if (app.key === "inventory") router.push("/inventory/products");
+                else if (app.key === "purchase") router.push("/purchase/orders");
+                else if (app.key === "invoicing") router.push("/accounting/invoices");
+                else if (app.key === "accounting") router.push("/accounting/journal-entries");
+                else if (app.key === "pos") router.push("/pos");
+                else if (app.key === "dashboard") router.push("/dashboard");
+              };
+
               return (
                 <div
                   key={app.key}
-                  onClick={() => {
-                    if (!hasAccess) {
-                      alert(`Akses Dibatasi: Modul ${app.name} memerlukan role: ${app.roles.join(", ")}.`);
-                      return;
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`Buka modul ${app.name}: ${app.destination}${hasAccess ? "" : " (Terkunci)"}`}
+                  onClick={handleNavigate}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleNavigate();
                     }
-                    if (app.key === "sales") router.push("/sales/orders");
-                    else if (app.key === "crm") router.push("/crm/leads");
-                    else if (app.key === "inventory") router.push("/inventory/products");
-                    else if (app.key === "purchase") router.push("/purchase/orders");
-                    else if (app.key === "invoicing") router.push("/accounting/invoices");
-                    else if (app.key === "accounting") router.push("/accounting/journal-entries");
-                    else if (app.key === "pos") router.push("/pos");
-                    else if (app.key === "dashboard") router.push("/dashboard");
                   }}
-                  className={`rounded-2xl border p-5 transition-all relative flex flex-col justify-between cursor-pointer group ${
+                  className={`rounded-2xl border p-4.5 transition-all relative flex flex-col justify-between cursor-pointer group focus-visible:ring-2 focus-visible:ring-[#26493b] focus-visible:outline-none ${
                     hasAccess
-                      ? "glass-2 glass-2-interactive border-white/80 hover:border-[#174A3A]/40"
+                      ? "glass-2 glass-2-interactive border-white/80 hover:border-[#26493b]/40"
                       : "glass-3 opacity-60 border-dashed border-black/15"
                   }`}
                 >
                   <div>
                     <div className="flex items-center justify-between mb-3.5">
+                      {/* Uniform Brand Green Icon with subtle tint */}
                       <div
-                        className={`w-10 h-10 rounded-xl flex items-center justify-center text-white ${app.color} shadow-xs border border-white/30 group-hover:scale-110 group-hover:shadow-md transition-all duration-300`}
+                        className="w-10 h-10 rounded-xl flex items-center justify-center bg-[#26493b]/10 text-[#26493b] border border-[#26493b]/20 group-hover:scale-105 group-hover:shadow-xs transition-all duration-200"
                       >
-                        <IconComponent className="w-5 h-5" />
+                        <IconComponent className="w-5 h-5 text-[#26493b]" aria-hidden="true" />
                       </div>
-                      {hasAccess ? (
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black glass-badge-success flex items-center space-x-1">
-                          <CheckCircle2 className="w-3 h-3" />
-                          <span>Aktif</span>
-                        </span>
-                      ) : (
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black glass-badge-danger flex items-center space-x-1">
-                          <Lock className="w-3 h-3" />
+
+                      {/* Badge: "Aktif" removed per audit. Only show when restricted/locked */}
+                      {!hasAccess && (
+                        <span className="px-2.5 py-0.5 rounded-full text-xs font-bold glass-badge-danger flex items-center space-x-1" title="Akses Dibatasi">
+                          <Lock className="w-3.5 h-3.5" aria-hidden="true" />
                           <span>Terkunci</span>
                         </span>
                       )}
                     </div>
 
-                    <h4 className="font-black text-sm text-[#0A110E] group-hover:text-[#174A3A] transition-colors">{app.name}</h4>
-                    <p className="text-xs text-slate-700 font-semibold mt-1 leading-relaxed line-clamp-2">
+                    <h3 className="font-extrabold text-sm text-[#0A110E] group-hover:text-[#26493b] transition-colors">
+                      {app.name}
+                    </h3>
+                    <p className="text-xs text-slate-700 font-medium mt-1 leading-relaxed line-clamp-2">
                       {app.desc}
                     </p>
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-black/5 flex items-center justify-between text-xs">
-                    <span className="text-slate-600 font-bold">Buka Menu:</span>
-                    <span className="font-black text-[#174A3A] flex items-center space-x-1 group-hover:translate-x-1.5 transition-transform">
-                      <span>{app.destination}</span>
-                      <ChevronRight className="w-3.5 h-3.5" />
+                  {/* Footer: Single line, aligned, "Buka Menu:" removed, just destination + arrow */}
+                  <div className="mt-4 pt-3 border-t border-black/5 flex items-center justify-between text-xs min-h-[34px]">
+                    <span 
+                      className="font-bold text-[#26493b] flex items-center space-x-1.5 truncate group-hover:translate-x-1 transition-transform max-w-full"
+                      title={app.destination}
+                    >
+                      <span className="truncate">{app.destination}</span>
+                      <ChevronRight className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                     </span>
                   </div>
                 </div>
@@ -440,7 +408,7 @@ export default function HomePage() {
           /* List View Mode */
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs text-slate-900">
-              <thead className="bg-white/60 text-slate-800 font-extrabold uppercase tracking-wider text-[11px] border-b border-black/10">
+              <thead className="bg-white/60 text-slate-800 font-bold uppercase tracking-wider text-xs border-b border-black/10">
                 <tr>
                   <th className="px-6 py-3.5">Aplikasi</th>
                   <th className="px-6 py-3.5">Halaman Tujuan</th>
@@ -453,24 +421,24 @@ export default function HomePage() {
                 {APPS_CATALOG.map((app) => {
                   const hasAccess = user ? app.roles.includes(user.role) : false;
                   return (
-                    <tr key={app.key} className="hover:bg-emerald-500/10 transition-colors duration-150">
-                      <td className="px-6 py-3.5 font-black text-slate-900 flex items-center space-x-2.5">
-                        <span className={`w-3.5 h-3.5 rounded-md ${app.color} shadow-xs`} />
+                    <tr key={app.key} className="hover:bg-[#26493b]/5 transition-colors duration-150">
+                      <td className="px-6 py-3.5 font-bold text-slate-900 flex items-center space-x-2.5">
+                        <span className="w-3 h-3 rounded-md bg-[#26493b]" aria-hidden="true" />
                         <span>{app.name}</span>
                       </td>
-                      <td className="px-6 py-3.5 text-slate-800 font-bold">{app.destination}</td>
-                      <td className="px-6 py-3.5 font-mono text-[11px] text-slate-700 font-semibold">
+                      <td className="px-6 py-3.5 text-slate-800 font-medium">{app.destination}</td>
+                      <td className="px-6 py-3.5 font-mono text-xs text-slate-700 font-medium">
                         {app.roles.join(", ")}
                       </td>
                       <td className="px-6 py-3.5">
                         {hasAccess ? (
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black glass-badge-success inline-flex items-center space-x-1">
-                            <CheckCircle2 className="w-3 h-3" />
+                          <span className="text-xs font-semibold text-[#166534] inline-flex items-center space-x-1">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-[#166534]" aria-hidden="true" />
                             <span>Tersedia</span>
                           </span>
                         ) : (
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black glass-badge-danger inline-flex items-center space-x-1">
-                            <Lock className="w-3 h-3" />
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-bold glass-badge-danger inline-flex items-center space-x-1">
+                            <Lock className="w-3.5 h-3.5" aria-hidden="true" />
                             <span>Terkunci</span>
                           </span>
                         )}
@@ -491,10 +459,11 @@ export default function HomePage() {
                             else if (app.key === "pos") router.push("/pos");
                             else if (app.key === "dashboard") router.push("/dashboard");
                           }}
-                          className="text-xs font-black text-[#174A3A] hover:translate-x-1 transition-transform inline-flex items-center space-x-0.5"
+                          aria-label={`Buka modul ${app.name}`}
+                          className="text-xs font-bold text-[#26493b] hover:translate-x-0.5 hover:underline transition-all inline-flex items-center space-x-1 focus-visible:ring-2 focus-visible:ring-[#26493b] focus-visible:outline-none rounded px-1.5 py-0.5"
                         >
                           <span>Buka Modul</span>
-                          <span>&rarr;</span>
+                          <span aria-hidden="true">&rarr;</span>
                         </button>
                       </td>
                     </tr>
@@ -504,18 +473,18 @@ export default function HomePage() {
             </table>
           </div>
         )}
-      </div>
+      </section>
 
       {/* Collapsible Rubric Test Panel (T-01 & T-02) */}
-      <details className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
-        <summary className="cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white select-none">
+      <details className="group bg-slate-900 text-white rounded-2xl p-4 sm:p-5 border border-slate-800">
+        <summary className="cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white select-none focus-visible:ring-2 focus-visible:ring-[#26493b] focus-visible:outline-none rounded-lg p-1">
           <div className="flex items-center space-x-2">
-            <span className="px-2 py-0.5 rounded-md bg-[#C6A15B] text-slate-900 font-bold text-[10px] uppercase">
+            <span className="px-2 py-0.5 rounded-md bg-[#d4b36a] text-[#14281f] font-bold text-xs uppercase">
               Developer Tool
             </span>
-            <span>🛠️ Panel Pengujian Otomatis Rubrik (T-01 & T-02)</span>
+            <span className="font-bold text-xs">🛠️ Panel Pengujian Otomatis Rubrik (T-01 & T-02)</span>
           </div>
-          <span className="text-[11px] text-slate-400 group-open:rotate-180 transition-transform">
+          <span className="text-xs text-slate-400 group-open:rotate-180 transition-transform" aria-hidden="true">
             ▼
           </span>
         </summary>
@@ -531,17 +500,19 @@ export default function HomePage() {
               <button
                 onClick={runTestT01}
                 disabled={testing}
-                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center space-x-1.5 shadow-xs transition-all"
+                aria-label="Jalankan Pengujian T-01"
+                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-emerald-700 hover:bg-emerald-600 active:bg-emerald-800 text-white flex items-center space-x-1.5 shadow-xs transition-all focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
               >
-                <Play className="w-3.5 h-3.5" />
+                <Play className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>Jalankan T-01</span>
               </button>
               <button
                 onClick={runTestT02}
                 disabled={testing}
-                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-rose-600 hover:bg-rose-500 text-white flex items-center space-x-1.5 shadow-xs transition-all"
+                aria-label="Jalankan Pengujian T-02"
+                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-rose-700 hover:bg-rose-600 active:bg-rose-800 text-white flex items-center space-x-1.5 shadow-xs transition-all focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
               >
-                <Play className="w-3.5 h-3.5" />
+                <Play className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>Jalankan T-02</span>
               </button>
             </div>
@@ -550,20 +521,20 @@ export default function HomePage() {
           {testResult && (
             <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-2 text-xs">
               <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                <span className="font-bold text-[#C6A15B]">
+                <span className="font-bold text-[#d4b36a]">
                   [{testResult.id}] {testResult.name}
                 </span>
                 <span
                   className={`px-2.5 py-0.5 rounded-full font-bold text-xs ${
                     testResult.status === "PASS"
-                      ? "bg-emerald-500 text-slate-950"
-                      : "bg-rose-500 text-white"
+                      ? "bg-emerald-600 text-white"
+                      : "bg-rose-600 text-white"
                   }`}
                 >
                   {testResult.status}
                 </span>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px] pt-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs pt-1">
                 <div>
                   <span className="text-slate-400 block font-semibold">Ekspektasi:</span>
                   <p className="text-slate-200 mt-0.5">{testResult.expected}</p>

@@ -3,12 +3,25 @@
 @tailwind utilities;
 
 :root {
-  /* Brand palette */
+  /* Brand palette tokens */
+  --brand-green: #26493b;
+  --brand-green-dark: #1b382d;
+  --brand-green-light: #335e4d;
+  --brand-gold-button: #d4b36a;
+  --brand-gold-button-text: #14281f;
+  --gold-text: #8a6a28;
+  --hero-tile-bg: #4a6d60;
+  --hero-tile-text: #ffffff;
+  --hero-tile-sub: #f0f3f2;
+  --hero-chip-bg: #d9f9e6;
+  --hero-chip-text: #14281f;
+
+  /* Legacy & base tokens */
   --background: #F4F6F3;
   --foreground: #151A18;
-  --primary: #174A3A;
+  --primary: #26493b;
   --secondary: #DCE8DF;
-  --accent: #C6A15B;
+  --accent: #d4b36a;
   --border: rgba(255, 255, 255, 0.55);
 
   /* Glass Level 1 (Hero, Sidebar, Topbar) - 45% white, 22px blur, 160% saturate */
@@ -34,22 +47,22 @@
   --glass-text-secondary: #1A2620; /* ~13:1 on glass */
   --glass-text-muted: #2E3E35;     /* ~8.5:1 on glass */
 
-  /* Translucent Tinted Glass Status Badges */
-  --glass-badge-success-bg: rgba(16, 185, 129, 0.12);
-  --glass-badge-success-border: rgba(16, 185, 129, 0.35);
-  --glass-badge-success-text: #065F46;
+  /* Translucent Tinted Status Badges (Separated from Brand, WCAG AA verified) */
+  --glass-badge-success-bg: rgba(22, 101, 52, 0.12);
+  --glass-badge-success-border: rgba(22, 101, 52, 0.32);
+  --glass-badge-success-text: #166534; /* 7.13:1 on light */
 
-  --glass-badge-warning-bg: rgba(245, 158, 11, 0.12);
-  --glass-badge-warning-border: rgba(245, 158, 11, 0.35);
-  --glass-badge-warning-text: #92400E;
+  --glass-badge-warning-bg: rgba(133, 77, 14, 0.12);
+  --glass-badge-warning-border: rgba(133, 77, 14, 0.32);
+  --glass-badge-warning-text: #854d0e; /* 6.85:1 on light */
 
-  --glass-badge-danger-bg: rgba(244, 63, 94, 0.12);
-  --glass-badge-danger-border: rgba(244, 63, 94, 0.35);
-  --glass-badge-danger-text: #9F1239;
+  --glass-badge-danger-bg: rgba(153, 27, 27, 0.12);
+  --glass-badge-danger-border: rgba(153, 27, 27, 0.32);
+  --glass-badge-danger-text: #991b1b; /* 8.31:1 on light */
 
-  --glass-badge-info-bg: rgba(59, 130, 246, 0.12);
-  --glass-badge-info-border: rgba(59, 130, 246, 0.35);
-  --glass-badge-info-text: #1E40AF;
+  --glass-badge-info-bg: rgba(30, 64, 175, 0.12);
+  --glass-badge-info-border: rgba(30, 64, 175, 0.32);
+  --glass-badge-info-text: #1e40af; /* 8.72:1 on light */
 }
 
 body {
@@ -110,24 +123,50 @@ body {
     transform: translateY(-1px) scale(0.995);
   }
 
-  /* Frosted Glass Tile Button inside Hero Banner */
+  /* Frosted Glass Tile Button inside Hero Banner - WCAG AA Contrast Compliant */
   .btn-glass-tile {
-    background-color: rgba(255, 255, 255, 0.22);
+    background-color: var(--hero-tile-bg, #4a6d60);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-    border: 1px solid rgba(255, 255, 255, 0.38);
-    box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.08), inset 0 1px 0 0 rgba(255, 255, 255, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.12), inset 0 1px 0 0 rgba(255, 255, 255, 0.25);
     transition: all 220ms cubic-bezier(0.16, 1, 0.3, 1);
     will-change: transform, box-shadow;
   }
   .btn-glass-tile:hover {
-    background-color: rgba(255, 255, 255, 0.38);
-    border-color: rgba(255, 255, 255, 0.85);
-    transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.20), inset 0 1px 0 0 #FFFFFF;
+    background-color: #3f6054;
+    border-color: rgba(255, 255, 255, 0.50);
+    transform: translateY(-2px) scale(1.015);
+    box-shadow: 0 8px 24px -2px rgba(0, 0, 0, 0.22), inset 0 1px 0 0 rgba(255, 255, 255, 0.40);
   }
   .btn-glass-tile:active {
     transform: translateY(0) scale(0.99);
+  }
+
+  /* Gold Action Button (Buka Kasir POS) - High Contrast WCAG AAA */
+  .btn-gold-action {
+    background-color: var(--brand-gold-button, #d4b36a);
+    color: var(--brand-gold-button-text, #14281f);
+    border: 1px solid rgba(20, 40, 31, 0.18);
+    box-shadow: 0 2px 8px 0 rgba(20, 40, 31, 0.14), inset 0 1px 0 0 rgba(255, 255, 255, 0.4);
+    transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .btn-gold-action:hover {
+    background-color: #c8a65c;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px 0 rgba(20, 40, 31, 0.20), inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+  }
+  .btn-gold-action:active {
+    transform: translateY(0);
+  }
+
+  /* Accessible High-Contrast Focus Ring */
+  .focus-brand-ring {
+    outline: none;
+  }
+  .focus-brand-ring:focus-visible {
+    outline: 2px solid #26493b;
+    outline-offset: 2px;
   }
 
   /* Level 3: Dense Data Areas (Tables, Forms, Modal Content) */

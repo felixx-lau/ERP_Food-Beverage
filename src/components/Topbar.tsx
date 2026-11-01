@@ -113,100 +113,96 @@ export default function Topbar({
             {/* Mobile Hamburger Toggle */}
             <button
               onClick={onToggleMobileSidebar}
-              className="lg:hidden flex items-center justify-center w-8 h-8 rounded-xl bg-white/60 hover:bg-white/95 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition-all text-slate-800 hover:text-[#174A3A] border border-white/70 shadow-xs"
+              aria-label="Buka menu navigasi"
+              className="lg:hidden flex items-center justify-center w-8 h-8 rounded-xl bg-white/60 hover:bg-white/95 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition-all text-slate-800 hover:text-[#26493b] border border-white/70 shadow-xs focus-visible:ring-2 focus-visible:ring-[#26493b] focus-visible:outline-none"
             >
-              <Menu className="w-5 h-5" />
+              <Menu className="w-5 h-5" aria-hidden="true" />
             </button>
 
             {/* App Switcher Button */}
             <button
               onClick={onOpenAppSwitcher}
-              title="App Switcher (▦ Apps)"
-              className="flex items-center justify-center w-8 h-8 rounded-xl bg-white/60 hover:bg-white/95 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition-all text-slate-800 hover:text-[#174A3A] border border-white/70 shadow-xs"
+              aria-label="Buka Hub Aplikasi (App Switcher)"
+              title="Hub Aplikasi (▦ Apps)"
+              className="flex items-center justify-center w-8 h-8 rounded-xl bg-white/60 hover:bg-white/95 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition-all text-slate-800 hover:text-[#26493b] border border-white/70 shadow-xs focus-visible:ring-2 focus-visible:ring-[#26493b] focus-visible:outline-none"
             >
-              <LayoutGrid className="w-4 h-4" />
+              <LayoutGrid className="w-4 h-4" aria-hidden="true" />
             </button>
 
-            {/* Multi-Company Switcher */}
+            {/* Multi-Company Switcher (Retained company name) */}
             <CompanySwitcher currentUser={currentUser} />
 
-            {/* Breadcrumbs */}
-            <div className="hidden lg:flex items-center space-x-2 text-xs font-semibold text-slate-800 truncate">
-              <span className="text-slate-900 font-black truncate max-w-[140px]">
-                {activeCompany?.name || "PT Rasa Aruna Bersama"}
-              </span>
-              <span className="text-black/30">/</span>
+            {/* Breadcrumbs (Deduplicated company name) */}
+            <nav aria-label="Breadcrumb" className="hidden lg:flex items-center space-x-2 text-xs font-semibold text-slate-800 truncate">
               {breadcrumbs && breadcrumbs.length > 0 ? (
                 breadcrumbs.map((b, idx) => (
                   <React.Fragment key={idx}>
-                    {idx > 0 && <span className="text-black/30">/</span>}
-                    <span className={idx === breadcrumbs.length - 1 ? "font-black text-[#174A3A]" : "text-slate-700 font-bold"}>
+                    {idx > 0 && <span className="text-black/30" aria-hidden="true">/</span>}
+                    <span className={idx === breadcrumbs.length - 1 ? "font-bold text-[#26493b]" : "text-slate-700 font-medium"}>
                       {b.label}
                     </span>
                   </React.Fragment>
                 ))
               ) : (
-                <span className="font-black text-[#174A3A]">Core ERP</span>
+                <span className="font-bold text-[#26493b]">Beranda</span>
               )}
-            </div>
+            </nav>
 
             {/* Default location indicator */}
-            <div className="hidden md:inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-emerald-500/15 text-emerald-950 border border-emerald-500/30 backdrop-blur-xs">
-              <MapPin className="w-3 h-3 text-[#C6A15B]" />
+            <div 
+              className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-[#26493b]/10 text-[#26493b] border border-[#26493b]/20 backdrop-blur-xs shrink-0"
+              title="Lokasi Operasional: WH-JKT (Gudang Utama) · Gerai: CAFE-JKT"
+            >
+              <MapPin className="w-3.5 h-3.5 text-[#8a6a28]" aria-hidden="true" />
               <span>WH-JKT</span>
             </div>
           </div>
 
-          {/* Right: Team Manage, Audit Trail, Reset Seed, and User Role Switcher */}
+          {/* Right: Team Manage, Audit Trail, and User Role Switcher */}
           <div className="flex items-center space-x-2">
             {/* Manage Team Shortcut */}
             <button
               onClick={() => setManageTeamOpen(true)}
-              className="hidden lg:inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold btn-glass-secondary hover:-translate-y-0.5 hover:shadow-md rounded-xl transition-all shadow-xs"
+              aria-label="Kelola Tim & Anggota Kelompok"
+              className="hidden lg:inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold btn-glass-secondary hover:-translate-y-0.5 hover:shadow-md rounded-xl transition-all shadow-xs focus-visible:ring-2 focus-visible:ring-[#26493b] focus-visible:outline-none"
               title="Kelola Tim & Anggota Kelompok"
             >
-              <Users2 className="w-3.5 h-3.5 text-[#C6A15B]" />
+              <Users2 className="w-3.5 h-3.5 text-[#8a6a28]" aria-hidden="true" />
               <span>Kelola Tim</span>
             </button>
 
             {/* Audit History Shortcut */}
             <button
               onClick={onOpenAuditDrawer}
-              className="hidden sm:inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold btn-glass-secondary hover:-translate-y-0.5 hover:shadow-md rounded-xl transition-all shadow-xs"
+              aria-label="Buka Log Audit & Security History"
+              className="hidden sm:inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold btn-glass-secondary hover:-translate-y-0.5 hover:shadow-md rounded-xl transition-all shadow-xs focus-visible:ring-2 focus-visible:ring-[#26493b] focus-visible:outline-none"
               title="Buka Log Audit & Security History (SR-15 / F-21)"
             >
-              <ShieldAlert className="w-3.5 h-3.5 text-[#C6A15B]" />
+              <ShieldAlert className="w-3.5 h-3.5 text-[#8a6a28]" aria-hidden="true" />
               <span className="hidden md:inline">Audit Trail</span>
-            </button>
-
-            {/* Reset Seed Button */}
-            <button
-              onClick={onOpenResetModal}
-              className="inline-flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-black bg-rose-500/15 hover:bg-rose-500/25 active:bg-rose-500/35 hover:-translate-y-0.5 hover:shadow-md text-rose-800 rounded-xl transition-all border border-rose-500/30 shadow-xs backdrop-blur-xs"
-              title="Reset Database ke Baseline Seed Skenario Tugas (Hanya Role Owner)"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Reset Seed</span>
             </button>
 
             {/* User Profile & Role Switcher */}
             <div className="relative">
               <button
                 onClick={() => setRoleMenuOpen(!roleMenuOpen)}
-                className="flex items-center space-x-2 px-2.5 py-1.5 rounded-xl glass-2 hover:bg-white/95 hover:-translate-y-0.5 hover:shadow-md border border-white/70 text-slate-900 text-xs font-bold transition-all shadow-xs"
+                aria-label={`Menu pengguna: ${currentUser?.name || "Pengguna"}, Role: ${currentUser?.role || "OWNER"}`}
+                aria-expanded={roleMenuOpen}
+                className="flex items-center space-x-2 px-2.5 py-1.5 rounded-xl glass-2 hover:bg-white/95 hover:-translate-y-0.5 hover:shadow-md border border-white/70 text-slate-900 text-xs font-bold transition-all shadow-xs focus-visible:ring-2 focus-visible:ring-[#26493b] focus-visible:outline-none"
               >
-                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#174A3A] to-[#205c49] text-white font-bold text-xs flex items-center justify-center shadow-xs">
+                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#26493b] to-[#335e4d] text-white font-bold text-xs flex items-center justify-center shadow-xs">
                   {currentUser?.name ? currentUser.name.charAt(0) : "M"}
                 </div>
                 <div className="text-left hidden sm:block">
-                  <p className="font-black leading-tight text-slate-900 max-w-[110px] truncate">
+                  <p className="font-bold leading-tight text-slate-900 max-w-[110px] truncate">
                     {currentUser?.name || "Memuat..."}
                   </p>
-                  <p className="text-[10px] text-[#C6A15B] font-extrabold uppercase tracking-wider">
+                  {/* High contrast role label with #8a6a28 (gold-text) */}
+                  <p className="text-xs text-[#8a6a28] font-extrabold uppercase tracking-wider">
                     {currentUser?.role || "OWNER"}
                   </p>
                 </div>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-700" />
+                <ChevronDown className="w-3.5 h-3.5 text-slate-700" aria-hidden="true" />
               </button>
 
               {/* Role Switcher Dropdown */}
@@ -307,23 +303,41 @@ export default function Topbar({
                     )}
                   </div>
 
-                  {/* Manage Team & Logout Actions */}
+                  {/* Actions: Manage Team, Dev Reset Seed, & Logout */}
                   <div className="p-2 border-t border-[#E5E9E4] bg-[#F7F8F5] space-y-1.5">
                     <button
                       onClick={() => {
                         setRoleMenuOpen(false);
                         setManageTeamOpen(true);
                       }}
-                      className="w-full py-2 px-3 bg-[#174A3A] hover:bg-[#134032] active:bg-[#0f3328] text-white rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 transition-all shadow-xs"
+                      className="w-full py-2 px-3 bg-[#26493b] hover:bg-[#1b382d] active:bg-[#14281f] text-white rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 transition-all shadow-xs focus-visible:ring-2 focus-visible:ring-[#26493b] focus-visible:outline-none"
                     >
-                      <UserPlus className="w-3.5 h-3.5 text-[#C6A15B]" />
+                      <UserPlus className="w-3.5 h-3.5 text-[#d4b36a]" aria-hidden="true" />
                       <span>+ Tambah / Kelola Anggota Tim</span>
                     </button>
+
+                    {/* Developer/Demo Tool: Reset Seed with confirmation dialog */}
+                    {(process.env.NODE_ENV !== "production" || activeCompany?.isDefault) && (
+                      <button
+                        onClick={() => {
+                          setRoleMenuOpen(false);
+                          if (window.confirm("Buka panel konfirmasi pemulihan baseline seed database?")) {
+                            onOpenResetModal();
+                          }
+                        }}
+                        className="w-full py-2 px-3 bg-amber-500/10 hover:bg-amber-500/20 active:bg-amber-500/30 text-amber-900 rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 transition-all border border-amber-500/30 focus-visible:ring-2 focus-visible:ring-[#26493b] focus-visible:outline-none"
+                        title="Buka dialog konfirmasi reset seed database (Hanya mode Demo / Dev)"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5 text-amber-800" aria-hidden="true" />
+                        <span>🛠️ Reset Baseline Seed (Demo / Dev)</span>
+                      </button>
+                    )}
+
                     <button
                       onClick={handleLogout}
-                      className="w-full py-2 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 transition-all border border-rose-200"
+                      className="w-full py-2 px-3 bg-rose-50 hover:bg-rose-100 active:bg-rose-200 text-rose-800 rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 transition-all border border-rose-200 focus-visible:ring-2 focus-visible:ring-[#26493b] focus-visible:outline-none"
                     >
-                      <LogOut className="w-3.5 h-3.5" />
+                      <LogOut className="w-3.5 h-3.5 text-rose-700" aria-hidden="true" />
                       <span>Keluar dari Sistem (Logout)</span>
                     </button>
                   </div>

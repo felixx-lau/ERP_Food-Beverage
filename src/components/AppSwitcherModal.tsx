@@ -27,74 +27,74 @@ export const APPS_CATALOG = [
   {
     key: "sales",
     name: "Sales",
-    desc: "Quotation, Sales Orders, Discount Approval & Price Lock",
+    desc: "Penawaran harga, sales order, persetujuan diskon & penguncian harga",
     icon: ShoppingCart,
-    color: "bg-emerald-600",
+    color: "bg-[#26493b]/10 text-[#26493b] border border-[#26493b]/20",
     roles: ["OWNER", "SALES"],
-    destination: "Quotation & Orders",
+    destination: "Penawaran & Pesanan (SO)",
   },
   {
     key: "crm",
     name: "CRM",
-    desc: "Lead Pipeline Kanban & Opportunity Tracking",
+    desc: "Pipeline prospek kanban & pelacakan peluang bisnis",
     icon: Users2,
-    color: "bg-blue-600",
+    color: "bg-[#26493b]/10 text-[#26493b] border border-[#26493b]/20",
     roles: ["OWNER", "SALES"],
-    destination: "Leads Kanban",
+    destination: "Papan Prospek (Leads CRM)",
   },
   {
     key: "purchase",
     name: "Purchase",
-    desc: "RFQ, Vendor PO & Procurement Commitments",
+    desc: "Permintaan penawaran (RFQ), PO vendor & komitmen pengadaan",
     icon: Truck,
-    color: "bg-amber-600",
+    color: "bg-[#26493b]/10 text-[#26493b] border border-[#26493b]/20",
     roles: ["OWNER", "PROCUREMENT"],
-    destination: "RFQ & PO",
+    destination: "Permintaan Penawaran (RFQ) & PO",
   },
   {
     key: "inventory",
     name: "Inventory",
-    desc: "15 SKU Variants, Multi-Location Stock, Delivery & Transfer",
+    desc: "15 varian SKU, stok multi-lokasi, surat jalan & transfer",
     icon: Package,
-    color: "bg-indigo-600",
+    color: "bg-[#26493b]/10 text-[#26493b] border border-[#26493b]/20",
     roles: ["OWNER", "WAREHOUSE", "PROCUREMENT"],
-    destination: "Stock & Operations",
+    destination: "Stok & Operasional",
   },
   {
     key: "accounting",
     name: "Accounting",
-    desc: "Double-Entry General Ledger, Chart of Accounts & COGS",
+    desc: "Buku besar double-entry, bagan akun (CoA) & COGS",
     icon: BookOpen,
-    color: "bg-purple-700",
+    color: "bg-[#26493b]/10 text-[#26493b] border border-[#26493b]/20",
     roles: ["OWNER", "FINANCE"],
-    destination: "General Ledger",
+    destination: "Buku Besar & Jurnal",
   },
   {
     key: "invoicing",
     name: "Invoicing",
-    desc: "Delivery Invoices, Vendor Bills, 3-Way Match & PBJT 10%",
+    desc: "Faktur pengiriman, tagihan vendor, 3-way match & PBJT 10%",
     icon: Receipt,
-    color: "bg-teal-600",
+    color: "bg-[#26493b]/10 text-[#26493b] border border-[#26493b]/20",
     roles: ["OWNER", "FINANCE", "SALES"],
-    destination: "Customer Invoices & Bills",
+    destination: "Faktur & Tagihan",
   },
   {
     key: "pos",
     name: "Point of Sale",
-    desc: "Kasir Gerai CAFE-JKT, POS Sessions, QRIS & Takeaway",
+    desc: "Kasir gerai CAFE-JKT, sesi POS, QRIS & pencatatan pesanan",
     icon: Store,
-    color: "bg-rose-600",
+    color: "bg-[#26493b]/10 text-[#26493b] border border-[#26493b]/20",
     roles: ["OWNER", "CASHIER"],
-    destination: "POS01 Session",
+    destination: "Sesi Kasir POS",
   },
   {
     key: "dashboard",
     name: "Dashboard",
-    desc: "KPI Operasional, Valuasi Rp12.2M, A/R & Rekonsiliasi",
+    desc: "KPI operasional, ringkasan valuasi persediaan & rekonsiliasi",
     icon: BarChart3,
-    color: "bg-cyan-700",
+    color: "bg-[#26493b]/10 text-[#26493b] border border-[#26493b]/20",
     roles: ["OWNER", "FINANCE", "SALES", "WAREHOUSE", "PROCUREMENT"],
-    destination: "Reporting & KPI",
+    destination: "Laporan & KPI",
   },
 ];
 
@@ -128,23 +128,24 @@ export default function AppSwitcherModal({
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-full hover:bg-white/80 text-slate-600 hover:text-slate-900 transition-colors shadow-xs"
+          aria-label="Tutup jendela daftar aplikasi"
+          className="absolute top-5 right-5 p-2 rounded-full hover:bg-white/80 text-slate-600 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-[#26493b] focus-visible:outline-none transition-colors shadow-xs"
         >
-          <X className="w-5 h-5" />
+          <X className="w-5 h-5" aria-hidden="true" />
         </button>
 
         {/* Modal Title */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-emerald-500/15 text-xs font-black text-[#174A3A] mb-2 border border-emerald-500/30">
-            <span className="w-2 h-2 rounded-full bg-[#174A3A]" />
-            <span>PT Rasa Aruna Bersama — Rasa Aruna Kitchen</span>
+          <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-[#26493b]/10 text-xs font-bold text-[#26493b] mb-2 border border-[#26493b]/20">
+            <span className="w-2 h-2 rounded-full bg-[#26493b]" aria-hidden="true" />
+            <span>Pusat Navigasi Terpadu</span>
           </div>
           <h2 className="text-2xl font-black tracking-tight text-slate-900 flex items-center justify-center space-x-2">
             <span>Rasa Aruna Apps Hub</span>
           </h2>
           <p className="text-xs text-slate-700 font-bold mt-1">
             Navigasi modul ERP terintegrasi · Role Aktif:{" "}
-            <span className="font-black text-[#174A3A] uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30">
+            <span className="font-black text-[#26493b] uppercase px-2.5 py-0.5 rounded-full bg-[#26493b]/10 border border-[#26493b]/20">
               {userRole || "GUEST"}
             </span>
           </p>
@@ -160,23 +161,23 @@ export default function AppSwitcherModal({
               <button
                 key={app.key}
                 onClick={() => handleAppClick(app.key)}
-                className={`group flex flex-col items-center text-center p-4 rounded-2xl border transition-all relative ${
+                className={`group flex flex-col items-center text-center p-4 rounded-2xl border transition-all relative focus-visible:ring-2 focus-visible:ring-[#26493b] focus-visible:outline-none ${
                   hasAccess
-                    ? "glass-2 glass-2-interactive border-white/80 hover:border-[#174A3A]/40"
+                    ? "glass-2 glass-2-interactive border-white/80 hover:border-[#26493b]/40"
                     : "glass-3 opacity-50 cursor-not-allowed border-dashed border-black/15"
                 }`}
               >
                 <div
-                  className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-md mb-3 ${app.color} text-white transition-transform group-hover:scale-110 group-hover:shadow-lg`}
+                  className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-xs mb-3 ${app.color} transition-transform group-hover:scale-110`}
                 >
-                  <IconComponent className="w-7 h-7" />
+                  <IconComponent className="w-7 h-7 text-[#26493b]" aria-hidden="true" />
                 </div>
 
                 <div className="flex items-center space-x-1.5">
-                  <span className="font-black text-sm tracking-wide text-slate-900 group-hover:text-[#174A3A] transition-colors">
+                  <span className="font-black text-sm tracking-wide text-slate-900 group-hover:text-[#26493b] transition-colors">
                     {app.name}
                   </span>
-                  {!hasAccess && <Lock className="w-3.5 h-3.5 text-amber-700" />}
+                  {!hasAccess && <Lock className="w-3.5 h-3.5 text-amber-700" aria-hidden="true" />}
                 </div>
 
                 <span className="text-[11px] text-slate-700 font-semibold mt-1 line-clamp-2 leading-relaxed">

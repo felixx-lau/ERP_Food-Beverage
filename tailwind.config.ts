@@ -9,6 +9,48 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Brand design tokens per UI/UX Audit
+        brand: {
+          green: "#26493b", // Primary action, active menu
+          "green-dark": "#1b382d",
+          "green-light": "#335e4d",
+          "green-tint": "rgba(38, 73, 59, 0.08)",
+          "gold-button": "#d4b36a",
+          "gold-button-text": "#14281f",
+          "gold-button-hover": "#c4a259",
+          "gold-text": "#8a6a28", // Text emas di atas putih / light (role label)
+          "hero-tile-bg": "#4a6d60", // Darker glass tile background for contrast
+          "hero-tile-text": "#ffffff",
+          "hero-tile-sub": "#f0f3f2",
+          "hero-chip-bg": "#d9f9e6",
+          "hero-chip-text": "#14281f",
+        },
+        status: {
+          success: {
+            DEFAULT: "#166534",
+            bg: "rgba(22, 101, 52, 0.12)",
+            border: "rgba(22, 101, 52, 0.30)",
+            text: "#166534",
+          },
+          warning: {
+            DEFAULT: "#854d0e",
+            bg: "rgba(133, 77, 14, 0.12)",
+            border: "rgba(133, 77, 14, 0.30)",
+            text: "#854d0e",
+          },
+          danger: {
+            DEFAULT: "#991b1b",
+            bg: "rgba(153, 27, 27, 0.12)",
+            border: "rgba(153, 27, 27, 0.30)",
+            text: "#991b1b",
+          },
+          info: {
+            DEFAULT: "#1e40af",
+            bg: "rgba(30, 64, 175, 0.12)",
+            border: "rgba(30, 64, 175, 0.30)",
+            text: "#1e40af",
+          },
+        },
         aruna: {
           DEFAULT: "#174A3A", // Primary deep forest green
           dark: "#11382C",

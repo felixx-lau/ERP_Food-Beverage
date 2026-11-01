@@ -123,18 +123,17 @@ export default function AppLayout({
         />
 
         {/* Content Body */}
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5 space-y-4">
           {/* Optional unified page header if title is passed */}
           {title && (
-            <div className="glass-2 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="space-y-1">
+            <div className="glass-2 rounded-2xl py-2.5 px-4 sm:px-5 sm:py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="space-y-0.5">
                 <div className="flex items-center space-x-2.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#174A3A] ring-4 ring-emerald-500/20" />
-                  <h1 className="text-xl font-bold tracking-tight text-[var(--glass-text-primary)]">
+                  <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[var(--glass-text-primary)]">
                     {title}
                   </h1>
                   {wireframe && (
-                    <span className="hidden sm:inline-block px-2.5 py-0.5 rounded-full text-[10px] font-mono font-medium text-emerald-800 bg-emerald-500/10 border border-emerald-500/20">
+                    <span className="hidden sm:inline-block px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold text-[#166534] bg-emerald-500/10 border border-emerald-500/20">
                       {wireframe}
                     </span>
                   )}

@@ -82,7 +82,7 @@ const NAVIGATION_GROUPS: NavGroup[] = [
     ],
   },
   {
-    group: "Point of Sale",
+    group: "Penjualan Kasir (POS)",
     items: [
       { name: "Kasir POS", href: "/pos", icon: Store, roles: ["OWNER", "CASHIER"], wireframe: "S-14" },
     ],
@@ -122,17 +122,21 @@ export default function Sidebar({
     <div className="flex flex-col h-full glass-1 text-[var(--glass-text-primary)] select-none border-r border-white/40 shadow-glass-1">
       {/* Brand Header */}
       <div className="h-14 px-4 flex items-center justify-between border-b border-white/30 bg-white/30 backdrop-blur-md">
-        <Link href="/" className="flex items-center space-x-2.5 overflow-hidden">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#C6A15B] to-[#b5924f] flex items-center justify-center text-[#174A3A] font-extrabold text-base flex-shrink-0 shadow-sm border border-white/40">
+        <Link 
+          href="/" 
+          className="flex items-center space-x-2.5 overflow-hidden rounded-xl p-1 focus-visible:ring-2 focus-visible:ring-[#26493b] focus-visible:outline-none"
+          title={`${activeBrand} — Portal ERP`}
+        >
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#d4b36a] to-[#b5924f] flex items-center justify-center text-[#14281f] font-extrabold text-sm flex-shrink-0 shadow-xs border border-white/40">
             {initials}
           </div>
           {!isCollapsed && (
             <div className="flex flex-col min-w-0">
-              <span className="font-black text-sm tracking-wide text-slate-900 truncate">
+              <span className="font-extrabold text-sm tracking-tight text-slate-900 truncate">
                 {activeBrand}
               </span>
-              <span className="text-[10px] text-slate-700 font-extrabold tracking-tight truncate">
-                {activeName}
+              <span className="text-xs text-slate-700 font-semibold tracking-normal truncate">
+                Portal ERP
               </span>
             </div>
           )}
@@ -141,10 +145,11 @@ export default function Sidebar({
         {/* Collapse toggle (desktop) */}
         <button
           onClick={onToggleCollapse}
-          className="hidden lg:flex items-center justify-center w-6 h-6 rounded-md hover:bg-white/60 text-[var(--glass-text-muted)] hover:text-[var(--glass-text-primary)] transition-colors"
+          aria-label={isCollapsed ? "Perluas Sidebar" : "Ciutkan Sidebar"}
+          className="hidden lg:flex items-center justify-center w-7 h-7 rounded-lg hover:bg-white/80 text-[var(--glass-text-muted)] hover:text-[#26493b] focus-visible:ring-2 focus-visible:ring-[#26493b] focus-visible:outline-none transition-colors"
           title={isCollapsed ? "Perluas Sidebar" : "Ciutkan Sidebar"}
         >
-          {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          {isCollapsed ? <ChevronRight className="w-4 h-4" aria-hidden="true" /> : <ChevronLeft className="w-4 h-4" aria-hidden="true" />}
         </button>
       </div>
 
@@ -153,7 +158,7 @@ export default function Sidebar({
         {NAVIGATION_GROUPS.map((group) => (
           <div key={group.group} className="space-y-1">
             {!isCollapsed && (
-              <p className="px-2.5 text-[10px] font-black text-slate-700 uppercase tracking-widest">
+              <p className="px-2.5 text-xs font-bold text-slate-700 uppercase tracking-wider">
                 {group.group}
               </p>
             )}
@@ -168,30 +173,31 @@ export default function Sidebar({
                   key={item.href}
                   href={item.href}
                   onClick={onCloseMobile}
-                  title={`${item.name} (${item.wireframe})`}
-                  className={`group flex items-center rounded-xl px-2.5 py-2 text-xs transition-all duration-200 ${
+                  title={item.name}
+                  className={`group flex items-center rounded-xl px-2.5 py-2 text-xs transition-all duration-200 focus-visible:ring-2 focus-visible:ring-[#26493b] focus-visible:outline-none ${
                     isActive
-                      ? "bg-gradient-to-r from-[#174A3A] to-[#1e5846] text-white font-extrabold shadow-md shadow-[#174A3A]/25 border border-white/30 transform translate-x-1"
+                      ? "bg-gradient-to-r from-[#26493b] to-[#1f4032] text-white font-bold shadow-md shadow-[#26493b]/20 border border-white/20 transform translate-x-1"
                       : hasAccess
-                      ? "text-slate-800 font-bold hover:bg-white/80 hover:text-[#174A3A] hover:translate-x-1.5 hover:shadow-xs"
+                      ? "text-slate-800 font-bold hover:bg-white/80 hover:text-[#26493b] hover:translate-x-1 hover:shadow-xs"
                       : "text-slate-400 font-medium hover:bg-white/20"
                   }`}
                 >
                   <Icon
-                    className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 group-hover:scale-115 ${
+                    className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 group-hover:scale-110 ${
                       isActive
-                        ? "text-[#C6A15B]"
+                        ? "text-[#d4b36a]"
                         : hasAccess
-                        ? "text-[#174A3A] group-hover:text-[#174A3A]"
+                        ? "text-[#26493b] group-hover:text-[#26493b]"
                         : "text-slate-400"
                     } ${!isCollapsed ? "mr-2.5" : "mx-auto"}`}
+                    aria-hidden="true"
                   />
 
                   {!isCollapsed && (
                     <div className="flex-1 flex items-center justify-between min-w-0">
                       <span className="truncate">{item.name}</span>
                       {!hasAccess && (
-                        <Lock className="w-3 h-3 text-[#C6A15B] flex-shrink-0 ml-1.5" />
+                        <Lock className="w-3 h-3 text-amber-700 flex-shrink-0 ml-1.5" aria-hidden="true" />
                       )}
                     </div>
                   )}
@@ -204,13 +210,13 @@ export default function Sidebar({
 
       {/* Footer Info */}
       {!isCollapsed && (
-        <div className="p-3 border-t border-white/40 bg-white/40 text-[11px]">
-          <div className="flex items-center space-x-1.5 text-xs font-black text-slate-900 truncate">
-            <ShieldCheck className="w-3.5 h-3.5 text-[#C6A15B] shrink-0" />
-            <span className="truncate">{activeName}</span>
+        <div className="p-3 border-t border-white/40 bg-white/40 text-xs">
+          <div className="flex items-center space-x-1.5 text-xs font-bold text-slate-900 truncate">
+            <ShieldCheck className="w-3.5 h-3.5 text-[#8a6a28] shrink-0" aria-hidden="true" />
+            <span className="truncate">Sesi Terverifikasi</span>
           </div>
-          <p className="text-[10px] text-slate-700 mt-0.5 font-bold">
-            Role Aktif: <span className="font-black text-[#174A3A] uppercase">{userRole}</span>
+          <p className="text-xs text-slate-700 mt-0.5 font-semibold">
+            Role: <span className="font-bold text-[#26493b] uppercase">{userRole}</span>
           </p>
         </div>
       )}
