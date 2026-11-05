@@ -87,12 +87,12 @@ export default function CreateLeadModal({
         {/* Header */}
         <div className="px-6 py-4 bg-white/40 border-b border-black/5 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-[#174A3A]">
-              <Users2 className="w-5 h-5 text-[#174A3A]" />
+            <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-[#1d4ed8]">
+              <Users2 className="w-5 h-5 text-[#1d4ed8]" />
             </div>
             <div>
-              <h2 className="text-base font-black text-slate-900 tracking-tight">Tambah Peluang Penjualan (Lead)</h2>
-              <p className="text-xs text-slate-700 font-semibold">
+              <h2 className="text-base font-bold text-slate-900 tracking-tight">Tambah Peluang Penjualan (Lead)</h2>
+              <p className="text-xs text-slate-600 font-medium">
                 Pencatatan prospek pelanggan Rasa Aruna
               </p>
             </div>
@@ -120,7 +120,7 @@ export default function CreateLeadModal({
           )}
 
           <div>
-            <label className="block text-xs font-black text-slate-800 mb-1">
+            <label className="block text-xs font-bold text-slate-800 mb-1">
               Nama Peluang / Prospek <span className="text-rose-500">*</span>
             </label>
             <input
@@ -129,18 +129,18 @@ export default function CreateLeadModal({
               placeholder="Contoh: Katering Makan Siang Harian 40 Porsi"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full text-xs px-3.5 py-2.5 input-glass rounded-xl font-bold text-slate-900"
+              className="w-full text-xs px-3.5 py-2.5 input-glass rounded-xl font-semibold text-slate-900"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-black text-slate-800 mb-1">
+            <label className="block text-xs font-bold text-slate-800 mb-1">
               Pelanggan Terkait <span className="text-rose-500">*</span>
             </label>
             <select
               value={contactId}
               onChange={(e) => setContactId(e.target.value)}
-              className="w-full text-xs px-3.5 py-2.5 input-glass rounded-xl font-bold text-slate-900"
+              className="w-full text-xs px-3.5 py-2.5 input-glass rounded-xl font-semibold text-slate-900"
             >
               {contacts.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -152,11 +152,11 @@ export default function CreateLeadModal({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-black text-slate-800 mb-1">
+              <label className="block text-xs font-bold text-slate-800 mb-1">
                 Estimasi Nilai Prospek (Rp)
               </label>
               <div className="relative">
-                <span className="text-xs font-black text-slate-600 absolute left-3.5 top-2.5">Rp</span>
+                <span className="text-xs font-bold text-slate-600 absolute left-3.5 top-2.5">Rp</span>
                 <input
                   type="number"
                   min={0}
@@ -170,13 +170,13 @@ export default function CreateLeadModal({
             </div>
 
             <div>
-              <label className="block text-xs font-black text-slate-800 mb-1">
+              <label className="block text-xs font-bold text-slate-800 mb-1">
                 Tahap Penjualan (Stage)
               </label>
               <select
                 value={stage}
                 onChange={(e) => setStage(e.target.value)}
-                className="w-full text-xs px-3.5 py-2.5 input-glass rounded-xl font-bold text-slate-900"
+                className="w-full text-xs px-3.5 py-2.5 input-glass rounded-xl font-semibold text-slate-900"
               >
                 <option value="NEW">New Lead (Baru)</option>
                 <option value="QUALIFIED">Qualified (Terkualifikasi)</option>
@@ -190,14 +190,14 @@ export default function CreateLeadModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-black btn-glass-secondary rounded-xl hover:-translate-y-0.5 transition-all"
+              className="px-4 py-2 text-xs font-bold btn-glass-secondary rounded-xl hover:-translate-y-0.5 transition-all"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-5 py-2.5 text-xs font-black btn-glass-primary rounded-xl shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg flex items-center space-x-1.5"
+              className="px-5 py-2.5 text-xs font-bold btn-glass-primary rounded-xl shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg flex items-center space-x-1.5"
             >
               {loading ? (
                 <span>Menyimpan...</span>

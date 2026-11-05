@@ -9,21 +9,34 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Brand design tokens per UI/UX Audit
+        // Modern Blue + Purple (Indigo-Violet) Brand design tokens
         brand: {
-          green: "#26493b", // Primary action, active menu
-          "green-dark": "#1b382d",
-          "green-light": "#335e4d",
-          "green-tint": "rgba(38, 73, 59, 0.08)",
-          "gold-button": "#d4b36a",
-          "gold-button-text": "#14281f",
-          "gold-button-hover": "#c4a259",
-          "gold-text": "#8a6a28", // Text emas di atas putih / light (role label)
-          "hero-tile-bg": "#4a6d60", // Darker glass tile background for contrast
+          blue: "#1d4ed8",       // Primary action, active menu (Royal Blue)
+          "blue-dark": "#1e3a8a",// Hover/Dark (Navy/Deep Blue)
+          "blue-light": "#2563eb",// Vibrant Blue
+          "blue-tint": "rgba(29, 78, 216, 0.08)",
+          purple: "#7c3aed",     // Accent color (Vibrant Violet/Purple)
+          "purple-dark": "#6d28d9",// Darker Purple
+          "purple-light": "#8b5cf6",// Light Purple
+          "purple-text": "#6d28d9", // High contrast purple text on white (7.8:1)
+          "purple-button": "#7c3aed",
+          "purple-button-text": "#ffffff",
+          "purple-button-hover": "#6d28d9",
+          "hero-tile-bg": "#1e293b", // Deep slate/indigo glass background for hero tiles
           "hero-tile-text": "#ffffff",
-          "hero-tile-sub": "#f0f3f2",
-          "hero-chip-bg": "#d9f9e6",
-          "hero-chip-text": "#14281f",
+          "hero-tile-sub": "#e0e7ff", // Periwinkle light sub
+          "hero-chip-bg": "#ede9fe", // Lavender chip
+          "hero-chip-text": "#5b21b6", // Deep violet text for chip (9.4:1)
+
+          // Aliases for seamless backward compatibility
+          green: "#1d4ed8",
+          "green-dark": "#1e3a8a",
+          "green-light": "#2563eb",
+          "green-tint": "rgba(29, 78, 216, 0.08)",
+          "gold-button": "#7c3aed",
+          "gold-button-text": "#ffffff",
+          "gold-button-hover": "#6d28d9",
+          "gold-text": "#6d28d9",
         },
         status: {
           success: {
@@ -45,87 +58,43 @@ const config: Config = {
             text: "#991b1b",
           },
           info: {
-            DEFAULT: "#1e40af",
-            bg: "rgba(30, 64, 175, 0.12)",
-            border: "rgba(30, 64, 175, 0.30)",
-            text: "#1e40af",
+            DEFAULT: "#1d4ed8",
+            bg: "rgba(29, 78, 216, 0.12)",
+            border: "rgba(29, 78, 216, 0.30)",
+            text: "#1d4ed8",
           },
         },
-        aruna: {
-          DEFAULT: "#174A3A", // Primary deep forest green
-          dark: "#11382C",
-          light: "#236550",
-          surface: "#F2F7F4",
-          50: "#F2F7F4",
-          100: "#E1EDE6",
-          200: "#C4DBD0",
-          300: "#9FBFA8",
-          400: "#5D8E6F",
-          500: "#174A3A",
-          600: "#134032",
-          700: "#103429",
-          800: "#0D2A21",
-          900: "#081B15",
+        indigo: {
+          50: "#eef2ff",
+          100: "#e0e7ff",
+          200: "#c7d2fe",
+          300: "#a5b4fc",
+          400: "#818cf8",
+          500: "#6366f1",
+          600: "#4f46e5",
+          700: "#4338ca",
+          800: "#3730a3",
+          900: "#312e81",
+          950: "#1e1b4b",
         },
-        sage: {
-          DEFAULT: "#DCE8DF", // Secondary sage green
-          dark: "#BDD1C2",
-          light: "#EEF4F0",
-          50: "#F8FAF8",
-          100: "#EEF4F0",
-          200: "#DCE8DF",
-          300: "#BDD1C2",
-          400: "#9DB9A4",
-        },
-        gold: {
-          DEFAULT: "#C6A15B", // Accent warm gold
-          dark: "#A88544",
-          light: "#DFBE7F",
-          surface: "#FAF5EB",
-          50: "#FDFBF7",
-          100: "#FAF5EB",
-          200: "#F4E7CE",
-          300: "#E9D2A3",
-          400: "#DFBE7F",
-          500: "#C6A15B",
-          600: "#A88544",
-        },
-        charcoal: {
-          DEFAULT: "#202824", // Text utama
-          50: "#F7F8F5",      // Background canvas
-          100: "#EBECE8",
-          200: "#D5D8D3",
-          300: "#ADB2AA",
-          400: "#758078",     // Text sekunder
-          500: "#525B55",
-          600: "#3B423D",
-          700: "#2B312D",
-          800: "#202824",
-          900: "#151A18",
-        },
-        // Kept for backward compatibility
-        odoo: {
-          purple: "#174A3A", // Remapped to primary deep green for instant aesthetic upgrade
-          "purple-dark": "#11382C",
-          "purple-light": "#236550",
-          teal: "#C6A15B",   // Remapped to accent gold
-          "teal-dark": "#A88544",
-          gray: {
-            50: "#F7F8F5",
-            100: "#F1F3F5",
-            200: "#E9ECEF",
-            300: "#DEE2E6",
-            400: "#CED4DA",
-            500: "#ADB5BD",
-            600: "#758078",
-            700: "#495057",
-            800: "#202824",
-            900: "#151A18",
-          }
+        violet: {
+          50: "#f5f3ff",
+          100: "#ede9fe",
+          200: "#ddd6fe",
+          300: "#c4b5fd",
+          400: "#a78bfa",
+          500: "#8b5cf6",
+          600: "#7c3aed",
+          700: "#6d28d9",
+          800: "#5b21b6",
+          900: "#4c1d95",
+          950: "#2e1065",
         },
       },
       fontFamily: {
         sans: [
+          "Plus Jakarta Sans",
+          "Inter",
           "-apple-system",
           "BlinkMacSystemFont",
           "Segoe UI",
@@ -134,16 +103,24 @@ const config: Config = {
           "Arial",
           "sans-serif",
         ],
+        display: [
+          "Plus Jakarta Sans",
+          "Inter",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "Segoe UI",
+          "sans-serif",
+        ],
       },
       boxShadow: {
-        subtle: "0 1px 3px 0 rgba(23, 74, 58, 0.05), 0 1px 2px -1px rgba(23, 74, 58, 0.03)",
-        card: "0 2px 8px -2px rgba(23, 74, 58, 0.08), 0 1px 4px -1px rgba(23, 74, 58, 0.04)",
-        dropdown: "0 10px 25px -5px rgba(23, 74, 58, 0.12), 0 8px 10px -6px rgba(23, 74, 58, 0.08)",
-        "glass-1": "0 8px 32px 0 rgba(23, 74, 58, 0.07), inset 0 1px 0 0 rgba(255, 255, 255, 0.8)",
-        "glass-2": "0 4px 20px -2px rgba(23, 74, 58, 0.06), 0 2px 6px -1px rgba(23, 74, 58, 0.04), inset 0 1px 0 0 rgba(255, 255, 255, 0.9)",
-        "glass-3": "0 2px 12px -1px rgba(23, 74, 58, 0.05), inset 0 1px 0 0 rgba(255, 255, 255, 0.95)",
-        "glass-hover": "0 12px 32px -4px rgba(23, 74, 58, 0.12), 0 4px 10px -2px rgba(23, 74, 58, 0.06), inset 0 1px 0 0 #FFFFFF",
-        "glass-modal": "0 24px 60px -12px rgba(23, 74, 58, 0.22), 0 8px 24px -4px rgba(23, 74, 58, 0.12), inset 0 1px 0 0 #FFFFFF",
+        subtle: "0 1px 3px 0 rgba(29, 78, 216, 0.04), 0 1px 2px -1px rgba(29, 78, 216, 0.02)",
+        card: "0 2px 8px -2px rgba(29, 78, 216, 0.08), 0 1px 4px -1px rgba(29, 78, 216, 0.04)",
+        dropdown: "0 10px 25px -5px rgba(29, 78, 216, 0.12), 0 8px 10px -6px rgba(29, 78, 216, 0.08)",
+        "glass-1": "0 8px 32px 0 rgba(29, 78, 216, 0.07), inset 0 1px 0 0 rgba(255, 255, 255, 0.85)",
+        "glass-2": "0 4px 20px -2px rgba(29, 78, 216, 0.06), 0 2px 6px -1px rgba(29, 78, 216, 0.04), inset 0 1px 0 0 rgba(255, 255, 255, 0.90)",
+        "glass-3": "0 2px 12px -1px rgba(29, 78, 216, 0.04), inset 0 1px 0 0 rgba(255, 255, 255, 0.95)",
+        "glass-hover": "0 12px 32px -4px rgba(29, 78, 216, 0.14), 0 4px 10px -2px rgba(124, 58, 237, 0.08), inset 0 1px 0 0 #FFFFFF",
+        "glass-modal": "0 24px 60px -12px rgba(15, 23, 42, 0.25), 0 8px 24px -4px rgba(124, 58, 237, 0.12), inset 0 1px 0 0 #FFFFFF",
       },
       zIndex: {
         background: "-10",

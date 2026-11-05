@@ -133,7 +133,7 @@ export default function AppLayout({
                     {title}
                   </h1>
                   {wireframe && (
-                    <span className="hidden sm:inline-block px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold text-[#166534] bg-emerald-500/10 border border-emerald-500/20">
+                    <span className="hidden sm:inline-block px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold text-blue-700 bg-blue-50 border border-blue-200">
                       {wireframe}
                     </span>
                   )}

@@ -65,6 +65,8 @@ export async function POST(request: NextRequest) {
         const price = Math.max(1000, Number(line.unitPrice) || 25000);
         const cost = Math.round(price * 0.6);
 
+        const firstVendor = await prisma.contact.findFirst({ where: { type: "VENDOR" } });
+
         variant = await prisma.productVariant.create({
           data: {
             sku: autoSku,
@@ -74,7 +76,7 @@ export async function POST(request: NextRequest) {
             unit: "porsi",
             salesPrice: price,
             standardCost: cost,
-            defaultVendorId: "V01",
+            defaultVendorId: firstVendor?.id || null,
             stockLevels: {
               create: [
                 { locationCode: "CAFE-JKT", onHand: 100, reserved: 0 },

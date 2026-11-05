@@ -158,16 +158,16 @@ export default function PurchaseOrdersPage() {
         <div className="flex items-center space-x-2">
           <button
             onClick={() => setCreateModalOpen(true)}
-            className="flex items-center space-x-1.5 px-3.5 py-2 text-xs font-black btn-glass-primary rounded-xl shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+            className="flex items-center space-x-1.5 px-3.5 py-2 text-xs font-bold btn-glass-primary rounded-xl shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus-brand-ring"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>+ Pesanan Beli Baru</span>
           </button>
-          <span className="text-xs font-black text-slate-800 hidden sm:inline">Pilih Dokumen PO:</span>
+          <span className="text-xs font-semibold text-slate-700 hidden sm:inline">Pilih Dokumen PO:</span>
           <select
             value={selectedOrder?.id || ""}
             onChange={(e) => fetchOrderDetail(e.target.value)}
-            className="text-xs font-mono font-bold input-glass rounded-xl px-3 py-1.5 shadow-xs focus:ring-2 focus:ring-[#174A3A]"
+            className="text-xs font-mono font-medium input-glass rounded-xl px-3 py-1.5 shadow-xs focus:ring-2 focus:ring-[#1d4ed8] focus-brand-ring"
           >
             {orders.map((o) => (
               <option key={o.id} value={o.id}>
@@ -184,14 +184,14 @@ export default function PurchaseOrdersPage() {
           {/* Status Bar */}
           <div className="bg-white/40 px-6 py-3.5 border-b border-black/5 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center space-x-3">
-              <span className="text-xs font-black text-slate-800 uppercase tracking-wider">Tahapan Status:</span>
+              <span className="text-xs font-semibold text-slate-700 uppercase tracking-wider">Tahapan Status:</span>
               <div className="inline-flex rounded-xl shadow-xs overflow-hidden border border-white/60">
                 {["DRAFT", "CONFIRMED", "DONE"].map((st) => (
                   <span
                     key={st}
-                    className={`px-3 py-1 text-xs font-black font-mono transition-colors ${
+                    className={`px-3 py-1 text-xs font-bold font-mono transition-colors ${
                       selectedOrder.status === st
-                        ? "bg-[#174A3A] text-white shadow-xs"
+                        ? "bg-[#1d4ed8] text-white shadow-xs"
                         : "bg-white/60 text-slate-700"
                     }`}
                   >
@@ -202,8 +202,8 @@ export default function PurchaseOrdersPage() {
             </div>
 
             <div className="flex items-center space-x-2 text-xs">
-              <span className="text-slate-800 font-bold">Vendor Tax:</span>
-              <span className="font-black text-emerald-950 bg-emerald-500/20 px-2.5 py-0.5 rounded-full border border-emerald-500/40 backdrop-blur-xs">
+              <span className="text-slate-800 font-semibold">Vendor Tax:</span>
+              <span className="font-bold text-emerald-950 bg-emerald-500/20 px-2.5 py-0.5 rounded-full border border-emerald-500/40 backdrop-blur-xs">
                 0% (Fixture)
               </span>
             </div>
@@ -212,53 +212,53 @@ export default function PurchaseOrdersPage() {
           {/* Document Header */}
           <div className="p-6 border-b border-black/5 grid grid-cols-1 sm:grid-cols-3 gap-6 bg-white/30">
             <div>
-              <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider block">
+              <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider block">
                 Nomor RFQ / PO
               </span>
-              <h2 className="text-2xl font-black text-[#174A3A] font-mono mt-0.5">
+              <h2 className="text-2xl font-bold text-[#1d4ed8] font-mono mt-0.5">
                 {selectedOrder.poNumber}
               </h2>
             </div>
 
             <div>
-              <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider block">
+              <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider block">
                 Vendor Rekanan
               </span>
-              <p className="text-base font-black text-slate-900 mt-0.5">
+              <p className="text-base font-bold text-slate-900 mt-0.5">
                 {selectedOrder.vendor?.name}
               </p>
-              <span className="text-xs text-slate-700 font-bold font-mono">
+              <span className="text-xs text-slate-600 font-medium font-mono">
                 ID: {selectedOrder.vendorId} · Terms: {selectedOrder.vendor?.paymentTerms}
               </span>
             </div>
 
             <div>
-              <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider block">
+              <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider block">
                 Jadwal Pengiriman (Scheduled Date)
               </span>
               <div className="flex items-center space-x-1.5 mt-0.5">
-                <Calendar className="w-4 h-4 text-[#174A3A]" />
-                <p className="text-sm font-black text-slate-900 font-mono">
+                <Calendar className="w-4 h-4 text-[#1d4ed8]" />
+                <p className="text-sm font-bold text-slate-900 font-mono">
                   {new Date(selectedOrder.scheduledDate).toLocaleDateString("id-ID")}
                 </p>
               </div>
-              <span className="text-xs text-slate-700 font-bold">Lokasi Tujuan: WH-JKT</span>
+              <span className="text-xs text-slate-600 font-medium">Lokasi Tujuan: WH-JKT</span>
             </div>
           </div>
 
           {/* Lines Table */}
           <div className="p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide flex items-center space-x-2">
-                <ShoppingBag className="w-4 h-4 text-[#174A3A]" />
+              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide flex items-center space-x-2">
+                <ShoppingBag className="w-4 h-4 text-[#1d4ed8]" />
                 <span>Rincian Item Bahan Baku / Produk Pesanan</span>
               </h3>
-              <span className="text-xs text-slate-700 font-semibold">Komitmen pengadaan vendor</span>
+              <span className="text-xs text-slate-600 font-medium">Komitmen pengadaan vendor</span>
             </div>
 
             <div className="overflow-x-auto border border-white/80 rounded-xl shadow-glass-1 glass-3">
               <table className="w-full text-left text-xs">
-                <thead className="bg-white/60 font-black text-slate-900 uppercase tracking-wider text-[11px] border-b border-black/10">
+                <thead className="bg-white/60 font-bold text-slate-900 uppercase tracking-wider text-[11px] border-b border-black/10">
                   <tr>
                     <th className="px-6 py-3.5">SKU Varian & Nama Produk</th>
                     <th className="px-6 py-3.5 text-right">Kuantitas Dipesan</th>
@@ -268,14 +268,14 @@ export default function PurchaseOrdersPage() {
                 </thead>
                 <tbody className="divide-y divide-black/5 font-mono">
                   {selectedOrder.lines?.map((l: any) => (
-                    <tr key={l.id} className="hover:bg-emerald-500/10 transition-colors duration-150">
-                      <td className="px-6 py-3.5 font-black text-slate-900 font-sans">
-                        <span className="font-mono text-[#174A3A] mr-2 font-black">{l.productSku}</span>
+                    <tr key={l.id} className="hover:bg-[#1d4ed8]/5 transition-colors duration-150">
+                      <td className="px-6 py-3.5 font-bold text-slate-900 font-sans">
+                        <span className="font-mono text-[#1d4ed8] mr-2 font-bold">{l.productSku}</span>
                         <span>{l.product?.name}</span>
                       </td>
-                      <td className="px-6 py-3.5 text-right font-black text-slate-900">{l.orderedQty}</td>
-                      <td className="px-6 py-3.5 text-right text-slate-800 font-bold">Rp {l.unitPrice.toLocaleString("id-ID")}</td>
-                      <td className="px-6 py-3.5 text-right font-black text-slate-900">
+                      <td className="px-6 py-3.5 text-right font-bold text-slate-900">{l.orderedQty}</td>
+                      <td className="px-6 py-3.5 text-right text-slate-800 font-medium">Rp {l.unitPrice.toLocaleString("id-ID")}</td>
+                      <td className="px-6 py-3.5 text-right font-bold text-slate-900">
                         Rp {l.subtotal.toLocaleString("id-ID")}
                       </td>
                     </tr>
@@ -283,10 +283,10 @@ export default function PurchaseOrdersPage() {
                 </tbody>
                 <tfoot className="bg-white/60 font-mono text-xs border-t-2 border-black/10">
                   <tr>
-                    <td colSpan={3} className="px-6 py-3.5 text-right font-sans font-black text-slate-800">
+                    <td colSpan={3} className="px-6 py-3.5 text-right font-sans font-bold text-slate-800">
                       Total Tagihan PO:
                     </td>
-                    <td className="px-6 py-3.5 text-right font-black text-base text-[#174A3A]">
+                    <td className="px-6 py-3.5 text-right font-bold text-base text-[#1d4ed8]">
                       Rp {selectedOrder.total?.toLocaleString("id-ID")}
                     </td>
                   </tr>
@@ -301,7 +301,7 @@ export default function PurchaseOrdersPage() {
       <details className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
         <summary className="cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white select-none">
           <div className="flex items-center space-x-2">
-            <span className="px-2 py-0.5 rounded-md bg-[#C6A15B] text-slate-900 font-bold text-[10px] uppercase">
+            <span className="px-2 py-0.5 rounded-md bg-[#7c3aed] text-[#ffffff] font-bold text-[10px] uppercase">
               Developer Tool
             </span>
             <span>🛠️ Panel Pengujian Otomatis Rubrik (T-15 & T-16)</span>
@@ -322,7 +322,7 @@ export default function PurchaseOrdersPage() {
               <button
                 onClick={runTestT15}
                 disabled={testing}
-                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center space-x-1.5 shadow-xs transition-all"
+                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center space-x-1.5 shadow-xs transition-all focus-brand-ring"
               >
                 <Play className="w-3.5 h-3.5" />
                 <span>Jalankan T-15</span>
@@ -330,7 +330,7 @@ export default function PurchaseOrdersPage() {
               <button
                 onClick={runTestT16}
                 disabled={testing}
-                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-[#C6A15B] hover:bg-[#b5924f] text-slate-900 flex items-center space-x-1.5 shadow-xs transition-all"
+                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-[#7c3aed] hover:bg-[#6d28d9] text-[#ffffff] flex items-center space-x-1.5 shadow-xs transition-all focus-brand-ring"
               >
                 <Play className="w-3.5 h-3.5" />
                 <span>Jalankan T-16</span>
@@ -341,7 +341,7 @@ export default function PurchaseOrdersPage() {
           {testResult && (
             <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-2 text-xs">
               <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                <span className="font-bold text-[#C6A15B]">
+                <span className="font-bold text-[#7c3aed]">
                   [{testResult.id}] {testResult.name}
                 </span>
                 <span

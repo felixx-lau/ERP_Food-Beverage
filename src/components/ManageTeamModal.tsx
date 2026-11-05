@@ -100,35 +100,35 @@ export default function ManageTeamModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-in fade-in duration-150">
       <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl border border-[#E5E9E4] overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="px-6 py-4 bg-[#174A3A] text-white flex items-center justify-between">
+        <div className="px-6 py-4 bg-gradient-to-r from-blue-700 via-indigo-700 to-violet-700 text-white flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-[#C6A15B] text-[#174A3A] flex items-center justify-center font-bold shadow-xs">
-              <Users2 className="w-5 h-5 text-[#174A3A]" />
+            <div className="w-10 h-10 rounded-xl bg-white/10 text-white flex items-center justify-center font-bold shadow-xs">
+              <Users2 className="w-5 h-5 text-white" />
             </div>
             <div>
               <h2 className="text-base font-bold tracking-wide">Kelola Tim & Anggota Kelompok</h2>
-              <p className="text-xs text-[#DCE8DF]">
+              <p className="text-xs text-blue-100/90">
                 PT Rasa Aruna Bersama · Skenario ERP F&B Group 03
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[#DCE8DF] hover:text-white hover:bg-white/10 transition-colors"
+            className="p-1.5 rounded-lg text-blue-100/80 hover:text-white hover:bg-white/10 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Subheader / Tabs */}
-        <div className="px-6 pt-3 border-b border-[#E5E9E4] bg-[#F7F8F5] flex items-center justify-between">
+        <div className="px-6 pt-3 border-b border-[#E5E9E4] bg-[#f1f5f9] flex items-center justify-between">
           <div className="flex space-x-4">
             <button
               onClick={() => setActiveTab("list")}
               className={`pb-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-all ${
                 activeTab === "list"
-                  ? "border-[#174A3A] text-[#174A3A]"
-                  : "border-transparent text-[#758078] hover:text-[#202824]"
+                  ? "border-[#1d4ed8] text-[#1d4ed8]"
+                  : "border-transparent text-[#64748b] hover:text-[#0f172a]"
               }`}
             >
               Daftar Anggota ({users.length})
@@ -137,8 +137,8 @@ export default function ManageTeamModal({
               onClick={() => setActiveTab("create")}
               className={`pb-3 text-xs font-bold uppercase tracking-wider border-b-2 flex items-center space-x-1.5 transition-all ${
                 activeTab === "create"
-                  ? "border-[#174A3A] text-[#174A3A]"
-                  : "border-transparent text-[#758078] hover:text-[#202824]"
+                  ? "border-[#1d4ed8] text-[#1d4ed8]"
+                  : "border-transparent text-[#64748b] hover:text-[#0f172a]"
               }`}
             >
               <UserPlus className="w-3.5 h-3.5" />
@@ -147,7 +147,7 @@ export default function ManageTeamModal({
           </div>
           <button
             onClick={fetchUsers}
-            className="text-xs text-[#758078] hover:text-[#174A3A] flex items-center space-x-1 mb-2"
+            className="text-xs text-[#64748b] hover:text-[#1d4ed8] flex items-center space-x-1 mb-2"
             title="Refresh data anggota"
           >
             <RefreshCw className={`w-3 h-3 ${loading ? "animate-spin" : ""}`} />
@@ -171,9 +171,9 @@ export default function ManageTeamModal({
 
           {activeTab === "list" ? (
             <div className="space-y-3">
-              <div className="p-3 bg-[#F7F8F5] rounded-xl border border-[#E5E9E4] text-xs text-[#758078] flex items-center justify-between">
+              <div className="p-3 bg-[#f1f5f9] rounded-xl border border-[#E5E9E4] text-xs text-[#64748b] flex items-center justify-between">
                 <div>
-                  <span className="font-semibold text-[#202824]">Perusahaan:</span> PT Rasa Aruna Bersama (Group 03)
+                  <span className="font-semibold text-[#0f172a]">Perusahaan:</span> PT Rasa Aruna Bersama (Group 03)
                 </div>
                 <div className="text-[11px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                   6 Role Skenario PDF Aktif
@@ -187,17 +187,17 @@ export default function ManageTeamModal({
                   return (
                     <div
                       key={u.id}
-                      className={`p-3.5 flex items-center justify-between hover:bg-[#F7F8F5] transition-colors ${
+                      className={`p-3.5 flex items-center justify-between hover:bg-[#f1f5f9] transition-colors ${
                         isCurrent ? "bg-amber-50/50" : ""
                       }`}
                     >
                       <div className="flex items-center space-x-3 min-w-0">
-                        <div className="w-9 h-9 rounded-full bg-[#174A3A] text-[#C6A15B] font-bold text-sm flex items-center justify-center shrink-0">
+                        <div className="w-9 h-9 rounded-full bg-[#1d4ed8] text-[#7c3aed] font-bold text-sm flex items-center justify-center shrink-0">
                           {u.name.charAt(0)}
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center space-x-2">
-                            <span className="font-bold text-sm text-[#202824] truncate">
+                            <span className="font-bold text-sm text-[#0f172a] truncate">
                               {u.name}
                             </span>
                             {isCurrent && (
@@ -206,7 +206,7 @@ export default function ManageTeamModal({
                               </span>
                             )}
                           </div>
-                          <p className="text-xs text-[#758078] truncate">{u.email}</p>
+                          <p className="text-xs text-[#64748b] truncate">{u.email}</p>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2 shrink-0">
@@ -230,7 +230,7 @@ export default function ManageTeamModal({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#202824] mb-1">
+                <label className="block text-xs font-bold text-[#0f172a] mb-1">
                   Nama Lengkap Anggota Kelompok <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -239,13 +239,13 @@ export default function ManageTeamModal({
                   placeholder="Contoh: Felix Lau"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full text-xs px-3 py-2 border border-[#CBD5E1] rounded-lg focus:outline-hidden focus:ring-2 focus:ring-[#174A3A]"
+                  className="w-full text-xs px-3 py-2 border border-[#CBD5E1] rounded-lg focus:outline-hidden focus:ring-2 focus:ring-[#1d4ed8]"
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-[#202824] mb-1">
+                  <label className="block text-xs font-bold text-[#0f172a] mb-1">
                     Email Akun <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -254,30 +254,30 @@ export default function ManageTeamModal({
                     placeholder="Contoh: felix@rasaaruna.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full text-xs px-3 py-2 border border-[#CBD5E1] rounded-lg focus:outline-hidden focus:ring-2 focus:ring-[#174A3A]"
+                    className="w-full text-xs px-3 py-2 border border-[#CBD5E1] rounded-lg focus:outline-hidden focus:ring-2 focus:ring-[#1d4ed8]"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-[#202824] mb-1">
+                  <label className="block text-xs font-bold text-[#0f172a] mb-1">
                     Password Default
                   </label>
                   <input
                     type="text"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full text-xs px-3 py-2 border border-[#CBD5E1] rounded-lg focus:outline-hidden focus:ring-2 focus:ring-[#174A3A]"
+                    className="w-full text-xs px-3 py-2 border border-[#CBD5E1] rounded-lg focus:outline-hidden focus:ring-2 focus:ring-[#1d4ed8]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#202824] mb-1">
+                <label className="block text-xs font-bold text-[#0f172a] mb-1">
                   Pilih Role / Tanggung Jawab (Sesuai PDF Matriks Wewenang) <span className="text-rose-500">*</span>
                 </label>
                 <select
                   value={role}
                   onChange={(e) => setRole(e.target.value)}
-                  className="w-full text-xs px-3 py-2 border border-[#CBD5E1] rounded-lg focus:outline-hidden focus:ring-2 focus:ring-[#174A3A] bg-white font-medium"
+                  className="w-full text-xs px-3 py-2 border border-[#CBD5E1] rounded-lg focus:outline-hidden focus:ring-2 focus:ring-[#1d4ed8] bg-white font-medium"
                 >
                   {AVAILABLE_ROLES.map((r) => (
                     <option key={r.role} value={r.role}>
@@ -291,14 +291,14 @@ export default function ManageTeamModal({
                 <button
                   type="button"
                   onClick={() => setActiveTab("list")}
-                  className="px-4 py-2 text-xs font-medium text-[#758078] hover:text-[#202824] transition-colors"
+                  className="px-4 py-2 text-xs font-medium text-[#64748b] hover:text-[#0f172a] transition-colors"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-4 py-2 text-xs font-bold bg-[#174A3A] hover:bg-[#134032] active:bg-[#0f3328] text-white rounded-lg shadow-xs transition-all flex items-center space-x-1.5"
+                  className="px-4 py-2 text-xs font-bold bg-[#1d4ed8] hover:bg-[#1e3a8a] text-white rounded-lg shadow-xs transition-all flex items-center space-x-1.5"
                 >
                   {submitting ? (
                     <span>Menyimpan...</span>
@@ -315,11 +315,11 @@ export default function ManageTeamModal({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3 bg-[#F7F8F5] border-t border-[#E5E9E4] flex items-center justify-between text-[11px] text-[#758078]">
+        <div className="px-6 py-3 bg-[#f1f5f9] border-t border-[#E5E9E4] flex items-center justify-between text-[11px] text-[#64748b]">
           <span>Perusahaan Default: PT Rasa Aruna Bersama</span>
           <button
             onClick={onClose}
-            className="px-3 py-1 rounded bg-white border border-[#CBD5E1] text-[#202824] font-medium hover:bg-gray-50"
+            className="px-3 py-1 rounded bg-white border border-[#CBD5E1] text-[#0f172a] font-medium hover:bg-gray-50"
           >
             Tutup
           </button>

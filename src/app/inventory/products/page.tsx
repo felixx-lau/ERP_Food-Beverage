@@ -181,9 +181,9 @@ export default function ProductsPage() {
           <div className="flex items-center space-x-1 glass-3 p-1 rounded-xl border border-white/60">
             <button
               onClick={() => setViewMode("table")}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-150 ${
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 focus-brand-ring ${
                 viewMode === "table"
-                  ? "bg-white/95 text-[#174A3A] shadow-xs font-black"
+                  ? "bg-white/95 text-[#1d4ed8] shadow-xs font-bold"
                   : "text-slate-700 hover:text-slate-900"
               }`}
             >
@@ -192,9 +192,9 @@ export default function ProductsPage() {
             </button>
             <button
               onClick={() => setViewMode("detail")}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-150 ${
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 focus-brand-ring ${
                 viewMode === "detail"
-                  ? "bg-white/95 text-[#174A3A] shadow-xs font-black"
+                  ? "bg-white/95 text-[#1d4ed8] shadow-xs font-bold"
                   : "text-slate-700 hover:text-slate-900"
               }`}
             >
@@ -205,7 +205,7 @@ export default function ProductsPage() {
 
           <button
             onClick={() => setCreateModalOpen(true)}
-            className="flex items-center space-x-1.5 px-3.5 py-2 text-xs font-black btn-glass-primary rounded-xl shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+            className="flex items-center space-x-1.5 px-3.5 py-2 text-xs font-bold btn-glass-primary rounded-xl shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus-brand-ring"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>+ Produk Baru</span>
@@ -215,7 +215,7 @@ export default function ProductsPage() {
             <select
               value={selectedSku}
               onChange={(e) => setSelectedSku(e.target.value)}
-              className="text-xs font-mono font-bold input-glass rounded-xl px-3 py-1.5 shadow-xs focus:ring-2 focus:ring-[#174A3A]"
+              className="text-xs font-mono font-medium input-glass rounded-xl px-3 py-1.5 shadow-xs focus:ring-2 focus:ring-[#1d4ed8] focus-brand-ring"
             >
               {products.map((p) => (
                 <option key={p.sku} value={p.sku}>
@@ -230,20 +230,20 @@ export default function ProductsPage() {
       {/* Empty State when clean company */}
       {products.length === 0 ? (
         <div className="glass-2 rounded-2xl border border-dashed border-slate-300 p-12 text-center space-y-4">
-          <div className="w-16 h-16 rounded-2xl bg-amber-500/15 text-[#C6A15B] flex items-center justify-center mx-auto shadow-xs border border-amber-500/30">
+          <div className="w-16 h-16 rounded-2xl bg-amber-500/15 text-[#6d28d9] flex items-center justify-center mx-auto shadow-xs border border-amber-500/30">
             <Package className="w-8 h-8" />
           </div>
           <div className="max-w-md mx-auto space-y-1">
-            <h3 className="text-base font-black text-slate-900">
+            <h3 className="text-base font-bold text-slate-900">
               Belum Ada Produk Terdaftar di Perusahaan Ini
             </h3>
-            <p className="text-xs text-slate-700 font-semibold leading-relaxed">
+            <p className="text-xs text-slate-600 font-normal leading-relaxed">
               Ruang kerja perusahaan ini masih bersih. Anda dapat mulai mendaftarkan menu dan produk buatan Anda sendiri beserta harga jual, modal awal, dan stok gudang.
             </p>
           </div>
           <button
             onClick={() => setCreateModalOpen(true)}
-            className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl btn-glass-primary text-xs font-black shadow-md transition-all duration-200 hover:-translate-y-0.5"
+            className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl btn-glass-primary text-xs font-bold shadow-md transition-all duration-200 hover:-translate-y-0.5 focus-brand-ring"
           >
             <Plus className="w-4 h-4" />
             <span>Tambah Produk Pertama Anda</span>
@@ -256,16 +256,16 @@ export default function ProductsPage() {
           <div className="p-5 border-b border-black/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/40">
             <div>
               <div className="flex items-center space-x-2">
-                <Package className="w-4 h-4 text-[#174A3A]" />
-                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide">
+                <Package className="w-4 h-4 text-[#1d4ed8]" />
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">
                   Tabel Ringkasan Master 15 SKU Varian
                 </h3>
               </div>
-              <p className="text-xs text-slate-700 font-semibold mt-0.5">
+              <p className="text-xs text-slate-600 font-medium mt-0.5">
                 Monitoring multi-lokasi stok fisik On-Hand (WH-JKT vs CAFE-JKT), margin keuntungan, dan status ambang batas minimum (&lt; 20 unit)
               </p>
             </div>
-            <div className="flex items-center space-x-2 text-xs font-black">
+            <div className="flex items-center space-x-2 text-xs font-bold">
               <span className="px-2.5 py-1 rounded-full bg-white/70 text-slate-900 border border-white/60 shadow-xs">
                 Total {products.length} SKU
               </span>
@@ -279,7 +279,7 @@ export default function ProductsPage() {
           {/* Table Container */}
           <div className="overflow-x-auto glass-3 border-t border-white/80">
             <table className="w-full text-left text-xs text-slate-900">
-              <thead className="bg-white/60 text-slate-900 font-black uppercase tracking-wider text-[11px] border-b border-black/10">
+              <thead className="bg-white/60 text-slate-900 font-bold uppercase tracking-wider text-[11px] border-b border-black/10">
                 <tr>
                   <th className="px-5 py-3.5">SKU &amp; Nama Produk</th>
                   <th className="px-4 py-3.5">Varian &amp; Satuan</th>
@@ -299,44 +299,44 @@ export default function ProductsPage() {
                   const marginPct = p.salesPrice > 0 ? Math.round(((p.salesPrice - p.standardCost) / p.salesPrice) * 100) : 0;
 
                   return (
-                    <tr key={p.sku} className={`hover:bg-emerald-500/10 transition-colors duration-150 ${isLow ? "bg-amber-500/10" : ""}`}>
-                      <td className="px-5 py-3.5 font-sans font-black text-slate-900">
-                        <span className="font-mono text-[#174A3A] block text-[11px] font-black">{p.sku}</span>
+                    <tr key={p.sku} className={`hover:bg-[#1d4ed8]/5 transition-colors duration-150 ${isLow ? "bg-amber-500/10" : ""}`}>
+                      <td className="px-5 py-3.5 font-sans font-bold text-slate-900">
+                        <span className="font-mono text-[#1d4ed8] block text-[11px] font-bold">{p.sku}</span>
                         <span>{p.name}</span>
                       </td>
                       <td className="px-4 py-3.5 font-sans text-slate-800">
-                        <span className="font-extrabold text-slate-900">{p.size}</span>
-                        <span className="text-slate-700 block text-[10px] font-bold">{p.color} · {p.unit}</span>
+                        <span className="font-semibold text-slate-900">{p.size}</span>
+                        <span className="text-slate-600 block text-[10px] font-medium">{p.color} · {p.unit}</span>
                       </td>
-                      <td className="px-4 py-3.5 text-right font-black text-slate-900">
+                      <td className="px-4 py-3.5 text-right font-bold text-slate-900">
                         {p.whStock?.onHand ?? 0}
                       </td>
-                      <td className="px-4 py-3.5 text-right font-black text-slate-900">
+                      <td className="px-4 py-3.5 text-right font-bold text-slate-900">
                         {p.cafeStock?.onHand ?? 0}
                       </td>
-                      <td className="px-4 py-3.5 text-right font-black text-slate-900 text-sm">
+                      <td className="px-4 py-3.5 text-right font-bold text-slate-900 text-sm">
                         {p.totalOnHand ?? 0}
                       </td>
                       <td className="px-4 py-3.5 text-center font-sans">
                         {isLow ? (
-                          <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-black glass-badge-warning">
+                          <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold glass-badge-warning">
                             <AlertTriangle className="w-3 h-3 text-amber-700 shrink-0" />
                             <span>Stok Rendah</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-black glass-badge-success">
+                          <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold glass-badge-success">
                             <CheckCircle2 className="w-3 h-3 text-emerald-700 shrink-0" />
                             <span>Aman</span>
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3.5 text-right font-black text-slate-900">
+                      <td className="px-4 py-3.5 text-right font-bold text-slate-900">
                         Rp {p.salesPrice?.toLocaleString("id-ID")}
                       </td>
-                      <td className="px-4 py-3.5 text-right text-slate-700 font-bold">
+                      <td className="px-4 py-3.5 text-right text-slate-700 font-medium">
                         Rp {p.standardCost?.toLocaleString("id-ID")}
                       </td>
-                      <td className="px-4 py-3.5 text-right font-black text-emerald-800">
+                      <td className="px-4 py-3.5 text-right font-bold text-emerald-800">
                         {marginPct}%
                       </td>
                       <td className="px-4 py-3.5 text-center font-sans">
@@ -345,7 +345,7 @@ export default function ProductsPage() {
                             setSelectedSku(p.sku);
                             setViewMode("detail");
                           }}
-                          className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl text-[11px] font-black btn-glass-secondary hover:-translate-y-0.5 hover:shadow-xs transition-all duration-150"
+                          className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl text-[11px] font-bold btn-glass-secondary hover:-translate-y-0.5 hover:shadow-xs transition-all duration-150 focus-brand-ring"
                         >
                           <span>Detail</span>
                           <ArrowRight className="w-3 h-3" />
@@ -363,26 +363,26 @@ export default function ProductsPage() {
           <div className="p-6 border-b border-black/5 grid grid-cols-1 md:grid-cols-2 gap-6 bg-white/40">
             <div>
               <div className="flex items-center space-x-2">
-                <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider">
+                <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider">
                   Variant SKU (SR-17)
                 </span>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-950 border border-emerald-500/40 backdrop-blur-xs">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-950 border border-emerald-500/40 backdrop-blur-xs">
                   Independent Stock
                 </span>
               </div>
-              <h2 className="text-2xl font-black text-[#174A3A] font-mono mt-1">
+              <h2 className="text-2xl font-bold text-[#1d4ed8] font-mono mt-1">
                 {productDetail.sku}
               </h2>
 
               <div className="mt-3">
-                <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider block">
+                <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider block">
                   Nama Produk
                 </span>
-                <p className="text-base font-black text-slate-900 mt-0.5">
+                <p className="text-base font-bold text-slate-900 mt-0.5">
                   {productDetail.name}
                 </p>
-                <p className="text-xs text-slate-700 font-semibold mt-0.5">
-                  Ukuran/Varian: <strong className="text-slate-900 font-black">{productDetail.size}</strong> · Varian Rasa/Suhu: <strong className="text-slate-900 font-black">{productDetail.color}</strong> · Satuan: {productDetail.unit}
+                <p className="text-xs text-slate-600 font-medium mt-0.5">
+                  Ukuran/Varian: <strong className="text-slate-900 font-bold">{productDetail.size}</strong> · Varian Rasa/Suhu: <strong className="text-slate-900 font-bold">{productDetail.color}</strong> · Satuan: {productDetail.unit}
                 </p>
               </div>
             </div>
@@ -390,20 +390,20 @@ export default function ProductsPage() {
             <div className="space-y-3">
               <div className="flex justify-between items-center glass-3 p-3.5 rounded-xl border border-white/80 shadow-xs">
                 <div className="flex items-center space-x-2">
-                  <Tag className="w-4 h-4 text-[#174A3A]" />
-                  <span className="text-xs font-black text-slate-900">Harga Jual (Sales Price):</span>
+                  <Tag className="w-4 h-4 text-[#1d4ed8]" />
+                  <span className="text-xs font-semibold text-slate-800">Harga Jual (Sales Price):</span>
                 </div>
-                <span className="text-sm font-black text-slate-900 font-mono">
+                <span className="text-sm font-bold text-slate-900 font-mono">
                   Rp {productDetail.salesPrice.toLocaleString("id-ID")}
                 </span>
               </div>
 
               <div className="flex justify-between items-center glass-3 p-3.5 rounded-xl border border-white/80 shadow-xs">
                 <div className="flex items-center space-x-2">
-                  <Package className="w-4 h-4 text-[#174A3A]" />
-                  <span className="text-xs font-black text-slate-900">Biaya Standar (Standard Cost):</span>
+                  <Package className="w-4 h-4 text-[#1d4ed8]" />
+                  <span className="text-xs font-semibold text-slate-800">Biaya Standar (Standard Cost):</span>
                 </div>
-                <span className="text-sm font-black text-[#174A3A] font-mono">
+                <span className="text-sm font-bold text-[#1d4ed8] font-mono">
                   Rp {productDetail.standardCost.toLocaleString("id-ID")}
                 </span>
               </div>
@@ -413,39 +413,39 @@ export default function ProductsPage() {
           {/* Section 4: Produk, Nilai dan Stok Lokasi */}
           <div className="p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide flex items-center space-x-2">
-                <Building className="w-4 h-4 text-[#174A3A]" />
+              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide flex items-center space-x-2">
+                <Building className="w-4 h-4 text-[#1d4ed8]" />
                 <span>Distribusi Stok Antar Lokasi (WH-JKT vs CAFE-JKT)</span>
               </h3>
-              <span className="text-xs text-slate-700 font-bold font-mono">
-                Total Perusahaan: <strong className="text-[#174A3A] font-black">{productDetail.companyOnHand} unit</strong> (Rp {productDetail.totalValuation.toLocaleString("id-ID")})
+              <span className="text-xs text-slate-700 font-semibold font-mono">
+                Total Perusahaan: <strong className="text-[#1d4ed8] font-bold">{productDetail.companyOnHand} unit</strong> (Rp {productDetail.totalValuation.toLocaleString("id-ID")})
               </span>
             </div>
 
             <div className="overflow-x-auto border border-white/80 rounded-xl shadow-glass-1 glass-3">
               <table className="w-full text-left text-xs">
-                <thead className="bg-white/60 font-black text-slate-900 uppercase tracking-wider text-[11px] border-b border-black/10">
+                <thead className="bg-white/60 font-bold text-slate-900 uppercase tracking-wider text-[11px] border-b border-black/10">
                   <tr>
                     <th className="px-6 py-3.5">Lokasi Gudang / Gerai</th>
                     <th className="px-6 py-3.5 text-right">Stok Fisik (On Hand)</th>
                     <th className="px-6 py-3.5 text-right">Stok Direservasi (SR-04)</th>
-                    <th className="px-6 py-3.5 text-right text-emerald-950 font-black">Tersedia (Available)</th>
+                    <th className="px-6 py-3.5 text-right text-emerald-950 font-bold">Tersedia (Available)</th>
                     <th className="px-6 py-3.5 text-right">Valuasi Stok</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-black/5 font-mono">
                   {productDetail.locations.map((loc: any) => (
-                    <tr key={loc.locationCode} className="hover:bg-emerald-500/10 transition-colors duration-150">
-                      <td className="px-6 py-3.5 font-black text-slate-900 font-sans flex items-center space-x-2.5">
-                        <MapPin className="w-4 h-4 text-[#174A3A]" />
+                    <tr key={loc.locationCode} className="hover:bg-[#1d4ed8]/5 transition-colors duration-150">
+                      <td className="px-6 py-3.5 font-bold text-slate-900 font-sans flex items-center space-x-2.5">
+                        <MapPin className="w-4 h-4 text-[#1d4ed8]" />
                         <span>{loc.locationCode} — {loc.locationName}</span>
                       </td>
-                      <td className="px-6 py-3.5 text-right font-black text-slate-900">{loc.onHand}</td>
-                      <td className="px-6 py-3.5 text-right text-amber-800 font-black">{loc.reserved}</td>
-                      <td className="px-6 py-3.5 text-right font-black text-emerald-900 bg-emerald-500/15">
+                      <td className="px-6 py-3.5 text-right font-bold text-slate-900">{loc.onHand}</td>
+                      <td className="px-6 py-3.5 text-right text-amber-800 font-bold">{loc.reserved}</td>
+                      <td className="px-6 py-3.5 text-right font-bold text-emerald-900 bg-emerald-500/15">
                         {loc.available}
                       </td>
-                      <td className="px-6 py-3.5 text-right text-slate-800 font-bold">
+                      <td className="px-6 py-3.5 text-right text-slate-800 font-medium">
                         Rp {loc.valuation.toLocaleString("id-ID")}
                       </td>
                     </tr>
@@ -461,7 +461,7 @@ export default function ProductsPage() {
       <details className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
         <summary className="cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white select-none">
           <div className="flex items-center space-x-2">
-            <span className="px-2 py-0.5 rounded-md bg-[#C6A15B] text-slate-900 font-bold text-[10px] uppercase">
+            <span className="px-2 py-0.5 rounded-md bg-[#7c3aed] text-[#ffffff] font-bold text-[10px] uppercase">
               Developer Tool
             </span>
             <span>🛠️ Panel Pengujian Otomatis Rubrik (T-05 & T-06)</span>
@@ -482,7 +482,7 @@ export default function ProductsPage() {
               <button
                 onClick={runTestT05}
                 disabled={testing}
-                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center space-x-1.5 shadow-xs transition-all"
+                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center space-x-1.5 shadow-xs transition-all focus-brand-ring"
               >
                 <Play className="w-3.5 h-3.5" />
                 <span>Jalankan T-05</span>
@@ -490,7 +490,7 @@ export default function ProductsPage() {
               <button
                 onClick={runTestT06}
                 disabled={testing}
-                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-[#C6A15B] hover:bg-[#b5924f] text-slate-900 flex items-center space-x-1.5 shadow-xs transition-all"
+                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-[#7c3aed] hover:bg-[#6d28d9] text-[#ffffff] flex items-center space-x-1.5 shadow-xs transition-all focus-brand-ring"
               >
                 <Play className="w-3.5 h-3.5" />
                 <span>Jalankan T-06</span>
@@ -501,7 +501,7 @@ export default function ProductsPage() {
           {testResult && (
             <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-2 text-xs">
               <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                <span className="font-bold text-[#C6A15B]">
+                <span className="font-bold text-[#7c3aed]">
                   [{testResult.id}] {testResult.name}
                 </span>
                 <span

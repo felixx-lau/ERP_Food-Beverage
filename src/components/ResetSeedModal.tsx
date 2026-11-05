@@ -96,23 +96,23 @@ export default function ResetSeedModal({
           <div className="glass-3 border border-white/80 rounded-2xl p-4 text-xs space-y-2 font-mono text-slate-900 shadow-xs">
             <div className="flex justify-between">
               <span className="text-slate-700 font-semibold">• Total Persediaan:</span>
-              <span className="font-black text-[#174A3A]">616 Unit (WH: 410, CAFE: 206)</span>
+              <span className="font-bold text-[#1d4ed8]">616 Unit (WH: 410, CAFE: 206)</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-700 font-semibold">• Valuasi Persediaan:</span>
-              <span className="font-black text-[#174A3A]">Rp 12.214.000</span>
+              <span className="font-bold text-[#1d4ed8]">Rp 12.214.000</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-700 font-semibold">• Saldo Bank Awal:</span>
-              <span className="font-black">Rp 20.000.000</span>
+              <span className="font-bold">Rp 20.000.000</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-700 font-semibold">• Jurnal Pembuka Seimbang:</span>
-              <span className="font-black text-emerald-800">Dr = Cr = Rp 33.714.000</span>
+              <span className="font-bold text-emerald-800">Dr = Cr = Rp 33.714.000</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-700 font-semibold">• Dokumen Bawaan:</span>
-              <span className="font-black">LD0003, S00006 (Res 6), P00006</span>
+              <span className="font-bold">LD0003, S00006 (Res 6), P00006</span>
             </div>
           </div>
 

@@ -85,27 +85,44 @@ Sistem dirancang dengan 4 lapisan independen agar perubahan pada antarmuka (UI) 
 
 ```
 ERP_Food-Beverage/
+├── docs/                       # Dokumentasi Teknis, Arsitektur, Laporan & Screens
+│   ├── architecture/           # Spesifikasi arsitektur & UML Class Diagram
+│   ├── reports/                # Laporan pengujian T-01 s/d T-32, checklist & decision log
+│   ├── changelogs/             # Catatan rilis & audit log UI/UX
+│   └── screens/                # Bukti tangkapan layar sebelum & sesudah
 ├── prisma/
 │   ├── schema.prisma           # Definisi model data relasional (22 tabel)
-│   └── erp.db                  # Database SQLite persisten
+│   ├── erp.db                  # Database SQLite persisten
+│   ├── companies/              # Basis data multi-perusahaan mandiri
+│   └── companies.json          # Registri multi-perusahaan
 ├── scripts/
 │   ├── seed.ts                 # Script restore data baseline 100% bersih
+│   ├── seed_demo_charts.ts     # Script seeder transaksi demo charts
 │   ├── test_phase2_3.ts        # Tes T-01 & T-02 (RBAC & Owner flow)
 │   ├── test_phase4.ts          # Tes T-03 s/d T-12 (Sales, CRM, DO, Credit Limit)
 │   ├── test_phase5.ts          # Tes T-15 s/d T-18, T-21, T-22 (Procurement & 3-Way Match)
 │   ├── test_phase6.ts          # Tes T-19, T-20, T-23 s/d T-26 (Invoicing & Payments)
 │   ├── test_phase7.ts          # Tes T-13, T-14, T-27 s/d T-30 (Transfer, POS, Return)
-│   └── test_phase8.ts          # Tes T-31 & T-32 (Dashboard KPI & SR-20 Reconciliation)
+│   ├── test_phase8.ts          # Tes T-31 & T-32 (Dashboard KPI & SR-20 Reconciliation)
+│   ├── test_charts.ts          # Tes Analytics Charts & API
+│   ├── export_to_docx.py       # Generator laporan Word terpadu
+│   └── generate_class_diagram_docx.py # Generator dokumen Class Diagram
 ├── src/
 │   ├── app/                    # Next.js App Router (Pages & API Handlers)
 │   │   ├── (modules)/          # Halaman front-end web (Sales, CRM, POS, Gudang, Akuntansi)
 │   │   ├── login/              # Halaman Login Minimalis
 │   │   └── api/                # REST API Endpoints
-│   ├── components/             # Reusable UI (Sidebar, Topbar, Modals)
+│   ├── components/             # Reusable UI (Sidebar, Topbar, Modals, StatusBadge, Charts)
+│   │   ├── AppLayout.tsx       # Shell tata letak aplikasi
+│   │   ├── Topbar.tsx          # Navigasi atas, role switcher, dan breadcrumbs
+│   │   ├── Sidebar.tsx         # Menu samping responsif dengan ikon Odoo
 │   │   ├── CreateProductModal.tsx        # Modal produk dengan auto-SKU
 │   │   ├── CreateSalesOrderModal.tsx     # Modal SO dengan ketik nama produk bebas
 │   │   ├── CreatePurchaseOrderModal.tsx  # Modal PO dengan ketik bahan bebas
-│   │   └── CreateContactModal.tsx        # Modal tambah pelanggan/vendor
+│   │   ├── CreateContactModal.tsx        # Modal tambah pelanggan/vendor
+│   │   ├── DashboardCharts.tsx           # Visualisasi chart performa & penjualan
+│   │   └── StatusBadge.tsx               # Badge status dokumen dengan warna semantik
+│   ├── context/                # React Context (CompanyContext untuk multi-company)
 │   └── lib/                    # ⚠️ CORE ENGINES (ATURAN BISNIS INTI)
 │       ├── prisma.ts           # Prisma client singleton
 │       ├── auth.ts             # JWT token & cookie authentication
@@ -113,11 +130,12 @@ ERP_Food-Beverage/
 │       ├── sequences.ts        # Generator nomor dokumen berurutan (SO, PO, INV, DO, dll.)
 │       ├── salesEngine.ts      # Logika penjualan, diskon, reservasi, credit limit
 │       ├── purchaseEngine.ts   # Logika pengadaan, RFQ, PO
-│       ├── inventoryEngine.ts  # Logika stok, inspeksi penerimaan, surat jalan
+│       ├── deliveryEngine.ts   # Logika surat jalan & pengiriman pesanan
 │       ├── posEngine.ts        # Logika kasir restoran, PBJT 10%, sesi kasir
 │       ├── transferEngine.ts   # Logika transfer antar-gudang
 │       ├── returnEngine.ts     # Logika retur, inspeksi QC, credit note
 │       ├── accountingEngine.ts # Logika faktur, tagihan vendor, jurnal double-entry
+│       ├── companyManager.ts   # Pengelola isolasi basis data multi-perusahaan
 │       └── dashboardEngine.ts  # Logika metrik eksekutif & rekonsiliasi SR-20
 └── README.md                   # Panduan umum proyek
 ```

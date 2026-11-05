@@ -77,17 +77,17 @@ export default function CompanySwitcher({ currentUser }: CompanySwitcherProps) {
         <button
           type="button"
           onClick={() => setDropdownOpen(!dropdownOpen)}
-          className="flex items-center space-x-2.5 px-3 py-1.5 rounded-xl bg-white/70 hover:bg-white/95 active:bg-white border border-white/80 text-slate-800 hover:text-[#26493b] transition-all shadow-xs hover:shadow-md hover:-translate-y-0.5 text-left group cursor-pointer focus-visible:ring-2 focus-visible:ring-[#26493b] focus-visible:outline-none"
+          className="flex items-center space-x-2.5 px-3 py-1.5 rounded-xl bg-white/70 hover:bg-white/95 active:bg-white border border-white/80 text-slate-800 hover:text-blue-700 transition-all shadow-xs hover:shadow-md hover:-translate-y-0.5 text-left group cursor-pointer focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none"
           title={`${activeBrand} — ${activeName} (Klik untuk beralih perusahaan)`}
           aria-expanded={dropdownOpen}
           aria-label={`Perusahaan aktif: ${activeName} (${activeBrand})`}
         >
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#d4b36a] to-[#b5924f] flex items-center justify-center font-extrabold text-[#14281f] text-xs shadow-xs shrink-0 group-hover:scale-105 transition-transform border border-white/60">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 flex items-center justify-center font-extrabold text-white text-xs shadow-md shadow-indigo-500/20 shrink-0 group-hover:scale-105 transition-transform border border-white/60">
             {initials}
           </div>
           <div className="leading-tight min-w-0 max-w-[210px]">
             <div className="flex items-center space-x-1.5">
-              <span className="font-extrabold text-slate-900 text-xs truncate group-hover:text-[#26493b]" title={activeBrand}>
+              <span className="font-extrabold text-slate-900 text-xs truncate group-hover:text-blue-700" title={activeBrand}>
                 {activeBrand}
               </span>
               {activeCompany?.isDefault ? (
@@ -105,8 +105,8 @@ export default function CompanySwitcher({ currentUser }: CompanySwitcherProps) {
             </span>
           </div>
           <ChevronDown
-            className={`w-3.5 h-3.5 text-slate-700 group-hover:text-[#26493b] transition-transform shrink-0 ${
-              dropdownOpen ? "rotate-180 text-[#26493b]" : ""
+            className={`w-3.5 h-3.5 text-slate-700 group-hover:text-blue-700 transition-transform shrink-0 ${
+              dropdownOpen ? "rotate-180 text-blue-700" : ""
             }`}
             aria-hidden="true"
           />
@@ -118,10 +118,10 @@ export default function CompanySwitcher({ currentUser }: CompanySwitcherProps) {
             {/* Header info */}
             <div className="px-4 py-2.5 border-b border-black/5 flex items-center justify-between">
               <div className="flex items-center space-x-1.5 text-slate-800 text-[11px] font-black uppercase tracking-wider">
-                <Layers className="w-3.5 h-3.5 text-[#26493b]" aria-hidden="true" />
+                <Layers className="w-3.5 h-3.5 text-blue-700" aria-hidden="true" />
                 <span>Pilih Perusahaan Aktif</span>
               </div>
-              <span className="text-[11px] font-bold text-[#26493b] bg-emerald-100/70 px-2 py-0.5 rounded-full border border-emerald-300/50">
+              <span className="text-[11px] font-bold text-blue-700 bg-blue-100/70 px-2 py-0.5 rounded-full border border-blue-300/50">
                 {companies.length} Entitas
               </span>
             </div>
@@ -138,7 +138,7 @@ export default function CompanySwitcher({ currentUser }: CompanySwitcherProps) {
                     onClick={() => handleSelectCompany(comp)}
                     className={`group/item flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition-all ${
                       isActive
-                        ? "bg-[#26493b]/10 border border-[#26493b]/30 text-[#26493b] font-bold shadow-xs"
+                        ? "bg-blue-600/10 border border-blue-600/30 text-blue-700 font-bold shadow-xs"
                         : "hover:bg-white/80 hover:shadow-xs text-slate-800 border border-transparent"
                     }`}
                   >
@@ -146,15 +146,15 @@ export default function CompanySwitcher({ currentUser }: CompanySwitcherProps) {
                       <div
                         className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 shadow-xs ${
                           isActive
-                            ? "bg-[#26493b] text-white"
-                            : "bg-slate-200 text-slate-800 group-hover/item:bg-[#d4b36a] group-hover/item:text-[#14281f]"
+                            ? "bg-gradient-to-br from-blue-600 to-indigo-600 text-white"
+                            : "bg-slate-200 text-slate-800 group-hover/item:bg-violet-600 group-hover/item:text-white"
                         }`}
                       >
                         {compInitials}
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center space-x-1.5">
-                          <p className="text-xs font-bold truncate text-slate-900 group-hover/item:text-[#26493b]" title={comp.name}>{comp.name}</p>
+                          <p className="text-xs font-bold truncate text-slate-900 group-hover/item:text-blue-700" title={comp.name}>{comp.name}</p>
                           {comp.isDefault && (
                             <span className="text-[9px] px-1 py-0.2 rounded font-mono font-bold bg-emerald-100 text-emerald-900 shrink-0">
                               Demo Kuliah
@@ -169,7 +169,7 @@ export default function CompanySwitcher({ currentUser }: CompanySwitcherProps) {
 
                     <div className="flex items-center space-x-1 shrink-0">
                       {isActive ? (
-                        <div className="w-5 h-5 rounded-full bg-[#26493b] text-white flex items-center justify-center shadow-xs">
+                        <div className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-xs">
                           <Check className="w-3.5 h-3.5 stroke-[3]" />
                         </div>
                       ) : !comp.isDefault ? (
@@ -196,9 +196,9 @@ export default function CompanySwitcher({ currentUser }: CompanySwitcherProps) {
                   setDropdownOpen(false);
                   setCreateModalOpen(true);
                 }}
-                className="w-full flex items-center space-x-2.5 px-3 py-2 text-xs font-black text-[#174A3A] bg-[#174A3A]/10 hover:bg-[#174A3A]/15 border border-[#174A3A]/20 rounded-xl transition-all text-left shadow-xs cursor-pointer hover:translate-x-0.5"
+                className="w-full flex items-center space-x-2.5 px-3 py-2 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl transition-all text-left shadow-xs cursor-pointer hover:translate-x-0.5"
               >
-                <div className="w-6 h-6 rounded-lg bg-[#174A3A] text-white flex items-center justify-center shadow-xs">
+                <div className="w-6 h-6 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-xs">
                   <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                 </div>
                 <span>Tambah Perusahaan Baru</span>
@@ -210,7 +210,7 @@ export default function CompanySwitcher({ currentUser }: CompanySwitcherProps) {
                   setDropdownOpen(false);
                   setEditModalOpen(true);
                 }}
-                className="w-full flex items-center space-x-2.5 px-3 py-2 text-xs font-bold text-slate-800 hover:text-[#174A3A] hover:bg-white/80 rounded-xl transition-colors text-left cursor-pointer"
+                className="w-full flex items-center space-x-2.5 px-3 py-2 text-xs font-semibold text-slate-800 hover:text-blue-700 hover:bg-white/80 rounded-xl transition-colors text-left cursor-pointer"
               >
                 <div className="w-6 h-6 rounded-lg bg-slate-200/80 text-slate-800 flex items-center justify-center">
                   <Settings className="w-3.5 h-3.5" />

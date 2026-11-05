@@ -336,18 +336,18 @@ export default function ReturnsPage() {
     >
       <div className="space-y-6">
         {/* Module Header & Sub-Nav */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-[#DCE8DF] shadow-xs">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-[#e2e8f0] shadow-xs">
           <div>
             <div className="flex items-center space-x-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#174A3A]" />
-              <h1 className="text-xl font-bold text-[#202824] tracking-tight">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#1d4ed8]" />
+              <h1 className="text-xl font-bold text-[#0f172a] tracking-tight">
                 Return Inspection & Credit Note
               </h1>
-              <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-[#DCE8DF] text-[#174A3A]">
+              <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-[#1d4ed8]/10 text-[#1d4ed8] border border-[#1d4ed8]/20">
                 Wireframe S-15
               </span>
             </div>
-            <p className="text-xs text-[#758078] mt-1">
+            <p className="text-xs text-[#64748b] mt-1">
               Alur retur penjualan berjenjang: QC fisik gudang (SR-11), pengembalian stok & penerbitan Credit Note (F-18).
             </p>
           </div>
@@ -355,26 +355,26 @@ export default function ReturnsPage() {
           <div className="flex flex-wrap items-center gap-2">
             <Link
               href="/inventory/transfers"
-              className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-[#DCE8DF] text-[#202824] hover:bg-[#F7F8F5] transition-colors"
+              className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-[#e2e8f0] text-[#0f172a] hover:bg-[#f1f5f9] transition-colors focus-brand-ring"
             >
               Internal Transfers
             </Link>
             <Link
               href="/accounting/invoices"
-              className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-[#DCE8DF] text-[#202824] hover:bg-[#F7F8F5] transition-colors"
+              className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-[#e2e8f0] text-[#0f172a] hover:bg-[#f1f5f9] transition-colors focus-brand-ring"
             >
               Customer Invoices
             </Link>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="px-3.5 py-1.5 bg-[#174A3A] hover:bg-[#103429] text-white rounded-lg text-xs font-bold flex items-center space-x-1.5 shadow-xs transition-colors"
+              className="px-3.5 py-1.5 bg-[#1d4ed8] hover:bg-[#1e3a8a] text-white rounded-lg text-xs font-bold flex items-center space-x-1.5 shadow-xs transition-colors focus-brand-ring"
             >
-              <Plus className="w-3.5 h-3.5 text-[#C6A15B]" />
+              <Plus className="w-3.5 h-3.5 text-[#7c3aed]" />
               <span>Buat Permintaan Retur</span>
             </button>
             <button
               onClick={fetchReturnsAndInvoices}
-              className="p-1.5 rounded-lg border border-[#DCE8DF] text-[#758078] hover:text-[#174A3A] hover:bg-[#F7F8F5] transition-colors"
+              className="p-1.5 rounded-lg border border-[#e2e8f0] text-[#64748b] hover:text-[#1d4ed8] hover:bg-[#f1f5f9] transition-colors focus-brand-ring"
               title="Refresh Data"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
@@ -424,10 +424,10 @@ export default function ReturnsPage() {
               <button
                 key={tab.key}
                 onClick={() => setStatusFilter(tab.key)}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors focus-brand-ring ${
                   statusFilter === tab.key
-                    ? "bg-[#174A3A] text-white"
-                    : "bg-[#F7F8F5] text-[#758078] hover:text-[#202824] hover:bg-[#DCE8DF]/50"
+                    ? "bg-[#1d4ed8] text-white"
+                    : "bg-[#f1f5f9] text-[#64748b] hover:text-[#0f172a] hover:bg-[#e2e8f0]/50"
                 }`}
               >
                 {tab.label}
@@ -437,13 +437,13 @@ export default function ReturnsPage() {
 
           <div className="flex items-center space-x-3">
             <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#758078]" />
+              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b]" />
               <input
                 type="text"
                 placeholder="Cari no. retur / customer / invoice..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 pr-3 py-1.5 text-xs bg-[#F7F8F5] border border-[#DCE8DF] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#174A3A] text-[#202824]"
+                className="pl-8 pr-3 py-1.5 text-xs bg-[#f1f5f9] border border-[#e2e8f0] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#1d4ed8] text-[#0f172a] focus-brand-ring"
               />
             </div>
 
@@ -453,7 +453,7 @@ export default function ReturnsPage() {
                 const sel = returns.find((r) => r.id === e.target.value);
                 if (sel) setSelectedReturn(sel);
               }}
-              className="text-xs font-mono font-bold bg-[#F7F8F5] border border-[#DCE8DF] rounded-lg px-3 py-1.5 text-[#202824] focus:outline-none focus:ring-1 focus:ring-[#174A3A]"
+              className="text-xs font-mono font-medium bg-[#f1f5f9] border border-[#e2e8f0] rounded-lg px-3 py-1.5 text-[#0f172a] focus:outline-none focus:ring-1 focus:ring-[#1d4ed8] focus-brand-ring"
             >
               {returns.length === 0 && <option value="">(Belum ada data retur)</option>}
               {filteredReturns.map((ret) => (
@@ -469,10 +469,10 @@ export default function ReturnsPage() {
         {selectedReturn && (
           <div className="card-aruna overflow-hidden">
             {/* Status Ribbon (Wireframe S-15 Section ②) */}
-            <div className="bg-[#F7F8F5] px-6 py-3.5 border-b border-[#DCE8DF] flex flex-wrap items-center justify-between gap-3">
+            <div className="bg-[#f1f5f9] px-6 py-3.5 border-b border-[#e2e8f0] flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center space-x-3">
-                <span className="text-xs font-bold text-[#758078] uppercase tracking-wider">Status Dokumen:</span>
-                <div className="inline-flex rounded-lg overflow-hidden border border-[#DCE8DF] bg-white shadow-2xs">
+                <span className="text-xs font-semibold text-[#64748b] uppercase tracking-wider">Status Dokumen:</span>
+                <div className="inline-flex rounded-lg overflow-hidden border border-[#e2e8f0] bg-white shadow-2xs">
                   {["DRAFT", "CONFIRMED", "DONE"].map((st) => {
                     const isDone = selectedReturn.status === "DONE" && st === "DONE";
                     const isConfirmed = selectedReturn.status === "CONFIRMED" && st === "CONFIRMED";
@@ -484,8 +484,8 @@ export default function ReturnsPage() {
                         key={st}
                         className={`px-3 py-1 text-xs font-bold font-mono transition-colors ${
                           active
-                            ? "bg-[#174A3A] text-white"
-                            : "text-[#758078] hover:bg-gray-50"
+                            ? "bg-[#1d4ed8] text-white"
+                            : "text-[#64748b] hover:bg-gray-50"
                         }`}
                       >
                         {st}
@@ -506,7 +506,7 @@ export default function ReturnsPage() {
                       setRejectedQtyInput(0);
                       setShowInspectModal(true);
                     }}
-                    className="px-3.5 py-1.5 bg-[#C6A15B] hover:bg-[#b08e4d] text-[#103429] rounded-lg text-xs font-bold flex items-center space-x-1.5 shadow-2xs transition-colors"
+                    className="px-3.5 py-1.5 bg-[#7c3aed] hover:bg-[#6d28d9] text-[#ffffff] rounded-lg text-xs font-bold flex items-center space-x-1.5 shadow-2xs transition-colors focus-brand-ring"
                   >
                     <ClipboardCheck className="w-3.5 h-3.5" />
                     <span>Lakukan Inspeksi Mutu Gudang (SR-11)</span>
@@ -516,9 +516,9 @@ export default function ReturnsPage() {
                 {selectedReturn.inspectionStatus === "ACCEPTED" && selectedReturn.status !== "DONE" && (
                   <button
                     onClick={() => handleProcessCreditNote(selectedReturn.id)}
-                    className="px-3.5 py-1.5 bg-[#174A3A] hover:bg-[#103429] text-white rounded-lg text-xs font-bold flex items-center space-x-1.5 shadow-2xs transition-colors"
+                    className="px-3.5 py-1.5 bg-[#1d4ed8] hover:bg-[#1e3a8a] text-white rounded-lg text-xs font-bold flex items-center space-x-1.5 shadow-2xs transition-colors focus-brand-ring"
                   >
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#C6A15B]" />
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#7c3aed]" />
                     <span>Proses Restock & Terbitkan Credit Note</span>
                   </button>
                 )}
@@ -526,62 +526,62 @@ export default function ReturnsPage() {
             </div>
 
             {/* Document Core Info (Wireframe S-15 Section ③) */}
-            <div className="p-6 border-b border-[#DCE8DF] grid grid-cols-1 md:grid-cols-4 gap-6 bg-white">
+            <div className="p-6 border-b border-[#e2e8f0] grid grid-cols-1 md:grid-cols-4 gap-6 bg-white">
               <div>
-                <span className="text-[11px] font-semibold text-[#758078] uppercase tracking-wider block">
+                <span className="text-[11px] font-semibold text-[#64748b] uppercase tracking-wider block">
                   Return Number
                 </span>
-                <span className="text-xl font-extrabold text-[#174A3A] font-mono block mt-1">
+                <span className="text-xl font-bold text-[#1d4ed8] font-mono block mt-1">
                   {selectedReturn.returnNumber}
                 </span>
-                <span className="text-xs text-[#758078] block mt-1">
-                  Customer: <strong className="text-[#202824]">{selectedReturn.customer?.name}</strong> ({selectedReturn.customer?.code})
+                <span className="text-xs text-[#64748b] block mt-1">
+                  Customer: <strong className="text-[#0f172a]">{selectedReturn.customer?.name}</strong> ({selectedReturn.customer?.code})
                 </span>
               </div>
 
               <div>
-                <span className="text-[11px] font-semibold text-[#758078] uppercase tracking-wider block">
+                <span className="text-[11px] font-semibold text-[#64748b] uppercase tracking-wider block">
                   Original Invoice
                 </span>
-                <span className="text-base font-bold text-[#174A3A] block font-mono mt-1">
+                <span className="text-base font-bold text-[#1d4ed8] block font-mono mt-1">
                   {selectedReturn.invoice?.invoiceNumber}
                 </span>
-                <span className="text-xs text-[#758078] block mt-1">Faktur Penjualan Rujukan</span>
+                <span className="text-xs text-[#64748b] block mt-1">Faktur Penjualan Rujukan</span>
               </div>
 
               <div>
-                <span className="text-[11px] font-semibold text-[#758078] uppercase tracking-wider block">
+                <span className="text-[11px] font-semibold text-[#64748b] uppercase tracking-wider block">
                   Status Inspeksi Fisik (SR-11)
                 </span>
-                <span className="text-base font-bold text-[#202824] block font-mono mt-1">
+                <span className="text-base font-bold text-[#0f172a] block font-mono mt-1">
                   {selectedReturn.inspectionStatus}
                 </span>
-                <span className="text-xs text-[#758078] block mt-1">Pemeriksaan mutu oleh Warehouse</span>
+                <span className="text-xs text-[#64748b] block mt-1">Pemeriksaan mutu oleh Warehouse</span>
               </div>
 
               <div>
-                <span className="text-[11px] font-semibold text-[#758078] uppercase tracking-wider block">
+                <span className="text-[11px] font-semibold text-[#64748b] uppercase tracking-wider block">
                   Credit Note
                 </span>
-                <span className="text-base font-bold text-[#C6A15B] block font-mono mt-1">
+                <span className="text-base font-bold text-[#6d28d9] block font-mono mt-1">
                   {selectedReturn.creditNotes?.[0]?.creditNoteNumber || "— (Belum Terbit)"}
                 </span>
-                <span className="text-xs text-[#758078] block mt-1">Dokumen pembalikan piutang dagang</span>
+                <span className="text-xs text-[#64748b] block mt-1">Dokumen pembalikan piutang dagang</span>
               </div>
             </div>
 
             {/* Section ④: Retur, Restock, Pembalikan Pajak Table */}
             <div className="p-6">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xs font-bold text-[#202824] uppercase tracking-wider flex items-center space-x-2">
-                  <FileText className="w-4 h-4 text-[#174A3A]" />
+                <h3 className="text-xs font-bold text-[#0f172a] uppercase tracking-wider flex items-center space-x-2">
+                  <FileText className="w-4 h-4 text-[#1d4ed8]" />
                   <span>④ Rincian Retur, Restock, & Pembalikan Pajak (F-18 / S-15)</span>
                 </h3>
               </div>
 
-              <div className="overflow-x-auto border border-[#DCE8DF] rounded-xl shadow-2xs">
+              <div className="overflow-x-auto border border-[#e2e8f0] rounded-xl shadow-2xs">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-[#F7F8F5] border-b border-[#DCE8DF] text-[#758078] font-semibold uppercase tracking-wider">
+                  <thead className="bg-[#f1f5f9] border-b border-[#e2e8f0] text-[#64748b] font-semibold uppercase tracking-wider">
                     <tr>
                       <th className="py-3 px-4">SKU</th>
                       <th className="py-3 px-4">Deskripsi Produk</th>
@@ -592,7 +592,7 @@ export default function ReturnsPage() {
                       <th className="py-3 px-4 text-right">Credit Gross</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#DCE8DF] font-mono">
+                  <tbody className="divide-y divide-[#e2e8f0] font-mono">
                     {selectedReturn.lines?.map((line: any) => {
                       const costRev = line.acceptedQty * line.unitStandardCost;
                       const netCredit = line.acceptedQty * line.unitSalesPrice;
@@ -600,16 +600,16 @@ export default function ReturnsPage() {
                       const grossCredit = netCredit + pbjtCredit;
 
                       return (
-                        <tr key={line.id} className="hover:bg-[#F7F8F5] transition-colors">
-                          <td className="py-3 px-4 font-bold text-[#174A3A]">{line.productSku}</td>
-                          <td className="py-3 px-4 font-sans text-[#202824]">{line.product?.name}</td>
-                          <td className="py-3 px-4 text-center font-bold text-[#202824]">{line.returnedQty}</td>
+                        <tr key={line.id} className="hover:bg-[#f1f5f9] transition-colors">
+                          <td className="py-3 px-4 font-bold text-[#1d4ed8]">{line.productSku}</td>
+                          <td className="py-3 px-4 font-sans text-[#0f172a]">{line.product?.name}</td>
+                          <td className="py-3 px-4 text-center font-bold text-[#0f172a]">{line.returnedQty}</td>
                           <td className="py-3 px-4 text-center font-bold text-emerald-700">{line.acceptedQty}</td>
                           <td className="py-3 px-4 text-center font-bold text-rose-700">{line.rejectedQty}</td>
-                          <td className="py-3 px-4 text-right text-[#202824] font-bold">
+                          <td className="py-3 px-4 text-right text-[#0f172a] font-bold">
                             Rp{costRev.toLocaleString("id-ID")}
                           </td>
-                          <td className="py-3 px-4 text-right font-bold text-[#174A3A]">
+                          <td className="py-3 px-4 text-right font-bold text-[#1d4ed8]">
                             Rp{grossCredit.toLocaleString("id-ID")}
                           </td>
                         </tr>
@@ -621,22 +621,22 @@ export default function ReturnsPage() {
             </div>
 
             {/* Wireframe S-15 Section ⑤: Related Docs & Audit History */}
-            <div className="bg-[#F7F8F5] px-6 py-3.5 border-t border-[#DCE8DF] flex flex-wrap items-center justify-between text-xs text-[#758078]">
+            <div className="bg-[#f1f5f9] px-6 py-3.5 border-t border-[#e2e8f0] flex flex-wrap items-center justify-between text-xs text-[#64748b]">
               <div className="flex flex-wrap items-center gap-3">
-                <span className="font-bold text-[#202824]">⑤ Related Documents:</span>
-                <span className="font-mono text-[#174A3A] font-semibold">
+                <span className="font-bold text-[#0f172a]">⑤ Related Documents:</span>
+                <span className="font-mono text-[#1d4ed8] font-semibold">
                   Retur: {selectedReturn.returnNumber}
                 </span>
                 <span>•</span>
-                <span className="font-mono text-[#202824]">
+                <span className="font-mono text-[#0f172a]">
                   Invoice: {selectedReturn.invoice?.invoiceNumber}
                 </span>
                 <span>•</span>
-                <span className="font-mono text-[#C6A15B] font-semibold">
+                <span className="font-mono text-[#6d28d9] font-semibold">
                   Credit Note: {selectedReturn.creditNotes?.[0]?.creditNoteNumber || "—"}
                 </span>
               </div>
-              <span className="text-[11px] text-[#758078] font-mono">
+              <span className="text-[11px] text-[#64748b] font-mono">
                 Audit trail recorded to DB
               </span>
             </div>
@@ -646,15 +646,15 @@ export default function ReturnsPage() {
         {/* Modal Buat Permintaan Retur */}
         {showCreateModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-in fade-in">
-            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-[#DCE8DF]">
-              <div className="flex items-center justify-between border-b border-[#DCE8DF] pb-3">
-                <h2 className="text-base font-bold text-[#202824] flex items-center space-x-2">
-                  <RotateCcw className="w-4 h-4 text-[#174A3A]" />
+            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-[#e2e8f0]">
+              <div className="flex items-center justify-between border-b border-[#e2e8f0] pb-3">
+                <h2 className="text-base font-bold text-[#0f172a] flex items-center space-x-2">
+                  <RotateCcw className="w-4 h-4 text-[#1d4ed8]" />
                   <span>Buat Permintaan Retur Pelanggan</span>
                 </h2>
                 <button
                   onClick={() => setShowCreateModal(false)}
-                  className="text-[#758078] hover:text-[#202824]"
+                  className="text-[#64748b] hover:text-[#0f172a] focus-brand-ring rounded"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -662,11 +662,11 @@ export default function ReturnsPage() {
 
               <div className="space-y-3 text-xs">
                 <div>
-                  <label className="font-bold text-[#202824] block mb-1">Pilih Faktur Penjualan (Customer Invoice):</label>
+                  <label className="font-bold text-[#0f172a] block mb-1">Pilih Faktur Penjualan (Customer Invoice):</label>
                   <select
                     value={selectedInvoiceId}
                     onChange={(e) => setSelectedInvoiceId(e.target.value)}
-                    className="w-full border border-[#DCE8DF] rounded-lg p-2 font-mono text-xs text-[#202824] focus:outline-none focus:ring-1 focus:ring-[#174A3A]"
+                    className="w-full border border-[#e2e8f0] rounded-lg p-2 font-mono text-xs text-[#0f172a] focus:outline-none focus:ring-1 focus:ring-[#1d4ed8] focus-brand-ring"
                   >
                     <option value="">-- Pilih Customer Invoice --</option>
                     {invoices.map((inv) => (
@@ -678,27 +678,27 @@ export default function ReturnsPage() {
                 </div>
 
                 <div>
-                  <label className="font-bold text-[#202824] block mb-1">Kuantitas Barang Retur:</label>
+                  <label className="font-bold text-[#0f172a] block mb-1">Kuantitas Barang Retur:</label>
                   <input
                     type="number"
                     value={returnQty}
                     onChange={(e) => setReturnQty(Number(e.target.value))}
                     min={1}
-                    className="w-full border border-[#DCE8DF] rounded-lg p-2 font-mono font-bold text-xs text-[#202824] focus:outline-none focus:ring-1 focus:ring-[#174A3A]"
+                    className="w-full border border-[#e2e8f0] rounded-lg p-2 font-mono font-bold text-xs text-[#0f172a] focus:outline-none focus:ring-1 focus:ring-[#1d4ed8] focus-brand-ring"
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-2 pt-4 border-t border-[#DCE8DF]">
+              <div className="flex justify-end space-x-2 pt-4 border-t border-[#e2e8f0]">
                 <button
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 border border-[#DCE8DF] rounded-lg text-xs font-semibold text-[#758078] hover:bg-[#F7F8F5]"
+                  className="px-4 py-2 border border-[#e2e8f0] rounded-lg text-xs font-semibold text-[#64748b] hover:bg-[#f1f5f9] focus-brand-ring"
                 >
                   Batal
                 </button>
                 <button
                   onClick={handleCreateReturn}
-                  className="px-4 py-2 bg-[#174A3A] hover:bg-[#103429] text-white rounded-lg text-xs font-bold shadow-xs"
+                  className="px-4 py-2 bg-[#1d4ed8] hover:bg-[#1e3a8a] text-white rounded-lg text-xs font-bold shadow-xs focus-brand-ring"
                 >
                   Simpan Permintaan Retur
                 </button>
@@ -710,69 +710,69 @@ export default function ReturnsPage() {
         {/* Modal Inspeksi Kualitas Gudang */}
         {showInspectModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-in fade-in">
-            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-[#DCE8DF]">
-              <div className="flex items-center justify-between border-b border-[#DCE8DF] pb-3">
-                <h2 className="text-base font-bold text-[#202824] flex items-center space-x-2">
-                  <ClipboardCheck className="w-4 h-4 text-[#C6A15B]" />
+            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-[#e2e8f0]">
+              <div className="flex items-center justify-between border-b border-[#e2e8f0] pb-3">
+                <h2 className="text-base font-bold text-[#0f172a] flex items-center space-x-2">
+                  <ClipboardCheck className="w-4 h-4 text-[#6d28d9]" />
                   <span>Pemeriksaan Kualitas Barang Retur (SR-11)</span>
                 </h2>
                 <button
                   onClick={() => setShowInspectModal(false)}
-                  className="text-[#758078] hover:text-[#202824]"
+                  className="text-[#64748b] hover:text-[#0f172a] focus-brand-ring rounded"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <p className="text-xs text-[#758078]">
+              <p className="text-xs text-[#64748b]">
                 Inspeksi mutu fisik barang sebelum dimasukkan kembali ke persediaan gudang atau dihapusbukukan sebagai limbah.
               </p>
 
               <div className="space-y-3 text-xs">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="font-bold text-[#202824] block mb-1">Diterima (Accepted Qty):</label>
+                    <label className="font-bold text-[#0f172a] block mb-1">Diterima (Accepted Qty):</label>
                     <input
                       type="number"
                       value={acceptedQtyInput}
                       onChange={(e) => setAcceptedQtyInput(Number(e.target.value))}
                       min={0}
-                      className="w-full border border-[#DCE8DF] rounded-lg p-2 font-mono font-bold text-xs text-[#202824] focus:outline-none focus:ring-1 focus:ring-[#174A3A]"
+                      className="w-full border border-[#e2e8f0] rounded-lg p-2 font-mono font-bold text-xs text-[#0f172a] focus:outline-none focus:ring-1 focus:ring-[#1d4ed8] focus-brand-ring"
                     />
                   </div>
                   <div>
-                    <label className="font-bold text-[#202824] block mb-1">Ditolak (Rejected Qty):</label>
+                    <label className="font-bold text-[#0f172a] block mb-1">Ditolak (Rejected Qty):</label>
                     <input
                       type="number"
                       value={rejectedQtyInput}
                       onChange={(e) => setRejectedQtyInput(Number(e.target.value))}
                       min={0}
-                      className="w-full border border-[#DCE8DF] rounded-lg p-2 font-mono font-bold text-xs text-[#202824] focus:outline-none focus:ring-1 focus:ring-[#174A3A]"
+                      className="w-full border border-[#e2e8f0] rounded-lg p-2 font-mono font-bold text-xs text-[#0f172a] focus:outline-none focus:ring-1 focus:ring-[#1d4ed8] focus-brand-ring"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="font-bold text-[#202824] block mb-1">Catatan Hasil Pemeriksaan Mutu:</label>
+                  <label className="font-bold text-[#0f172a] block mb-1">Catatan Hasil Pemeriksaan Mutu:</label>
                   <textarea
                     value={inspectNotes}
                     onChange={(e) => setInspectNotes(e.target.value)}
                     rows={2}
-                    className="w-full border border-[#DCE8DF] rounded-lg p-2 text-xs text-[#202824] focus:outline-none focus:ring-1 focus:ring-[#174A3A]"
+                    className="w-full border border-[#e2e8f0] rounded-lg p-2 text-xs text-[#0f172a] focus:outline-none focus:ring-1 focus:ring-[#1d4ed8] focus-brand-ring"
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-2 pt-4 border-t border-[#DCE8DF]">
+              <div className="flex justify-end space-x-2 pt-4 border-t border-[#e2e8f0]">
                 <button
                   onClick={() => setShowInspectModal(false)}
-                  className="px-4 py-2 border border-[#DCE8DF] rounded-lg text-xs font-semibold text-[#758078] hover:bg-[#F7F8F5]"
+                  className="px-4 py-2 border border-[#e2e8f0] rounded-lg text-xs font-semibold text-[#64748b] hover:bg-[#f1f5f9] focus-brand-ring"
                 >
                   Batal
                 </button>
                 <button
                   onClick={handleInspectReturn}
-                  className="px-4 py-2 bg-[#C6A15B] hover:bg-[#b08e4d] text-[#103429] rounded-lg text-xs font-bold shadow-xs"
+                  className="px-4 py-2 bg-[#7c3aed] hover:bg-[#6d28d9] text-[#ffffff] rounded-lg text-xs font-bold shadow-xs focus-brand-ring"
                 >
                   Simpan Hasil Inspeksi
                 </button>
@@ -785,7 +785,7 @@ export default function ReturnsPage() {
         <details className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
           <summary className="cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white select-none">
             <div className="flex items-center space-x-2">
-              <span className="px-2 py-0.5 rounded-md bg-[#C6A15B] text-slate-900 font-bold text-[10px] uppercase">
+              <span className="px-2 py-0.5 rounded-md bg-[#7c3aed] text-[#ffffff] font-bold text-[10px] uppercase">
                 Developer Tool
               </span>
               <span>🛠️ Panel Pengujian Otomatis Rubrik (T-29 & T-30)</span>
@@ -806,7 +806,7 @@ export default function ReturnsPage() {
                 <button
                   onClick={runTestT29}
                   disabled={testing}
-                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-all disabled:opacity-50"
+                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-all disabled:opacity-50 focus-brand-ring"
                 >
                   <Play className="w-3.5 h-3.5 fill-current" />
                   <span>Jalankan T-29</span>
@@ -814,7 +814,7 @@ export default function ReturnsPage() {
                 <button
                   onClick={runTestT30}
                   disabled={testing}
-                  className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-all disabled:opacity-50"
+                  className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-all disabled:opacity-50 focus-brand-ring"
                 >
                   <ShieldAlert className="w-3.5 h-3.5" />
                   <span>Jalankan T-30</span>
@@ -848,7 +848,7 @@ export default function ReturnsPage() {
                 </div>
                 <div className="space-y-1">
                   <p>
-                    <strong className="text-[#C6A15B]">Ekspektasi:</strong> {testResult.expected}
+                    <strong className="text-[#7c3aed]">Ekspektasi:</strong> {testResult.expected}
                   </p>
                   <p className="font-mono">
                     <strong className="text-white">Hasil Aktual:</strong> {testResult.actual}

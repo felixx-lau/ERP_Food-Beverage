@@ -194,12 +194,12 @@ export default function CreatePurchaseOrderModal({
         {/* Header */}
         <div className="px-6 py-4 bg-white/40 border-b border-black/5 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-[#174A3A]">
-              <ShoppingBag className="w-5 h-5 text-[#174A3A]" />
+            <div className="w-10 h-10 rounded-2xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-600">
+              <ShoppingBag className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <h2 className="text-base font-black text-slate-900 tracking-tight">Buat Pesanan Pembelian (Purchase Order)</h2>
-              <p className="text-xs text-slate-700 font-semibold">
+              <h2 className="text-base font-bold text-slate-900 tracking-tight">Buat Pesanan Pembelian (Purchase Order)</h2>
+              <p className="text-xs text-slate-600 font-medium">
                 Ketik nama bahan/barang pengadaan, kuantitas, dan harga beli ke vendor
               </p>
             </div>
@@ -228,13 +228,13 @@ export default function CreatePurchaseOrderModal({
 
           {/* Vendor Selection */}
           <div>
-            <label className="block text-xs font-black text-slate-800 mb-1">
+            <label className="block text-xs font-bold text-slate-800 mb-1">
               Vendor / Pemasok <span className="text-rose-500">*</span>
             </label>
             <select
               value={selectedVendorId}
               onChange={(e) => setSelectedVendorId(e.target.value)}
-              className="w-full text-xs px-3.5 py-2.5 input-glass rounded-xl font-bold text-slate-900"
+              className="w-full text-xs px-3.5 py-2.5 input-glass rounded-xl font-semibold text-slate-900"
             >
               {vendors.map((v) => (
                 <option key={v.id} value={v.id}>
@@ -248,7 +248,7 @@ export default function CreatePurchaseOrderModal({
           <div className="space-y-2 pt-1">
             <div className="flex items-center justify-between">
               <div>
-                <label className="text-xs font-semibold text-[#202824]">Item Pengadaan Bahan / Barang</label>
+                <label className="text-xs font-semibold text-[#0f172a]">Item Pengadaan Bahan / Barang</label>
                 <p className="text-[10px] text-slate-400">
                   Ketik nama barang sendiri (atau pilih dari saran), atur kuantitas, dan harga beli
                 </p>
@@ -256,7 +256,7 @@ export default function CreatePurchaseOrderModal({
               <button
                 type="button"
                 onClick={handleAddLine}
-                className="text-xs font-bold text-[#174A3A] hover:text-[#11382C] flex items-center space-x-1"
+                className="text-xs font-bold text-[#1d4ed8] hover:text-[#1e3a8a] flex items-center space-x-1"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>+ Tambah Baris</span>
@@ -276,7 +276,7 @@ export default function CreatePurchaseOrderModal({
               {lines.map((line, idx) => (
                 <div
                   key={idx}
-                  className="p-3.5 rounded-xl bg-[#F7F8F5] border border-slate-200 grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center"
+                  className="p-3.5 rounded-xl bg-[#f1f5f9] border border-slate-200 grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center"
                 >
                   <div className="sm:col-span-6">
                     <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">
@@ -289,7 +289,7 @@ export default function CreatePurchaseOrderModal({
                       placeholder="Ketik nama bahan (misal: Biji Kopi Arabika, Beras)"
                       value={line.productName}
                       onChange={(e) => handleProductInput(idx, e.target.value)}
-                      className="w-full text-xs px-2.5 py-1.5 border border-slate-200 rounded-lg bg-white focus:ring-1 focus:ring-[#174A3A]"
+                      className="w-full text-xs px-2.5 py-1.5 border border-slate-200 rounded-lg bg-white focus:ring-1 focus:ring-[#1d4ed8]"
                     />
                   </div>
 
@@ -300,7 +300,7 @@ export default function CreatePurchaseOrderModal({
                       min={1}
                       value={line.orderedQty}
                       onChange={(e) => handleLineChange(idx, "orderedQty", e.target.value)}
-                      className="w-full text-xs px-2.5 py-1.5 border border-slate-200 rounded-lg bg-white font-mono focus:ring-1 focus:ring-[#174A3A]"
+                      className="w-full text-xs px-2.5 py-1.5 border border-slate-200 rounded-lg bg-white font-mono focus:ring-1 focus:ring-[#1d4ed8]"
                     />
                   </div>
 
@@ -312,7 +312,7 @@ export default function CreatePurchaseOrderModal({
                       step={500}
                       value={line.unitPrice}
                       onChange={(e) => handleLineChange(idx, "unitPrice", e.target.value)}
-                      className="w-full text-xs px-2.5 py-1.5 border border-slate-200 rounded-lg bg-white font-mono focus:ring-1 focus:ring-[#174A3A]"
+                      className="w-full text-xs px-2.5 py-1.5 border border-slate-200 rounded-lg bg-white font-mono focus:ring-1 focus:ring-[#1d4ed8]"
                     />
                   </div>
 
@@ -334,11 +334,11 @@ export default function CreatePurchaseOrderModal({
 
           {/* Summary Box */}
           <div className="p-4 rounded-2xl glass-3 border border-white/80 space-y-2 text-xs shadow-xs">
-            <div className="flex justify-between font-black text-sm text-slate-900">
+            <div className="flex justify-between font-bold text-sm text-slate-900">
               <span>Total Estimasi Pengadaan (PO)</span>
-              <span className="font-mono text-[#174A3A] font-black text-base">Rp {totalAmount.toLocaleString("id-ID")}</span>
+              <span className="font-mono text-[#1d4ed8] font-bold text-base">Rp {totalAmount.toLocaleString("id-ID")}</span>
             </div>
-            <p className="text-[11px] text-slate-700 font-semibold">
+            <p className="text-[11px] text-slate-600 font-medium">
               Setelah disimpan, pesanan akan berstatus DRAFT dan dapat dikonfirmasi untuk membuat komitmen pengadaan serta dokumen Penerimaan Barang.
             </p>
           </div>
@@ -348,14 +348,14 @@ export default function CreatePurchaseOrderModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-black btn-glass-secondary rounded-xl hover:-translate-y-0.5 transition-all"
+              className="px-4 py-2 text-xs font-bold btn-glass-secondary rounded-xl hover:-translate-y-0.5 transition-all"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-5 py-2.5 text-xs font-black btn-glass-primary rounded-xl shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg flex items-center space-x-1.5"
+              className="px-5 py-2.5 text-xs font-bold btn-glass-primary rounded-xl shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg flex items-center space-x-1.5"
             >
               {loading ? (
                 <span>Memproses...</span>

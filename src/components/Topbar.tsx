@@ -114,7 +114,7 @@ export default function Topbar({
             <button
               onClick={onToggleMobileSidebar}
               aria-label="Buka menu navigasi"
-              className="lg:hidden flex items-center justify-center w-8 h-8 rounded-xl bg-white/60 hover:bg-white/95 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition-all text-slate-800 hover:text-[#26493b] border border-white/70 shadow-xs focus-visible:ring-2 focus-visible:ring-[#26493b] focus-visible:outline-none"
+              className="lg:hidden flex items-center justify-center w-8 h-8 rounded-xl bg-white/60 hover:bg-white/95 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition-all text-slate-800 hover:text-blue-700 border border-white/70 shadow-xs focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none"
             >
               <Menu className="w-5 h-5" aria-hidden="true" />
             </button>
@@ -124,7 +124,7 @@ export default function Topbar({
               onClick={onOpenAppSwitcher}
               aria-label="Buka Hub Aplikasi (App Switcher)"
               title="Hub Aplikasi (▦ Apps)"
-              className="flex items-center justify-center w-8 h-8 rounded-xl bg-white/60 hover:bg-white/95 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition-all text-slate-800 hover:text-[#26493b] border border-white/70 shadow-xs focus-visible:ring-2 focus-visible:ring-[#26493b] focus-visible:outline-none"
+              className="flex items-center justify-center w-8 h-8 rounded-xl bg-white/60 hover:bg-white/95 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition-all text-slate-800 hover:text-blue-700 border border-white/70 shadow-xs focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none"
             >
               <LayoutGrid className="w-4 h-4" aria-hidden="true" />
             </button>
@@ -138,22 +138,22 @@ export default function Topbar({
                 breadcrumbs.map((b, idx) => (
                   <React.Fragment key={idx}>
                     {idx > 0 && <span className="text-black/30" aria-hidden="true">/</span>}
-                    <span className={idx === breadcrumbs.length - 1 ? "font-bold text-[#26493b]" : "text-slate-700 font-medium"}>
+                    <span className={idx === breadcrumbs.length - 1 ? "font-bold text-blue-700" : "text-slate-700 font-medium"}>
                       {b.label}
                     </span>
                   </React.Fragment>
                 ))
               ) : (
-                <span className="font-bold text-[#26493b]">Beranda</span>
+                <span className="font-bold text-blue-700">Beranda</span>
               )}
             </nav>
 
             {/* Default location indicator */}
             <div 
-              className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-[#26493b]/10 text-[#26493b] border border-[#26493b]/20 backdrop-blur-xs shrink-0"
+              className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-blue-600/10 text-blue-700 border border-blue-600/20 backdrop-blur-xs shrink-0"
               title="Lokasi Operasional: WH-JKT (Gudang Utama) · Gerai: CAFE-JKT"
             >
-              <MapPin className="w-3.5 h-3.5 text-[#8a6a28]" aria-hidden="true" />
+              <MapPin className="w-3.5 h-3.5 text-violet-600" aria-hidden="true" />
               <span>WH-JKT</span>
             </div>
           </div>
@@ -164,10 +164,10 @@ export default function Topbar({
             <button
               onClick={() => setManageTeamOpen(true)}
               aria-label="Kelola Tim & Anggota Kelompok"
-              className="hidden lg:inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold btn-glass-secondary hover:-translate-y-0.5 hover:shadow-md rounded-xl transition-all shadow-xs focus-visible:ring-2 focus-visible:ring-[#26493b] focus-visible:outline-none"
+              className="hidden lg:inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold btn-glass-secondary hover:-translate-y-0.5 hover:shadow-md rounded-xl transition-all shadow-xs focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none"
               title="Kelola Tim & Anggota Kelompok"
             >
-              <Users2 className="w-3.5 h-3.5 text-[#8a6a28]" aria-hidden="true" />
+              <Users2 className="w-3.5 h-3.5 text-violet-600" aria-hidden="true" />
               <span>Kelola Tim</span>
             </button>
 
@@ -175,10 +175,10 @@ export default function Topbar({
             <button
               onClick={onOpenAuditDrawer}
               aria-label="Buka Log Audit & Security History"
-              className="hidden sm:inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold btn-glass-secondary hover:-translate-y-0.5 hover:shadow-md rounded-xl transition-all shadow-xs focus-visible:ring-2 focus-visible:ring-[#26493b] focus-visible:outline-none"
+              className="hidden sm:inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold btn-glass-secondary hover:-translate-y-0.5 hover:shadow-md rounded-xl transition-all shadow-xs focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none"
               title="Buka Log Audit & Security History (SR-15 / F-21)"
             >
-              <ShieldAlert className="w-3.5 h-3.5 text-[#8a6a28]" aria-hidden="true" />
+              <ShieldAlert className="w-3.5 h-3.5 text-violet-600" aria-hidden="true" />
               <span className="hidden md:inline">Audit Trail</span>
             </button>
 
@@ -188,17 +188,17 @@ export default function Topbar({
                 onClick={() => setRoleMenuOpen(!roleMenuOpen)}
                 aria-label={`Menu pengguna: ${currentUser?.name || "Pengguna"}, Role: ${currentUser?.role || "OWNER"}`}
                 aria-expanded={roleMenuOpen}
-                className="flex items-center space-x-2 px-2.5 py-1.5 rounded-xl glass-2 hover:bg-white/95 hover:-translate-y-0.5 hover:shadow-md border border-white/70 text-slate-900 text-xs font-bold transition-all shadow-xs focus-visible:ring-2 focus-visible:ring-[#26493b] focus-visible:outline-none"
+                className="flex items-center space-x-2 px-2.5 py-1.5 rounded-xl glass-2 hover:bg-white/95 hover:-translate-y-0.5 hover:shadow-md border border-white/70 text-slate-900 text-xs font-bold transition-all shadow-xs focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none"
               >
-                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#26493b] to-[#335e4d] text-white font-bold text-xs flex items-center justify-center shadow-xs">
+                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 text-white font-bold text-xs flex items-center justify-center shadow-xs">
                   {currentUser?.name ? currentUser.name.charAt(0) : "M"}
                 </div>
                 <div className="text-left hidden sm:block">
                   <p className="font-bold leading-tight text-slate-900 max-w-[110px] truncate">
                     {currentUser?.name || "Memuat..."}
                   </p>
-                  {/* High contrast role label with #8a6a28 (gold-text) */}
-                  <p className="text-xs text-[#8a6a28] font-extrabold uppercase tracking-wider">
+                  {/* High contrast role label in violet */}
+                  <p className="text-xs text-violet-700 font-extrabold uppercase tracking-wider">
                     {currentUser?.role || "OWNER"}
                   </p>
                 </div>
@@ -232,13 +232,13 @@ export default function Topbar({
                             disabled={switching}
                             className={`w-full text-left px-3.5 py-2 flex items-start space-x-2.5 text-xs transition-colors ${
                               isSelected
-                                ? "bg-emerald-500/15 text-[#174A3A] font-bold"
+                                ? "bg-blue-600/15 text-blue-700 font-bold"
                                 : "hover:bg-white/60 text-[var(--glass-text-primary)]"
                             }`}
                           >
                             <div className="mt-0.5">
                               {isSelected ? (
-                                <Check className="w-4 h-4 text-[#174A3A]" />
+                                <Check className="w-4 h-4 text-blue-700" />
                               ) : (
                                 <div className="w-4 h-4 rounded-full border border-black/20" />
                               )}
@@ -246,7 +246,7 @@ export default function Topbar({
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between">
                                 <span className="font-bold text-[var(--glass-text-primary)] truncate">{r.name}</span>
-                                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/70 font-mono font-bold text-[#174A3A] border border-white/60">
+                                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/70 font-mono font-bold text-blue-700 border border-white/60">
                                   {r.role}
                                 </span>
                               </div>
@@ -262,7 +262,7 @@ export default function Topbar({
                     {/* Custom Group Members */}
                     {customUsers.length > 0 && (
                       <div>
-                        <p className="px-3.5 py-1 text-[10px] font-bold text-[#174A3A] bg-emerald-50/80 uppercase">
+                        <p className="px-3.5 py-1 text-[10px] font-bold text-blue-700 bg-blue-50/80 uppercase">
                           Anggota Tim Kelompok ({customUsers.length}):
                         </p>
                         {customUsers.map((u) => {
@@ -274,25 +274,25 @@ export default function Topbar({
                               disabled={switching}
                               className={`w-full text-left px-3.5 py-2 flex items-start space-x-2.5 text-xs transition-colors ${
                                 isSelected
-                                  ? "bg-amber-50 text-[#174A3A] font-semibold"
-                                  : "hover:bg-[#F7F8F5] text-[#202824]"
+                                  ? "bg-violet-50 text-violet-800 font-semibold"
+                                  : "hover:bg-[#f1f5f9] text-[#202824]"
                               }`}
                             >
                               <div className="mt-0.5">
                                 {isSelected ? (
-                                  <Check className="w-4 h-4 text-amber-600" />
+                                  <Check className="w-4 h-4 text-violet-600" />
                                 ) : (
-                                  <div className="w-4 h-4 rounded-full border border-[#D5D8D3]" />
+                                  <div className="w-4 h-4 rounded-full border border-slate-300" />
                                 )}
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between">
                                   <span className="font-bold text-[#202824] truncate">{u.name}</span>
-                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 font-mono font-semibold text-emerald-800">
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 font-mono font-semibold text-blue-800">
                                     {u.role}
                                   </span>
                                 </div>
-                                <p className="text-[11px] text-[#758078] font-normal truncate">
+                                <p className="text-[11px] text-slate-500 font-normal truncate">
                                   {u.email}
                                 </p>
                               </div>
@@ -304,15 +304,15 @@ export default function Topbar({
                   </div>
 
                   {/* Actions: Manage Team, Dev Reset Seed, & Logout */}
-                  <div className="p-2 border-t border-[#E5E9E4] bg-[#F7F8F5] space-y-1.5">
+                  <div className="p-2 border-t border-slate-200 bg-[#f8fafc] space-y-1.5">
                     <button
                       onClick={() => {
                         setRoleMenuOpen(false);
                         setManageTeamOpen(true);
                       }}
-                      className="w-full py-2 px-3 bg-[#26493b] hover:bg-[#1b382d] active:bg-[#14281f] text-white rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 transition-all shadow-xs focus-visible:ring-2 focus-visible:ring-[#26493b] focus-visible:outline-none"
+                      className="w-full py-2 px-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:from-blue-800 active:to-indigo-800 text-white rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 transition-all shadow-xs focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none"
                     >
-                      <UserPlus className="w-3.5 h-3.5 text-[#d4b36a]" aria-hidden="true" />
+                      <UserPlus className="w-3.5 h-3.5 text-violet-200" aria-hidden="true" />
                       <span>+ Tambah / Kelola Anggota Tim</span>
                     </button>
 
@@ -325,7 +325,7 @@ export default function Topbar({
                             onOpenResetModal();
                           }
                         }}
-                        className="w-full py-2 px-3 bg-amber-500/10 hover:bg-amber-500/20 active:bg-amber-500/30 text-amber-900 rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 transition-all border border-amber-500/30 focus-visible:ring-2 focus-visible:ring-[#26493b] focus-visible:outline-none"
+                        className="w-full py-2 px-3 bg-amber-500/10 hover:bg-amber-500/20 active:bg-amber-500/30 text-amber-900 rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 transition-all border border-amber-500/30 focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none"
                         title="Buka dialog konfirmasi reset seed database (Hanya mode Demo / Dev)"
                       >
                         <RotateCcw className="w-3.5 h-3.5 text-amber-800" aria-hidden="true" />
@@ -335,7 +335,7 @@ export default function Topbar({
 
                     <button
                       onClick={handleLogout}
-                      className="w-full py-2 px-3 bg-rose-50 hover:bg-rose-100 active:bg-rose-200 text-rose-800 rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 transition-all border border-rose-200 focus-visible:ring-2 focus-visible:ring-[#26493b] focus-visible:outline-none"
+                      className="w-full py-2 px-3 bg-rose-50 hover:bg-rose-100 active:bg-rose-200 text-rose-800 rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 transition-all border border-rose-200 focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none"
                     >
                       <LogOut className="w-3.5 h-3.5 text-rose-700" aria-hidden="true" />
                       <span>Keluar dari Sistem (Logout)</span>

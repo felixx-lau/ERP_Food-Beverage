@@ -11,7 +11,7 @@ import Link from "next/link";
 const STAGES = [
   { key: "NEW", label: "New Lead", border: "border-t-blue-500", badge: "bg-blue-50 text-blue-700 border-blue-200" },
   { key: "QUALIFIED", label: "Qualified", border: "border-t-amber-500", badge: "bg-amber-50 text-amber-700 border-amber-200" },
-  { key: "PROPOSITION", label: "Proposition", border: "border-t-[#174A3A]", badge: "bg-[#F2F7F4] text-[#174A3A] border-[#C4DBD0]" },
+  { key: "PROPOSITION", label: "Proposition", border: "border-t-[#1d4ed8]", badge: "bg-[#1d4ed8]/10 text-[#1d4ed8] border-[#1d4ed8]/25" },
   { key: "WON", label: "Won / Deal", border: "border-t-emerald-600", badge: "bg-emerald-50 text-emerald-800 border-emerald-200" },
 ];
 
@@ -145,12 +145,12 @@ export default function CrmLeadsPage() {
       actions={
         <div className="flex items-center space-x-2">
           <div className="text-right hidden sm:block">
-            <p className="text-[10px] font-semibold text-[#758078] uppercase tracking-wider">Total Pipeline</p>
-            <p className="text-sm font-bold text-[#174A3A]">Rp {totalPipeline.toLocaleString("id-ID")}</p>
+            <p className="text-[10px] font-semibold text-[#64748b] uppercase tracking-wider">Total Pipeline</p>
+            <p className="text-sm font-bold text-[#1d4ed8]">Rp {totalPipeline.toLocaleString("id-ID")}</p>
           </div>
           <button
             onClick={() => setCreateModalOpen(true)}
-            className="inline-flex items-center space-x-1.5 px-3.5 py-2 btn-glass-primary text-white rounded-xl text-xs font-black shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+            className="inline-flex items-center space-x-1.5 px-3.5 py-2 btn-glass-primary text-white rounded-xl text-xs font-bold shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus-brand-ring"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>+ Lead Baru</span>
@@ -172,14 +172,14 @@ export default function CrmLeadsPage() {
               {/* Column Header */}
               <div className="p-3.5 border-b border-black/5 flex items-center justify-between bg-white/40">
                 <div>
-                  <h3 className="font-black text-xs uppercase tracking-wide text-slate-900">
+                  <h3 className="font-bold text-xs uppercase tracking-wide text-slate-900">
                     {stg.label}
                   </h3>
-                  <span className="text-[11px] text-slate-700 font-mono font-bold">
+                  <span className="text-[11px] text-slate-700 font-mono font-semibold">
                     Rp {stageTotal.toLocaleString("id-ID")}
                   </span>
                 </div>
-                <span className="w-5 h-5 rounded-full bg-white/80 border border-white/80 text-slate-900 flex items-center justify-center font-black text-[10px] shadow-xs">
+                <span className="w-5 h-5 rounded-full bg-white/80 border border-white/80 text-slate-900 flex items-center justify-center font-bold text-[10px] shadow-xs">
                   {stageLeads.length}
                 </span>
               </div>
@@ -194,26 +194,26 @@ export default function CrmLeadsPage() {
                   stageLeads.map((lead) => (
                     <div
                       key={lead.id}
-                      className="glass-3 border border-white/80 hover:border-[#174A3A]/40 rounded-xl p-3.5 shadow-xs space-y-2.5 cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-1 hover:bg-white/95"
+                      className="glass-3 border border-white/80 hover:border-[#1d4ed8]/40 rounded-xl p-3.5 shadow-xs space-y-2.5 cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-1 hover:bg-white/95 focus-brand-ring"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-mono font-black text-xs text-[#174A3A] bg-emerald-500/15 px-2 py-0.5 rounded-lg border border-emerald-500/30">
+                        <span className="font-mono font-bold text-xs text-[#1d4ed8] bg-[#1d4ed8]/10 px-2 py-0.5 rounded-lg border border-[#1d4ed8]/20">
                           {lead.id}
                         </span>
-                        <span className="text-xs font-black text-emerald-800 font-mono">
+                        <span className="text-xs font-bold text-emerald-800 font-mono">
                           Rp {lead.expectedRevenue.toLocaleString("id-ID")}
                         </span>
                       </div>
 
-                      <h4 className="font-black text-xs text-slate-900 leading-snug">
+                      <h4 className="font-bold text-xs text-slate-900 leading-snug">
                         {lead.name}
                       </h4>
 
-                      <div className="pt-2 border-t border-black/5 flex items-center justify-between text-[11px] text-slate-700 font-semibold">
-                        <span className="truncate max-w-[130px] font-bold text-slate-800">
+                      <div className="pt-2 border-t border-black/5 flex items-center justify-between text-[11px] text-slate-700 font-medium">
+                        <span className="truncate max-w-[130px] font-semibold text-slate-800">
                           {lead.contact?.name || lead.contactId}
                         </span>
-                        <span className="font-mono text-[10px] font-bold bg-white/70 px-1.5 py-0.5 rounded border border-white/60">
+                        <span className="font-mono text-[10px] font-semibold bg-white/70 px-1.5 py-0.5 rounded border border-white/60">
                           {lead.contactId}
                         </span>
                       </div>
@@ -230,7 +230,7 @@ export default function CrmLeadsPage() {
       <details className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
         <summary className="cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white select-none">
           <div className="flex items-center space-x-2">
-            <span className="px-2 py-0.5 rounded-md bg-[#C6A15B] text-slate-900 font-bold text-[10px] uppercase">
+            <span className="px-2 py-0.5 rounded-md bg-[#7c3aed] text-[#ffffff] font-bold text-[10px] uppercase">
               Developer Tool
             </span>
             <span>🛠️ Panel Pengujian Otomatis Rubrik (T-07 & T-08)</span>
@@ -251,7 +251,7 @@ export default function CrmLeadsPage() {
               <button
                 onClick={runTestT07}
                 disabled={testing}
-                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center space-x-1.5 shadow-xs transition-all"
+                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center space-x-1.5 shadow-xs transition-all focus-brand-ring"
               >
                 <Play className="w-3.5 h-3.5" />
                 <span>Jalankan T-07</span>
@@ -259,7 +259,7 @@ export default function CrmLeadsPage() {
               <button
                 onClick={runTestT08}
                 disabled={testing}
-                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-rose-600 hover:bg-rose-500 text-white flex items-center space-x-1.5 shadow-xs transition-all"
+                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-rose-600 hover:bg-rose-500 text-white flex items-center space-x-1.5 shadow-xs transition-all focus-brand-ring"
               >
                 <Play className="w-3.5 h-3.5" />
                 <span>Jalankan T-08</span>
@@ -270,7 +270,7 @@ export default function CrmLeadsPage() {
           {testResult && (
             <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-2 text-xs">
               <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                <span className="font-bold text-[#C6A15B]">
+                <span className="font-bold text-[#7c3aed]">
                   [{testResult.id}] {testResult.name}
                 </span>
                 <span

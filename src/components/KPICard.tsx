@@ -33,22 +33,22 @@ export default function KPICard({
   className = "",
 }: KPICardProps) {
   const iconVariants = {
-    primary: "text-[#174A3A] bg-emerald-500/15 border-emerald-500/30",
-    gold: "text-[#A88544] bg-amber-500/15 border-amber-500/30",
-    sage: "text-[#174A3A] bg-emerald-600/15 border-emerald-600/30",
+    primary: "text-blue-700 bg-blue-600/10 border-blue-600/20",
+    gold: "text-violet-700 bg-violet-600/15 border-violet-600/30",
+    sage: "text-indigo-700 bg-indigo-600/10 border-indigo-600/20",
     success: "text-emerald-800 bg-emerald-500/15 border-emerald-500/30",
     warning: "text-amber-800 bg-amber-500/15 border-amber-500/30",
     danger: "text-rose-800 bg-rose-500/15 border-rose-500/30",
-    default: "text-slate-800 bg-black/5 border-black/15",
+    default: "text-slate-800 bg-slate-100 border-slate-200",
   }[variant];
 
   const badgeVariants = {
-    success: "glass-badge-success font-black",
-    warning: "glass-badge-warning font-black",
-    danger: "glass-badge-danger font-black",
-    gold: "bg-amber-500/20 text-amber-950 border-amber-500/40 backdrop-blur-xs font-black",
-    sage: "bg-emerald-500/20 text-emerald-950 border-emerald-500/40 backdrop-blur-xs font-black",
-    default: "glass-badge-default font-black",
+    success: "glass-badge-success font-semibold",
+    warning: "glass-badge-warning font-semibold",
+    danger: "glass-badge-danger font-semibold",
+    gold: "bg-violet-50 text-violet-700 border-violet-200 backdrop-blur-xs font-semibold",
+    sage: "bg-blue-50 text-blue-700 border-blue-200 backdrop-blur-xs font-semibold",
+    default: "glass-badge-default font-semibold",
   }[badgeVariant];
 
   return (
@@ -61,18 +61,18 @@ export default function KPICard({
       <div className="flex items-start justify-between">
         <div className="space-y-1.5">
           <div className="flex items-center space-x-2">
-            <p className="text-xs font-black text-slate-800 tracking-wider uppercase">
+            <p className="text-xs font-semibold text-slate-600 tracking-wider uppercase">
               {title}
             </p>
             {badgeText && (
               <span
-                className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black border ${badgeVariants}`}
+                className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${badgeVariants}`}
               >
                 {badgeText}
               </span>
             )}
           </div>
-          <p className="text-2xl sm:text-3xl font-black tracking-tight text-[#0A110E]">
+          <p className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
             {value}
           </p>
         </div>

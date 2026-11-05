@@ -124,10 +124,10 @@ export default function Sidebar({
       <div className="h-14 px-4 flex items-center justify-between border-b border-white/30 bg-white/30 backdrop-blur-md">
         <Link 
           href="/" 
-          className="flex items-center space-x-2.5 overflow-hidden rounded-xl p-1 focus-visible:ring-2 focus-visible:ring-[#26493b] focus-visible:outline-none"
+          className="flex items-center space-x-2.5 overflow-hidden rounded-xl p-1 focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none"
           title={`${activeBrand} — Portal ERP`}
         >
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#d4b36a] to-[#b5924f] flex items-center justify-center text-[#14281f] font-extrabold text-sm flex-shrink-0 shadow-xs border border-white/40">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 flex items-center justify-center text-white font-extrabold text-sm flex-shrink-0 shadow-md shadow-indigo-500/20 border border-white/40">
             {initials}
           </div>
           {!isCollapsed && (
@@ -146,7 +146,7 @@ export default function Sidebar({
         <button
           onClick={onToggleCollapse}
           aria-label={isCollapsed ? "Perluas Sidebar" : "Ciutkan Sidebar"}
-          className="hidden lg:flex items-center justify-center w-7 h-7 rounded-lg hover:bg-white/80 text-[var(--glass-text-muted)] hover:text-[#26493b] focus-visible:ring-2 focus-visible:ring-[#26493b] focus-visible:outline-none transition-colors"
+          className="hidden lg:flex items-center justify-center w-7 h-7 rounded-lg hover:bg-white/80 text-[var(--glass-text-muted)] hover:text-blue-700 focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none transition-colors"
           title={isCollapsed ? "Perluas Sidebar" : "Ciutkan Sidebar"}
         >
           {isCollapsed ? <ChevronRight className="w-4 h-4" aria-hidden="true" /> : <ChevronLeft className="w-4 h-4" aria-hidden="true" />}
@@ -174,20 +174,20 @@ export default function Sidebar({
                   href={item.href}
                   onClick={onCloseMobile}
                   title={item.name}
-                  className={`group flex items-center rounded-xl px-2.5 py-2 text-xs transition-all duration-200 focus-visible:ring-2 focus-visible:ring-[#26493b] focus-visible:outline-none ${
+                  className={`group flex items-center rounded-xl px-2.5 py-2 text-xs transition-all duration-200 focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none ${
                     isActive
-                      ? "bg-gradient-to-r from-[#26493b] to-[#1f4032] text-white font-bold shadow-md shadow-[#26493b]/20 border border-white/20 transform translate-x-1"
+                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-md shadow-blue-500/25 border border-white/20 transform translate-x-1"
                       : hasAccess
-                      ? "text-slate-800 font-bold hover:bg-white/80 hover:text-[#26493b] hover:translate-x-1 hover:shadow-xs"
+                      ? "text-slate-800 font-bold hover:bg-white/80 hover:text-blue-700 hover:translate-x-1 hover:shadow-xs"
                       : "text-slate-400 font-medium hover:bg-white/20"
                   }`}
                 >
                   <Icon
                     className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 group-hover:scale-110 ${
                       isActive
-                        ? "text-[#d4b36a]"
+                        ? "text-violet-200"
                         : hasAccess
-                        ? "text-[#26493b] group-hover:text-[#26493b]"
+                        ? "text-blue-600 group-hover:text-indigo-600"
                         : "text-slate-400"
                     } ${!isCollapsed ? "mr-2.5" : "mx-auto"}`}
                     aria-hidden="true"
@@ -212,11 +212,11 @@ export default function Sidebar({
       {!isCollapsed && (
         <div className="p-3 border-t border-white/40 bg-white/40 text-xs">
           <div className="flex items-center space-x-1.5 text-xs font-bold text-slate-900 truncate">
-            <ShieldCheck className="w-3.5 h-3.5 text-[#8a6a28] shrink-0" aria-hidden="true" />
+            <ShieldCheck className="w-3.5 h-3.5 text-violet-600 shrink-0" aria-hidden="true" />
             <span className="truncate">Sesi Terverifikasi</span>
           </div>
           <p className="text-xs text-slate-700 mt-0.5 font-semibold">
-            Role: <span className="font-bold text-[#26493b] uppercase">{userRole}</span>
+            Role: <span className="font-bold text-blue-700 uppercase">{userRole}</span>
           </p>
         </div>
       )}

@@ -450,15 +450,15 @@ export default function PointOfSalePage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-2 p-5 rounded-2xl border border-white/80 shadow-glass-2">
           <div>
             <div className="flex items-center space-x-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#174A3A]" />
-              <h1 className="text-xl font-black text-slate-900 tracking-tight">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#1d4ed8]" />
+              <h1 className="text-xl font-bold text-slate-900 tracking-tight">
                 Point of Sale Restoran (CAFE-JKT)
               </h1>
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-500/15 text-[#174A3A] border border-emerald-500/30">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#1d4ed8]/10 text-[#1d4ed8] border border-[#1d4ed8]/20">
                 Wireframe S-14
               </span>
             </div>
-            <p className="text-xs text-slate-700 font-semibold mt-1">
+            <p className="text-xs text-slate-600 font-medium mt-1">
               Kasir gerai cepat, sinkronisasi stok fisik instan, PBJT 10% & penutupan sesi kasir (F-16, F-17, SR-03, SR-04, SR-14).
             </p>
           </div>
@@ -467,7 +467,7 @@ export default function PointOfSalePage() {
             {activeSession?.status === "OPEN" ? (
               <button
                 onClick={() => setCloseModalOpen(true)}
-                className="px-4 py-2 bg-rose-500/15 hover:bg-rose-500/25 active:bg-rose-500/35 text-rose-900 border border-rose-500/30 rounded-xl text-xs font-black flex items-center space-x-1.5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md backdrop-blur-xs"
+                className="px-4 py-2 bg-rose-500/15 hover:bg-rose-500/25 active:bg-rose-500/35 text-rose-900 border border-rose-500/30 rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md backdrop-blur-xs focus-brand-ring"
               >
                 <Lock className="w-3.5 h-3.5 text-rose-800" />
                 <span>Tutup Sesi ({activeSession.sessionCode})</span>
@@ -475,16 +475,16 @@ export default function PointOfSalePage() {
             ) : (
               <button
                 onClick={handleOpenSession}
-                className="px-4 py-2 btn-glass-primary rounded-xl text-xs font-black flex items-center space-x-1.5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                className="px-4 py-2 btn-glass-primary rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus-brand-ring"
               >
-                <Plus className="w-3.5 h-3.5 text-[#C6A15B]" />
+                <Plus className="w-3.5 h-3.5 text-[#7c3aed]" />
                 <span>Buka Sesi Kasir Baru</span>
               </button>
             )}
 
             <button
               onClick={fetchSessionsAndOrders}
-              className="p-2 rounded-xl btn-glass-secondary text-slate-700 hover:text-[#174A3A] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs"
+              className="p-2 rounded-xl btn-glass-secondary text-slate-700 hover:text-[#1d4ed8] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs focus-brand-ring"
               title="Refresh Data"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
@@ -496,20 +496,20 @@ export default function PointOfSalePage() {
         <div className="glass-3 p-4 rounded-xl border border-white/80 shadow-xs flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <span className="text-xs font-black text-slate-800 uppercase tracking-wider">Sesi Aktif:</span>
-              <span className="font-mono font-black text-sm text-[#174A3A]">
+              <span className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Sesi Aktif:</span>
+              <span className="font-mono font-bold text-sm text-[#1d4ed8]">
                 {activeSession?.sessionCode || "POS01"}
               </span>
             </div>
             <span className="text-black/20">|</span>
             <div className="flex items-center space-x-2">
-              <span className="text-xs font-bold text-slate-700">Lokasi Gerai:</span>
-              <span className="font-mono font-black text-xs text-slate-900">CAFE-JKT</span>
+              <span className="text-xs font-medium text-slate-600">Lokasi Gerai:</span>
+              <span className="font-mono font-bold text-xs text-slate-900">CAFE-JKT</span>
             </div>
             <span className="text-black/20">|</span>
             <div className="flex items-center space-x-2">
-              <span className="text-xs font-bold text-slate-700">Modal Awal:</span>
-              <span className="font-mono font-black text-xs text-slate-900">
+              <span className="text-xs font-medium text-slate-600">Modal Awal:</span>
+              <span className="font-mono font-bold text-xs text-slate-900">
                 Rp{activeSession?.openingCash?.toLocaleString("id-ID") || "0"}
               </span>
             </div>
@@ -517,8 +517,8 @@ export default function PointOfSalePage() {
 
           <div className="flex items-center space-x-3">
             <StatusBadge status={activeSession?.status || "CLOSED"} />
-            <span className="text-xs text-slate-700 font-bold">
-              Kasir: <strong className="text-slate-900 font-black">{currentUser?.name || "Citra Dewi"}</strong>
+            <span className="text-xs text-slate-600 font-medium">
+              Kasir: <strong className="text-slate-900 font-bold">{currentUser?.name || "Citra Dewi"}</strong>
             </span>
           </div>
         </div>
@@ -530,11 +530,11 @@ export default function PointOfSalePage() {
             <div className="glass-2 p-5 rounded-2xl border border-white/80 shadow-glass-2">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-black/5">
                 <div>
-                  <h2 className="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center space-x-2">
-                    <Store className="w-4 h-4 text-[#174A3A]" />
+                  <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center space-x-2">
+                    <Store className="w-4 h-4 text-[#1d4ed8]" />
                     <span>Katalog Menu Gerai CAFE-JKT</span>
                   </h2>
-                  <p className="text-xs text-slate-700 font-semibold mt-0.5">Pilih menu di bawah atau ketik nama menu sendiri</p>
+                  <p className="text-xs text-slate-600 font-normal mt-0.5">Pilih menu di bawah atau ketik nama menu sendiri</p>
                 </div>
 
                 <div className="flex items-center space-x-2">
@@ -545,16 +545,16 @@ export default function PointOfSalePage() {
                       placeholder="Cari menu..."
                       value={searchProduct}
                       onChange={(e) => setSearchProduct(e.target.value)}
-                      className="pl-8 pr-3 py-1.5 text-xs input-glass rounded-xl font-bold text-slate-900"
+                      className="pl-8 pr-3 py-1.5 text-xs input-glass rounded-xl font-medium text-slate-900 focus-brand-ring"
                     />
                   </div>
 
                   <button
                     type="button"
                     onClick={() => setManualModalOpen(true)}
-                    className="px-3 py-1.5 btn-glass-primary rounded-xl text-xs font-black flex items-center space-x-1.5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 shrink-0"
+                    className="px-3 py-1.5 btn-glass-primary rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 shrink-0 focus-brand-ring"
                   >
-                    <Plus className="w-3.5 h-3.5 text-[#C6A15B]" />
+                    <Plus className="w-3.5 h-3.5 text-[#7c3aed]" />
                     <span>+ Ketik Menu</span>
                   </button>
                 </div>
@@ -572,9 +572,9 @@ export default function PointOfSalePage() {
                   <button
                     key={cat.key}
                     onClick={() => setCategoryFilter(cat.key)}
-                    className={`px-3 py-1.5 text-xs font-black rounded-xl transition-all duration-150 ${
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all duration-150 focus-brand-ring ${
                       categoryFilter === cat.key
-                        ? "bg-[#174A3A] text-white shadow-xs"
+                        ? "bg-[#1d4ed8] text-white shadow-xs"
                         : "glass-3 text-slate-800 hover:text-slate-900 hover:bg-white/95"
                     }`}
                   >
@@ -589,24 +589,24 @@ export default function PointOfSalePage() {
                   <button
                     key={product.sku}
                     onClick={() => addToCart(product)}
-                    className="text-left p-3.5 rounded-2xl border border-white/70 hover:border-[#174A3A]/40 glass-2 glass-2-interactive flex flex-col justify-between group"
+                    className="text-left p-3.5 rounded-2xl border border-white/70 hover:border-[#1d4ed8]/40 glass-2 glass-2-interactive flex flex-col justify-between group focus-brand-ring"
                   >
                     <div>
-                      <span className="text-[10px] font-mono font-black text-[#174A3A] block">
+                      <span className="text-[10px] font-mono font-bold text-[#1d4ed8] block">
                         {product.sku}
                       </span>
-                      <h4 className="text-xs font-black text-slate-900 mt-1 line-clamp-1 group-hover:text-[#174A3A] transition-colors">
+                      <h4 className="text-xs font-bold text-slate-900 mt-1 line-clamp-1 group-hover:text-[#1d4ed8] transition-colors">
                         {product.name}
                       </h4>
-                      <span className="text-[11px] text-slate-700 font-semibold block mt-0.5">
+                      <span className="text-[11px] text-slate-600 font-normal block mt-0.5">
                         {product.size || "Standard"} · {product.color || "Default"}
                       </span>
                     </div>
                     <div className="mt-3 flex items-center justify-between border-t border-black/5 pt-2">
-                      <span className="text-xs font-mono font-black text-slate-900">
+                      <span className="text-xs font-mono font-bold text-slate-900">
                         Rp{product.salesPrice.toLocaleString("id-ID")}
                       </span>
-                      <span className="text-[11px] px-2 py-0.5 rounded-lg bg-emerald-500/15 text-[#174A3A] font-black group-hover:bg-[#174A3A] group-hover:text-white transition-all">
+                      <span className="text-[11px] px-2 py-0.5 rounded-lg bg-[#1d4ed8]/10 text-[#1d4ed8] font-semibold group-hover:bg-[#1d4ed8] group-hover:text-white transition-all">
                         + Tambah
                       </span>
                     </div>
@@ -617,8 +617,8 @@ export default function PointOfSalePage() {
 
             {/* Recent Orders in Session */}
             <div className="glass-2 p-5 rounded-2xl border border-white/80 shadow-glass-2">
-              <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider mb-3 flex items-center space-x-2">
-                <Receipt className="w-4 h-4 text-[#174A3A]" />
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3 flex items-center space-x-2">
+                <Receipt className="w-4 h-4 text-[#1d4ed8]" />
                 <span>Riwayat Pesanan Kasir Sesi Ini</span>
               </h3>
               <div className="overflow-x-auto border border-white/80 rounded-xl shadow-glass-1 glass-3">
@@ -641,13 +641,13 @@ export default function PointOfSalePage() {
                       </tr>
                     ) : (
                       orders.slice(0, 5).map((o) => (
-                        <tr key={o.id} className="hover:bg-emerald-500/10 transition-colors duration-150">
-                          <td className="py-3 px-3 font-black text-[#174A3A]">{o.orderNumber}</td>
-                          <td className="py-3 px-3 font-sans text-slate-700 font-bold">
+                        <tr key={o.id} className="hover:bg-[#1d4ed8]/5 transition-colors duration-150">
+                          <td className="py-3 px-3 font-bold text-[#1d4ed8]">{o.orderNumber}</td>
+                          <td className="py-3 px-3 font-sans text-slate-700 font-medium">
                             {new Date(o.orderDate).toLocaleTimeString("id-ID")}
                           </td>
-                          <td className="py-3 px-3 font-sans text-slate-900 font-extrabold">{o.paymentMethod}</td>
-                          <td className="py-3 px-3 text-right font-black text-slate-900">
+                          <td className="py-3 px-3 font-sans text-slate-900 font-semibold">{o.paymentMethod}</td>
+                          <td className="py-3 px-3 text-right font-bold text-slate-900">
                             Rp{o.totalAmount?.toLocaleString("id-ID")}
                           </td>
                           <td className="py-3 px-3 text-center">
@@ -668,22 +668,22 @@ export default function PointOfSalePage() {
               {/* S-14 Section ② & ③: Session & Modes */}
               <div className="border-b border-black/5 pb-3 mb-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-slate-800 uppercase tracking-wider">
+                  <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
                     Sesi: {activeSession?.sessionCode || "POS01"}
                   </span>
                   <StatusBadge status={activeSession?.status || "CLOSED"} />
                 </div>
                 <div className="grid grid-cols-2 gap-3 mt-3 text-xs">
                   <div>
-                    <label className="text-[10px] font-black text-slate-700 uppercase block mb-1">Lokasi Stok</label>
-                    <span className="font-mono font-black text-[#174A3A] text-xs">CAFE-JKT</span>
+                    <label className="text-[10px] font-semibold text-slate-600 uppercase block mb-1">Lokasi Stok</label>
+                    <span className="font-mono font-bold text-[#1d4ed8] text-xs">CAFE-JKT</span>
                   </div>
                   <div>
-                    <label className="text-[10px] font-black text-slate-700 uppercase block mb-1">Layanan / Meja</label>
+                    <label className="text-[10px] font-semibold text-slate-600 uppercase block mb-1">Layanan / Meja</label>
                     <select
                       value={tableInfo}
                       onChange={(e) => setTableInfo(e.target.value)}
-                      className="w-full input-glass rounded-xl px-2.5 py-1 font-bold text-xs text-slate-900"
+                      className="w-full input-glass rounded-xl px-2.5 py-1 font-medium text-xs text-slate-900 focus-brand-ring"
                     >
                       <option value="Takeaway">Takeaway</option>
                       <option value="Meja 01">Meja 01</option>
@@ -696,15 +696,15 @@ export default function PointOfSalePage() {
 
               {/* Basket Items (Wireframe S-14 Section ④) */}
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center space-x-1.5">
-                  <ShoppingBag className="w-3.5 h-3.5 text-[#174A3A]" />
+                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center space-x-1.5">
+                  <ShoppingBag className="w-3.5 h-3.5 text-[#1d4ed8]" />
                   <span>④ Keranjang Belanja</span>
                 </h3>
                 <div className="flex items-center space-x-2">
                   <button
                     type="button"
                     onClick={() => setManualModalOpen(true)}
-                    className="text-[11px] font-black text-[#174A3A] bg-emerald-500/15 hover:bg-emerald-500/25 px-2.5 py-1 rounded-lg transition-colors flex items-center space-x-1"
+                    className="text-[11px] font-semibold text-[#1d4ed8] bg-[#1d4ed8]/10 hover:bg-[#1d4ed8]/20 px-2.5 py-1 rounded-lg transition-colors flex items-center space-x-1 focus-brand-ring"
                   >
                     <Plus className="w-3 h-3" />
                     <span>+ Ketik Manual</span>
@@ -712,7 +712,7 @@ export default function PointOfSalePage() {
                   {cart.length > 0 && (
                     <button
                       onClick={clearCart}
-                      className="text-[11px] text-rose-700 hover:text-rose-900 font-extrabold"
+                      className="text-[11px] text-rose-700 hover:text-rose-900 font-bold focus-brand-ring rounded"
                     >
                       Kosongkan
                     </button>
@@ -722,10 +722,10 @@ export default function PointOfSalePage() {
 
               <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
                 {cart.length === 0 ? (
-                  <div className="text-center py-8 text-slate-600 font-bold text-xs space-y-1">
-                    <ShoppingBag className="w-6 h-6 mx-auto text-emerald-800/40" />
+                  <div className="text-center py-8 text-slate-600 font-medium text-xs space-y-1">
+                    <ShoppingBag className="w-6 h-6 mx-auto text-[#1d4ed8]/40" />
                     <p>Keranjang masih kosong.</p>
-                    <p className="text-[11px] text-slate-500 font-semibold">Pilih menu di sebelah kiri atau klik &quot;+ Ketik Manual&quot;.</p>
+                    <p className="text-[11px] text-slate-500 font-normal">Pilih menu di sebelah kiri atau klik &quot;+ Ketik Manual&quot;.</p>
                   </div>
                 ) : (
                   cart.map((item) => (
@@ -734,8 +734,8 @@ export default function PointOfSalePage() {
                       className="flex items-center justify-between p-2.5 rounded-xl glass-3 border border-white/80 text-xs shadow-xs"
                     >
                       <div className="min-w-0 pr-2">
-                        <span className="font-black text-slate-900 block truncate">{item.name}</span>
-                        <span className="text-[10px] text-slate-700 font-bold font-mono">
+                        <span className="font-bold text-slate-900 block truncate">{item.name}</span>
+                        <span className="text-[10px] text-slate-600 font-medium font-mono">
                           {item.sku} • Rp{item.price.toLocaleString("id-ID")}
                         </span>
                       </div>
@@ -743,27 +743,27 @@ export default function PointOfSalePage() {
                         <div className="flex items-center border border-white/80 rounded-xl bg-white/90 font-mono shadow-xs overflow-hidden">
                           <button
                             onClick={() => updateCartQty(item.sku, -1)}
-                            className="px-2 py-0.5 hover:bg-white text-slate-900 font-black"
+                            className="px-2 py-0.5 hover:bg-white text-slate-900 font-bold focus-brand-ring"
                           >
                             -
                           </button>
-                          <span className="px-2 py-0.5 font-black text-[#174A3A] min-w-5 text-center">
+                          <span className="px-2 py-0.5 font-bold text-[#1d4ed8] min-w-5 text-center">
                             {item.qty}
                           </span>
                           <button
                             onClick={() => updateCartQty(item.sku, 1)}
-                            className="px-2 py-0.5 hover:bg-white text-slate-900 font-black"
+                            className="px-2 py-0.5 hover:bg-white text-slate-900 font-bold focus-brand-ring"
                           >
                             +
                           </button>
                         </div>
-                        <span className="font-mono font-black text-slate-900 w-16 text-right">
+                        <span className="font-mono font-bold text-slate-900 w-16 text-right">
                           Rp{(item.qty * item.price).toLocaleString("id-ID")}
                         </span>
                         <button
                           type="button"
                           onClick={() => removeCartItem(item.sku)}
-                          className="p-1 text-slate-400 hover:text-rose-600 transition-colors"
+                          className="p-1 text-slate-400 hover:text-rose-600 transition-colors focus-brand-ring rounded"
                           title="Hapus baris"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -778,34 +778,34 @@ export default function PointOfSalePage() {
             {/* Financial Summary & Payment */}
             <div className="space-y-3 pt-3 border-t border-black/5 text-xs">
               <div className="space-y-1.5 glass-3 p-3.5 rounded-xl border border-white/80 shadow-xs">
-                <div className="flex justify-between text-slate-700 font-bold">
+                <div className="flex justify-between text-slate-700 font-medium">
                   <span>Subtotal Net:</span>
-                  <span className="font-mono font-black text-slate-900">
+                  <span className="font-mono font-bold text-slate-900">
                     Rp{subtotalNet.toLocaleString("id-ID")}
                   </span>
                 </div>
-                <div className="flex justify-between text-[#174A3A] font-extrabold">
+                <div className="flex justify-between text-[#1d4ed8] font-semibold">
                   <span>PBJT 10% Restoran:</span>
-                  <span className="font-mono font-black">
+                  <span className="font-mono font-bold">
                     Rp{pbjtTax.toLocaleString("id-ID")}
                   </span>
                 </div>
-                <div className="border-t border-black/5 pt-2 flex justify-between text-slate-900 font-black text-sm">
+                <div className="border-t border-black/5 pt-2 flex justify-between text-slate-900 font-bold text-sm">
                   <span>Total Tagihan:</span>
-                  <span className="font-mono text-[#174A3A] text-base font-black">
+                  <span className="font-mono text-[#1d4ed8] text-base font-bold">
                     Rp{totalGross.toLocaleString("id-ID")}
                   </span>
                 </div>
               </div>
 
               <div>
-                <label className="text-[10px] font-black text-slate-700 uppercase block mb-1">
+                <label className="text-[10px] font-semibold text-slate-600 uppercase block mb-1">
                   Metode Pembayaran
                 </label>
                 <select
                   value={paymentMethod}
                   onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="w-full input-glass rounded-xl p-2 font-mono font-black text-xs text-slate-900"
+                  className="w-full input-glass rounded-xl p-2 font-mono font-bold text-xs text-slate-900 focus-brand-ring"
                 >
                   <option value="QRIS / Bank">QRIS / Bank (BCA 1010)</option>
                   <option value="Cash / Kas">Cash / Kas Tunai (1010)</option>
@@ -815,9 +815,9 @@ export default function PointOfSalePage() {
               <button
                 onClick={handleCheckout}
                 disabled={cart.length === 0 || activeSession?.status !== "OPEN"}
-                className="w-full py-3 btn-glass-primary font-black rounded-xl text-xs flex items-center justify-center space-x-2 shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50"
+                className="w-full py-3 btn-glass-primary font-bold rounded-xl text-xs flex items-center justify-center space-x-2 shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50 focus-brand-ring"
               >
-                <Receipt className="w-4 h-4 text-[#C6A15B]" />
+                <Receipt className="w-4 h-4 text-[#7c3aed]" />
                 <span>Bayar Sekarang (Rp{totalGross.toLocaleString("id-ID")})</span>
               </button>
             </div>
@@ -827,17 +827,17 @@ export default function PointOfSalePage() {
         {/* Modal Ketik Menu Manual / Bebas */}
         {manualModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-2xs p-4 animate-in fade-in">
-            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-[#DCE8DF]">
-              <div className="flex items-center justify-between border-b border-[#DCE8DF] pb-3">
+            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-[#e2e8f0]">
+              <div className="flex items-center justify-between border-b border-[#e2e8f0] pb-3">
                 <div className="flex items-center space-x-2">
-                  <span className="w-8 h-8 rounded-lg bg-[#174A3A]/10 text-[#174A3A] flex items-center justify-center font-bold">
-                    <Plus className="w-4 h-4 text-[#174A3A]" />
+                  <span className="w-8 h-8 rounded-lg bg-[#1d4ed8]/10 text-[#1d4ed8] flex items-center justify-center font-bold">
+                    <Plus className="w-4 h-4 text-[#1d4ed8]" />
                   </span>
                   <div>
-                    <h2 className="text-sm font-bold text-[#202824]">
+                    <h2 className="text-sm font-bold text-[#0f172a]">
                       Ketik Item / Menu Manual
                     </h2>
-                    <p className="text-[11px] text-[#758078]">
+                    <p className="text-[11px] text-[#64748b]">
                       Ketik nama produk, kuantitas, dan harga sesuai kebutuhan
                     </p>
                   </div>
@@ -845,7 +845,7 @@ export default function PointOfSalePage() {
                 <button
                   type="button"
                   onClick={() => setManualModalOpen(false)}
-                  className="text-[#758078] hover:text-[#202824] p-1 rounded-md"
+                  className="text-[#64748b] hover:text-[#0f172a] p-1 rounded-md"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -853,7 +853,7 @@ export default function PointOfSalePage() {
 
               <form onSubmit={handleAddManualItem} className="space-y-3.5 text-xs">
                 <div>
-                  <label className="font-semibold text-[#202824] block mb-1">
+                  <label className="font-semibold text-[#0f172a] block mb-1">
                     Nama Menu / Produk <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -871,7 +871,7 @@ export default function PointOfSalePage() {
                         setManualItemPrice(match.salesPrice);
                       }
                     }}
-                    className="w-full border border-[#DCE8DF] rounded-lg p-2.5 font-semibold text-xs text-[#202824] focus:outline-none focus:ring-2 focus:ring-[#174A3A]"
+                    className="w-full border border-[#e2e8f0] rounded-lg p-2.5 font-medium text-xs text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-[#1d4ed8] focus-brand-ring"
                   />
                   <datalist id="pos-manual-suggestions">
                     {products.map((p) => (
@@ -880,12 +880,12 @@ export default function PointOfSalePage() {
                       </option>
                     ))}
                   </datalist>
-                  <span className="text-[10px] text-[#758078]">Pilih dari daftar atau ketik nama menu baru secara bebas</span>
+                  <span className="text-[10px] text-[#64748b]">Pilih dari daftar atau ketik nama menu baru secara bebas</span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="font-semibold text-[#202824] block mb-1">
+                    <label className="font-semibold text-[#0f172a] block mb-1">
                       Kuantitas <span className="text-rose-500">*</span>
                     </label>
                     <input
@@ -894,12 +894,12 @@ export default function PointOfSalePage() {
                       min={1}
                       value={manualItemQty}
                       onChange={(e) => setManualItemQty(Math.max(1, Number(e.target.value) || 1))}
-                      className="w-full border border-[#DCE8DF] rounded-lg p-2.5 font-mono font-bold text-xs text-[#202824] focus:outline-none focus:ring-2 focus:ring-[#174A3A]"
+                      className="w-full border border-[#e2e8f0] rounded-lg p-2.5 font-mono font-bold text-xs text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-[#1d4ed8] focus-brand-ring"
                     />
                   </div>
 
                   <div>
-                    <label className="font-semibold text-[#202824] block mb-1">
+                    <label className="font-semibold text-[#0f172a] block mb-1">
                       Harga Satuan (Rp) <span className="text-rose-500">*</span>
                     </label>
                     <input
@@ -909,32 +909,32 @@ export default function PointOfSalePage() {
                       step={500}
                       value={manualItemPrice}
                       onChange={(e) => setManualItemPrice(Math.max(0, Number(e.target.value) || 0))}
-                      className="w-full border border-[#DCE8DF] rounded-lg p-2.5 font-mono font-bold text-xs text-[#202824] focus:outline-none focus:ring-2 focus:ring-[#174A3A]"
+                      className="w-full border border-[#e2e8f0] rounded-lg p-2.5 font-mono font-bold text-xs text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-[#1d4ed8] focus-brand-ring"
                     />
                   </div>
                 </div>
 
                 {/* Subtotal Preview */}
-                <div className="p-3 bg-[#F7F8F5] rounded-xl border border-[#DCE8DF] flex justify-between items-center text-xs">
-                  <span className="text-[#758078] font-medium">Subtotal Item:</span>
-                  <span className="font-mono font-bold text-sm text-[#174A3A]">
+                <div className="p-3 bg-[#f1f5f9] rounded-xl border border-[#e2e8f0] flex justify-between items-center text-xs">
+                  <span className="text-[#64748b] font-medium">Subtotal Item:</span>
+                  <span className="font-mono font-bold text-sm text-[#1d4ed8]">
                     Rp{((Number(manualItemQty) || 0) * (Number(manualItemPrice) || 0)).toLocaleString("id-ID")}
                   </span>
                 </div>
 
-                <div className="flex justify-end space-x-2 pt-3 border-t border-[#DCE8DF]">
+                <div className="flex justify-end space-x-2 pt-3 border-t border-[#e2e8f0]">
                   <button
                     type="button"
                     onClick={() => setManualModalOpen(false)}
-                    className="px-4 py-2 border border-[#DCE8DF] rounded-lg text-xs font-semibold text-[#758078] hover:bg-[#F7F8F5]"
+                    className="px-4 py-2 border border-[#e2e8f0] rounded-lg text-xs font-semibold text-[#64748b] hover:bg-[#f1f5f9] focus-brand-ring"
                   >
                     Batal
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-[#174A3A] hover:bg-[#103429] text-white rounded-lg text-xs font-bold flex items-center space-x-1.5 shadow-xs"
+                    className="px-4 py-2 bg-[#1d4ed8] hover:bg-[#1e3a8a] text-white rounded-lg text-xs font-bold flex items-center space-x-1.5 shadow-xs focus-brand-ring"
                   >
-                    <Plus className="w-3.5 h-3.5 text-[#C6A15B]" />
+                    <Plus className="w-3.5 h-3.5 text-[#7c3aed]" />
                     <span>Tambahkan ke Keranjang</span>
                   </button>
                 </div>
@@ -946,57 +946,57 @@ export default function PointOfSalePage() {
         {/* Modal Tutup Sesi */}
         {closeModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-in fade-in">
-            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-[#DCE8DF]">
-              <div className="flex items-center justify-between border-b border-[#DCE8DF] pb-3">
-                <h2 className="text-base font-bold text-[#202824] flex items-center space-x-2">
+            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-[#e2e8f0]">
+              <div className="flex items-center justify-between border-b border-[#e2e8f0] pb-3">
+                <h2 className="text-base font-bold text-[#0f172a] flex items-center space-x-2">
                   <Lock className="w-4 h-4 text-rose-600" />
                   <span>Tutup Sesi Kasir ({activeSession?.sessionCode})</span>
                 </h2>
                 <button
                   onClick={() => setCloseModalOpen(false)}
-                  className="text-[#758078] hover:text-[#202824]"
+                  className="text-[#64748b] hover:text-[#0f172a] focus-brand-ring rounded"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <p className="text-xs text-[#758078]">
+              <p className="text-xs text-[#64748b]">
                 Hitung kas fisik di laci kasir dan masukkan nominal aktual untuk rekonsiliasi selisih kas (SR-14).
               </p>
 
               <div className="space-y-3 text-xs">
-                <div className="bg-[#F7F8F5] p-3 rounded-lg border border-[#DCE8DF] space-y-1.5">
+                <div className="bg-[#f1f5f9] p-3 rounded-lg border border-[#e2e8f0] space-y-1.5">
                   <div className="flex justify-between">
-                    <span className="text-[#758078]">Modal Awal Kas:</span>
-                    <span className="font-mono font-bold text-[#202824]">
+                    <span className="text-[#64748b]">Modal Awal Kas:</span>
+                    <span className="font-mono font-bold text-[#0f172a]">
                       Rp{activeSession?.openingCash?.toLocaleString("id-ID")}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[#758078]">Akumulasi Penjualan Sesi:</span>
-                    <span className="font-mono font-bold text-[#174A3A]">
+                    <span className="text-[#64748b]">Akumulasi Penjualan Sesi:</span>
+                    <span className="font-mono font-bold text-[#1d4ed8]">
                       Rp{activeSession?.totalSales?.toLocaleString("id-ID")}
                     </span>
                   </div>
                 </div>
 
                 <div>
-                  <label className="font-bold text-[#202824] block mb-1">
+                  <label className="font-bold text-[#0f172a] block mb-1">
                     Kas Fisik Aktual (Laci Kasir):
                   </label>
                   <input
                     type="number"
                     value={closingCashInput}
                     onChange={(e) => setClosingCashInput(Number(e.target.value))}
-                    className="w-full border border-[#DCE8DF] rounded-lg p-2 font-mono font-bold text-[#202824] focus:outline-none focus:ring-1 focus:ring-[#174A3A]"
+                    className="w-full border border-[#e2e8f0] rounded-lg p-2 font-mono font-bold text-[#0f172a] focus:outline-none focus:ring-1 focus:ring-[#1d4ed8] focus-brand-ring"
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-2 pt-4 border-t border-[#DCE8DF]">
+              <div className="flex justify-end space-x-2 pt-4 border-t border-[#e2e8f0]">
                 <button
                   onClick={() => setCloseModalOpen(false)}
-                  className="px-4 py-2 border border-[#DCE8DF] rounded-lg text-xs font-semibold text-[#758078] hover:bg-[#F7F8F5]"
+                  className="px-4 py-2 border border-[#e2e8f0] rounded-lg text-xs font-semibold text-[#64748b] hover:bg-[#f1f5f9] focus-brand-ring"
                 >
                   Batal
                 </button>
@@ -1005,7 +1005,7 @@ export default function PointOfSalePage() {
                     await handleCloseSession();
                     setCloseModalOpen(false);
                   }}
-                  className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold"
+                  className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold focus-brand-ring"
                 >
                   Konfirmasi Tutup Sesi
                 </button>
@@ -1018,7 +1018,7 @@ export default function PointOfSalePage() {
         <details className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
           <summary className="cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white select-none">
             <div className="flex items-center space-x-2">
-              <span className="px-2 py-0.5 rounded-md bg-[#C6A15B] text-slate-900 font-bold text-[10px] uppercase">
+              <span className="px-2 py-0.5 rounded-md bg-[#7c3aed] text-[#ffffff] font-bold text-[10px] uppercase">
                 Developer Tool
               </span>
               <span>🛠️ Panel Pengujian Otomatis Rubrik (T-27 & T-28)</span>
@@ -1039,7 +1039,7 @@ export default function PointOfSalePage() {
                 <button
                   onClick={runTestT27}
                   disabled={testing}
-                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-all disabled:opacity-50"
+                  className="px-3 py-1.5 bg-[#1d4ed8] hover:bg-[#1e3a8a] text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-all disabled:opacity-50 focus-brand-ring"
                 >
                   <Play className="w-3.5 h-3.5 fill-current" />
                   <span>Jalankan T-27</span>
@@ -1047,7 +1047,7 @@ export default function PointOfSalePage() {
                 <button
                   onClick={runTestT28}
                   disabled={testing}
-                  className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-all disabled:opacity-50"
+                  className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-all disabled:opacity-50 focus-brand-ring"
                 >
                   <ShieldAlert className="w-3.5 h-3.5" />
                   <span>Jalankan T-28</span>
@@ -1081,7 +1081,7 @@ export default function PointOfSalePage() {
                 </div>
                 <div className="space-y-1">
                   <p>
-                    <strong className="text-[#C6A15B]">Ekspektasi:</strong> {testResult.expected}
+                    <strong className="text-[#7c3aed]">Ekspektasi:</strong> {testResult.expected}
                   </p>
                   <p className="font-mono">
                     <strong className="text-white">Hasil Aktual:</strong> {testResult.actual}

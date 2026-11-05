@@ -11,9 +11,9 @@
 | :--- | :--- | :---: | :--- |
 | **Aplikasi Berfungsi** | Web application aktif dengan data persisten setelah refresh, 6 akun uji sesuai role, baseline seed terpasang. | **SIAP (Lokal)** / *Pending Deploy Publik* | Berjalan di lingkungan lokal (`npm run dev` / `npm start`). Deployment URL publik perlu di-host oleh mahasiswa ke Vercel/Railway sesuai batasan privasi tugas. |
 | **Source Code Repository** | Repositori bersih berisi source code lengkap, dokumentasi, script pengujian, dan riwayat commit. | **LENGKAP** | Repositori git lokal terstruktur rapi dengan seluruh implementasi dan test suite. |
-| **README Proyek** | Panduan instalasi, konfigurasi, cara menjalankan aplikasi, panduan akun uji, dan catatan AI-tool usage. | **TERSEDIA** | `README.md` |
-| **Decision Log** | Dokumentasi resolusi seluruh konflik aturan bisnis (SR-xx) dengan opsi, keputusan, trade-off, dan bukti. | **TERSEDIA** | `DECISION_LOG.md` |
-| **Test Results** | Hasil pengujian tiap T-xx (Given/When/Then, expected vs actual, status Pass/Fail, bukti pengujian). | **TERSEDIA** | `TEST_RESULTS.md` |
+| **README Proyek** | Panduan instalasi, konfigurasi, cara menjalankan aplikasi, panduan akun uji, dan catatan AI-tool usage. | **TERSEDIA** | `README.md` (root) |
+| **Decision Log** | Dokumentasi resolusi seluruh konflik aturan bisnis (SR-xx) dengan opsi, keputusan, trade-off, dan bukti. | **TERSEDIA** | `docs/reports/DECISION_LOG.md` |
+| **Test Results** | Hasil pengujian tiap T-xx (Given/When/Then, expected vs actual, status Pass/Fail, bukti pengujian). | **TERSEDIA** | `docs/reports/TEST_RESULTS.md` |
 | **AI Tool Usage Note** | Pengungkapan alat AI yang digunakan, peran AI dalam coding, dan telaah verifikasi manusia. | **TERSEDIA** | Tercakup di dalam `README.md` bagian AI Disclosure. |
 | **Role Assignment & Team Agreement** | Matriks peran tim (M1–M4), modul ownership, dan aturan kerja kelompok. | **TERSEDIA** | Tercakup di dalam `README.md`. |
 | **Screenshot Bukti Uji (S-01 s.d. S-16)** | Tangkapan layar antarmuka dari 16 wireframe dan skenario pengujian T-01 s.d. T-32. | **PERLU DIAMBIL MANUAL OLEH MAHASISWA** | Panduan daftar screenshot terinci pada Bagian 2 di bawah. |

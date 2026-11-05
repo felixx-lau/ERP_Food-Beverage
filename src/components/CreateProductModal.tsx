@@ -24,7 +24,7 @@ export default function CreateProductModal({
   const [standardCost, setStandardCost] = useState<number | "">("");
   const [initialWhStock, setInitialWhStock] = useState<number>(10);
   const [initialCafeStock, setInitialCafeStock] = useState<number>(5);
-  const [defaultVendorId, setDefaultVendorId] = useState("V01");
+  const [defaultVendorId, setDefaultVendorId] = useState("");
   const [vendors, setVendors] = useState<any[]>([]);
 
   const [loading, setLoading] = useState(false);
@@ -49,23 +49,17 @@ export default function CreateProductModal({
       fetch("/api/contacts?type=VENDOR")
         .then((r) => r.json())
         .then((d) => {
-          if (d.contacts && d.contacts.length > 0) {
-            setVendors(d.contacts);
-            setDefaultVendorId(d.contacts[0].id);
+          const list = Array.isArray(d?.contacts) ? d.contacts : [];
+          setVendors(list);
+          if (list.length > 0) {
+            setDefaultVendorId(list[0].id);
           } else {
-            setVendors([
-              { id: "V01", name: "PT Segar Pangan Nusantara" },
-              { id: "V02", name: "CV Beras Makmur" },
-              { id: "V03", name: "PT Unggas Jaya Abadi" },
-            ]);
+            setDefaultVendorId("");
           }
         })
         .catch(() => {
-          setVendors([
-            { id: "V01", name: "PT Segar Pangan Nusantara" },
-            { id: "V02", name: "CV Beras Makmur" },
-            { id: "V03", name: "PT Unggas Jaya Abadi" },
-          ]);
+          setVendors([]);
+          setDefaultVendorId("");
         });
     }
   }, [isOpen]);
@@ -126,14 +120,14 @@ export default function CreateProductModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 animate-in fade-in duration-150">
       <div className="bg-white w-full max-w-xl rounded-2xl shadow-xl border border-[#E5E9E4] overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="px-6 py-4 bg-[#174A3A] text-white flex items-center justify-between">
+        <div className="px-6 py-4 bg-gradient-to-r from-blue-700 via-indigo-700 to-violet-700 text-white flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center font-bold">
-              <Package className="w-5 h-5 text-emerald-300" />
+              <Package className="w-5 h-5 text-blue-200" />
             </div>
             <div>
               <h2 className="text-base font-bold tracking-tight">Tambah Produk / Menu Baru</h2>
-              <p className="text-xs text-emerald-100">
+              <p className="text-xs text-blue-100">
                 Katalog master barang Rasa Aruna Kitchen
               </p>
             </div>
@@ -162,7 +156,7 @@ export default function CreateProductModal({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#202824] mb-1">
+              <label className="block text-xs font-semibold text-[#0f172a] mb-1">
                 Nama Produk / Menu <span className="text-rose-500">*</span>
               </label>
               <input
@@ -171,14 +165,14 @@ export default function CreateProductModal({
                 placeholder="Contoh: Matcha Latte Hangat"
                 value={name}
                 onChange={(e) => handleNameChange(e.target.value)}
-                className="w-full text-xs px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#174A3A] focus:outline-none"
+                className="w-full text-xs px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#1d4ed8] focus:outline-none"
               />
               <span className="text-[10px] text-slate-500">Ketik nama produk yang ingin dijual</span>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="block text-xs font-semibold text-[#202824]">
+                <label className="block text-xs font-semibold text-[#0f172a]">
                   Kode SKU <span className="text-rose-500">*</span>
                 </label>
                 <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded font-medium">
@@ -194,7 +188,7 @@ export default function CreateProductModal({
                   setSku(e.target.value.toUpperCase());
                   setSkuTouched(true);
                 }}
-                className="w-full text-xs font-mono px-3.5 py-2.5 border border-slate-200 rounded-xl uppercase focus:ring-2 focus:ring-[#174A3A] focus:outline-none"
+                className="w-full text-xs font-mono px-3.5 py-2.5 border border-slate-200 rounded-xl uppercase focus:ring-2 focus:ring-[#1d4ed8] focus:outline-none"
               />
               <span className="text-[10px] text-slate-500">Terisi otomatis, atau Anda dapat menggantinya</span>
             </div>
@@ -202,40 +196,40 @@ export default function CreateProductModal({
 
           <div className="grid grid-cols-3 gap-2">
             <div>
-              <label className="block text-xs font-semibold text-[#202824] mb-1">Ukuran / Porsi</label>
+              <label className="block text-xs font-semibold text-[#0f172a] mb-1">Ukuran / Porsi</label>
               <input
                 type="text"
                 value={size}
                 onChange={(e) => setSize(e.target.value)}
                 placeholder="Regular, Large"
-                className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#174A3A] focus:outline-none"
+                className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#1d4ed8] focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-[#202824] mb-1">Varian Rasa / Tipe</label>
+              <label className="block text-xs font-semibold text-[#0f172a] mb-1">Varian Rasa / Tipe</label>
               <input
                 type="text"
                 value={color}
                 onChange={(e) => setColor(e.target.value)}
                 placeholder="Original, Hot, Ice"
-                className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#174A3A] focus:outline-none"
+                className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#1d4ed8] focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-[#202824] mb-1">Satuan</label>
+              <label className="block text-xs font-semibold text-[#0f172a] mb-1">Satuan</label>
               <input
                 type="text"
                 value={unit}
                 onChange={(e) => setUnit(e.target.value)}
                 placeholder="porsi, cup, pcs"
-                className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#174A3A] focus:outline-none"
+                className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#1d4ed8] focus:outline-none"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
             <div>
-              <label className="block text-xs font-semibold text-[#202824] mb-1">
+              <label className="block text-xs font-semibold text-[#0f172a] mb-1">
                 Harga Jual Konsumen (Rp) <span className="text-rose-500">*</span>
               </label>
               <input
@@ -245,13 +239,13 @@ export default function CreateProductModal({
                 placeholder="Contoh: 28000"
                 value={salesPrice}
                 onChange={(e) => setSalesPrice(e.target.value === "" ? "" : Number(e.target.value))}
-                className="w-full text-xs font-mono px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#174A3A] focus:outline-none"
+                className="w-full text-xs font-mono px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#1d4ed8] focus:outline-none"
               />
               <span className="text-[10px] text-slate-500">Harga sebelum pajak resto PBJT 10%</span>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#202824] mb-1">
+              <label className="block text-xs font-semibold text-[#0f172a] mb-1">
                 Harga Pokok / HPP (Rp) <span className="text-rose-500">*</span>
               </label>
               <input
@@ -261,17 +255,17 @@ export default function CreateProductModal({
                 placeholder="Contoh: 15000"
                 value={standardCost}
                 onChange={(e) => setStandardCost(e.target.value === "" ? "" : Number(e.target.value))}
-                className="w-full text-xs font-mono px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#174A3A] focus:outline-none"
+                className="w-full text-xs font-mono px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#1d4ed8] focus:outline-none"
               />
               <span className="text-[10px] text-slate-500">Nilai modal barang untuk valuasi persediaan</span>
             </div>
           </div>
 
-          <div className="p-3.5 bg-[#F7F8F5] rounded-xl border border-[#E5E9E4] space-y-2">
-            <span className="text-xs font-semibold text-[#202824]">Stok Awal Alokasi:</span>
+          <div className="p-3.5 bg-[#f1f5f9] rounded-xl border border-[#E5E9E4] space-y-2">
+            <span className="text-xs font-semibold text-[#0f172a]">Stok Awal Alokasi:</span>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[11px] font-semibold text-[#758078] mb-0.5">
+                <label className="block text-[11px] font-semibold text-[#64748b] mb-0.5">
                   WH-JKT (Gudang Pusat)
                 </label>
                 <input
@@ -283,7 +277,7 @@ export default function CreateProductModal({
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-semibold text-[#758078] mb-0.5">
+                <label className="block text-[11px] font-semibold text-[#64748b] mb-0.5">
                   CAFE-JKT (Gerai Kasir)
                 </label>
                 <input
@@ -298,20 +292,26 @@ export default function CreateProductModal({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[#202824] mb-1">
-              Vendor Pemasok Utama
+            <label className="block text-xs font-semibold text-[#0f172a] mb-1">
+              Vendor Pemasok Utama <span className="text-[#64748b] font-normal">(Opsional)</span>
             </label>
             <select
               value={defaultVendorId}
               onChange={(e) => setDefaultVendorId(e.target.value)}
-              className="w-full text-xs px-3.5 py-2.5 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-[#174A3A] focus:outline-none"
+              className="w-full text-xs px-3.5 py-2.5 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-[#1d4ed8] focus:outline-none"
             >
+              <option value="">-- Tanpa Vendor (Opsional) --</option>
               {vendors.map((v) => (
                 <option key={v.id} value={v.id}>
                   {v.id} — {v.name}
                 </option>
               ))}
             </select>
+            {vendors.length === 0 && (
+              <p className="text-[11px] text-amber-600 mt-1">
+                Belum ada kontak vendor di perusahaan ini. Anda dapat menyimpannya tanpa vendor, atau menambahkannya nanti lewat menu Kontak.
+              </p>
+            )}
           </div>
 
           <div className="pt-2 flex justify-end space-x-2 border-t border-slate-100">
@@ -325,7 +325,7 @@ export default function CreateProductModal({
             <button
               type="submit"
               disabled={loading}
-              className="px-5 py-2 text-xs font-bold bg-[#174A3A] hover:bg-[#134032] active:bg-[#0f3328] text-white rounded-xl shadow-xs transition-all flex items-center space-x-1.5"
+              className="px-5 py-2 text-xs font-bold bg-[#1d4ed8] hover:bg-[#1e3a8a] text-white rounded-xl shadow-xs transition-all flex items-center space-x-1.5"
             >
               {loading ? (
                 <span>Menyimpan...</span>

@@ -472,28 +472,51 @@ def create_document_base():
     return doc
 
 def build_readme_docx():
-    print("Converting README.md -> README.docx...")
-    with open("README.md", "r", encoding="utf-8") as f:
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    readme_path = os.path.join(project_root, "README.md")
+    out_dir = os.path.join(project_root, "docs", "reports")
+    os.makedirs(out_dir, exist_ok=True)
+    out_path = os.path.join(out_dir, "README.docx")
+    
+    print(f"Converting {readme_path} -> {out_path}...")
+    with open(readme_path, "r", encoding="utf-8") as f:
         content = f.read()
     doc = create_document_base()
     parse_markdown_to_docx(doc, content)
-    doc.save("README.docx")
-    print("Successfully generated README.docx")
+    doc.save(out_path)
+    print(f"Successfully generated {out_path}")
 
 def build_test_results_docx():
-    print("Converting TEST_RESULTS.md -> TEST_RESULTS.docx...")
-    with open("TEST_RESULTS.md", "r", encoding="utf-8") as f:
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    test_path = os.path.join(project_root, "docs", "reports", "TEST_RESULTS.md")
+    if not os.path.exists(test_path):
+        test_path = os.path.join(project_root, "TEST_RESULTS.md")
+    out_dir = os.path.join(project_root, "docs", "reports")
+    os.makedirs(out_dir, exist_ok=True)
+    out_path = os.path.join(out_dir, "TEST_RESULTS.docx")
+    
+    print(f"Converting {test_path} -> {out_path}...")
+    with open(test_path, "r", encoding="utf-8") as f:
         content = f.read()
     doc = create_document_base()
     parse_markdown_to_docx(doc, content)
-    doc.save("TEST_RESULTS.docx")
-    print("Successfully generated TEST_RESULTS.docx")
+    doc.save(out_path)
+    print(f"Successfully generated {out_path}")
 
 def build_combined_docx():
-    print("Building combined report: Dokumentasi_dan_Hasil_Pengujian_ERP.docx...")
-    with open("README.md", "r", encoding="utf-8") as f:
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    readme_path = os.path.join(project_root, "README.md")
+    test_path = os.path.join(project_root, "docs", "reports", "TEST_RESULTS.md")
+    if not os.path.exists(test_path):
+        test_path = os.path.join(project_root, "TEST_RESULTS.md")
+    out_dir = os.path.join(project_root, "docs", "reports")
+    os.makedirs(out_dir, exist_ok=True)
+    out_path = os.path.join(out_dir, "Dokumentasi_dan_Hasil_Pengujian_ERP.docx")
+
+    print(f"Building combined report: {out_path}...")
+    with open(readme_path, "r", encoding="utf-8") as f:
         readme_content = f.read()
-    with open("TEST_RESULTS.md", "r", encoding="utf-8") as f:
+    with open(test_path, "r", encoding="utf-8") as f:
         test_content = f.read()
         
     doc = create_document_base()
@@ -529,8 +552,8 @@ def build_combined_docx():
     # Parse TEST_RESULTS
     parse_markdown_to_docx(doc, test_content)
     
-    doc.save("Dokumentasi_dan_Hasil_Pengujian_ERP.docx")
-    print("Successfully generated Dokumentasi_dan_Hasil_Pengujian_ERP.docx")
+    doc.save(out_path)
+    print(f"Successfully generated {out_path}")
 
 if __name__ == "__main__":
     build_readme_docx()

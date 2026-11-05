@@ -168,12 +168,12 @@ export default function DashboardCharts() {
       {
         label: "Pendapatan Penjualan",
         data: data?.salesTrend.revenues || [],
-        borderColor: "#174A3A",
-        backgroundColor: "rgba(23, 74, 58, 0.08)",
+        borderColor: "#2563eb",
+        backgroundColor: "rgba(37, 99, 235, 0.08)",
         borderWidth: 2.5,
         fill: true,
         tension: 0.35,
-        pointBackgroundColor: "#174A3A",
+        pointBackgroundColor: "#2563eb",
         pointBorderColor: "#ffffff",
         pointBorderWidth: 2,
         pointRadius: 4,
@@ -183,12 +183,12 @@ export default function DashboardCharts() {
       {
         label: "Jumlah Transaksi",
         data: data?.salesTrend.orderCounts || [],
-        borderColor: "#C6A15B",
+        borderColor: "#7c3aed",
         backgroundColor: "transparent",
         borderWidth: 2,
         borderDash: [5, 4],
         tension: 0.25,
-        pointBackgroundColor: "#C6A15B",
+        pointBackgroundColor: "#7c3aed",
         pointBorderColor: "#ffffff",
         pointBorderWidth: 2,
         pointRadius: 3.5,
@@ -286,8 +286,8 @@ export default function DashboardCharts() {
       {
         label: "Kuantitas Terjual (Unit)",
         data: data?.topProducts.quantities || [],
-        backgroundColor: "rgba(23, 74, 58, 0.85)",
-        hoverBackgroundColor: "#174A3A",
+        backgroundColor: "rgba(37, 99, 235, 0.85)",
+        hoverBackgroundColor: "#1d4ed8",
         borderRadius: 6,
         borderSkipped: false,
       },
@@ -301,7 +301,7 @@ export default function DashboardCharts() {
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: "#202824",
+        backgroundColor: "#0f172a",
         padding: 10,
         cornerRadius: 8,
         callbacks: {
@@ -331,11 +331,11 @@ export default function DashboardCharts() {
 
   // 3. Bar Chart 2: Sales by Category
   const categoryColors = [
-    "#174A3A", // Forest green
-    "#C6A15B", // Warm gold
-    "#236550", // Mid emerald
-    "#A88544", // Dark gold
-    "#5D8E6F", // Soft sage
+    "#2563eb", // Royal blue
+    "#7c3aed", // Vibrant violet
+    "#6366f1", // Indigo
+    "#0284c7", // Sky blue
+    "#a855f7", // Purple
   ];
 
   const categoryData = {
@@ -403,15 +403,15 @@ export default function DashboardCharts() {
       {
         label: "Penjualan (SO + POS)",
         data: data?.purchasesVsSalesMonthly.sales || [],
-        backgroundColor: "rgba(23, 74, 58, 0.90)",
-        hoverBackgroundColor: "#174A3A",
+        backgroundColor: "rgba(37, 99, 235, 0.90)",
+        hoverBackgroundColor: "#1d4ed8",
         borderRadius: 6,
       },
       {
         label: "Pembelian Vendor (PO)",
         data: data?.purchasesVsSalesMonthly.purchases || [],
-        backgroundColor: "rgba(198, 161, 91, 0.90)",
-        hoverBackgroundColor: "#C6A15B",
+        backgroundColor: "rgba(124, 58, 237, 0.85)",
+        hoverBackgroundColor: "#6d28d9",
         borderRadius: 6,
       },
     ],
@@ -474,15 +474,15 @@ export default function DashboardCharts() {
             <span className="text-xs font-bold text-[var(--glass-text-secondary)] uppercase tracking-wider">
               Total Penjualan
             </span>
-            <div className="w-9 h-9 rounded-xl glass-3 text-[#174A3A] border border-emerald-500/25 flex items-center justify-center shadow-xs">
+            <div className="w-9 h-9 rounded-xl glass-3 text-blue-700 border border-blue-500/25 flex items-center justify-center shadow-xs">
               <DollarSign className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
-            <div className="text-2xl font-black text-[var(--glass-text-primary)] tracking-tight">
+            <div className="text-2xl font-bold text-[var(--glass-text-primary)] tracking-tight">
               {formatRupiah(data?.kpis.totalSales || 0)}
             </div>
-            <p className="text-[11px] text-emerald-800 font-semibold mt-1 flex items-center space-x-1">
+            <p className="text-[11px] text-blue-800 font-semibold mt-1 flex items-center space-x-1">
               <TrendingUp className="w-3.5 h-3.5" />
               <span>Gabungan SO Korporat & POS Kasir</span>
             </p>
@@ -495,12 +495,12 @@ export default function DashboardCharts() {
             <span className="text-xs font-bold text-[var(--glass-text-secondary)] uppercase tracking-wider">
               Total Pembelian
             </span>
-            <div className="w-9 h-9 rounded-xl glass-3 text-[#A88544] border border-amber-500/25 flex items-center justify-center shadow-xs">
+            <div className="w-9 h-9 rounded-xl glass-3 text-violet-700 border border-violet-500/25 flex items-center justify-center shadow-xs">
               <ShoppingBag className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
-            <div className="text-2xl font-black text-[var(--glass-text-primary)] tracking-tight">
+            <div className="text-2xl font-bold text-[var(--glass-text-primary)] tracking-tight">
               {formatRupiah(data?.kpis.totalPurchases || 0)}
             </div>
             <p className="text-[11px] text-[var(--glass-text-muted)] font-medium mt-1">
@@ -520,7 +520,7 @@ export default function DashboardCharts() {
             </div>
           </div>
           <div className="mt-3">
-            <div className="text-2xl font-black text-[var(--glass-text-primary)] tracking-tight">
+            <div className="text-2xl font-bold text-[var(--glass-text-primary)] tracking-tight">
               {formatRupiah(data?.kpis.stockValuation || 0)}
             </div>
             <p className="text-[11px] text-[var(--glass-text-muted)] font-medium mt-1">
@@ -554,7 +554,7 @@ export default function DashboardCharts() {
           </div>
           <div className="mt-3">
             <div className="flex items-baseline space-x-2">
-              <span className="text-2xl font-black text-[var(--glass-text-primary)] tracking-tight">
+              <span className="text-2xl font-bold text-[var(--glass-text-primary)] tracking-tight">
                 {data?.kpis.lowStockCount || 0}
               </span>
               <span className="text-xs font-semibold text-[var(--glass-text-muted)]">SKU Kritis</span>
@@ -574,12 +574,12 @@ export default function DashboardCharts() {
             <span className="text-xs font-bold text-[var(--glass-text-secondary)] uppercase tracking-wider">
               Estimasi Laba Kotor
             </span>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#174A3A] text-[#C6A15B] shadow-xs">
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-700 text-violet-200 shadow-xs">
               Margin {data?.kpis.grossProfitMarginPercent || 0}%
             </span>
           </div>
           <div className="mt-3">
-            <div className="text-2xl font-black text-[#174A3A] tracking-tight">
+            <div className="text-2xl font-bold text-blue-700 tracking-tight">
               {formatRupiah(data?.kpis.estimatedGrossProfit || 0)}
             </div>
             <p className="text-[11px] text-[var(--glass-text-muted)] font-medium mt-1">
@@ -647,7 +647,7 @@ export default function DashboardCharts() {
               onClick={() => setPeriod(t.key as any)}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 period === t.key
-                  ? "bg-[#174A3A] text-white shadow-xs"
+                  ? "bg-[#1d4ed8] text-white shadow-xs"
                   : "bg-white/60 text-[var(--glass-text-secondary)] hover:bg-white/90 border border-white/60"
               }`}
             >
@@ -670,8 +670,8 @@ export default function DashboardCharts() {
                 onClick={() => handleApplyPreset(p.key as any)}
                 className={`px-2.5 py-1.2 text-[11px] rounded-lg font-bold transition-all ${
                   preset === p.key
-                    ? "bg-[#FAF5EB] text-[#A88544] border border-[#F4E7CE]"
-                    : "text-[var(--glass-text-secondary)] hover:text-[#174A3A]"
+                    ? "bg-violet-50 text-violet-700 border border-violet-200"
+                    : "text-[var(--glass-text-secondary)] hover:text-blue-700"
                 }`}
               >
                 {p.label}
@@ -705,17 +705,17 @@ export default function DashboardCharts() {
             className="inline-flex items-center space-x-1.5 px-3 py-1.5 btn-glass-secondary rounded-xl text-xs font-bold transition-all disabled:opacity-50"
             title="Segarkan data chart"
           >
-            <RefreshCw className={`w-3.5 h-3.5 text-[#174A3A] ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`w-3.5 h-3.5 text-blue-700 ${loading ? "animate-spin" : ""}`} />
             <span className="hidden sm:inline">Segarkan</span>
           </button>
 
           <button
             onClick={handleLoadDemoData}
             disabled={seedingDemo}
-            className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-gradient-to-r from-[#FAF5EB] to-[#F4E7CE] hover:from-[#F4E7CE] hover:to-[#E9D2A3] text-[#174A3A] border border-[#C6A15B]/50 rounded-xl text-xs font-extrabold shadow-xs transition-all disabled:opacity-50"
+            className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-gradient-to-r from-violet-50 to-indigo-50 hover:from-violet-100 hover:to-indigo-100 text-violet-900 border border-violet-300/60 rounded-xl text-xs font-extrabold shadow-xs transition-all disabled:opacity-50"
             title="Muat transaksi demo historis untuk visualisasi chart"
           >
-            <Sparkles className="w-3.5 h-3.5 text-[#C6A15B]" />
+            <Sparkles className="w-3.5 h-3.5 text-violet-600" />
             <span>{seedingDemo ? "Memuat Demo..." : "Muat Data Demo"}</span>
           </button>
         </div>
@@ -726,7 +726,7 @@ export default function DashboardCharts() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-black/5 gap-2">
           <div>
             <div className="flex items-center space-x-2">
-              <TrendingUp className="w-4 h-4 text-[#174A3A]" />
+              <TrendingUp className="w-4 h-4 text-blue-700" />
               <h3 className="text-sm font-bold text-[var(--glass-text-primary)] uppercase tracking-wide">
                 Tren Pendapatan & Volume Transaksi (Line Chart)
               </h3>
@@ -744,12 +744,12 @@ export default function DashboardCharts() {
         <div className="h-72 w-full relative">
           {loading ? (
             <div className="h-full flex items-center justify-center text-xs text-[var(--glass-text-muted)] space-x-2">
-              <RefreshCw className="w-4 h-4 animate-spin text-[#174A3A]" />
+              <RefreshCw className="w-4 h-4 animate-spin text-blue-700" />
               <span>Memperbarui grafik penjualan...</span>
             </div>
           ) : lineChartData.labels.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-3 glass-3 rounded-2xl border border-dashed border-black/15">
-              <div className="w-10 h-10 rounded-2xl glass-3 text-[#C6A15B] flex items-center justify-center border border-amber-500/20">
+              <div className="w-10 h-10 rounded-2xl glass-3 text-violet-700 flex items-center justify-center border border-violet-500/20">
                 <Info className="w-5 h-5" />
               </div>
               <div className="max-w-md space-y-1">
@@ -780,7 +780,7 @@ export default function DashboardCharts() {
         <div className="glass-2 rounded-3xl border border-white/70 p-5 shadow-glass-2 space-y-3 lg:col-span-1 flex flex-col justify-between">
           <div>
             <div className="flex items-center space-x-2 pb-2.5 border-b border-black/5">
-              <BarChart3 className="w-4 h-4 text-[#174A3A]" />
+              <BarChart3 className="w-4 h-4 text-blue-700" />
               <h4 className="text-xs font-bold text-[var(--glass-text-primary)] uppercase tracking-wide">
                 Top 10 Produk Terlaris
               </h4>
@@ -809,7 +809,7 @@ export default function DashboardCharts() {
         <div className="glass-2 rounded-3xl border border-white/70 p-5 shadow-glass-2 space-y-3 lg:col-span-1 flex flex-col justify-between">
           <div>
             <div className="flex items-center space-x-2 pb-2.5 border-b border-black/5">
-              <PieChart className="w-4 h-4 text-[#C6A15B]" />
+              <PieChart className="w-4 h-4 text-violet-700" />
               <h4 className="text-xs font-bold text-[var(--glass-text-primary)] uppercase tracking-wide">
                 Penjualan per Kategori F&amp;B
               </h4>
@@ -838,7 +838,7 @@ export default function DashboardCharts() {
         <div className="glass-2 rounded-3xl border border-white/70 p-5 shadow-glass-2 space-y-3 lg:col-span-1 flex flex-col justify-between">
           <div>
             <div className="flex items-center space-x-2 pb-2.5 border-b border-black/5">
-              <TrendingUp className="w-4 h-4 text-[#174A3A]" />
+              <TrendingUp className="w-4 h-4 text-blue-700" />
               <h4 className="text-xs font-bold text-[var(--glass-text-primary)] uppercase tracking-wide">
                 Beli vs Jual (6 Bulan)
               </h4>

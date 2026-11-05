@@ -168,11 +168,11 @@ export default function VendorBillsPage() {
       wireframe="Wireframe S-11"
       actions={
         <div className="flex items-center space-x-2">
-          <span className="text-xs font-black text-slate-800 hidden sm:inline">Pilih Tagihan Vendor:</span>
+          <span className="text-xs font-bold text-slate-700 hidden sm:inline">Pilih Tagihan Vendor:</span>
           <select
             value={selectedBill?.id || ""}
             onChange={(e) => fetchBillDetail(e.target.value)}
-            className="text-xs font-mono font-bold input-glass rounded-xl px-3 py-1.5 shadow-xs focus:ring-2 focus:ring-[#174A3A]"
+            className="text-xs font-mono font-bold input-glass rounded-xl px-3 py-1.5 shadow-xs focus:ring-2 focus:ring-[#1d4ed8]"
           >
             {bills.map((b) => (
               <option key={b.id} value={b.id}>
@@ -189,16 +189,16 @@ export default function VendorBillsPage() {
           {/* Status Bar */}
           <div className="bg-white/40 px-6 py-3.5 border-b border-black/5 flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <span className="text-xs font-black text-slate-800 uppercase tracking-wider">Status Tagihan:</span>
+              <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Status Tagihan:</span>
               <div className="inline-flex rounded-xl shadow-xs overflow-hidden border border-white/60">
                 {["DRAFT", "CONFIRMED", "DONE"].map((st) => {
                   const active = (selectedBill.status === "POSTED" && st === "DONE") || selectedBill.status === st;
                   return (
                     <span
                       key={st}
-                      className={`px-3 py-1 text-xs font-black font-mono transition-colors ${
+                      className={`px-3 py-1 text-xs font-bold font-mono transition-colors ${
                         active
-                          ? "bg-[#174A3A] text-white shadow-xs"
+                          ? "bg-[#1d4ed8] text-white shadow-xs"
                           : "bg-white/60 text-slate-700"
                       }`}
                     >
@@ -210,8 +210,8 @@ export default function VendorBillsPage() {
             </div>
 
             <div className="flex items-center space-x-2 text-xs">
-              <span className="text-slate-800 font-bold">Pencocokan:</span>
-              <span className="font-black text-emerald-950 bg-emerald-500/20 px-2.5 py-0.5 rounded-full border border-emerald-500/40 backdrop-blur-xs">
+              <span className="text-slate-700 font-semibold">Pencocokan:</span>
+              <span className="font-bold text-emerald-900 bg-emerald-500/20 px-2.5 py-0.5 rounded-full border border-emerald-500/40 backdrop-blur-xs">
                 Three-Way Match Terverifikasi
               </span>
             </div>
@@ -220,40 +220,40 @@ export default function VendorBillsPage() {
           {/* Document Header */}
           <div className="p-6 border-b border-black/5 grid grid-cols-1 sm:grid-cols-4 gap-6 bg-white/30">
             <div>
-              <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider block">
+              <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">
                 Nomor Vendor Bill
               </span>
-              <h2 className="text-2xl font-black text-[#174A3A] font-mono mt-0.5">
+              <h2 className="text-2xl font-bold text-[#1d4ed8] font-mono mt-0.5">
                 {selectedBill.billNumber}
               </h2>
             </div>
 
             <div>
-              <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider block">
+              <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">
                 Pemasok / Vendor
               </span>
-              <p className="text-base font-black text-slate-900 mt-0.5">
+              <p className="text-base font-bold text-slate-900 mt-0.5">
                 {selectedBill.vendor?.name}
               </p>
-              <span className="text-xs text-slate-700 font-bold font-mono">
+              <span className="text-xs text-slate-600 font-semibold font-mono">
                 ID: {selectedBill.vendorId}
               </span>
             </div>
 
             <div>
-              <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider block">
+              <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">
                 Referensi Purchase Order
               </span>
-              <p className="text-sm font-black text-[#174A3A] font-mono mt-0.5">
+              <p className="text-sm font-bold text-[#1d4ed8] font-mono mt-0.5">
                 {selectedBill.purchaseOrder?.poNumber}
               </p>
             </div>
 
             <div>
-              <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider block">
+              <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">
                 Pajak Vendor
               </span>
-              <p className="text-sm font-black text-emerald-800 mt-0.5">
+              <p className="text-sm font-bold text-emerald-800 mt-0.5">
                 0% (Fixture)
               </p>
             </div>
@@ -262,22 +262,22 @@ export default function VendorBillsPage() {
           {/* Lines Table */}
           <div className="p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide flex items-center space-x-2">
-                <FileText className="w-4 h-4 text-[#174A3A]" />
+              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide flex items-center space-x-2">
+                <FileText className="w-4 h-4 text-[#1d4ed8]" />
                 <span>Pencocokan Tiga Arah: PO vs Receipt (Accepted) vs Tagihan Baru</span>
               </h3>
-              <span className="text-xs text-slate-700 font-semibold">Mencegah penagihan berlebih atau barang ditolak</span>
+              <span className="text-xs text-slate-600 font-medium">Mencegah penagihan berlebih atau barang ditolak</span>
             </div>
 
             <div className="overflow-x-auto border border-white/80 rounded-xl shadow-glass-1 glass-3">
               <table className="w-full text-left text-xs">
-                <thead className="bg-white/60 font-black text-slate-900 uppercase tracking-wider text-[11px] border-b border-black/10">
+                <thead className="bg-white/60 font-bold text-slate-700 uppercase tracking-wider text-[11px] border-b border-black/10">
                   <tr>
                     <th className="px-6 py-3.5">SKU Varian & Nama Produk</th>
                     <th className="px-6 py-3.5 text-right">Dipesan (PO)</th>
-                    <th className="px-6 py-3.5 text-right text-emerald-950 font-black">Diterima (Receipt)</th>
-                    <th className="px-6 py-3.5 text-right text-slate-700 font-bold">Sudah Ditagih</th>
-                    <th className="px-6 py-3.5 text-right text-[#174A3A] font-black">Qty Tagihan Ini</th>
+                    <th className="px-6 py-3.5 text-right text-emerald-900 font-bold">Diterima (Receipt)</th>
+                    <th className="px-6 py-3.5 text-right text-slate-600 font-semibold">Sudah Ditagih</th>
+                    <th className="px-6 py-3.5 text-right text-[#1d4ed8] font-bold">Qty Tagihan Ini</th>
                     <th className="px-6 py-3.5 text-right">Net Subtotal</th>
                   </tr>
                 </thead>
@@ -299,17 +299,17 @@ export default function VendorBillsPage() {
 
                     return (
                       <tr key={l.id} className="hover:bg-emerald-500/10 transition-colors duration-150">
-                        <td className="px-6 py-3.5 font-black text-slate-900 font-sans">
-                          <span className="font-mono text-[#174A3A] mr-2 font-black">{l.productSku}</span>
+                        <td className="px-6 py-3.5 font-bold text-slate-900 font-sans">
+                          <span className="font-mono text-[#1d4ed8] mr-2 font-bold">{l.productSku}</span>
                           <span>{l.product?.name}</span>
                         </td>
-                        <td className="px-6 py-3.5 text-right font-black text-slate-900">{orderedQty}</td>
-                        <td className="px-6 py-3.5 text-right font-black text-emerald-900 bg-emerald-500/15">{acceptedQty}</td>
-                        <td className="px-6 py-3.5 text-right text-slate-700 font-bold">{alreadyBilled}</td>
-                        <td className="px-6 py-3.5 text-right font-black text-[#174A3A] bg-emerald-500/15">
+                        <td className="px-6 py-3.5 text-right font-semibold text-slate-900">{orderedQty}</td>
+                        <td className="px-6 py-3.5 text-right font-bold text-emerald-800 bg-emerald-500/15">{acceptedQty}</td>
+                        <td className="px-6 py-3.5 text-right text-slate-600 font-medium">{alreadyBilled}</td>
+                        <td className="px-6 py-3.5 text-right font-bold text-[#1d4ed8] bg-emerald-500/15">
                           {l.quantity}
                         </td>
-                        <td className="px-6 py-3.5 text-right font-black text-slate-900">
+                        <td className="px-6 py-3.5 text-right font-bold text-slate-900">
                           Rp {(l.totalAmount ?? 0).toLocaleString("id-ID")}
                         </td>
                       </tr>
@@ -318,10 +318,10 @@ export default function VendorBillsPage() {
                 </tbody>
                 <tfoot className="bg-white/60 font-mono text-xs border-t-2 border-black/10">
                   <tr>
-                    <td colSpan={5} className="px-6 py-3.5 text-right font-sans font-black text-slate-800">
+                    <td colSpan={5} className="px-6 py-3.5 text-right font-sans font-bold text-slate-700">
                       Total Kewajiban Tagihan Vendor:
                     </td>
-                    <td className="px-6 py-3.5 text-right font-black text-base text-[#174A3A]">
+                    <td className="px-6 py-3.5 text-right font-bold text-base text-[#1d4ed8]">
                       Rp {selectedBill.totalGross?.toLocaleString("id-ID")}
                     </td>
                   </tr>
@@ -336,7 +336,7 @@ export default function VendorBillsPage() {
       <details className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
         <summary className="cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white select-none">
           <div className="flex items-center space-x-2">
-            <span className="px-2 py-0.5 rounded-md bg-[#C6A15B] text-slate-900 font-bold text-[10px] uppercase">
+            <span className="px-2 py-0.5 rounded-md bg-[#7c3aed] text-slate-900 font-bold text-[10px] uppercase">
               Developer Tool
             </span>
             <span>🛠️ Panel Pengujian Otomatis Rubrik (T-21 & T-22)</span>
@@ -365,7 +365,7 @@ export default function VendorBillsPage() {
               <button
                 onClick={runTestT22}
                 disabled={testing}
-                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-[#C6A15B] hover:bg-[#b5924f] text-slate-900 flex items-center space-x-1.5 shadow-xs transition-all"
+                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-[#7c3aed] hover:bg-[#c9a65d] text-slate-900 flex items-center space-x-1.5 shadow-xs transition-all"
               >
                 <Play className="w-3.5 h-3.5" />
                 <span>Jalankan T-22</span>
@@ -376,7 +376,7 @@ export default function VendorBillsPage() {
           {testResult && (
             <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-2 text-xs">
               <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                <span className="font-bold text-[#C6A15B]">
+                <span className="font-bold text-[#7c3aed]">
                   [{testResult.id}] {testResult.name}
                 </span>
                 <span

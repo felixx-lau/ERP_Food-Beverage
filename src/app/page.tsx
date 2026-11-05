@@ -174,10 +174,10 @@ export default function HomePage() {
             aria-selected={activeTab === "kanban"}
             aria-label="Tampilan Grid Kartu"
             onClick={() => setActiveTab("kanban")}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all focus-visible:ring-2 focus-visible:ring-[#26493b] focus-visible:outline-none ${
+            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none ${
               activeTab === "kanban"
-                ? "bg-[#26493b] text-white shadow-xs"
-                : "text-[var(--glass-text-secondary)] hover:text-[#26493b]"
+                ? "bg-[#1d4ed8] text-white shadow-xs"
+                : "text-[var(--glass-text-secondary)] hover:text-[#1d4ed8]"
             }`}
           >
             <LayoutGrid className="w-3.5 h-3.5" aria-hidden="true" />
@@ -188,10 +188,10 @@ export default function HomePage() {
             aria-selected={activeTab === "list"}
             aria-label="Tampilan Tabel Modul"
             onClick={() => setActiveTab("list")}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all focus-visible:ring-2 focus-visible:ring-[#26493b] focus-visible:outline-none ${
+            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none ${
               activeTab === "list"
-                ? "bg-[#26493b] text-white shadow-xs"
-                : "text-[var(--glass-text-secondary)] hover:text-[#26493b]"
+                ? "bg-[#1d4ed8] text-white shadow-xs"
+                : "text-[var(--glass-text-secondary)] hover:text-[#1d4ed8]"
             }`}
           >
             <List className="w-3.5 h-3.5" aria-hidden="true" />
@@ -200,22 +200,22 @@ export default function HomePage() {
         </div>
       }
     >
-      {/* Welcome & Quick Action Hub (Compacted height per audit) */}
+      {/* Welcome & Quick Action Hub: Modern Royal Blue to Violet Gradient */}
       <section 
         aria-label="Pusat Input dan Aksi Cepat"
-        className="glass-1 bg-gradient-to-br from-[#26493b] via-[#1f3f33] to-[#183329] rounded-3xl p-3.5 sm:p-4 text-white border border-white/20 shadow-glass-1 backdrop-blur-xl space-y-2.5 relative overflow-hidden"
+        className="glass-1 bg-gradient-to-r from-[#0f172a] via-[#1e3a8a] to-[#4c1d95] rounded-3xl p-3.5 sm:p-4 text-white border border-white/20 shadow-glass-1 backdrop-blur-xl space-y-2.5 relative overflow-hidden"
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
           <div>
-            <span className="inline-flex items-center space-x-1.5 px-3 py-0.5 rounded-full text-xs font-bold bg-[#d9f9e6] text-[#14281f] border border-[#a3e6be] shadow-xs">
-              <Sparkles className="w-3.5 h-3.5 text-[#8a6a28]" aria-hidden="true" />
+            <span className="inline-flex items-center space-x-1.5 px-3 py-0.5 rounded-full text-xs font-bold bg-[#ede9fe] text-[#4c1d95] border border-[#c4b5fd] shadow-xs">
+              <Sparkles className="w-3.5 h-3.5 text-[#7c3aed]" aria-hidden="true" />
               <span>Pusat Input & Aksi Cepat</span>
             </span>
             {/* Secondary heading clearly smaller than H1 */}
             <h2 className="text-base sm:text-lg font-bold tracking-tight text-white mt-1">
               Halo, {user?.name || "Pengguna"}! Ingin input data apa hari ini?
             </h2>
-            <p className="text-xs text-[#f0f3f2] mt-0.5 max-w-2xl font-normal">
+            <p className="text-xs text-[#e0e7ff] mt-0.5 max-w-2xl font-normal">
               Pilih salah satu tombol di bawah untuk langsung menambah data baru tanpa harus berpindah halaman.
             </p>
           </div>
@@ -223,15 +223,15 @@ export default function HomePage() {
             <button
               onClick={() => router.push("/pos")}
               aria-label="Buka Kasir POS (Point of Sale)"
-              className="inline-flex items-center space-x-2 px-4 py-2 bg-[#d4b36a] hover:bg-[#c4a259] active:bg-[#b3924a] text-[#14281f] font-extrabold text-xs rounded-xl shadow-xs transition-all active:scale-95 border border-[#14281f]/20 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none cursor-pointer"
+              className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-[#7c3aed] to-[#6366f1] hover:from-[#6d28d9] hover:to-[#4f46e5] active:from-[#5b21b6] active:to-[#4338ca] text-white font-extrabold text-xs rounded-xl shadow-md shadow-violet-900/30 transition-all active:scale-95 border border-white/30 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none cursor-pointer"
             >
-              <Store className="w-4 h-4 text-[#14281f]" aria-hidden="true" />
+              <Store className="w-4 h-4 text-white" aria-hidden="true" />
               <span>Buka Kasir POS</span>
             </button>
           </div>
         </div>
 
-        {/* 4 Quick Input Tiles (WCAG AA Compliant contrast, consistent cream/white icons) */}
+        {/* 4 Quick Input Tiles (WCAG AAA Compliant contrast, consistent white icons) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-0.5">
           <button
             onClick={() => setProductModalOpen(true)}
@@ -245,7 +245,7 @@ export default function HomePage() {
               <span className="text-xs font-bold text-white block tracking-wide">
                 + Tambah Produk
               </span>
-              <span className="text-xs text-[#f0f3f2] font-normal truncate block mt-0.5">
+              <span className="text-xs text-[#e0e7ff] font-normal truncate block mt-0.5">
                 Menu baru & stok awal
               </span>
             </div>
@@ -263,7 +263,7 @@ export default function HomePage() {
               <span className="text-xs font-bold text-white block tracking-wide">
                 + Buat Penjualan (SO)
               </span>
-              <span className="text-xs text-[#f0f3f2] font-normal truncate block mt-0.5">
+              <span className="text-xs text-[#e0e7ff] font-normal truncate block mt-0.5">
                 Pesanan catering & resto
               </span>
             </div>
@@ -281,7 +281,7 @@ export default function HomePage() {
               <span className="text-xs font-bold text-white block tracking-wide">
                 + Tambah Pelanggan
               </span>
-              <span className="text-xs text-[#f0f3f2] font-normal truncate block mt-0.5">
+              <span className="text-xs text-[#e0e7ff] font-normal truncate block mt-0.5">
                 Customer & vendor baru
               </span>
             </div>
@@ -299,7 +299,7 @@ export default function HomePage() {
               <span className="text-xs font-bold text-white block tracking-wide">
                 + Buat Pesanan Beli
               </span>
-              <span className="text-xs text-[#f0f3f2] font-normal truncate block mt-0.5">
+              <span className="text-xs text-[#e0e7ff] font-normal truncate block mt-0.5">
                 Pengadaan PO ke vendor
               </span>
             </div>
@@ -307,18 +307,18 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Akses Modul / Aplikasi (3 Info Cards dihapus agar Modul tampak di atas lipatan layar 1440x900) */}
+      {/* Akses Modul / Aplikasi */}
       <section 
         aria-label="Katalog Modul dan Aplikasi Utama"
         className="glass-2 rounded-3xl border border-white/70 shadow-glass-2 overflow-hidden"
       >
         <div className="px-5 py-3 bg-white/40 border-b border-black/5 flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-extrabold text-[#0A110E] tracking-wider uppercase">
+            <h2 className="text-sm font-extrabold text-[#0f172a] tracking-wider uppercase">
               Modul & Aplikasi Utama
             </h2>
             <p className="text-xs text-slate-700 font-medium mt-0.5">
-              Pilih modul untuk mengelola alur operasional sesuai wewenang role <strong className="font-bold text-[#26493b]">{user?.role || "GUEST"}</strong>.
+              Pilih modul untuk mengelola alur operasional sesuai wewenang role <strong className="font-bold text-[#1d4ed8]">{user?.role || "GUEST"}</strong>.
             </p>
           </div>
         </div>
@@ -358,22 +358,22 @@ export default function HomePage() {
                       handleNavigate();
                     }
                   }}
-                  className={`rounded-2xl border p-4.5 transition-all relative flex flex-col justify-between cursor-pointer group focus-visible:ring-2 focus-visible:ring-[#26493b] focus-visible:outline-none ${
+                  className={`rounded-2xl border p-4.5 transition-all relative flex flex-col justify-between cursor-pointer group focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none ${
                     hasAccess
-                      ? "glass-2 glass-2-interactive border-white/80 hover:border-[#26493b]/40"
+                      ? "glass-2 glass-2-interactive border-white/80 hover:border-indigo-400/50 hover:shadow-indigo-500/10"
                       : "glass-3 opacity-60 border-dashed border-black/15"
                   }`}
                 >
                   <div>
                     <div className="flex items-center justify-between mb-3.5">
-                      {/* Uniform Brand Green Icon with subtle tint */}
+                      {/* Uniform Royal Blue / Indigo Icon with soft periwinkle tint */}
                       <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center bg-[#26493b]/10 text-[#26493b] border border-[#26493b]/20 group-hover:scale-105 group-hover:shadow-xs transition-all duration-200"
+                        className="w-10 h-10 rounded-xl flex items-center justify-center bg-blue-600/10 text-blue-600 border border-blue-600/20 group-hover:scale-105 group-hover:shadow-xs transition-all duration-200"
                       >
-                        <IconComponent className="w-5 h-5 text-[#26493b]" aria-hidden="true" />
+                        <IconComponent className="w-5 h-5 text-blue-600 group-hover:text-indigo-600" aria-hidden="true" />
                       </div>
 
-                      {/* Badge: "Aktif" removed per audit. Only show when restricted/locked */}
+                      {/* Badge: only show when restricted/locked */}
                       {!hasAccess && (
                         <span className="px-2.5 py-0.5 rounded-full text-xs font-bold glass-badge-danger flex items-center space-x-1" title="Akses Dibatasi">
                           <Lock className="w-3.5 h-3.5" aria-hidden="true" />
@@ -382,7 +382,7 @@ export default function HomePage() {
                       )}
                     </div>
 
-                    <h3 className="font-extrabold text-sm text-[#0A110E] group-hover:text-[#26493b] transition-colors">
+                    <h3 className="font-extrabold text-sm text-[#0f172a] group-hover:text-blue-700 transition-colors">
                       {app.name}
                     </h3>
                     <p className="text-xs text-slate-700 font-medium mt-1 leading-relaxed line-clamp-2">
@@ -390,10 +390,10 @@ export default function HomePage() {
                     </p>
                   </div>
 
-                  {/* Footer: Single line, aligned, "Buka Menu:" removed, just destination + arrow */}
+                  {/* Footer: Single line, aligned */}
                   <div className="mt-4 pt-3 border-t border-black/5 flex items-center justify-between text-xs min-h-[34px]">
                     <span 
-                      className="font-bold text-[#26493b] flex items-center space-x-1.5 truncate group-hover:translate-x-1 transition-transform max-w-full"
+                      className="font-bold text-blue-700 group-hover:text-indigo-700 flex items-center space-x-1.5 truncate group-hover:translate-x-1 transition-transform max-w-full"
                       title={app.destination}
                     >
                       <span className="truncate">{app.destination}</span>
@@ -421,9 +421,9 @@ export default function HomePage() {
                 {APPS_CATALOG.map((app) => {
                   const hasAccess = user ? app.roles.includes(user.role) : false;
                   return (
-                    <tr key={app.key} className="hover:bg-[#26493b]/5 transition-colors duration-150">
+                    <tr key={app.key} className="hover:bg-blue-600/5 transition-colors duration-150">
                       <td className="px-6 py-3.5 font-bold text-slate-900 flex items-center space-x-2.5">
-                        <span className="w-3 h-3 rounded-md bg-[#26493b]" aria-hidden="true" />
+                        <span className="w-3 h-3 rounded-md bg-[#1d4ed8]" aria-hidden="true" />
                         <span>{app.name}</span>
                       </td>
                       <td className="px-6 py-3.5 text-slate-800 font-medium">{app.destination}</td>
@@ -460,7 +460,7 @@ export default function HomePage() {
                             else if (app.key === "dashboard") router.push("/dashboard");
                           }}
                           aria-label={`Buka modul ${app.name}`}
-                          className="text-xs font-bold text-[#26493b] hover:translate-x-0.5 hover:underline transition-all inline-flex items-center space-x-1 focus-visible:ring-2 focus-visible:ring-[#26493b] focus-visible:outline-none rounded px-1.5 py-0.5"
+                          className="text-xs font-bold text-blue-700 hover:text-indigo-700 hover:translate-x-0.5 hover:underline transition-all inline-flex items-center space-x-1 focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none rounded px-1.5 py-0.5"
                         >
                           <span>Buka Modul</span>
                           <span aria-hidden="true">&rarr;</span>
@@ -477,9 +477,9 @@ export default function HomePage() {
 
       {/* Collapsible Rubric Test Panel (T-01 & T-02) */}
       <details className="group bg-slate-900 text-white rounded-2xl p-4 sm:p-5 border border-slate-800">
-        <summary className="cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white select-none focus-visible:ring-2 focus-visible:ring-[#26493b] focus-visible:outline-none rounded-lg p-1">
+        <summary className="cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white select-none focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none rounded-lg p-1">
           <div className="flex items-center space-x-2">
-            <span className="px-2 py-0.5 rounded-md bg-[#d4b36a] text-[#14281f] font-bold text-xs uppercase">
+            <span className="px-2 py-0.5 rounded-md bg-[#ede9fe] text-[#4c1d95] font-bold text-xs uppercase border border-[#c4b5fd]">
               Developer Tool
             </span>
             <span className="font-bold text-xs">🛠️ Panel Pengujian Otomatis Rubrik (T-01 & T-02)</span>
@@ -521,7 +521,7 @@ export default function HomePage() {
           {testResult && (
             <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-2 text-xs">
               <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                <span className="font-bold text-[#d4b36a]">
+                <span className="font-bold text-violet-300">
                   [{testResult.id}] {testResult.name}
                 </span>
                 <span

@@ -100,6 +100,17 @@ export async function POST(request: NextRequest) {
     }
 
     const newProduct = await prisma.$transaction(async (tx) => {
+      // Validate defaultVendorId: ensure vendor actually exists in this company's database
+      let validVendorId: string | null = null;
+      if (defaultVendorId && typeof defaultVendorId === "string" && defaultVendorId.trim() !== "") {
+        const vendorExists = await tx.contact.findUnique({
+          where: { id: defaultVendorId.trim() },
+        });
+        if (vendorExists) {
+          validVendorId = vendorExists.id;
+        }
+      }
+
       const prod = await tx.productVariant.create({
         data: {
           sku: cleanSku,
@@ -109,28 +120,36 @@ export async function POST(request: NextRequest) {
           unit: unit.trim().toLowerCase(),
           salesPrice: Number(salesPrice),
           standardCost: Number(standardCost),
-          defaultVendorId: defaultVendorId || null,
+          defaultVendorId: validVendorId,
         },
       });
 
-      // Initialize stock levels for WH-JKT and CAFE-JKT
-      await tx.stockLevel.create({
-        data: {
-          productSku: cleanSku,
-          locationCode: "WH-JKT",
-          onHand: Math.max(0, parseInt(initialWhStock) || 0),
-          reserved: 0,
-        },
-      });
+      // Initialize stock levels for existing warehouse locations
+      const locations = await tx.warehouseLocation.findMany();
+      const whLoc = locations.find((l) => l.code === "WH-JKT");
+      const cafeLoc = locations.find((l) => l.code === "CAFE-JKT");
 
-      await tx.stockLevel.create({
-        data: {
-          productSku: cleanSku,
-          locationCode: "CAFE-JKT",
-          onHand: Math.max(0, parseInt(initialCafeStock) || 0),
-          reserved: 0,
-        },
-      });
+      if (whLoc) {
+        await tx.stockLevel.create({
+          data: {
+            productSku: cleanSku,
+            locationCode: whLoc.code,
+            onHand: Math.max(0, parseInt(initialWhStock) || 0),
+            reserved: 0,
+          },
+        });
+      }
+
+      if (cafeLoc) {
+        await tx.stockLevel.create({
+          data: {
+            productSku: cleanSku,
+            locationCode: cafeLoc.code,
+            onHand: Math.max(0, parseInt(initialCafeStock) || 0),
+            reserved: 0,
+          },
+        });
+      }
 
       return prod;
     });

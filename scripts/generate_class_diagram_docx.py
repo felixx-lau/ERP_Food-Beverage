@@ -369,8 +369,11 @@ def generate_class_diagram_image(output_path):
 # Main Document Builder
 # -------------------------------------------------------------
 def build_class_diagram_docx():
-    docx_file = "CLASS_DIAGRAM_ERP_RASA_ARUNA.docx"
-    img_file = "class_diagram_visual.png"
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    arch_dir = os.path.join(project_root, "docs", "architecture")
+    os.makedirs(arch_dir, exist_ok=True)
+    docx_file = os.path.join(arch_dir, "CLASS_DIAGRAM_ERP_RASA_ARUNA.docx")
+    img_file = os.path.join(arch_dir, "class_diagram_visual.png")
     print(f"Building {docx_file}...")
     
     generate_class_diagram_image(img_file)

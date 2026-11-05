@@ -248,11 +248,11 @@ export default function RegisterPaymentPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-2 p-5 rounded-2xl border border-white/80 shadow-glass-2">
           <div>
             <div className="flex items-center space-x-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#174A3A]" />
-              <h1 className="text-xl font-black text-slate-900 tracking-tight">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#1d4ed8]" />
+              <h1 className="text-xl font-bold text-slate-900 tracking-tight">
                 Register Payment & Cash Receipt
               </h1>
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-500/15 text-[#174A3A] border border-emerald-500/30">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#1d4ed8]/10 text-[#1d4ed8] border border-[#1d4ed8]/20">
                 Wireframe S-12
               </span>
             </div>
@@ -264,25 +264,25 @@ export default function RegisterPaymentPage() {
           <div className="flex flex-wrap items-center gap-2">
             <Link
               href="/accounting/invoices"
-              className="text-xs font-black px-3.5 py-1.5 rounded-xl btn-glass-secondary text-slate-800 hover:-translate-y-0.5 hover:shadow-xs transition-all"
+              className="text-xs font-bold px-3.5 py-1.5 rounded-xl btn-glass-secondary text-slate-800 hover:-translate-y-0.5 hover:shadow-xs transition-all"
             >
               Customer Invoices
             </Link>
             <Link
               href="/accounting/vendor-bills"
-              className="text-xs font-black px-3.5 py-1.5 rounded-xl btn-glass-secondary text-slate-800 hover:-translate-y-0.5 hover:shadow-xs transition-all"
+              className="text-xs font-bold px-3.5 py-1.5 rounded-xl btn-glass-secondary text-slate-800 hover:-translate-y-0.5 hover:shadow-xs transition-all"
             >
               Vendor Bills
             </Link>
             <Link
               href="/accounting/journal-entries"
-              className="text-xs font-black px-3.5 py-1.5 rounded-xl btn-glass-secondary text-slate-800 hover:-translate-y-0.5 hover:shadow-xs transition-all"
+              className="text-xs font-bold px-3.5 py-1.5 rounded-xl btn-glass-secondary text-slate-800 hover:-translate-y-0.5 hover:shadow-xs transition-all"
             >
               General Ledger
             </Link>
             <button
               onClick={fetchPaymentsAndInvoices}
-              className="p-2 rounded-xl btn-glass-secondary text-slate-700 hover:text-[#174A3A] transition-all hover:-translate-y-0.5"
+              className="p-2 rounded-xl btn-glass-secondary text-slate-700 hover:text-[#1d4ed8] transition-all hover:-translate-y-0.5"
               title="Refresh Data"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
@@ -295,7 +295,7 @@ export default function RegisterPaymentPage() {
           {/* Section ②: Mode View / Status Breadcrumb */}
           <div className="bg-white/40 px-6 py-3.5 border-b border-black/5 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center space-x-3">
-              <span className="text-xs font-black text-slate-800 uppercase tracking-wider">Tahap Pembayaran:</span>
+              <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Tahap Pembayaran:</span>
               <div className="inline-flex rounded-xl overflow-hidden border border-white/60 bg-white/70 shadow-xs">
                 {["INVOICE", "PAYMENT", "RECONCILED"].map((st) => {
                   const isReconciled = selectedInvoice?.paymentStatus === "PAID";
@@ -308,9 +308,9 @@ export default function RegisterPaymentPage() {
                   return (
                     <span
                       key={st}
-                      className={`px-3 py-1 text-xs font-black font-mono transition-colors ${
+                      className={`px-3 py-1 text-xs font-bold font-mono transition-colors ${
                         active
-                          ? "bg-[#174A3A] text-white shadow-xs"
+                          ? "bg-[#1d4ed8] text-white shadow-xs"
                           : "text-slate-700 hover:bg-white/50"
                       }`}
                     >
@@ -321,21 +321,21 @@ export default function RegisterPaymentPage() {
               </div>
             </div>
 
-            <div className="text-xs text-slate-800 font-semibold">
-              Kebijakan <strong className="text-[#174A3A] font-black">SR-19</strong>: Pembayaran parsial diizinkan; overpayment dilarang keras.
+            <div className="text-xs text-slate-700 font-semibold">
+              Kebijakan <strong className="text-[#1d4ed8] font-bold">SR-19</strong>: Pembayaran parsial diizinkan; overpayment dilarang keras.
             </div>
           </div>
 
           {/* Section ③: Form Inti */}
-          <div className="p-6 grid grid-cols-1 md:grid-cols-4 gap-6 bg-white border-b border-[#DCE8DF]">
+          <div className="p-6 grid grid-cols-1 md:grid-cols-4 gap-6 bg-white border-b border-[#e2e8f0]">
             <div>
-              <label className="text-[11px] font-semibold text-[#758078] uppercase tracking-wider block mb-1">
+              <label className="text-[11px] font-semibold text-[#64748b] uppercase tracking-wider block mb-1">
                 Pilih Customer Invoice
               </label>
               <select
                 value={selectedInvoiceId}
                 onChange={(e) => setSelectedInvoiceId(e.target.value)}
-                className="w-full text-xs font-mono font-bold bg-white border border-[#DCE8DF] rounded-lg p-2.5 text-[#202824] focus:outline-none focus:ring-2 focus:ring-[#174A3A]"
+                className="w-full text-xs font-mono font-bold bg-white border border-[#e2e8f0] rounded-lg p-2.5 text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-[#1d4ed8]"
               >
                 {invoices.map((inv) => (
                   <option key={inv.id} value={inv.id}>
@@ -344,30 +344,30 @@ export default function RegisterPaymentPage() {
                 ))}
               </select>
               <span className="text-[11px] text-slate-700 font-semibold block mt-1.5">
-                Customer: <strong className="text-slate-900 font-black">{selectedInvoice?.customer?.name || "-"}</strong> ({selectedInvoice?.customer?.code || "-"})
+                Customer: <strong className="text-slate-900 font-bold">{selectedInvoice?.customer?.name || "-"}</strong> ({selectedInvoice?.customer?.code || "-"})
               </span>
             </div>
 
             <div>
-              <label className="text-[11px] font-black text-slate-700 uppercase tracking-wider block mb-1">
+              <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider block mb-1">
                 Metode Pembayaran
               </label>
               <select
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
-                className="w-full text-xs font-mono font-bold input-glass rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-[#174A3A]"
+                className="w-full text-xs font-mono font-bold input-glass rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-[#1d4ed8]"
               >
                 <option value="BANK">Bank BCA / Transfer (1010 Bank)</option>
                 <option value="CASH">Kas Tunai / Cash (1010 Cash)</option>
                 <option value="QRIS">QRIS Dinamis (1010 Bank)</option>
               </select>
               <span className="text-[11px] text-slate-700 font-semibold block mt-1.5">
-                Target GL: <span className="font-mono text-[#174A3A] font-black">1010 Kas & Setara Kas</span>
+                Target GL: <span className="font-mono text-[#1d4ed8] font-bold">1010 Kas & Setara Kas</span>
               </span>
             </div>
 
             <div>
-              <label className="text-[11px] font-black text-slate-700 uppercase tracking-wider block mb-1">
+              <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider block mb-1">
                 Nominal Bayar (Rp)
               </label>
               <input
@@ -375,7 +375,7 @@ export default function RegisterPaymentPage() {
                 value={paymentAmount}
                 onChange={(e) => setPaymentAmount(Number(e.target.value))}
                 min={1}
-                className="w-full text-xs font-mono font-bold input-glass rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-[#174A3A]"
+                className="w-full text-xs font-mono font-bold input-glass rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-[#1d4ed8]"
               />
               <span className="text-[11px] text-slate-700 font-semibold block mt-1.5">
                 Contoh: Rp100.000 untuk pengujian T-23
@@ -385,9 +385,9 @@ export default function RegisterPaymentPage() {
             <div className="flex flex-col justify-end">
               <button
                 onClick={handleRegisterPayment}
-                className="w-full py-2.5 btn-glass-primary text-white rounded-xl text-xs font-black flex items-center justify-center space-x-2 shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+                className="w-full py-2.5 btn-glass-primary text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-2 shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
               >
-                <Receipt className="w-4 h-4 text-[#C6A15B]" />
+                <Receipt className="w-4 h-4 text-[#7c3aed]" />
                 <span>Konfirmasi Pembayaran</span>
               </button>
             </div>
@@ -395,44 +395,44 @@ export default function RegisterPaymentPage() {
 
           {/* Section ④: Pembayaran Parsial dan Sisa KPI Grid */}
           <div className="p-6 bg-white/40">
-            <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider mb-4 flex items-center space-x-2">
-              <DollarSign className="w-4 h-4 text-[#174A3A]" />
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4 flex items-center space-x-2">
+              <DollarSign className="w-4 h-4 text-[#1d4ed8]" />
               <span>Ringkasan Saldo Pembayaran Parsial & Sisa Piutang (F-15 / S-12)</span>
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="glass-3 p-4 rounded-xl border border-white/80 shadow-xs">
-                <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider block">
+                <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">
                   Nilai Tagihan (Gross + PBJT)
                 </span>
-                <span className="text-xl font-black text-slate-900 font-mono block mt-1">
+                <span className="text-xl font-bold text-slate-900 font-mono block mt-1">
                   Rp{selectedInvoice?.totalAmount?.toLocaleString("id-ID") || "0"}
                 </span>
-                <span className="text-xs text-slate-700 font-semibold block mt-1">
+                <span className="text-xs text-slate-600 font-medium block mt-1">
                   Net + PBJT 10%
                 </span>
               </div>
 
               <div className="glass-3 p-4 rounded-xl border border-emerald-500/40 shadow-xs">
-                <span className="text-[11px] font-black text-emerald-950 uppercase tracking-wider block">
+                <span className="text-[11px] font-bold text-emerald-900 uppercase tracking-wider block">
                   Sudah Terbayar (Paid Amount)
                 </span>
-                <span className="text-xl font-black text-emerald-900 font-mono block mt-1">
+                <span className="text-xl font-bold text-emerald-800 font-mono block mt-1">
                   Rp{selectedInvoice?.paidAmount?.toLocaleString("id-ID") || "0"}
                 </span>
-                <span className="text-xs text-slate-700 font-semibold block mt-1">
+                <span className="text-xs text-slate-600 font-medium block mt-1">
                   Akumulasi kas diterima
                 </span>
               </div>
 
               <div className="glass-3 p-4 rounded-xl border border-amber-500/40 shadow-xs">
-                <span className="text-[11px] font-black text-amber-950 uppercase tracking-wider block">
+                <span className="text-[11px] font-bold text-amber-900 uppercase tracking-wider block">
                   Sisa Piutang (Outstanding Balance)
                 </span>
-                <span className="text-xl font-black text-amber-900 font-mono block mt-1">
+                <span className="text-xl font-bold text-amber-800 font-mono block mt-1">
                   Rp{selectedInvoice?.outstandingAmount?.toLocaleString("id-ID") || "0"}
                 </span>
-                <span className="text-xs text-slate-700 font-semibold block mt-1">
+                <span className="text-xs text-slate-600 font-medium block mt-1">
                   Sisa piutang akun 1020 Piutang Usaha
                 </span>
               </div>
@@ -440,22 +440,22 @@ export default function RegisterPaymentPage() {
           </div>
 
           {/* Wireframe S-12 Section ⑤: Related Docs & Audit Trail */}
-          <div className="bg-white px-6 py-3.5 border-t border-[#DCE8DF] flex flex-wrap items-center justify-between text-xs text-[#758078]">
+          <div className="bg-white px-6 py-3.5 border-t border-[#e2e8f0] flex flex-wrap items-center justify-between text-xs text-[#64748b]">
             <div className="flex flex-wrap items-center gap-3">
-              <span className="font-bold text-[#202824]">⑤ Related Documents:</span>
-              <span className="font-mono text-[#174A3A] font-semibold">
+              <span className="font-bold text-[#0f172a]">⑤ Related Documents:</span>
+              <span className="font-mono text-[#1d4ed8] font-semibold">
                 Invoice: {selectedInvoice?.invoiceNumber || "-"}
               </span>
               <span>•</span>
-              <span className="font-mono text-[#202824]">
+              <span className="font-mono text-[#0f172a]">
                 Customer: {selectedInvoice?.customer?.code || "-"}
               </span>
               <span>•</span>
-              <span className="font-mono text-[#C6A15B] font-semibold">
+              <span className="font-mono text-[#6d28d9] font-semibold">
                 Jurnal Otomatis: Dr 1010 Kas / Cr 1020 Piutang Usaha
               </span>
             </div>
-            <span className="text-[11px] text-[#758078] font-mono">
+            <span className="text-[11px] text-[#64748b] font-mono">
               Audit recorded to System Log
             </span>
           </div>
@@ -465,11 +465,11 @@ export default function RegisterPaymentPage() {
         <div className="glass-2 rounded-2xl border border-white/80 shadow-glass-2 overflow-hidden">
           <div className="p-5 border-b border-black/5 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/40">
             <div>
-              <h2 className="text-sm font-black text-slate-900 tracking-wide uppercase">
+              <h2 className="text-sm font-bold text-slate-900 tracking-wide uppercase">
                 Riwayat Pembayaran Terdaftar (Payment History)
               </h2>
               <p className="text-xs text-slate-700 font-semibold mt-0.5">
-                Total pembayaran terakumulasi: <strong className="text-[#174A3A] font-black">Rp{totalCollected.toLocaleString("id-ID")}</strong> ({payments.length} transaksi)
+                Total pembayaran terakumulasi: <strong className="text-[#1d4ed8] font-bold">Rp{totalCollected.toLocaleString("id-ID")}</strong> ({payments.length} transaksi)
               </p>
             </div>
 
@@ -500,7 +500,7 @@ export default function RegisterPaymentPage() {
 
           <div className="overflow-x-auto border-t border-white/80 glass-3">
             <table className="w-full text-left text-xs text-slate-900">
-              <thead className="bg-white/60 border-b border-black/10 text-slate-900 font-black uppercase tracking-wider text-[11px]">
+              <thead className="bg-white/60 border-b border-black/10 text-slate-700 font-bold uppercase tracking-wider text-[11px]">
                 <tr>
                   <th className="py-3.5 px-4">No. Bukti Bayar</th>
                   <th className="py-3.5 px-4">Tanggal</th>
@@ -514,31 +514,31 @@ export default function RegisterPaymentPage() {
               <tbody className="divide-y divide-black/5 font-mono">
                 {filteredPayments.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-8 text-center text-slate-700 font-bold font-sans">
+                    <td colSpan={7} className="py-8 text-center text-slate-700 font-semibold font-sans">
                       {loading ? "Memuat riwayat pembayaran..." : "Belum ada catatan pembayaran yang cocok dengan filter."}
                     </td>
                   </tr>
                 ) : (
                   filteredPayments.map((p) => (
                     <tr key={p.id} className="hover:bg-emerald-500/10 transition-colors duration-150">
-                      <td className="py-3.5 px-4 font-black text-[#174A3A]">
+                      <td className="py-3.5 px-4 font-bold text-[#1d4ed8]">
                         {p.paymentNumber}
                       </td>
-                      <td className="py-3.5 px-4 font-sans text-slate-700 font-bold">
+                      <td className="py-3.5 px-4 font-sans text-slate-600 font-medium">
                         {new Date(p.paymentDate).toLocaleDateString("id-ID")}
                       </td>
-                      <td className="py-3.5 px-4 font-sans text-slate-900 font-black">
+                      <td className="py-3.5 px-4 font-sans text-slate-900 font-medium">
                         {p.customer?.name || p.vendor?.name || "-"}
                       </td>
-                      <td className="py-3.5 px-4 text-[#174A3A] font-bold">
+                      <td className="py-3.5 px-4 text-[#1d4ed8] font-semibold">
                         {p.invoice?.invoiceNumber || p.bill?.billNumber || "-"}
                       </td>
                       <td className="py-3.5 px-4">
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/15 text-[#174A3A] border border-emerald-500/30">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#1d4ed8]/10 text-[#1d4ed8] border border-[#1d4ed8]/20">
                           {p.paymentMethod}
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 text-right font-black text-[#174A3A]">
+                      <td className="py-3.5 px-4 text-right font-bold text-[#1d4ed8]">
                         Rp{p.amount?.toLocaleString("id-ID")}
                       </td>
                       <td className="py-3.5 px-4 text-center">
@@ -556,7 +556,7 @@ export default function RegisterPaymentPage() {
         <details className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
           <summary className="cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white select-none">
             <div className="flex items-center space-x-2">
-              <span className="px-2 py-0.5 rounded-md bg-[#C6A15B] text-slate-900 font-bold text-[10px] uppercase">
+              <span className="px-2 py-0.5 rounded-md bg-[#7c3aed] text-slate-900 font-bold text-[10px] uppercase">
                 Developer Tool
               </span>
               <span>🛠️ Panel Pengujian Otomatis Rubrik (T-23 & T-24)</span>
@@ -619,7 +619,7 @@ export default function RegisterPaymentPage() {
                 </div>
                 <div className="space-y-1">
                   <p>
-                    <strong className="text-[#C6A15B]">Ekspektasi:</strong> {testResult.expected}
+                    <strong className="text-[#7c3aed]">Ekspektasi:</strong> {testResult.expected}
                   </p>
                   <p className="font-mono">
                     <strong className="text-white">Hasil Aktual:</strong> {testResult.actual}

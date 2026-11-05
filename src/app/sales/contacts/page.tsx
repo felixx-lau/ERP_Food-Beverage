@@ -173,20 +173,20 @@ export default function ContactsPage() {
         <div className="flex items-center space-x-2 overflow-x-auto pb-1 sm:pb-0">
           <button
             onClick={() => setCreateModalOpen(true)}
-            className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold bg-[#174A3A] hover:bg-[#134032] active:bg-[#0f3328] text-white rounded-lg shadow-xs transition-all shrink-0"
+            className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold bg-[#1d4ed8] hover:bg-[#1e3a8a] active:bg-[#172554] text-white rounded-lg shadow-xs transition-all shrink-0 focus-brand-ring"
           >
             <UserPlus className="w-3.5 h-3.5" />
             <span>+ Tambah Mitra</span>
           </button>
-          <span className="text-xs font-semibold text-[#758078] mr-1 hidden sm:inline">Pilih Kontak:</span>
+          <span className="text-xs font-semibold text-[#64748b] mr-1 hidden sm:inline">Pilih Kontak:</span>
           {contacts.map((c) => (
             <button
               key={c.id}
               onClick={() => setSelectedContact(c)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 focus-brand-ring ${
                 selectedContact?.id === c.id
-                  ? "bg-[#174A3A] text-white shadow-xs"
-                  : "bg-white border border-[#E5E9E4] text-[#202824] hover:bg-[#F7F8F5]"
+                  ? "bg-[#1d4ed8] text-white shadow-xs"
+                  : "bg-white border border-[#E5E9E4] text-[#0f172a] hover:bg-[#f1f5f9]"
               }`}
             >
               {c.id} - {c.name.split(" ")[0]}
@@ -198,7 +198,7 @@ export default function ContactsPage() {
       {/* Empty State when clean company */}
       {contacts.length === 0 ? (
         <div className="bg-white rounded-2xl border border-dashed border-slate-300 p-12 text-center space-y-4">
-          <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-[#174A3A] flex items-center justify-center mx-auto shadow-xs">
+          <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-[#1d4ed8] flex items-center justify-center mx-auto shadow-xs">
             <Building2 className="w-8 h-8" />
           </div>
           <div className="max-w-md mx-auto space-y-1">
@@ -211,7 +211,7 @@ export default function ContactsPage() {
           </div>
           <button
             onClick={() => setCreateModalOpen(true)}
-            className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-[#174A3A] hover:bg-[#11382C] text-white text-xs font-bold shadow-md transition-all"
+            className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-[#1d4ed8] hover:bg-[#1e3a8a] text-white text-xs font-bold shadow-md transition-all focus-brand-ring"
           >
             <UserPlus className="w-4 h-4" />
             <span>Tambah Pelanggan Pertama Anda</span>
@@ -219,28 +219,28 @@ export default function ContactsPage() {
         </div>
       ) : selectedContact && (
         <div className="bg-white rounded-xl shadow-xs border border-[#E5E9E4] overflow-hidden">
-          <div className="p-6 border-b border-[#E5E9E4] grid grid-cols-1 md:grid-cols-2 gap-6 bg-[#F7F8F5]/60">
+          <div className="p-6 border-b border-[#E5E9E4] grid grid-cols-1 md:grid-cols-2 gap-6 bg-[#f1f5f9]/60">
             <div>
               <div className="flex items-center space-x-2">
-                <span className="text-[11px] font-semibold text-[#758078] uppercase tracking-wider">
+                <span className="text-[11px] font-semibold text-[#64748b] uppercase tracking-wider">
                   Customer ID / Code
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#E1EDE6] text-[#174A3A]">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#E1EDE6] text-[#1d4ed8]">
                   Active Customer
                 </span>
               </div>
-              <h2 className="text-2xl font-black text-[#174A3A] font-mono mt-1">
+              <h2 className="text-2xl font-bold text-[#1d4ed8] font-mono mt-1">
                 {selectedContact.id}
               </h2>
 
               <div className="mt-3">
-                <span className="text-[11px] font-semibold text-[#758078] uppercase tracking-wider block">
+                <span className="text-[11px] font-semibold text-[#64748b] uppercase tracking-wider block">
                   Nama Pelanggan
                 </span>
-                <p className="text-base font-bold text-[#202824] mt-0.5">
+                <p className="text-base font-bold text-[#0f172a] mt-0.5">
                   {selectedContact.name}
                 </p>
-                <p className="text-xs text-[#758078]">
+                <p className="text-xs text-[#64748b]">
                   Tipe: {selectedContact.customerType || "Corporate / Business"} · Kota: {selectedContact.city}
                 </p>
               </div>
@@ -249,20 +249,20 @@ export default function ContactsPage() {
             <div className="space-y-3">
               <div className="flex justify-between items-center bg-white p-3.5 rounded-xl border border-[#E5E9E4]">
                 <div className="flex items-center space-x-2">
-                  <Clock className="w-4 h-4 text-[#174A3A]" />
-                  <span className="text-xs font-semibold text-[#202824]">Payment Terms:</span>
+                  <Clock className="w-4 h-4 text-[#1d4ed8]" />
+                  <span className="text-xs font-semibold text-[#0f172a]">Payment Terms:</span>
                 </div>
-                <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#FAF5EB] text-[#A88544] border border-[#F4E7CE]">
+                <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#f5f3ff] text-[#6d28d9] border border-[#ede9fe]">
                   {selectedContact.paymentTerms}
                 </span>
               </div>
 
               <div className="flex justify-between items-center bg-white p-3.5 rounded-xl border border-[#E5E9E4]">
                 <div className="flex items-center space-x-2">
-                  <CreditCard className="w-4 h-4 text-[#174A3A]" />
-                  <span className="text-xs font-semibold text-[#202824]">Credit Limit Plafon:</span>
+                  <CreditCard className="w-4 h-4 text-[#1d4ed8]" />
+                  <span className="text-xs font-semibold text-[#0f172a]">Credit Limit Plafon:</span>
                 </div>
-                <span className="text-sm font-bold text-[#202824] font-mono">
+                <span className="text-sm font-bold text-[#0f172a] font-mono">
                   Rp {selectedContact.creditLimit.toLocaleString("id-ID")}
                 </span>
               </div>
@@ -272,35 +272,35 @@ export default function ContactsPage() {
           {/* Section 4: Piutang dan Batas Kredit (Formula SR-09) */}
           <div className="p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-[#202824] uppercase tracking-wide flex items-center space-x-2">
-                <Wallet className="w-4 h-4 text-[#174A3A]" />
+              <h3 className="text-sm font-bold text-[#0f172a] uppercase tracking-wide flex items-center space-x-2">
+                <Wallet className="w-4 h-4 text-[#1d4ed8]" />
                 <span>Rincian Credit Exposure & Sisa Plafon (SR-09)</span>
               </h3>
-              <span className="text-xs text-[#758078]">Formula: Headroom = Limit - Exposure</span>
+              <span className="text-xs text-[#64748b]">Formula: Headroom = Limit - Exposure</span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="p-4 rounded-xl border border-[#E5E9E4] bg-[#F7F8F5]">
-                <span className="text-xs text-[#758078] block">Open A/R (Piutang Terbuka):</span>
-                <p className="text-lg font-bold text-[#202824] font-mono mt-1">
+              <div className="p-4 rounded-xl border border-[#E5E9E4] bg-[#f1f5f9]">
+                <span className="text-xs text-[#64748b] block">Open A/R (Piutang Terbuka):</span>
+                <p className="text-lg font-bold text-[#0f172a] font-mono mt-1">
                   Rp {selectedContact.openReceivable.toLocaleString("id-ID")}
                 </p>
-                <span className="text-[10px] text-[#758078]">Saldo invoice confirmed belum lunas</span>
+                <span className="text-[10px] text-[#64748b]">Saldo invoice confirmed belum lunas</span>
               </div>
 
-              <div className="p-4 rounded-xl border border-[#E5E9E4] bg-[#F7F8F5]">
-                <span className="text-xs text-[#758078] block">Confirmed-Uninvoiced SO:</span>
-                <p className="text-lg font-bold text-[#202824] font-mono mt-1">
+              <div className="p-4 rounded-xl border border-[#E5E9E4] bg-[#f1f5f9]">
+                <span className="text-xs text-[#64748b] block">Confirmed-Uninvoiced SO:</span>
+                <p className="text-lg font-bold text-[#0f172a] font-mono mt-1">
                   Rp {(selectedContact.creditExposure - selectedContact.openReceivable).toLocaleString("id-ID")}
                 </p>
-                <span className="text-[10px] text-[#758078]">Order confirmed belum diterbitkan tagihan</span>
+                <span className="text-[10px] text-[#64748b]">Order confirmed belum diterbitkan tagihan</span>
               </div>
 
               <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50/70">
                 <span className="text-xs font-semibold text-emerald-800 block">
                   Credit Headroom (Sisa Plafon):
                 </span>
-                <p className="text-xl font-black text-emerald-700 font-mono mt-1">
+                <p className="text-xl font-bold text-emerald-700 font-mono mt-1">
                   Rp {selectedContact.creditHeadroom.toLocaleString("id-ID")}
                 </p>
                 <span className="text-[10px] text-emerald-600 font-medium">Batas aman transaksi berikutnya</span>
@@ -314,7 +314,7 @@ export default function ContactsPage() {
       <details className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
         <summary className="cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white select-none">
           <div className="flex items-center space-x-2">
-            <span className="px-2 py-0.5 rounded-md bg-[#C6A15B] text-slate-900 font-bold text-[10px] uppercase">
+            <span className="px-2 py-0.5 rounded-md bg-[#7c3aed] text-[#ffffff] font-bold text-[10px] uppercase">
               Developer Tool
             </span>
             <span>🛠️ Panel Pengujian Otomatis Rubrik (T-03 & T-04)</span>
@@ -335,7 +335,7 @@ export default function ContactsPage() {
               <button
                 onClick={runTestT03}
                 disabled={testing}
-                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center space-x-1.5 shadow-xs transition-all"
+                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center space-x-1.5 shadow-xs transition-all focus-brand-ring"
               >
                 <Play className="w-3.5 h-3.5" />
                 <span>Jalankan T-03</span>
@@ -343,7 +343,7 @@ export default function ContactsPage() {
               <button
                 onClick={runTestT04}
                 disabled={testing}
-                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-rose-600 hover:bg-rose-500 text-white flex items-center space-x-1.5 shadow-xs transition-all"
+                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-rose-600 hover:bg-rose-500 text-white flex items-center space-x-1.5 shadow-xs transition-all focus-brand-ring"
               >
                 <Play className="w-3.5 h-3.5" />
                 <span>Jalankan T-04</span>
@@ -354,7 +354,7 @@ export default function ContactsPage() {
           {testResult && (
             <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-2 text-xs">
               <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                <span className="font-bold text-[#C6A15B]">
+                <span className="font-bold text-[#7c3aed]">
                   [{testResult.id}] {testResult.name}
                 </span>
                 <span

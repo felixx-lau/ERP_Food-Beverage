@@ -79,16 +79,16 @@ export default function CreateContactModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 animate-in fade-in duration-150">
       <div className="bg-white w-full max-w-lg rounded-2xl shadow-xl border border-[#E5E9E4] overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="px-6 py-4 bg-[#174A3A] text-white flex items-center justify-between">
+        <div className="px-6 py-4 bg-gradient-to-r from-blue-700 via-indigo-700 to-violet-700 text-white flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
-              <UserPlus className="w-5 h-5 text-emerald-300" />
+              <UserPlus className="w-5 h-5 text-blue-200" />
             </div>
             <div>
               <h2 className="text-base font-bold tracking-tight">
                 Tambah {type === "CUSTOMER" ? "Pelanggan" : "Vendor / Pemasok"}
               </h2>
-              <p className="text-xs text-emerald-100">
+              <p className="text-xs text-blue-100">
                 Pendaftaran data mitra bisnis PT Rasa Aruna Bersama
               </p>
             </div>
@@ -117,14 +117,14 @@ export default function CreateContactModal({
 
           {/* Tipe Kontak */}
           <div>
-            <label className="block text-xs font-semibold text-[#758078] mb-1.5">Jenis Mitra</label>
+            <label className="block text-xs font-semibold text-[#64748b] mb-1.5">Jenis Mitra</label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setType("CUSTOMER")}
                 className={`py-2 px-3 rounded-xl border text-xs font-semibold flex items-center justify-center space-x-2 transition-all ${
                   type === "CUSTOMER"
-                    ? "border-[#174A3A] bg-[#F2F7F4] text-[#174A3A] shadow-xs"
+                    ? "border-[#1d4ed8] bg-[#1d4ed8]/10 text-[#1d4ed8] shadow-xs"
                     : "border-slate-200 text-slate-600 hover:bg-slate-50"
                 }`}
               >
@@ -136,7 +136,7 @@ export default function CreateContactModal({
                 onClick={() => setType("VENDOR")}
                 className={`py-2 px-3 rounded-xl border text-xs font-semibold flex items-center justify-center space-x-2 transition-all ${
                   type === "VENDOR"
-                    ? "border-[#174A3A] bg-[#F2F7F4] text-[#174A3A] shadow-xs"
+                    ? "border-[#1d4ed8] bg-[#1d4ed8]/10 text-[#1d4ed8] shadow-xs"
                     : "border-slate-200 text-slate-600 hover:bg-slate-50"
                 }`}
               >
@@ -148,7 +148,7 @@ export default function CreateContactModal({
 
           {/* Nama */}
           <div>
-            <label className="block text-xs font-semibold text-[#202824] mb-1">
+            <label className="block text-xs font-semibold text-[#0f172a] mb-1">
               Nama {type === "CUSTOMER" ? "Pelanggan / Usaha" : "Vendor / Supplier"} <span className="text-rose-500">*</span>
             </label>
             <input
@@ -157,18 +157,18 @@ export default function CreateContactModal({
               placeholder={type === "CUSTOMER" ? "Contoh: PT Katering Sukses / Budi Santoso" : "Contoh: CV Bahan Pangan Segar"}
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full text-xs px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#174A3A] focus:outline-none"
+              className="w-full text-xs px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#1d4ed8] focus:outline-none"
             />
           </div>
 
           {type === "CUSTOMER" && (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-[#202824] mb-1">Kategori Pelanggan</label>
+                <label className="block text-xs font-semibold text-[#0f172a] mb-1">Kategori Pelanggan</label>
                 <select
                   value={customerType}
                   onChange={(e) => setCustomerType(e.target.value as any)}
-                  className="w-full text-xs px-3.5 py-2.5 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-[#174A3A] focus:outline-none"
+                  className="w-full text-xs px-3.5 py-2.5 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-[#1d4ed8] focus:outline-none"
                 >
                   <option value="COMPANY">Badan Usaha / Perusahaan</option>
                   <option value="INDIVIDUAL">Individu / Perorangan</option>
@@ -176,11 +176,11 @@ export default function CreateContactModal({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#202824] mb-1">Syarat Pembayaran</label>
+                <label className="block text-xs font-semibold text-[#0f172a] mb-1">Syarat Pembayaran</label>
                 <select
                   value={paymentTerms}
                   onChange={(e) => setPaymentTerms(e.target.value)}
-                  className="w-full text-xs px-3.5 py-2.5 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-[#174A3A] focus:outline-none"
+                  className="w-full text-xs px-3.5 py-2.5 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-[#1d4ed8] focus:outline-none"
                 >
                   <option value="IMMEDIATE">Langsung / Tunai (Immediate)</option>
                   <option value="NET7">Tempo 7 Hari (NET 7)</option>
@@ -193,7 +193,7 @@ export default function CreateContactModal({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#202824] mb-1">Kota / Domisili</label>
+              <label className="block text-xs font-semibold text-[#0f172a] mb-1">Kota / Domisili</label>
               <div className="relative">
                 <MapPin className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-3" />
                 <input
@@ -201,14 +201,14 @@ export default function CreateContactModal({
                   placeholder="Jakarta Selatan"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
-                  className="w-full text-xs pl-8 pr-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#174A3A] focus:outline-none"
+                  className="w-full text-xs pl-8 pr-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#1d4ed8] focus:outline-none"
                 />
               </div>
             </div>
 
             {type === "CUSTOMER" && (
               <div>
-                <label className="block text-xs font-semibold text-[#202824] mb-1">
+                <label className="block text-xs font-semibold text-[#0f172a] mb-1">
                   Limit Kredit Piutang (Rp)
                 </label>
                 <div className="relative">
@@ -220,7 +220,7 @@ export default function CreateContactModal({
                     placeholder="0 (Tanpa Kredit)"
                     value={creditLimit}
                     onChange={(e) => setCreditLimit(e.target.value === "" ? "" : Number(e.target.value))}
-                    className="w-full text-xs pl-8 pr-3.5 py-2.5 border border-slate-200 rounded-xl font-mono focus:ring-2 focus:ring-[#174A3A] focus:outline-none"
+                    className="w-full text-xs pl-8 pr-3.5 py-2.5 border border-slate-200 rounded-xl font-mono focus:ring-2 focus:ring-[#1d4ed8] focus:outline-none"
                   />
                 </div>
               </div>
@@ -238,7 +238,7 @@ export default function CreateContactModal({
             <button
               type="submit"
               disabled={loading}
-              className="px-5 py-2 text-xs font-bold bg-[#174A3A] hover:bg-[#134032] active:bg-[#0f3328] text-white rounded-xl shadow-xs transition-all flex items-center space-x-1.5"
+              className="px-5 py-2 text-xs font-bold bg-[#1d4ed8] hover:bg-[#1e3a8a] text-white rounded-xl shadow-xs transition-all flex items-center space-x-1.5"
             >
               {loading ? (
                 <span>Menyimpan...</span>

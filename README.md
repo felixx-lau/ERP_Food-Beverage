@@ -10,7 +10,7 @@
 
 > 📖 **PANDUAN LENGKAP ARSITEKTUR & ALUR BISNIS MUTLAK:**  
 > Agar siapa pun yang memodifikasi sistem ini tidak merusak aturan bisnis, formula akuntansi, atau alur kerja penilaian (T-01 s/d T-32), baca dokumen panduan resmi di:  
-> 👉 **[DOKUMENTASI_ALUR_DAN_ARSITEKTUR_SISTEM.md](./DOKUMENTASI_ALUR_DAN_ARSITEKTUR_SISTEM.md)**
+> 👉 **[DOKUMENTASI_ALUR_DAN_ARSITEKTUR_SISTEM.md](./docs/architecture/DOKUMENTASI_ALUR_DAN_ARSITEKTUR_SISTEM.md)**
 
 PT Rasa Aruna Bersama adalah perusahaan F&B di Jakarta yang mengoperasikan restoran cepat saji, layanan *takeaway*, pesanan katering korporat, dan paket makan siang perkantoran. Sistem ERP ini dibangun dengan pendekatan *vibe coding* dan rekayasa perangkat lunak berstandar industri untuk memecahkan 6 permasalahan operasional utama:
 1. Bentrok reservasi pesanan kantor dengan kasir gerai.
@@ -116,11 +116,65 @@ npx tsx scripts/test_phase8.ts && \
 npx tsx scripts/seed.ts
 ```
 
-Setiap test case memvalidasi kondisi `Given / When / Then`, integritas relasi tabel, dan aturan bisnis `SR-01` sampai `SR-20`. Rincian hasil dapat dilihat pada file `TEST_RESULTS.md`.
+Setiap test case memvalidasi kondisi `Given / When / Then`, integritas relasi tabel, dan aturan bisnis `SR-01` sampai `SR-20`. Rincian hasil dapat dilihat pada file [docs/reports/TEST_RESULTS.md](./docs/reports/TEST_RESULTS.md).
 
 ---
 
-## 6. Struktur Menu & Peta Modul Aplikasi
+## 6. Struktur Direktori Proyek
+
+```text
+ERP_Food-Beverage/
+├── docs/                                  # Dokumentasi Lengkap Proyek
+│   ├── architecture/                      # Spesifikasi Arsitektur, UML Class Diagram & Gambar
+│   │   ├── CLASS_DIAGRAM_ERP_RASA_ARUNA.docx
+│   │   ├── DOKUMENTASI_ALUR_DAN_ARSITEKTUR_SISTEM.md
+│   │   └── class_diagram_visual.png
+│   ├── reports/                           # Laporan Pengujian, Deliverables & Keputusan Desain
+│   │   ├── DECISION_LOG.md
+│   │   ├── DELIVERABLES_CHECKLIST.md
+│   │   ├── Dokumentasi_dan_Hasil_Pengujian_ERP.docx
+│   │   ├── README.docx
+│   │   ├── TEST_RESULTS.docx
+│   │   └── TEST_RESULTS.md
+│   ├── changelogs/                        # Riwayat Perubahan & Audit Log
+│   │   ├── AUDIT.md
+│   │   ├── CHANGELOG.md
+│   │   └── UI-CHANGELOG.md
+│   └── screens/                           # Tangkapan Layar Aplikasi (Sebelum & Sesudah)
+│       ├── after/
+│       ├── before/
+│       └── step1/
+├── prisma/                                # Konfigurasi Basis Data & ORM
+│   ├── schema.prisma                      # Skema Model Data Relasional
+│   ├── erp.db                             # Basis Data SQLite Utama
+│   ├── companies/                         # Basis Data Multi-Perusahaan
+│   └── companies.json                     # Registri Multi-Perusahaan
+├── scripts/                               # Script Pengujian Otomatis & Seeder
+│   ├── seed.ts                            # Seeder Data Awal Baseline
+│   ├── seed_demo_charts.ts                # Seeder Data Transaksi Demo Charts
+│   ├── test_phase2_3.ts                   # Pengujian T-01 & T-02
+│   ├── test_phase4.ts                     # Pengujian T-03 s/d T-12
+│   ├── test_phase5.ts                     # Pengujian T-15 s/d T-18, T-21, T-22
+│   ├── test_phase6.ts                     # Pengujian T-19, T-20, T-23 s/d T-26
+│   ├── test_phase7.ts                     # Pengujian T-13, T-14, T-27 s/d T-30
+│   ├── test_phase8.ts                     # Pengujian T-31 & T-32
+│   ├── test_charts.ts                     # Pengujian Analytics & Dashboard API
+│   ├── export_to_docx.py                  # Script Generator Laporan DOCX
+│   └── generate_class_diagram_docx.py     # Script Generator Class Diagram DOCX
+├── src/                                   # Kode Sumber Next.js 15
+│   ├── app/                               # Next.js App Router (Halaman & API Routes)
+│   ├── components/                        # Komponen UI, Modals, Topbar & Sidebar
+│   ├── context/                           # React Context (CompanyContext)
+│   └── lib/                               # Mesin Bisnis (Accounting, Sales, POS, DB, Auth)
+├── package.json                           # Konfigurasi Dependensi & Scripts
+├── tailwind.config.ts                     # Konfigurasi Tema & Design Tokens Tailwind
+├── tsconfig.json                          # Konfigurasi TypeScript
+└── README.md                              # Panduan Utama Proyek
+```
+
+---
+
+## 7. Struktur Menu & Peta Modul Aplikasi
 
 Aplikasi memiliki 8 modul inti yang dapat diakses melalui Home App Switcher:
 1. **Sales (`/sales/orders`):** Penawaran, Sales Order, validasi credit limit, approval diskon, dan price lock.
@@ -139,7 +193,7 @@ Aplikasi memiliki 8 modul inti yang dapat diakses melalui Home App Switcher:
 Sesuai ketentuan Bagian 13 Dokumen Tugas (*Integritas Akademik & Penggunaan AI*):
 * **Alat AI yang Digunakan:** Antigravity (Advanced Agentic AI Assistant berbasis Google DeepMind).
 * **Peran AI:** Pembuatan boilerplate antarmuka Odoo 17, skema Prisma ORM, penyusunan fungsi pembukuan berpasangan (*double-entry balancing*), dan otomasi script verifikasi *Given/When/Then*.
-* **Telaah & Kontrol Rekayasa Manusia:** Seluruh logika bisnis (*business rules* `SR-01` s.d. `SR-20`), penyelesaian konflik di `DECISION_LOG.md`, penolakan stok negatif, Three-Way Matching engine, dan perhitungan pajak daerah PBJT 10% telah ditelaah, diuji, dan diverifikasi secara manual oleh tim mahasiswa untuk memastikan sistem tidak terjebak dalam *AI-generated traps* (seperti bypass validasi kredit atau manipulasi jurnal otomatis).
+* **Telaah & Kontrol Rekayasa Manusia:** Seluruh logika bisnis (*business rules* `SR-01` s.d. `SR-20`), penyelesaian konflik di [docs/reports/DECISION_LOG.md](./docs/reports/DECISION_LOG.md), penolakan stok negatif, Three-Way Matching engine, dan perhitungan pajak daerah PBJT 10% telah ditelaah, diuji, dan diverifikasi secara manual oleh tim mahasiswa untuk memastikan sistem tidak terjebak dalam *AI-generated traps* (seperti bypass validasi kredit atau manipulasi jurnal otomatis).
 
 ---
 
