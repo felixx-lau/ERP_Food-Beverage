@@ -6,6 +6,7 @@ import Topbar from "@/components/Topbar";
 import AppSwitcherModal from "@/components/AppSwitcherModal";
 import ResetSeedModal from "@/components/ResetSeedModal";
 import AuditHistoryDrawer from "@/components/AuditHistoryDrawer";
+import PageTransition from "@/components/PageTransition";
 import { CompanyProvider } from "@/context/CompanyContext";
 
 interface AppLayoutProps {
@@ -123,13 +124,13 @@ export default function AppLayout({
         />
 
         {/* Content Body */}
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5 space-y-4">
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6 space-y-4">
           {/* Optional unified page header if title is passed */}
           {title && (
-            <div className="glass-2 rounded-2xl py-2.5 px-4 sm:px-5 sm:py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="bg-white/90 rounded-xl py-3 px-4 sm:px-5 sm:py-3.5 border border-slate-200/70 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="space-y-0.5">
                 <div className="flex items-center space-x-2.5">
-                  <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[var(--glass-text-primary)]">
+                  <h1 className="text-lg sm:text-xl font-bold tracking-tight text-[var(--glass-text-primary)]">
                     {title}
                   </h1>
                   {wireframe && (
@@ -152,7 +153,9 @@ export default function AppLayout({
             </div>
           )}
 
-          {children}
+          <PageTransition>
+            {children}
+          </PageTransition>
         </main>
       </div>
 

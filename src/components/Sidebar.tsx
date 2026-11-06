@@ -121,46 +121,62 @@ export default function Sidebar({
   const sidebarContent = (
     <div className="flex flex-col h-full glass-1 text-[var(--glass-text-primary)] select-none border-r border-white/40 shadow-glass-1">
       {/* Brand Header */}
-      <div className="h-14 px-4 flex items-center justify-between border-b border-white/30 bg-white/30 backdrop-blur-md">
+      <div className={`h-14 flex items-center justify-between border-b border-white/30 bg-white/30 backdrop-blur-md ${isCollapsed ? "px-0 justify-center" : "px-4"}`}>
         <Link 
           href="/" 
-          className="flex items-center space-x-2.5 overflow-hidden rounded-xl p-1 focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none"
+          className={`flex items-center overflow-hidden rounded-xl focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none ${isCollapsed ? "p-1 justify-center" : "space-x-2.5 p-1"}`}
           title={`${activeBrand} — Portal ERP`}
         >
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 flex items-center justify-center text-white font-extrabold text-sm flex-shrink-0 shadow-md shadow-indigo-500/20 border border-white/40">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-md shadow-indigo-500/20 border border-white/40">
             {initials}
           </div>
           {!isCollapsed && (
             <div className="flex flex-col min-w-0">
-              <span className="font-extrabold text-sm tracking-tight text-slate-900 truncate">
+              <span className="font-semibold text-sm tracking-tight text-slate-900 truncate">
                 {activeBrand}
               </span>
-              <span className="text-xs text-slate-700 font-semibold tracking-normal truncate">
+              <span className="text-xs text-slate-500 font-medium tracking-normal truncate">
                 Portal ERP
               </span>
             </div>
           )}
         </Link>
 
-        {/* Collapse toggle (desktop) */}
-        <button
-          onClick={onToggleCollapse}
-          aria-label={isCollapsed ? "Perluas Sidebar" : "Ciutkan Sidebar"}
-          className="hidden lg:flex items-center justify-center w-7 h-7 rounded-lg hover:bg-white/80 text-[var(--glass-text-muted)] hover:text-blue-700 focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none transition-colors"
-          title={isCollapsed ? "Perluas Sidebar" : "Ciutkan Sidebar"}
-        >
-          {isCollapsed ? <ChevronRight className="w-4 h-4" aria-hidden="true" /> : <ChevronLeft className="w-4 h-4" aria-hidden="true" />}
-        </button>
+        {/* Collapse toggle (desktop) — hidden when collapsed to save space */}
+        {!isCollapsed && (
+          <button
+            onClick={onToggleCollapse}
+            aria-label="Ciutkan Sidebar"
+            className="hidden lg:flex items-center justify-center w-7 h-7 rounded-lg hover:bg-white/80 text-[var(--glass-text-muted)] hover:text-blue-700 focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none transition-colors"
+            title="Ciutkan Sidebar"
+          >
+            <ChevronLeft className="w-4 h-4" aria-hidden="true" />
+          </button>
+        )}
       </div>
 
       {/* Navigation Links */}
       <div className="flex-1 overflow-y-auto py-3 px-2 space-y-5">
+        {/* Expand button visible when collapsed */}
+        {isCollapsed && (
+          <button
+            onClick={onToggleCollapse}
+            aria-label="Perluas Sidebar"
+            title="Perluas Sidebar"
+            className="flex items-center justify-center w-9 h-9 mt-1 mx-auto rounded-xl hover:bg-white/80 text-slate-500 hover:text-blue-700 transition-colors focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none"
+          >
+            <ChevronRight className="w-4 h-4" aria-hidden="true" />
+          </button>
+        )}
         {NAVIGATION_GROUPS.map((group) => (
           <div key={group.group} className="space-y-1">
             {!isCollapsed && (
-              <p className="px-2.5 text-xs font-bold text-slate-700 uppercase tracking-wider">
+              <p className="px-3 text-[10px] font-medium text-slate-400 uppercase tracking-widest">
                 {group.group}
               </p>
+            )}
+            {isCollapsed && (
+              <div className="border-t border-white/30 mx-1 mb-1" />
             )}
 
             {group.items.map((item) => {
@@ -174,22 +190,24 @@ export default function Sidebar({
                   href={item.href}
                   onClick={onCloseMobile}
                   title={item.name}
-                  className={`group flex items-center rounded-xl px-2.5 py-2 text-xs transition-all duration-200 focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none ${
+                  className={`group flex items-center rounded-xl text-xs transition-all duration-200 focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none ${
+                    isCollapsed ? "justify-center w-9 h-9 mx-auto" : "px-3 py-2"
+                  } ${
                     isActive
-                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-md shadow-blue-500/25 border border-white/20 transform translate-x-1"
+                      ? "bg-blue-600 text-white font-semibold shadow-sm border border-blue-500/20"
                       : hasAccess
-                      ? "text-slate-800 font-bold hover:bg-white/80 hover:text-blue-700 hover:translate-x-1 hover:shadow-xs"
+                      ? "text-slate-800 font-medium hover:bg-slate-50/80 hover:text-blue-700"
                       : "text-slate-400 font-medium hover:bg-white/20"
                   }`}
                 >
                   <Icon
-                    className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 group-hover:scale-110 ${
+                    className={`w-4 h-4 flex-shrink-0 transition-colors duration-200 ${
                       isActive
-                        ? "text-violet-200"
+                        ? "text-blue-100"
                         : hasAccess
-                        ? "text-blue-600 group-hover:text-indigo-600"
+                        ? "text-slate-500 group-hover:text-blue-600"
                         : "text-slate-400"
-                    } ${!isCollapsed ? "mr-2.5" : "mx-auto"}`}
+                    } ${!isCollapsed ? "mr-3" : ""}`}
                     aria-hidden="true"
                   />
 
@@ -211,7 +229,7 @@ export default function Sidebar({
       {/* Footer Info */}
       {!isCollapsed && (
         <div className="p-3 border-t border-white/40 bg-white/40 text-xs">
-          <div className="flex items-center space-x-1.5 text-xs font-bold text-slate-900 truncate">
+          <div className="flex items-center space-x-1.5 text-xs font-medium text-slate-700 truncate">
             <ShieldCheck className="w-3.5 h-3.5 text-violet-600 shrink-0" aria-hidden="true" />
             <span className="truncate">Sesi Terverifikasi</span>
           </div>

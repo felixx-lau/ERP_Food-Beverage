@@ -203,16 +203,16 @@ export default function HomePage() {
       {/* Welcome & Quick Action Hub: Modern Royal Blue to Violet Gradient */}
       <section 
         aria-label="Pusat Input dan Aksi Cepat"
-        className="glass-1 bg-gradient-to-r from-[#0f172a] via-[#1e3a8a] to-[#4c1d95] rounded-3xl p-3.5 sm:p-4 text-white border border-white/20 shadow-glass-1 backdrop-blur-xl space-y-2.5 relative overflow-hidden"
+        className="bg-gradient-to-br from-[#1e3a8a] via-[#1d4ed8] to-[#4c1d95] rounded-2xl p-4 sm:p-5 text-white border border-indigo-500/30 shadow-lg space-y-3 relative overflow-hidden"
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
           <div>
-            <span className="inline-flex items-center space-x-1.5 px-3 py-0.5 rounded-full text-xs font-bold bg-[#ede9fe] text-[#4c1d95] border border-[#c4b5fd] shadow-xs">
+            <span className="inline-flex items-center space-x-1.5 px-3 py-0.5 rounded-full text-xs font-bold bg-white/15 text-white border border-white/25 shadow-xs">
               <Sparkles className="w-3.5 h-3.5 text-[#7c3aed]" aria-hidden="true" />
               <span>Pusat Input & Aksi Cepat</span>
             </span>
             {/* Secondary heading clearly smaller than H1 */}
-            <h2 className="text-base sm:text-lg font-bold tracking-tight text-white mt-1">
+            <h2 className="text-base sm:text-lg font-semibold tracking-tight text-white mt-1">
               Halo, {user?.name || "Pengguna"}! Ingin input data apa hari ini?
             </h2>
             <p className="text-xs text-[#e0e7ff] mt-0.5 max-w-2xl font-normal">
@@ -236,9 +236,9 @@ export default function HomePage() {
           <button
             onClick={() => setProductModalOpen(true)}
             aria-label="Tambah Produk Baru: Menu baru dan stok awal"
-            className="btn-glass-tile flex items-center space-x-3 p-3 rounded-2xl text-left group cursor-pointer focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
+            className="btn-glass-tile flex items-center space-x-3 p-3.5 rounded-xl text-left group cursor-pointer focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
           >
-            <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center text-white group-hover:scale-110 transition-transform duration-200 border border-white/25 shadow-xs shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center text-white transition-colors duration-200 border border-white/20 shrink-0">
               <Package className="w-4 h-4 text-white" aria-hidden="true" />
             </div>
             <div className="min-w-0">
@@ -254,9 +254,9 @@ export default function HomePage() {
           <button
             onClick={() => setSalesOrderModalOpen(true)}
             aria-label="Buat Penjualan SO: Pesanan catering dan resto"
-            className="btn-glass-tile flex items-center space-x-3 p-3 rounded-2xl text-left group cursor-pointer focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
+            className="btn-glass-tile flex items-center space-x-3 p-3.5 rounded-xl text-left group cursor-pointer focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
           >
-            <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center text-white group-hover:scale-110 transition-transform duration-200 border border-white/25 shadow-xs shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center text-white transition-colors duration-200 border border-white/20 shrink-0">
               <ShoppingCart className="w-4 h-4 text-white" aria-hidden="true" />
             </div>
             <div className="min-w-0">
@@ -272,9 +272,9 @@ export default function HomePage() {
           <button
             onClick={() => setContactModalOpen(true)}
             aria-label="Tambah Pelanggan Baru: Customer dan vendor baru"
-            className="btn-glass-tile flex items-center space-x-3 p-3 rounded-2xl text-left group cursor-pointer focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
+            className="btn-glass-tile flex items-center space-x-3 p-3.5 rounded-xl text-left group cursor-pointer focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
           >
-            <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center text-white group-hover:scale-110 transition-transform duration-200 border border-white/25 shadow-xs shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center text-white transition-colors duration-200 border border-white/20 shrink-0">
               <UserPlus className="w-4 h-4 text-white" aria-hidden="true" />
             </div>
             <div className="min-w-0">
@@ -290,9 +290,9 @@ export default function HomePage() {
           <button
             onClick={() => setPurchaseOrderModalOpen(true)}
             aria-label="Buat Pesanan Beli PO: Pengadaan PO ke vendor"
-            className="btn-glass-tile flex items-center space-x-3 p-3 rounded-2xl text-left group cursor-pointer focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
+            className="btn-glass-tile flex items-center space-x-3 p-3.5 rounded-xl text-left group cursor-pointer focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
           >
-            <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center text-white group-hover:scale-110 transition-transform duration-200 border border-white/25 shadow-xs shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center text-white transition-colors duration-200 border border-white/20 shrink-0">
               <ShoppingBag className="w-4 h-4 text-white" aria-hidden="true" />
             </div>
             <div className="min-w-0">
@@ -310,11 +310,11 @@ export default function HomePage() {
       {/* Akses Modul / Aplikasi */}
       <section 
         aria-label="Katalog Modul dan Aplikasi Utama"
-        className="glass-2 rounded-3xl border border-white/70 shadow-glass-2 overflow-hidden"
+        className="bg-white/90 rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden"
       >
-        <div className="px-5 py-3 bg-white/40 border-b border-black/5 flex items-center justify-between">
+        <div className="px-5 py-3.5 bg-transparent border-b border-slate-100 flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-extrabold text-[#0f172a] tracking-wider uppercase">
+            <h2 className="text-sm font-semibold text-slate-800 tracking-normal">
               Modul & Aplikasi Utama
             </h2>
             <p className="text-xs text-slate-700 font-medium mt-0.5">
@@ -358,19 +358,19 @@ export default function HomePage() {
                       handleNavigate();
                     }
                   }}
-                  className={`rounded-2xl border p-4.5 transition-all relative flex flex-col justify-between cursor-pointer group focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none ${
+                  className={`rounded-2xl border p-5 transition-all relative flex flex-col justify-between cursor-pointer group focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none min-h-[160px] ${
                     hasAccess
-                      ? "glass-2 glass-2-interactive border-white/80 hover:border-indigo-400/50 hover:shadow-indigo-500/10"
-                      : "glass-3 opacity-60 border-dashed border-black/15"
+                      ? "bg-white border border-slate-200/80 hover:border-indigo-300 hover:shadow-md rounded-xl transition-all duration-200 cursor-pointer group"
+                      : "bg-slate-50/70 opacity-55 border border-dashed border-slate-200 rounded-xl"
                   }`}
                 >
                   <div>
-                    <div className="flex items-center justify-between mb-3.5">
-                      {/* Uniform Royal Blue / Indigo Icon with soft periwinkle tint */}
+                    <div className="flex items-start justify-between mb-4">
+                      {/* Icon container — fixed size, proper padding so icon never touches border */}
                       <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center bg-blue-600/10 text-blue-600 border border-blue-600/20 group-hover:scale-105 group-hover:shadow-xs transition-all duration-200"
+                        className="w-10 h-10 rounded-lg flex items-center justify-center bg-blue-50 border border-blue-100 flex-shrink-0 group-hover:bg-blue-100 transition-colors duration-200"
                       >
-                        <IconComponent className="w-5 h-5 text-blue-600 group-hover:text-indigo-600" aria-hidden="true" />
+                        <IconComponent className="w-5 h-5 text-blue-600 group-hover:text-indigo-700 transition-colors duration-200" aria-hidden="true" />
                       </div>
 
                       {/* Badge: only show when restricted/locked */}
@@ -382,18 +382,18 @@ export default function HomePage() {
                       )}
                     </div>
 
-                    <h3 className="font-extrabold text-sm text-[#0f172a] group-hover:text-blue-700 transition-colors">
+                    <h3 className="font-semibold text-sm text-[#0f172a] group-hover:text-blue-700 transition-colors">
                       {app.name}
                     </h3>
-                    <p className="text-xs text-slate-700 font-medium mt-1 leading-relaxed line-clamp-2">
+                    <p className="text-xs text-slate-600 font-medium mt-1.5 leading-relaxed line-clamp-2">
                       {app.desc}
                     </p>
                   </div>
 
-                  {/* Footer: Single line, aligned */}
-                  <div className="mt-4 pt-3 border-t border-black/5 flex items-center justify-between text-xs min-h-[34px]">
-                    <span 
-                      className="font-bold text-blue-700 group-hover:text-indigo-700 flex items-center space-x-1.5 truncate group-hover:translate-x-1 transition-transform max-w-full"
+                  {/* Footer */}
+                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                    <span
+                      className="font-bold text-blue-700 group-hover:text-indigo-700 flex items-center gap-1.5 truncate group-hover:translate-x-0.5 transition-transform duration-200 max-w-full"
                       title={app.destination}
                     >
                       <span className="truncate">{app.destination}</span>

@@ -114,7 +114,7 @@ export default function Topbar({
             <button
               onClick={onToggleMobileSidebar}
               aria-label="Buka menu navigasi"
-              className="lg:hidden flex items-center justify-center w-8 h-8 rounded-xl bg-white/60 hover:bg-white/95 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition-all text-slate-800 hover:text-blue-700 border border-white/70 shadow-xs focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none"
+              className="lg:hidden flex items-center justify-center w-8 h-8 rounded-lg bg-transparent hover:bg-slate-100/80 transition-colors text-slate-500 hover:text-slate-800 border-0 shadow-none focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none"
             >
               <Menu className="w-5 h-5" aria-hidden="true" />
             </button>
@@ -124,7 +124,7 @@ export default function Topbar({
               onClick={onOpenAppSwitcher}
               aria-label="Buka Hub Aplikasi (App Switcher)"
               title="Hub Aplikasi (▦ Apps)"
-              className="flex items-center justify-center w-8 h-8 rounded-xl bg-white/60 hover:bg-white/95 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition-all text-slate-800 hover:text-blue-700 border border-white/70 shadow-xs focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none"
+              className="flex items-center justify-center w-8 h-8 rounded-lg bg-transparent hover:bg-slate-100/80 transition-colors text-slate-500 hover:text-slate-800 border-0 shadow-none focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none"
             >
               <LayoutGrid className="w-4 h-4" aria-hidden="true" />
             </button>
@@ -150,7 +150,7 @@ export default function Topbar({
 
             {/* Default location indicator */}
             <div 
-              className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-blue-600/10 text-blue-700 border border-blue-600/20 backdrop-blur-xs shrink-0"
+              className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100/80 text-slate-600 border border-slate-200/60 backdrop-blur-xs shrink-0"
               title="Lokasi Operasional: WH-JKT (Gudang Utama) · Gerai: CAFE-JKT"
             >
               <MapPin className="w-3.5 h-3.5 text-violet-600" aria-hidden="true" />
@@ -164,7 +164,7 @@ export default function Topbar({
             <button
               onClick={() => setManageTeamOpen(true)}
               aria-label="Kelola Tim & Anggota Kelompok"
-              className="hidden lg:inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold btn-glass-secondary hover:-translate-y-0.5 hover:shadow-md rounded-xl transition-all shadow-xs focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none"
+              className="hidden lg:inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 rounded-lg border border-transparent hover:border-slate-200/60 transition-colors focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none"
               title="Kelola Tim & Anggota Kelompok"
             >
               <Users2 className="w-3.5 h-3.5 text-violet-600" aria-hidden="true" />
@@ -175,7 +175,7 @@ export default function Topbar({
             <button
               onClick={onOpenAuditDrawer}
               aria-label="Buka Log Audit & Security History"
-              className="hidden sm:inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold btn-glass-secondary hover:-translate-y-0.5 hover:shadow-md rounded-xl transition-all shadow-xs focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none"
+              className="hidden sm:inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 rounded-lg border border-transparent hover:border-slate-200/60 transition-colors focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none"
               title="Buka Log Audit & Security History (SR-15 / F-21)"
             >
               <ShieldAlert className="w-3.5 h-3.5 text-violet-600" aria-hidden="true" />
@@ -188,7 +188,7 @@ export default function Topbar({
                 onClick={() => setRoleMenuOpen(!roleMenuOpen)}
                 aria-label={`Menu pengguna: ${currentUser?.name || "Pengguna"}, Role: ${currentUser?.role || "OWNER"}`}
                 aria-expanded={roleMenuOpen}
-                className="flex items-center space-x-2 px-2.5 py-1.5 rounded-xl glass-2 hover:bg-white/95 hover:-translate-y-0.5 hover:shadow-md border border-white/70 text-slate-900 text-xs font-bold transition-all shadow-xs focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none"
+                className="flex items-center space-x-2 px-2.5 py-1.5 rounded-xl hover:bg-slate-50/90 border border-slate-200/70 shadow-none text-slate-900 text-xs font-bold transition-colors focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none"
               >
                 <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 text-white font-bold text-xs flex items-center justify-center shadow-xs">
                   {currentUser?.name ? currentUser.name.charAt(0) : "M"}

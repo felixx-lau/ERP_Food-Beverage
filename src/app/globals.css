@@ -35,14 +35,14 @@
   --accent: #7c3aed;
   --border: rgba(226, 232, 240, 0.85);
 
-  /* Glass Level 1 (Hero, Sidebar, Topbar) - 55% white, 22px blur, 160% saturate */
+  /* Glass Level 1 (Hero, Sidebar, Topbar) - 55% white, 16px blur, 160% saturate */
   --glass-1-bg: rgba(255, 255, 255, 0.65);
-  --glass-1-blur: 22px;
+  --glass-1-blur: 16px;
   --glass-1-border: rgba(255, 255, 255, 0.80);
   --glass-1-shadow: 0 8px 32px 0 rgba(29, 78, 216, 0.07), inset 0 1px 0 0 rgba(255, 255, 255, 0.85);
 
   /* Glass Level 2 (Cards, Panels, KPI Cards) - 75% white, 16px blur, 150% saturate */
-  --glass-2-bg: rgba(255, 255, 255, 0.78);
+  --glass-2-bg: rgba(255, 255, 255, 0.88);
   --glass-2-blur: 16px;
   --glass-2-border: rgba(255, 255, 255, 0.85);
   --glass-2-shadow: 0 4px 20px -2px rgba(29, 78, 216, 0.06), 0 2px 6px -1px rgba(29, 78, 216, 0.04), inset 0 1px 0 0 rgba(255, 255, 255, 0.90);
@@ -118,7 +118,7 @@ body {
     -webkit-backdrop-filter: blur(var(--glass-2-blur)) saturate(150%);
     border: 1px solid var(--glass-2-border);
     box-shadow: var(--glass-2-shadow);
-    transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 220ms ease, border-color 220ms ease, background-color 220ms ease;
+    transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1), border-color 200ms cubic-bezier(0.4, 0, 0.2, 1), background-color 200ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .glass-2-interactive {
@@ -126,12 +126,12 @@ body {
     will-change: transform, box-shadow;
   }
   .glass-2-interactive:hover {
-    transform: translateY(-4px) scale(1.008);
-    border-color: rgba(165, 180, 252, 0.8);
-    box-shadow: 0 16px 36px -4px rgba(29, 78, 216, 0.14), 0 6px 16px -2px rgba(124, 58, 237, 0.08), inset 0 1px 0 0 #FFFFFF;
+    transform: translateY(-1px);
+    border-color: rgba(165, 180, 252, 0.7);
+    box-shadow: 0 10px 28px -4px rgba(29, 78, 216, 0.12), 0 4px 12px -2px rgba(124, 58, 237, 0.07), inset 0 1px 0 0 #FFFFFF;
   }
   .glass-2-interactive:active {
-    transform: translateY(-1px) scale(0.995);
+    transform: translateY(0px) scale(0.998);
   }
 
   /* Frosted Glass Tile Button inside Hero Banner - WCAG AA Contrast Compliant */
@@ -141,13 +141,13 @@ body {
     -webkit-backdrop-filter: blur(14px);
     border: 1px solid rgba(255, 255, 255, 0.20);
     box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.15), inset 0 1px 0 0 rgba(255, 255, 255, 0.20);
-    transition: all 220ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
     will-change: transform, box-shadow;
   }
   .btn-glass-tile:hover {
     background-color: #334155;
     border-color: rgba(196, 181, 253, 0.45);
-    transform: translateY(-2px) scale(1.015);
+    transform: translateY(-1px);
     box-shadow: 0 8px 24px -2px rgba(15, 23, 42, 0.30), inset 0 1px 0 0 rgba(255, 255, 255, 0.35);
   }
   .btn-glass-tile:active {
@@ -160,7 +160,7 @@ body {
     color: #ffffff;
     border: 1px solid rgba(255, 255, 255, 0.3);
     box-shadow: 0 2px 8px 0 rgba(124, 58, 237, 0.25), inset 0 1px 0 0 rgba(255, 255, 255, 0.4);
-    transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
   }
   .btn-gold-action:hover {
     background: linear-gradient(135deg, #6d28d9 0%, #4f46e5 100%);
@@ -241,7 +241,7 @@ body {
     color: #FFFFFF;
     border: 1px solid rgba(255, 255, 255, 0.35);
     box-shadow: 0 4px 14px 0 rgba(29, 78, 216, 0.25), inset 0 1px 0 0 rgba(255, 255, 255, 0.35);
-    transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
   }
   .btn-glass-primary:hover {
     background: linear-gradient(135deg, #1e40af 0%, #5b21b6 100%);
@@ -259,7 +259,7 @@ body {
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     box-shadow: 0 2px 8px 0 rgba(29, 78, 216, 0.05), inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
-    transition: all 180ms ease;
+    transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
   }
   .btn-glass-secondary:hover {
     background-color: #f8fafc;
@@ -284,6 +284,28 @@ body {
     border-color: #2563eb;
     outline: none;
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16), inset 0 1px 2px 0 rgba(0, 0, 0, 0.02);
+  }
+
+  /* Enterprise utility cards */
+  .section-card {
+    background-color: rgba(255,255,255,0.88);
+    backdrop-filter: blur(16px) saturate(150%);
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+    border: 1px solid rgba(226,232,240,0.8);
+    box-shadow: 0 1px 3px 0 rgba(0,0,0,0.04), 0 1px 2px -1px rgba(0,0,0,0.04);
+    border-radius: 0.75rem;
+  }
+  .page-header {
+    border-bottom: 1px solid rgba(226,232,240,0.6);
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+  }
+  .stat-card {
+    background-color: rgba(255,255,255,0.92);
+    border: 1px solid rgba(226,232,240,0.7);
+    border-radius: 0.75rem;
+    padding: 1rem 1.25rem;
+    box-shadow: 0 1px 2px 0 rgba(0,0,0,0.03);
   }
 }
 
@@ -384,4 +406,38 @@ body { line-height: 1.5; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}
+
+/* Page Transition & Entrance Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-up {
+    animation: none;
+  }
+}
+
+@keyframes fadeInScale {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-stagger-1 { animation: fadeInScale 280ms cubic-bezier(0.4,0,0.2,1) 0ms both; }
+.animate-stagger-2 { animation: fadeInScale 280ms cubic-bezier(0.4,0,0.2,1) 40ms both; }
+.animate-stagger-3 { animation: fadeInScale 280ms cubic-bezier(0.4,0,0.2,1) 80ms both; }
+.animate-stagger-4 { animation: fadeInScale 280ms cubic-bezier(0.4,0,0.2,1) 120ms both; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-stagger-1, .animate-stagger-2, .animate-stagger-3, .animate-stagger-4 { animation: none; }
 }
