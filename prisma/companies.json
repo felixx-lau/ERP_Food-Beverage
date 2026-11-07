@@ -34,5 +34,18 @@
     "currency": "IDR",
     "taxRate": 10,
     "createdAt": "2026-10-30T11:11:54.710Z"
+  },
+  {
+    "id": "comp_pt-morie-matcha_qkc6",
+    "name": "PT Morie Matcha",
+    "brand": "PT Morie Matcha",
+    "dbFile": "companies/comp_pt-morie-matcha_qkc6.db",
+    "isDefault": false,
+    "city": "Jakarta",
+    "description": "Entitas ERP Mandiri: PT Morie Matcha",
+    "currency": "IDR",
+    "taxRate": 10,
+    "createdAt": "2026-11-06T07:30:53.583Z",
+    "address": ""
   }
 ]

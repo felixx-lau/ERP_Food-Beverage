@@ -1,3 +1,6 @@
+import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
+import { authorizeApi } from "@/lib/apiAuthorization";
 import { NextRequest, NextResponse } from "next/server";
 import {
   getCompanies,
@@ -15,9 +18,9 @@ export async function GET(request: NextRequest) {
     const activeCompany = getCompanyById(activeCompanyId);
 
     return NextResponse.json({
-      companies,
+      companies: companies.map(({ dbFile, ...company }) => company),
       activeCompanyId,
-      activeCompany,
+      activeCompany: Object.fromEntries(Object.entries(activeCompany).filter(([key])=>key!=="dbFile")),
     });
   } catch (error: any) {
     console.error("GET /api/companies error:", error);
@@ -29,6 +32,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const accessDenied = await authorizeApi(request);
+  if (accessDenied) return accessDenied;
+
   try {
     const body = await request.json();
     const { name, brand, city, description, adminName, adminEmail, adminPassword, cloneMode } = body;
@@ -40,14 +46,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const actor = (await getCurrentUser(request))!;
+    const issuer = (await prisma.user.findUnique({where:{id:actor.id}}))!;
+    if (adminEmail && (!adminPassword || adminPassword.length < 10)) return NextResponse.json({error:"Password admin baru minimal 10 karakter."},{status:400});
     const newCompany = await createCompany({
+      issuer,
       name: name.trim(),
       brand: (brand && brand.trim()) || name.trim(),
       city: city ? city.trim() : "Jakarta",
       description: description ? description.trim() : undefined,
       adminName: adminName ? adminName.trim() : undefined,
       adminEmail: adminEmail ? adminEmail.trim() : undefined,
-      adminPassword: adminPassword || "password123",
+      adminPassword: adminPassword || undefined,
       cloneMode: cloneMode === "sample" ? "sample" : "clean",
     });
 
@@ -57,6 +67,7 @@ export async function POST(request: NextRequest) {
       company: newCompany,
     });
 
+    response.cookies.delete("rasa_aruna_session");
     // Auto-switch to newly created company
     response.cookies.set("rasa_aruna_company", newCompany.id, {
       path: "/",
@@ -76,6 +87,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
+  const accessDenied = await authorizeApi(request);
+  if (accessDenied) return accessDenied;
+
   try {
     const body = await request.json();
     const { id, name, brand, city, description, address, taxRate } = body;
@@ -87,6 +101,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    if (taxRate !== undefined && Number(taxRate) !== 10) return NextResponse.json({error:"PBJT skenario ini ditetapkan 10%."},{status:400});
     const updated = updateCompany(id, {
       ...(name ? { name: name.trim() } : {}),
       ...(brand ? { brand: brand.trim() } : {}),
@@ -111,54 +126,7 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get("id");
-
-    if (!id) {
-      return NextResponse.json(
-        { error: "ID Perusahaan wajib disertakan." },
-        { status: 400 }
-      );
-    }
-
-    if (id === "default") {
-      return NextResponse.json(
-        { error: "Perusahaan baseline bawaan (PT Rasa Aruna Bersama) tidak boleh dihapus." },
-        { status: 400 }
-      );
-    }
-
-    const success = deleteCompany(id);
-    if (!success) {
-      return NextResponse.json(
-        { error: "Perusahaan tidak ditemukan." },
-        { status: 404 }
-      );
-    }
-
-    const response = NextResponse.json({
-      success: true,
-      message: "Perusahaan berhasil dihapus.",
-    });
-
-    // If active company was the deleted one, reset to default
-    const activeCompanyId = request.cookies.get("rasa_aruna_company")?.value;
-    if (activeCompanyId === id) {
-      response.cookies.set("rasa_aruna_company", "default", {
-        path: "/",
-        httpOnly: false,
-        sameSite: "lax",
-        maxAge: 60 * 60 * 24 * 30,
-      });
-    }
-
-    return response;
-  } catch (error: any) {
-    console.error("DELETE /api/companies error:", error);
-    return NextResponse.json(
-      { error: error?.message || "Gagal menghapus perusahaan." },
-      { status: 500 }
-    );
-  }
+  const accessDenied = await authorizeApi(request);
+  if (accessDenied) return accessDenied;
+  return NextResponse.json({ error: "Penghapusan database perusahaan dinonaktifkan untuk melindungi riwayat transaksi." }, { status: 409 });
 }

@@ -1,3 +1,4 @@
+import { authorizeApi } from "@/lib/apiAuthorization";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Role } from "@prisma/client";
@@ -5,9 +6,13 @@ import { createSessionToken, getCurrentUser } from "@/lib/auth";
 import { recordAuditLog } from "@/lib/audit";
 
 export async function POST(request: NextRequest) {
+  const accessDenied = await authorizeApi(request);
+  if (accessDenied) return accessDenied;
+
   try {
     const { role, userId } = await request.json();
-    const prevUser = await getCurrentUser();
+    const prevUser = await getCurrentUser(request);
+    if (!prevUser || prevUser.role !== Role.OWNER || process.env.ALLOW_DEMO_ROLE_SWITCH !== "true" || process.env.NODE_ENV === "production") return NextResponse.json({ error: "Gunakan login dengan kredensial akun yang dituju." }, { status: 403 });
 
     let targetUser = null;
     if (userId) {
@@ -61,7 +66,7 @@ export async function POST(request: NextRequest) {
 
     response.cookies.set("rasa_aruna_session", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: false,
       sameSite: "lax",
       path: "/",
       maxAge: 60 * 60 * 24,

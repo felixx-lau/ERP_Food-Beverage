@@ -1,7 +1,11 @@
+import { authorizeApi } from "@/lib/apiAuthorization";
 import { NextRequest, NextResponse } from "next/server";
 import { getFinancialReconciliation } from "@/lib/dashboardEngine";
 
 export async function GET(request: NextRequest) {
+  const accessDenied = await authorizeApi(request);
+  if (accessDenied) return accessDenied;
+
   try {
     const { searchParams } = new URL(request.url);
     const simulatedDiffParam = searchParams.get("simulatedDiff");

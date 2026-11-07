@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import DialogFrame from "./ui/DialogFrame";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCompany } from "@/context/CompanyContext";
@@ -25,6 +26,8 @@ import {
   ChevronRight,
   ShieldCheck,
   Lock,
+  ChevronDown,
+  X,
 } from "lucide-react";
 
 interface NavItem {
@@ -40,7 +43,7 @@ interface NavGroup {
   items: NavItem[];
 }
 
-const NAVIGATION_GROUPS: NavGroup[] = [
+export const NAVIGATION_GROUPS: NavGroup[] = [
   {
     group: "Ringkasan",
     items: [
@@ -51,19 +54,20 @@ const NAVIGATION_GROUPS: NavGroup[] = [
   {
     group: "Penjualan & CRM",
     items: [
-      { name: "Peluang CRM (Leads)", href: "/crm/leads", icon: Users2, roles: ["OWNER", "SALES"], wireframe: "S-02" },
-      { name: "Pelanggan & Vendor", href: "/sales/contacts", icon: Contact2, roles: ["OWNER", "SALES"], wireframe: "S-03" },
-      { name: "Pesanan Penjualan (SO)", href: "/sales/orders", icon: ShoppingCart, roles: ["OWNER", "SALES"], wireframe: "S-04" },
+      { name: "Peluang CRM (Leads)", href: "/crm/leads", icon: Users2, roles: ["OWNER", "SALES"], wireframe: "S-04" },
+      { name: "Pelanggan & Vendor", href: "/sales/contacts", icon: Contact2, roles: ["OWNER", "SALES", "PROCUREMENT", "FINANCE"], wireframe: "S-02" },
+      { name: "Pesanan Penjualan (SO)", href: "/sales/orders", icon: ShoppingCart, roles: ["OWNER", "SALES"], wireframe: "S-05" },
     ],
   },
   {
     group: "Persediaan & Gudang",
     items: [
-      { name: "Produk & Menu", href: "/inventory/products", icon: Package, roles: ["OWNER", "WAREHOUSE", "PROCUREMENT"], wireframe: "S-05" },
+      { name: "Produk & Menu", href: "/inventory/products", icon: Package, roles: ["OWNER", "WAREHOUSE", "PROCUREMENT"], wireframe: "S-03" },
+      { name: "Pergerakan & Penyesuaian", href: "/inventory/movements", icon: ArrowLeftRight, roles: ["OWNER","WAREHOUSE","PROCUREMENT","FINANCE"] },
       { name: "Pengiriman (Delivery)", href: "/inventory/delivery", icon: Truck, roles: ["OWNER", "WAREHOUSE"], wireframe: "S-06" },
       { name: "Transfer Gudang", href: "/inventory/transfers", icon: ArrowLeftRight, roles: ["OWNER", "WAREHOUSE"], wireframe: "S-07" },
       { name: "Penerimaan Barang", href: "/inventory/receipts", icon: PackageCheck, roles: ["OWNER", "WAREHOUSE"], wireframe: "S-09" },
-      { name: "Retur Barang", href: "/inventory/returns", icon: RotateCcw, roles: ["OWNER", "WAREHOUSE"], wireframe: "S-15" },
+      { name: "Retur Barang", href: "/inventory/returns", icon: RotateCcw, roles: ["OWNER", "WAREHOUSE", "FINANCE"], wireframe: "S-15" },
     ],
   },
   {
@@ -78,7 +82,19 @@ const NAVIGATION_GROUPS: NavGroup[] = [
       { name: "Faktur Tagihan (Invoice)", href: "/accounting/invoices", icon: Receipt, roles: ["OWNER", "FINANCE", "SALES"], wireframe: "S-10" },
       { name: "Tagihan Vendor (Bills)", href: "/accounting/vendor-bills", icon: FileText, roles: ["OWNER", "FINANCE"], wireframe: "S-11" },
       { name: "Pembayaran Kas & Bank", href: "/accounting/payments", icon: CreditCard, roles: ["OWNER", "FINANCE"], wireframe: "S-12" },
+      { name: "Laporan Keuangan", href: "/accounting/reports", icon: BarChart3, roles: ["OWNER","FINANCE"] },
       { name: "Buku Besar & Jurnal", href: "/accounting/journal-entries", icon: BookOpen, roles: ["OWNER", "FINANCE"], wireframe: "S-13" },
+    ],
+  },
+  {
+    group: "Data Master",
+    items: [
+      { name: "Kelola Produk", href: "/master/products", icon: Package, roles: ["OWNER","WAREHOUSE","PROCUREMENT","SALES","FINANCE"] },
+      { name: "Kategori & Menu", href: "/master/categories", icon: Package, roles: ["OWNER","WAREHOUSE","PROCUREMENT"] },
+      { name: "Satuan Produk", href: "/master/units", icon: Package, roles: ["OWNER","WAREHOUSE","PROCUREMENT"] },
+      { name: "Gudang & Lokasi", href: "/master/locations", icon: Package, roles: ["OWNER","WAREHOUSE","PROCUREMENT"] },
+      { name: "Harga Vendor", href: "/master/vendor-prices", icon: ShoppingBag, roles: ["OWNER","PROCUREMENT","FINANCE"] },
+      { name: "Chart of Accounts", href: "/master/accounts", icon: BookOpen, roles: ["OWNER","FINANCE"] },
     ],
   },
   {
@@ -97,177 +113,43 @@ interface SidebarProps {
   onCloseMobile: () => void;
 }
 
-export default function Sidebar({
-  userRole = "OWNER",
-  isCollapsed,
-  onToggleCollapse,
-  isOpenMobile,
-  onCloseMobile,
-}: SidebarProps) {
+export default function Sidebar({ userRole = "OWNER", isCollapsed, onToggleCollapse, isOpenMobile, onCloseMobile }: SidebarProps) {
   const pathname = usePathname();
   const { activeCompany } = useCompany();
-
-  const getInitials = (name?: string) => {
-    if (!name) return "RA";
-    const words = name.replace(/^(pt|cv|ud)\.?\s+/i, "").trim().split(/\s+/);
-    if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
-    return name.slice(0, 2).toUpperCase();
-  };
-
-  const activeName = activeCompany?.name || "PT Rasa Aruna Bersama";
-  const activeBrand = activeCompany?.brand || "Rasa Aruna";
-  const initials = getInitials(activeName);
-
-  const sidebarContent = (
-    <div className="flex flex-col h-full glass-1 text-[var(--glass-text-primary)] select-none border-r border-white/40 shadow-glass-1">
-      {/* Brand Header */}
-      <div className={`h-14 flex items-center justify-between border-b border-white/30 bg-white/30 backdrop-blur-md ${isCollapsed ? "px-0 justify-center" : "px-4"}`}>
-        <Link 
-          href="/" 
-          className={`flex items-center overflow-hidden rounded-xl focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none ${isCollapsed ? "p-1 justify-center" : "space-x-2.5 p-1"}`}
-          title={`${activeBrand} — Portal ERP`}
-        >
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-md shadow-indigo-500/20 border border-white/40">
-            {initials}
-          </div>
-          {!isCollapsed && (
-            <div className="flex flex-col min-w-0">
-              <span className="font-semibold text-sm tracking-tight text-slate-900 truncate">
-                {activeBrand}
-              </span>
-              <span className="text-xs text-slate-500 font-medium tracking-normal truncate">
-                Portal ERP
-              </span>
-            </div>
-          )}
-        </Link>
-
-        {/* Collapse toggle (desktop) — hidden when collapsed to save space */}
-        {!isCollapsed && (
-          <button
-            onClick={onToggleCollapse}
-            aria-label="Ciutkan Sidebar"
-            className="hidden lg:flex items-center justify-center w-7 h-7 rounded-lg hover:bg-white/80 text-[var(--glass-text-muted)] hover:text-blue-700 focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none transition-colors"
-            title="Ciutkan Sidebar"
-          >
-            <ChevronLeft className="w-4 h-4" aria-hidden="true" />
-          </button>
-        )}
-      </div>
-
-      {/* Navigation Links */}
-      <div className="flex-1 overflow-y-auto py-3 px-2 space-y-5">
-        {/* Expand button visible when collapsed */}
-        {isCollapsed && (
-          <button
-            onClick={onToggleCollapse}
-            aria-label="Perluas Sidebar"
-            title="Perluas Sidebar"
-            className="flex items-center justify-center w-9 h-9 mt-1 mx-auto rounded-xl hover:bg-white/80 text-slate-500 hover:text-blue-700 transition-colors focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none"
-          >
-            <ChevronRight className="w-4 h-4" aria-hidden="true" />
-          </button>
-        )}
-        {NAVIGATION_GROUPS.map((group) => (
-          <div key={group.group} className="space-y-1">
-            {!isCollapsed && (
-              <p className="px-3 text-[10px] font-medium text-slate-400 uppercase tracking-widest">
-                {group.group}
-              </p>
-            )}
-            {isCollapsed && (
-              <div className="border-t border-white/30 mx-1 mb-1" />
-            )}
-
-            {group.items.map((item) => {
-              const isActive = pathname === item.href;
-              const hasAccess = item.roles.includes(userRole);
-              const Icon = item.icon;
-
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={onCloseMobile}
-                  title={item.name}
-                  className={`group flex items-center rounded-xl text-xs transition-all duration-200 focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none ${
-                    isCollapsed ? "justify-center w-9 h-9 mx-auto" : "px-3 py-2"
-                  } ${
-                    isActive
-                      ? "bg-blue-600 text-white font-semibold shadow-sm border border-blue-500/20"
-                      : hasAccess
-                      ? "text-slate-800 font-medium hover:bg-slate-50/80 hover:text-blue-700"
-                      : "text-slate-400 font-medium hover:bg-white/20"
-                  }`}
-                >
-                  <Icon
-                    className={`w-4 h-4 flex-shrink-0 transition-colors duration-200 ${
-                      isActive
-                        ? "text-blue-100"
-                        : hasAccess
-                        ? "text-slate-500 group-hover:text-blue-600"
-                        : "text-slate-400"
-                    } ${!isCollapsed ? "mr-3" : ""}`}
-                    aria-hidden="true"
-                  />
-
-                  {!isCollapsed && (
-                    <div className="flex-1 flex items-center justify-between min-w-0">
-                      <span className="truncate">{item.name}</span>
-                      {!hasAccess && (
-                        <Lock className="w-3 h-3 text-amber-700 flex-shrink-0 ml-1.5" aria-hidden="true" />
-                      )}
-                    </div>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
-        ))}
-      </div>
-
-      {/* Footer Info */}
-      {!isCollapsed && (
-        <div className="p-3 border-t border-white/40 bg-white/40 text-xs">
-          <div className="flex items-center space-x-1.5 text-xs font-medium text-slate-700 truncate">
-            <ShieldCheck className="w-3.5 h-3.5 text-violet-600 shrink-0" aria-hidden="true" />
-            <span className="truncate">Sesi Terverifikasi</span>
-          </div>
-          <p className="text-xs text-slate-700 mt-0.5 font-semibold">
-            Role: <span className="font-bold text-blue-700 uppercase">{userRole}</span>
-          </p>
-        </div>
-      )}
+  const [closedGroups, setClosedGroups] = useState<string[]>([]);
+  useEffect(() => { setClosedGroups(groups => groups.filter(name => !NAVIGATION_GROUPS.find(g => g.group === name)?.items.some(i => i.href === pathname))); }, [pathname]);
+  const content = (collapsed: boolean, mobile = false) => <div className="sidebar-shell flex flex-col h-full">
+    <div className={`h-[72px] flex items-center gap-3 border-b border-white/15 shrink-0 ${collapsed ? "justify-center" : "px-5"}`}>
+      <Link href="/" onClick={onCloseMobile} aria-label="Rasa Aruna — Beranda" className="flex items-center gap-3 min-w-0">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-violet-600 text-white flex items-center justify-center font-bold text-sm shrink-0">RA</div>
+        {!collapsed && <div className="min-w-0"><p className="font-semibold text-[15px] text-white truncate">{activeCompany?.brand || "Rasa Aruna"}</p><p className="text-[11px] text-indigo-200 mt-0.5">Business workspace</p></div>}
+      </Link>
+      {mobile && <button className="icon-button ml-auto" onClick={onCloseMobile} aria-label="Tutup navigasi"><X className="w-5 h-5" /></button>}
     </div>
-  );
-
-  return (
-    <>
-      {/* Desktop Sidebar */}
-      <aside
-        className={`hidden lg:block fixed top-0 bottom-0 left-0 z-30 transition-all duration-200 ease-in-out ${
-          isCollapsed ? "w-16" : "w-64"
-        }`}
-      >
-        {sidebarContent}
-      </aside>
-
-      {/* Mobile Drawer Backdrop */}
-      {isOpenMobile && (
-        <div
-          onClick={onCloseMobile}
-          className="lg:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-xs transition-opacity"
-        />
-      )}
-
-      {/* Mobile Drawer */}
-      <div
-        className={`lg:hidden fixed inset-y-0 left-0 z-50 w-72 transform transition-transform duration-200 ease-in-out ${
-          isOpenMobile ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        {sidebarContent}
-      </div>
-    </>
-  );
+    <nav aria-label="Navigasi utama" className={`flex-1 py-5 space-y-5 ${collapsed ? "px-3 overflow-y-auto" : "px-4 overflow-y-auto"}`}>
+      {NAVIGATION_GROUPS.map((group, index) => <div key={group.group}>
+        {!collapsed && <button type="button" onClick={() => setClosedGroups(prev => prev.includes(group.group) ? prev.filter(g => g !== group.group) : [...prev, group.group])} aria-expanded={!closedGroups.includes(group.group)} aria-controls={`${mobile ? "mobile" : "desktop"}-nav-${index}`} className="w-full flex items-center justify-between px-3 mb-1 text-[10px] font-semibold uppercase tracking-[.1em] text-indigo-200 min-h-8">
+          {group.group}<ChevronDown className={`w-3 h-3 transition-transform ${closedGroups.includes(group.group) ? "-rotate-90" : ""}`} />
+        </button>}
+        <div id={`${mobile ? "mobile" : "desktop"}-nav-${index}`} className="sidebar-group" data-open={collapsed || !closedGroups.includes(group.group)} aria-hidden={!collapsed && closedGroups.includes(group.group)}>
+          <div className="sidebar-group-content" inert={!collapsed && closedGroups.includes(group.group)}>
+          <div className="space-y-1">
+          {group.items.map(item => <Link key={item.href} href={item.href} onClick={onCloseMobile} title={collapsed ? item.name : undefined} aria-label={item.name} aria-current={pathname === item.href ? "page" : undefined} className={`nav-item ${collapsed ? "justify-center px-0" : ""}`}>
+            <item.icon /><span className={collapsed ? "sr-only" : "truncate"}>{item.name}</span>
+            {!collapsed && !item.roles.includes(userRole) && <Lock className="nav-lock" aria-label="Akses terbatas" />}
+          </Link>)}
+          </div>
+          </div>
+        </div>
+      </div>)}
+    </nav>
+    <div className={`border-t border-white/15 p-4 ${collapsed ? "text-center" : ""}`}>
+      {!collapsed && <div className="rounded-xl bg-white/10 px-3 py-3 mb-3 flex gap-2.5 items-center"><ShieldCheck className="w-5 h-5 text-violet-200 shrink-0" /><div><p className="text-xs font-medium text-indigo-100">Ruang kerja aktif</p><p className="text-[11px] text-indigo-200 mt-0.5">{userRole}</p></div></div>}
+      {!mobile && <button onClick={onToggleCollapse} aria-label={collapsed ? "Perluas sidebar" : "Ciutkan sidebar"} title={collapsed ? "Perluas sidebar" : "Ciutkan sidebar"} className={`flex items-center gap-3 text-xs text-indigo-200 hover:text-white rounded-lg w-full ${collapsed ? "justify-center" : "px-3"}`}>{collapsed ? <ChevronRight className="w-4 h-4" /> : <><ChevronLeft className="w-4 h-4" /><span>Ciutkan sidebar</span></>}</button>}
+    </div>
+  </div>;
+  return <>
+    <aside className={`hidden lg:block fixed inset-y-0 left-0 z-30 transition-[width] duration-200 ${isCollapsed ? "w-20" : "w-[272px]"}`}>{content(isCollapsed)}</aside>
+    {isOpenMobile && <DialogFrame onClose={onCloseMobile} label="Navigasi utama" drawer side="left"><div className="w-[min(320px,90vw)] mr-auto">{content(false, true)}</div></DialogFrame>}
+  </>;
 }

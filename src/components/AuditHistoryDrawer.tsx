@@ -1,4 +1,5 @@
 "use client";
+import DialogFrame from "./ui/DialogFrame";
 
 import React, { useEffect, useState } from "react";
 import { X, Shield, Clock, FileText, RefreshCw, User } from "lucide-react";
@@ -49,7 +50,7 @@ export default function AuditHistoryDrawer({ isOpen, onClose }: AuditHistoryDraw
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-md animate-in fade-in duration-200">
+    <DialogFrame onClose={onClose} drawer>
       <div className="w-full max-w-xl glass-modal h-full shadow-glass-modal flex flex-col border-l border-white/80 animate-in slide-in-from-right duration-250">
         {/* Header */}
         <div className="bg-white/40 px-5 py-4 flex items-center justify-between border-b border-black/5">
@@ -72,6 +73,7 @@ export default function AuditHistoryDrawer({ isOpen, onClose }: AuditHistoryDraw
             </button>
             <button
               onClick={onClose}
+            aria-label="Tutup dialog"
               className="p-1.5 hover:bg-white/80 rounded-xl text-slate-700 hover:text-slate-900 transition-colors shadow-xs"
             >
               <X className="w-5 h-5" />
@@ -155,6 +157,6 @@ export default function AuditHistoryDrawer({ isOpen, onClose }: AuditHistoryDraw
           )}
         </div>
       </div>
-    </div>
+    </DialogFrame>
   );
 }

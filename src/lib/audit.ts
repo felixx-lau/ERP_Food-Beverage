@@ -62,7 +62,7 @@ export async function recordAuditLog(params: AuditParams) {
     return log;
   } catch (error) {
     console.error("Failed to record audit log:", error);
-    return null;
+    throw error;
   }
 }
 

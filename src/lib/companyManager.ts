@@ -81,15 +81,19 @@ export function getCompanies(): Company[] {
 export function saveCompanies(companies: Company[]): void {
   const filePath = getCompaniesFilePath();
   try {
-    fs.writeFileSync(filePath, JSON.stringify(companies, null, 2), "utf-8");
+    const temporary = `${filePath}.${crypto.randomUUID()}.tmp`;
+    fs.writeFileSync(temporary, JSON.stringify(companies, null, 2), "utf-8");
+    fs.renameSync(temporary, filePath);
   } catch (err) {
-    console.error("Error saving companies.json:", err);
+    throw err;
   }
 }
 
 export function getCompanyById(id: string): Company {
   const companies = getCompanies();
-  return companies.find((c) => c.id === id) || companies[0] || DEFAULT_COMPANY;
+  const company = companies.find((c) => c.id === id);
+  if (!company) throw new Error("Perusahaan tidak ditemukan.");
+  return company;
 }
 
 export function getDatabasePathForCompany(company: Company): string {
@@ -114,6 +118,7 @@ export async function createCompany(params: {
   adminEmail?: string;
   adminPassword?: string;
   cloneMode?: "clean" | "sample";
+  issuer?: { id:string; email:string; name:string; passwordHash:string };
 }): Promise<Company> {
   const companies = getCompanies();
   const slug = params.name
@@ -136,7 +141,8 @@ export async function createCompany(params: {
   if (!fs.existsSync(sourceDbPath)) {
     throw new Error(`Baseline database not found at ${sourceDbPath}`);
   }
-  fs.copyFileSync(sourceDbPath, targetDbPath);
+  const sourceClient = new PrismaClient({datasourceUrl:`file:${sourceDbPath}`});
+  try { await sourceClient.$executeRawUnsafe("VACUUM INTO ?", targetDbPath); } finally { await sourceClient.$disconnect(); }
 
   // If clean mode, clear all demo/transactional data so user starts from scratch
   if (params.cloneMode !== "sample") {
@@ -145,6 +151,11 @@ export async function createCompany(params: {
     });
 
     try {
+      await tempClient.requestIdentity.deleteMany();
+      await tempClient.documentSequence.deleteMany();
+      await tempClient.stockReservation.deleteMany();
+      await tempClient.vendorPrice.deleteMany();
+      await tempClient.posRefund.deleteMany();
       await tempClient.auditLog.deleteMany();
       await tempClient.internalTransferLine.deleteMany();
       await tempClient.internalTransfer.deleteMany();
@@ -175,6 +186,7 @@ export async function createCompany(params: {
       await tempClient.stockLevel.deleteMany();
       await tempClient.productVariant.deleteMany();
       await tempClient.contact.deleteMany();
+      await tempClient.account.updateMany({data:{openingBalance:0,currentBalance:0}});
 
       // If user specified custom admin credentials, register them
       if (params.adminEmail && params.adminName) {
@@ -208,6 +220,15 @@ export async function createCompany(params: {
     }
   }
 
+  if (params.issuer) {
+    const client = new PrismaClient({datasourceUrl:`file:${targetDbPath}`});
+    try {
+      await client.user.updateMany({data:{active:false,sessionVersion:{increment:1}}});
+      const email = params.adminEmail || params.issuer.email;
+      const passwordHash = params.adminPassword ? await bcrypt.hash(params.adminPassword,10) : params.issuer.passwordHash;
+      await client.user.upsert({where:{email},create:{name:params.adminName||params.issuer.name,email,passwordHash,role:Role.OWNER,active:true},update:{name:params.adminName||params.issuer.name,passwordHash,role:Role.OWNER,active:true,sessionVersion:0}});
+    } finally {await client.$disconnect();}
+  }
   const newCompany: Company = {
     id: companyId,
     name: params.name,
@@ -221,8 +242,9 @@ export async function createCompany(params: {
     createdAt: new Date().toISOString(),
   };
 
-  companies.push(newCompany);
-  saveCompanies(companies);
+  const latestCompanies = getCompanies();
+  latestCompanies.push(newCompany);
+  saveCompanies(latestCompanies);
 
   return newCompany;
 }
@@ -247,26 +269,6 @@ export function updateCompany(
   return updated;
 }
 
-export function deleteCompany(id: string): boolean {
-  if (id === "default") {
-    throw new Error("Perusahaan default (PT Rasa Aruna Bersama) tidak boleh dihapus.");
-  }
-
-  const companies = getCompanies();
-  const company = companies.find((c) => c.id === id);
-  if (!company) return false;
-
-  // Try to remove database file if it exists
-  try {
-    const dbPath = getDatabasePathForCompany(company);
-    if (fs.existsSync(dbPath)) {
-      fs.unlinkSync(dbPath);
-    }
-  } catch (err) {
-    console.error(`Failed to delete database file for company ${id}:`, err);
-  }
-
-  const filtered = companies.filter((c) => c.id !== id);
-  saveCompanies(filtered);
-  return true;
+export function deleteCompany(_id: string): boolean {
+  throw new Error('Penghapusan database perusahaan dinonaktifkan. Riwayat transaksi harus dipertahankan.');
 }

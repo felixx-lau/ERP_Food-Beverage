@@ -1,4 +1,5 @@
 "use client";
+import DialogFrame from "./ui/DialogFrame";
 
 import React, { useState } from "react";
 import { AlertTriangle, RotateCcw, X, CheckCircle, ShieldAlert } from "lucide-react";
@@ -59,7 +60,7 @@ export default function ResetSeedModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-4 animate-in fade-in duration-200">
+    <DialogFrame onClose={onClose}>
       <div className="glass-modal w-full max-w-lg rounded-3xl shadow-glass-modal overflow-hidden border border-white/80 animate-in zoom-in-95 duration-200">
         {/* Modal Header */}
         <div className="bg-rose-500/15 border-b border-rose-500/25 px-6 py-4 flex items-center justify-between">
@@ -69,6 +70,7 @@ export default function ResetSeedModal({
           </div>
           <button
             onClick={onClose}
+            aria-label="Tutup dialog"
             className="p-1 rounded-full text-slate-600 hover:text-slate-900 hover:bg-white/80 transition-colors shadow-xs"
           >
             <X className="w-5 h-5" />
@@ -138,6 +140,7 @@ export default function ResetSeedModal({
         <div className="bg-white/40 px-6 py-4 border-t border-black/5 flex justify-end space-x-3">
           <button
             onClick={onClose}
+            aria-label="Tutup dialog"
             disabled={loading}
             className="px-4 py-2 text-xs font-black btn-glass-secondary rounded-xl hover:-translate-y-0.5 transition-all"
           >
@@ -157,6 +160,6 @@ export default function ResetSeedModal({
           </button>
         </div>
       </div>
-    </div>
+    </DialogFrame>
   );
 }

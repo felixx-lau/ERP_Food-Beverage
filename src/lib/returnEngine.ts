@@ -1,3 +1,5 @@
+import { atomic } from "./atomic";
+import { permit, quantity, money, discount, uniqueLines, editable } from "./validation";
 import { prisma } from "./prisma";
 import { getNextSequence } from "./sequences";
 import { logAudit } from "./audit";
@@ -26,13 +28,15 @@ export interface InspectReturnLineInput {
 /**
  * 1. Buat Permintaan Retur Penjualan (S-15 / F-18)
  */
-export async function createReturnRequest(input: CreateReturnRequestInput) {
+async function createReturnRequestImpl(input: CreateReturnRequestInput) {
   const { invoiceId, lines, actor } = input;
+  permit(actor, ["OWNER","WAREHOUSE"]);
+  uniqueLines(lines, l => l.productSku); lines.forEach(l => quantity(l.returnedQty));
 
   return await prisma.$transaction(async (tx) => {
     const invoice = await tx.customerInvoice.findUnique({
       where: { id: invoiceId },
-      include: { lines: true, customer: true },
+      include: { lines: true, customer: true, salesOrder: { include: { lines: true } } },
     });
 
     if (!invoice) {
@@ -43,6 +47,8 @@ export async function createReturnRequest(input: CreateReturnRequestInput) {
       throw new Error("Baris barang retur tidak boleh kosong.");
     }
 
+    if (!invoice.isPosted || !["POSTED","PAID"].includes(invoice.status)) throw new Error("Retur memerlukan invoice yang sudah diposting.");
+    const previousReturns = await tx.returnRequest.findMany({ where: { invoiceId, status: { not: "REJECTED" } }, include: { lines: true } });
     const returnNumber = await getNextSequence("RET", tx);
     const returnLinesData = [];
 
@@ -56,7 +62,8 @@ export async function createReturnRequest(input: CreateReturnRequestInput) {
         throw new Error(`SKU ${item.productSku} tidak terdapat pada invoice ${invoice.invoiceNumber}.`);
       }
 
-      if (item.returnedQty > invLine.quantity) {
+      const used = previousReturns.reduce((sum,r) => sum + r.lines.filter(l => l.productSku === item.productSku).reduce((n,l) => n + (r.status === "DONE" ? l.acceptedQty : l.returnedQty), 0), 0);
+      if (item.returnedQty + used > invLine.quantity) {
         throw new Error(
           `Kuantitas retur (${item.returnedQty}) melebihi kuantitas pada faktur (${invLine.quantity}).`
         );
@@ -75,8 +82,8 @@ export async function createReturnRequest(input: CreateReturnRequestInput) {
         returnedQty: item.returnedQty,
         acceptedQty: 0,
         rejectedQty: 0,
-        unitSalesPrice: invLine.unitPrice,
-        unitStandardCost: product.standardCost,
+        unitSalesPrice: invLine.netPrice / invLine.quantity,
+        unitStandardCost: invoice.salesOrder.lines.find(l => l.productSku === item.productSku)!.standardCost,
       });
     }
 
@@ -118,11 +125,14 @@ export async function createReturnRequest(input: CreateReturnRequestInput) {
 /**
  * 2. Lakukan Pemeriksaan Kualitas Barang Retur (Warehouse Inspection / SR-11)
  */
-export async function inspectReturnRequest(
+async function inspectReturnRequestImpl(
   returnRequestId: string,
   inspections: InspectReturnLineInput[],
   actor: { id?: string; name: string; role: Role | string }
 ) {
+  permit(actor, ["OWNER","WAREHOUSE"]);
+  uniqueLines(inspections, l => l.productSku);
+  inspections.forEach(i => { quantity(i.acceptedQty, true); quantity(i.rejectedQty, true); });
   return await prisma.$transaction(async (tx) => {
     const returnReq = await tx.returnRequest.findUnique({
       where: { id: returnRequestId },
@@ -133,6 +143,8 @@ export async function inspectReturnRequest(
       throw new Error(`Permintaan retur ${returnRequestId} tidak ditemukan.`);
     }
 
+    if (!["DRAFT","CONFIRMED"].includes(returnReq.status)) throw new Error("Inspeksi retur yang selesai tidak boleh diubah.");
+    if (inspections.length !== returnReq.lines.length) throw new Error("Semua baris retur harus diperiksa.");
     let allAccepted = true;
     let anyAccepted = false;
 
@@ -201,17 +213,18 @@ export async function inspectReturnRequest(
 /**
  * 3. Eksekusi Restock dan Penerbitan Credit Note (SR-11 / T-29 / T-30)
  */
-export async function processReturnAndCreditNote(
+async function processReturnAndCreditNoteImpl(
   returnRequestId: string,
   actor: { id?: string; name: string; role: Role | string }
 ) {
+  permit(actor, ["OWNER","FINANCE"]);
   return await prisma.$transaction(async (tx) => {
     const returnReq = await tx.returnRequest.findUnique({
       where: { id: returnRequestId },
       include: {
         lines: { include: { product: true } },
         customer: true,
-        invoice: true,
+        invoice: { include: { lines: true } },
         creditNotes: true,
       },
     });
@@ -248,6 +261,7 @@ export async function processReturnAndCreditNote(
     let totalCostReversed = 0;
     const creditNoteLinesData = [];
 
+    const previousCredits = await tx.creditNote.findMany({ where: { returnRequest: { invoiceId: returnReq.invoiceId } }, include: { lines: true } });
     // 1. Kembalikan stok ke WH-JKT & hitung nilai pembalikan
     for (const line of acceptedLines) {
       // Tambah stok fisik on-hand di WH-JKT (T-29)
@@ -263,11 +277,15 @@ export async function processReturnAndCreditNote(
         },
       });
 
-      const netLine = line.acceptedQty * line.unitSalesPrice;
-      const pbjtLine = Math.round(netLine * 0.1); // SR-18
+      const original = returnReq.invoice.lines.find(l => l.productSku === line.productSku)!;
+      const creditedQty = previousCredits.reduce((sum,c) => sum + c.lines.filter(l => l.productSku === line.productSku).reduce((n,l) => n + l.quantity, 0), 0);
+      if (creditedQty + line.acceptedQty > original.quantity) throw new Error('Total retur melebihi kuantitas invoice (SR-11).');
+      const netLine = Math.round(original.netPrice * (creditedQty + line.acceptedQty) / original.quantity) - Math.round(original.netPrice * creditedQty / original.quantity);
+      const pbjtLine = Math.round(original.pbjtAmount * (creditedQty + line.acceptedQty) / original.quantity) - Math.round(original.pbjtAmount * creditedQty / original.quantity);
       const grossLine = netLine + pbjtLine;
       const costLine = line.acceptedQty * line.unitStandardCost;
 
+      await tx.stockMove.create({ data: { moveNumber: `SM/RET/${crypto.randomUUID()}`, productSku: line.productSku, sourceLocation: "Customer/Return", destLocation: "WH-JKT", quantity: line.acceptedQty, unitCost: line.unitStandardCost, totalValue: costLine, documentType: "RETURN", actorId: actor.id, reason: "RETURN", documentRef: returnReq.returnNumber } });
       totalCreditNet += netLine;
       totalCreditPbjt += pbjtLine;
       totalCreditGross += grossLine;
@@ -373,6 +391,7 @@ export async function processReturnAndCreditNote(
       include: { items: { include: { account: true } } },
     });
 
+    await tx.stockMove.updateMany({where:{documentRef:returnReq.returnNumber},data:{journalEntryId:journalEntryStock.id}});
     // Update CoA balances
     await tx.account.update({ where: { code: "1030" }, data: { currentBalance: { increment: totalCostReversed } } });
     await tx.account.update({ where: { code: "5010" }, data: { currentBalance: { decrement: totalCostReversed } } });
@@ -411,6 +430,7 @@ export async function processReturnAndCreditNote(
       actorName: actor.name,
       actorRole: actor.role as Role,
       action: "PROCESS_RETURN_AND_CREDIT_NOTE",
+    beforeData: returnReq,
       documentType: "CREDIT_NOTE",
       documentId: creditNote.id,
       documentNumber: creditNote.creditNoteNumber,
@@ -434,3 +454,9 @@ export async function processReturnAndCreditNote(
     };
   });
 }
+
+export const createReturnRequest = (...args: Parameters<typeof createReturnRequestImpl>) => atomic(() => createReturnRequestImpl(...args));
+
+export const inspectReturnRequest = (...args: Parameters<typeof inspectReturnRequestImpl>) => atomic(() => inspectReturnRequestImpl(...args));
+
+export const processReturnAndCreditNote = (...args: Parameters<typeof processReturnAndCreditNoteImpl>) => atomic(() => processReturnAndCreditNoteImpl(...args));

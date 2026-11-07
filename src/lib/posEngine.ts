@@ -1,3 +1,5 @@
+import { atomic } from "./atomic";
+import { permit, quantity, money, discount, uniqueLines, editable } from "./validation";
 import { prisma } from "./prisma";
 import { getNextSequence } from "./sequences";
 import { logAudit } from "./audit";
@@ -35,8 +37,11 @@ export interface CreatePosOrderInput {
 /**
  * Buka sesi kasir baru (F-17 / S-14)
  */
-export async function openPosSession(input: OpenSessionInput) {
+async function openPosSessionImpl(input: OpenSessionInput) {
   const { cashierId, locationCode = "CAFE-JKT", openingCash = 0, actor } = input;
+  permit(actor, ["OWNER", "CASHIER"]); money(openingCash);
+  if (actor.role !== "OWNER" && cashierId !== actor.id) throw new Error("Kasir sesi harus sesuai pengguna.");
+  if (!await prisma.warehouseLocation.findFirst({ where: { code: locationCode, archivedAt: null } })) throw new Error("Lokasi tidak terdaftar.");
 
   return await prisma.$transaction(async (tx) => {
     // Cek apakah ada sesi kasir yang masih OPEN untuk lokasi ini
@@ -45,23 +50,19 @@ export async function openPosSession(input: OpenSessionInput) {
     });
 
     if (existingOpen) {
+      if (actor.role !== "OWNER" && existingOpen.cashierId !== actor.id) throw new Error("Lokasi mempunyai sesi kasir lain yang masih terbuka.");
       return existingOpen;
     }
 
     const sessionCode = input.sessionCode || (await getNextSequence("SESSION", tx));
 
-    // Resolve valid cashier user ID
-    let validCashierId = cashierId;
     const userExists = await tx.user.findUnique({ where: { id: cashierId } });
-    if (!userExists) {
-      const cashierFallback = await tx.user.findFirst({ where: { role: Role.CASHIER } });
-      if (cashierFallback) validCashierId = cashierFallback.id;
-    }
+    if (!userExists?.active || !['OWNER','CASHIER'].includes(userExists.role)) throw new Error('Akun kasir tidak aktif atau tidak sesuai role.');
 
     const session = await tx.posSession.create({
       data: {
         sessionCode,
-        cashierId: validCashierId,
+        cashierId,
         locationCode,
         status: "OPEN",
         openingCash,
@@ -89,7 +90,7 @@ export async function openPosSession(input: OpenSessionInput) {
 /**
  * Transaksi Penjualan Point of Sale Gerai (F-16 / S-14 / T-27 / T-28)
  */
-export async function createPosOrder(input: CreatePosOrderInput) {
+async function createPosOrderImpl(input: CreatePosOrderInput) {
   const {
     sessionId,
     locationCode = "CAFE-JKT",
@@ -99,6 +100,10 @@ export async function createPosOrder(input: CreatePosOrderInput) {
     actor,
   } = input;
 
+  permit(actor, ["OWNER", "CASHIER"]);
+  uniqueLines(lines, l => l.productSku);
+  lines.forEach(l => { quantity(l.quantity); if (l.unitPrice !== undefined) money(l.unitPrice); });
+  if (!["QRIS / Bank","QRIS","BANK","CASH"].includes(paymentMethod)) throw new Error("Metode pembayaran tidak valid.");
   if (!lines || lines.length === 0) {
     throw new Error("Keranjang belanja POS tidak boleh kosong.");
   }
@@ -113,6 +118,7 @@ export async function createPosOrder(input: CreatePosOrderInput) {
       throw new Error(`Sesi POS ${sessionId} tidak aktif atau sudah ditutup.`);
     }
 
+    if (session.locationCode !== locationCode || (actor.role !== "OWNER" && session.cashierId !== actor.id)) throw new Error("Lokasi atau pemilik sesi POS tidak sesuai.");
     // 2. Evaluasi Stok & Hitung Keuangan (SR-03 vs SR-04 / T-28)
     let totalSubtotalNet = 0;
     let totalPbjt = 0;
@@ -130,7 +136,7 @@ export async function createPosOrder(input: CreatePosOrderInput) {
         where: { sku: item.productSku },
       });
 
-      if (!product) {
+      if (!product || product.archivedAt) {
         throw new Error(`Produk dengan SKU ${item.productSku} tidak ditemukan.`);
       }
 
@@ -145,13 +151,14 @@ export async function createPosOrder(input: CreatePosOrderInput) {
       });
 
       const onHand = stock?.onHand || 0;
-      if (item.quantity > onHand) {
+      if (item.quantity > onHand - (stock?.reserved || 0)) {
         throw new Error(
           `Validasi POS Gagal (SR-04 / T-28): Kuantitas pesanan (${item.quantity}) melebihi stok fisik On-Hand (${onHand}) di ${locationCode}. Stok minus dilarang.`
         );
       }
 
-      const unitPrice = item.unitPrice !== undefined ? item.unitPrice : product.salesPrice;
+      if (item.unitPrice !== undefined && item.unitPrice !== product.salesPrice) throw new Error("Harga POS harus sesuai harga SKU.");
+      const unitPrice = product.salesPrice;
       const netLine = item.quantity * unitPrice;
       // PBJT 10% round half-up per baris (SR-18)
       const pbjtLine = Math.round(netLine * 0.1);
@@ -221,6 +228,10 @@ export async function createPosOrder(input: CreatePosOrderInput) {
       });
     }
 
+    for (const mov of stockMovements) {
+      const product = orderLinesData.find(l => l.productSku === mov.sku)!;
+      await tx.stockMove.create({ data: { moveNumber: `SM/POS/${crypto.randomUUID()}`, productSku: mov.sku, sourceLocation: locationCode, destLocation: 'Customer/Output', quantity: mov.qty, unitCost: product.standardCost, totalValue: mov.qty * product.standardCost, documentType: 'POS', actorId: actor.id, reason: 'POS', documentRef: orderNumber } });
+    }
     // 5. Update Akumulasi Sesi POS
     await tx.posSession.update({
       where: { id: session.id },
@@ -282,6 +293,7 @@ export async function createPosOrder(input: CreatePosOrderInput) {
       },
     });
 
+    await tx.stockMove.updateMany({where:{documentRef:orderNumber},data:{journalEntryId:journalEntry.id}});
     // Update CoA balances
     await tx.account.update({ where: { code: "1010" }, data: { currentBalance: { increment: totalGross } } });
     await tx.account.update({ where: { code: "5010" }, data: { currentBalance: { increment: totalCost } } });
@@ -299,7 +311,8 @@ export async function createPosOrder(input: CreatePosOrderInput) {
       documentId: posOrder.id,
       documentNumber: posOrder.orderNumber,
       notes: `Order POS ${orderNumber} berhasil dicatat senilai Rp ${totalGross.toLocaleString("id-ID")} (Net Rp ${totalSubtotalNet.toLocaleString("id-ID")}, PBJT Rp ${totalPbjt.toLocaleString("id-ID")}). Stok berkurang dan jurnal diterbitkan.`,
-      afterData: posOrder,
+      beforeData: { sessionId, stock: stockMovements.map(m => ({sku:m.sku,onHand:m.before})) },
+      afterData: { ...posOrder, stock: stockMovements.map(m => ({sku:m.sku,onHand:m.after})) },
       tx,
     });
 
@@ -314,11 +327,12 @@ export async function createPosOrder(input: CreatePosOrderInput) {
 /**
  * Tutup sesi kasir dan hitung selisih kas (F-17 / T-28 / SR-14 / SR-13)
  */
-export async function closePosSession(
+async function closePosSessionImpl(
   sessionId: string,
   closingCash: number,
   actor: { id?: string; name: string; role: Role | string }
 ) {
+  permit(actor, ["OWNER","CASHIER"]); money(closingCash);
   return await prisma.$transaction(async (tx) => {
     const session = await tx.posSession.findUnique({
       where: { id: sessionId },
@@ -331,19 +345,22 @@ export async function closePosSession(
       throw new Error(`Sesi POS ${sessionId} tidak ditemukan.`);
     }
 
+    if (actor.role !== "OWNER" && session.cashierId !== actor.id) throw new Error("Sesi bukan milik kasir ini.");
     // SR-13 & SR-14: Idempotensi Penutupan Sesi
     if (session.status === "CLOSED" || session.isClosed) {
+      const log = await tx.auditLog.findFirst({where:{action:"CLOSE_POS_SESSION",documentId:session.id},orderBy:{timestamp:"desc"}});
+      const summary = log?.afterState ? JSON.parse(log.afterState) : null;
       return {
         success: true,
         alreadyClosed: true,
         message: `Sesi ${session.sessionCode} sudah ditutup sebelumnya. Penutupan ulang tidak membuat jurnal ganda.`,
         session,
-        difference: session.closingCash - (session.openingCash + session.totalSales),
+        difference: summary?.difference ?? session.closingCash - (session.openingCash + (summary?.orders || session.orders).filter((o:any) => /cash|tunai/i.test(o.paymentMethod)).reduce((sum:number,o:any) => sum + o.totalAmount, 0)),
       };
     }
 
     const cashOrders = session.orders.filter((o) =>
-      o.paymentMethod.toLowerCase().includes("cash") || o.paymentMethod.toLowerCase().includes("tunai")
+      o.status === "PAID" && (o.paymentMethod.toLowerCase().includes("cash") || o.paymentMethod.toLowerCase().includes("tunai"))
     );
     const cashSales = cashOrders.reduce((sum, o) => sum + o.totalAmount, 0);
 
@@ -373,7 +390,7 @@ export async function closePosSession(
       documentNumber: closedSession.sessionCode,
       notes: `Sesi ${closedSession.sessionCode} ditutup. Modal Awal: Rp ${session.openingCash.toLocaleString("id-ID")}, Total Penjualan: Rp ${session.totalSales.toLocaleString("id-ID")}, Kas Fisik Aktual: Rp ${closingCash.toLocaleString("id-ID")}, Selisih Kas: Rp ${difference.toLocaleString("id-ID")}.`,
       beforeData: session,
-      afterData: closedSession,
+      afterData: { ...closedSession, expectedCash, cashSales, difference },
       tx,
     });
 
@@ -386,3 +403,9 @@ export async function closePosSession(
     };
   });
 }
+
+export const openPosSession = (...args: Parameters<typeof openPosSessionImpl>) => atomic(() => openPosSessionImpl(...args));
+
+export const createPosOrder = (...args: Parameters<typeof createPosOrderImpl>) => atomic(() => createPosOrderImpl(...args));
+
+export const closePosSession = (...args: Parameters<typeof closePosSessionImpl>) => atomic(() => closePosSessionImpl(...args));

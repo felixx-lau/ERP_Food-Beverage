@@ -1,6 +1,10 @@
 "use client";
+import DialogFrame from "@/components/ui/DialogFrame";
 
 import React, { useState, useEffect } from "react";
+import DocumentControls from "@/components/DocumentControls";
+import DocumentList from "@/components/DocumentList";
+import DocumentTrail from "@/components/DocumentTrail";
 import AppLayout from "@/components/AppLayout";
 import StatusBadge from "@/components/StatusBadge";
 import KPICard from "@/components/KPICard";
@@ -8,6 +12,7 @@ import { ArrowRightLeft, Play, Plus, CheckCircle2, Lock, Package, Building, MapP
 import Link from "next/link";
 
 export default function InternalTransfersPage() {
+  const [locations,setLocations]=useState<any[]>([]);
   const [user, setUser] = useState<any>(null);
   const [transfers, setTransfers] = useState<any[]>([]);
   const [selectedTransfer, setSelectedTransfer] = useState<any>(null);
@@ -41,7 +46,7 @@ export default function InternalTransfersPage() {
         const data = await res.json();
         setTransfers(data.transfers || []);
         if (data.transfers?.length > 0 && !selectedTransfer) {
-          setSelectedTransfer(data.transfers[0]);
+          setSelectedTransfer(data.transfers.find((r: any) => r.id === new URLSearchParams(window.location.search).get("id")) || data.transfers[0]);
         }
       }
     } finally {
@@ -62,6 +67,7 @@ export default function InternalTransfersPage() {
   };
 
   useEffect(() => {
+    fetch("/api/master/options").then(r=>r.json()).then(d=>setLocations(d.locations||[]));
     fetchSession();
     fetchTransfers();
     fetchProducts();
@@ -227,7 +233,7 @@ export default function InternalTransfersPage() {
       currentUser={user}
       onSwitchRole={handleSwitchRole}
       breadcrumbs={[{ label: "Persediaan & Gudang" }, { label: "Transfer Antar Lokasi" }]}
-      title="Internal Stock Transfers"
+      title="Transfer stok"
       subtitle="Mutasi Perpindahan Stok Antar Gudang WH-JKT & Gerai CAFE-JKT Tanpa Mengubah Valuasi Total (F-19, SR-04, SR-12)"
       wireframe="Wireframe S-07"
       actions={
@@ -242,6 +248,10 @@ export default function InternalTransfersPage() {
         </div>
       }
     >
+      <DocumentList records={transfers} selectedId={selectedTransfer?.id} onSelect={(id: string) => setSelectedTransfer(transfers.find(t => t.id === id))}/>
+
+      {selectedTransfer && <DocumentControls kind="transfers" record={selectedTransfer} role={user?.role} onChanged={async () => { await fetchTransfers(); }} />}
+
       {/* Transfer Selector Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-[#E5E9E4] shadow-xs">
         <div className="flex items-center space-x-2">
@@ -379,11 +389,11 @@ export default function InternalTransfersPage() {
               <table className="w-full text-left text-xs">
                 <thead className="bg-[#f1f5f9] border-b border-[#E5E9E4] text-[#64748b] font-semibold uppercase tracking-wider text-[11px]">
                   <tr>
-                    <th className="py-3 px-4">SKU Produk</th>
-                    <th className="py-3 px-4">Deskripsi Produk</th>
-                    <th className="py-3 px-4 text-center">Kuantitas Transfer</th>
-                    <th className="py-3 px-4 text-right">Standard Cost</th>
-                    <th className="py-3 px-4 text-right">Total Nilai Pindah</th>
+                    <th scope="col" className="py-3 px-4">SKU Produk</th>
+                    <th scope="col" className="py-3 px-4">Deskripsi Produk</th>
+                    <th scope="col" className="py-3 px-4 text-center">Kuantitas Transfer</th>
+                    <th scope="col" className="py-3 px-4 text-right">Standard Cost</th>
+                    <th scope="col" className="py-3 px-4 text-right">Total Nilai Pindah</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#E5E9E4] font-mono">
@@ -407,7 +417,7 @@ export default function InternalTransfersPage() {
 
       {/* Modal Buat Transfer */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in">
+        <DialogFrame onClose={() => setShowModal(false)}>
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-[#E5E9E4] space-y-4">
             <h2 className="text-lg font-bold text-[#0f172a] flex items-center space-x-2">
               <ArrowRightLeft className="w-5 h-5 text-[#1d4ed8]" />
@@ -423,8 +433,7 @@ export default function InternalTransfersPage() {
                     onChange={(e) => setSrcLoc(e.target.value)}
                     className="w-full border border-[#E5E9E4] rounded-lg p-2 font-mono bg-white text-[#0f172a]"
                   >
-                    <option value="WH-JKT">WH-JKT (Gudang)</option>
-                    <option value="CAFE-JKT">CAFE-JKT (Gerai)</option>
+                    {locations.map(l=><option key={l.code} value={l.code}>{l.code} · {l.name}</option>)}
                   </select>
                 </div>
                 <div>
@@ -434,8 +443,7 @@ export default function InternalTransfersPage() {
                     onChange={(e) => setDstLoc(e.target.value)}
                     className="w-full border border-[#E5E9E4] rounded-lg p-2 font-mono bg-white text-[#0f172a]"
                   >
-                    <option value="CAFE-JKT">CAFE-JKT (Gerai)</option>
-                    <option value="WH-JKT">WH-JKT (Gudang)</option>
+                    {locations.map(l=><option key={l.code} value={l.code}>{l.code} · {l.name}</option>)}
                   </select>
                 </div>
               </div>
@@ -485,11 +493,11 @@ export default function InternalTransfersPage() {
               </button>
             </div>
           </div>
-        </div>
+        </DialogFrame>
       )}
 
       {/* Collapsible QA Test Runner for T-13 & T-14 */}
-      <details className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
+      <details hidden className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
         <summary className="cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white select-none">
           <div className="flex items-center space-x-2">
             <span className="px-2 py-0.5 rounded-md bg-[#7c3aed] text-[#ffffff] font-bold text-[10px] uppercase">
@@ -562,6 +570,7 @@ export default function InternalTransfersPage() {
           )}
         </div>
       </details>
+      {selectedTransfer && <DocumentTrail kind="transfers" record={selectedTransfer}/>}
     </AppLayout>
   );
 }

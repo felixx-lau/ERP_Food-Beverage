@@ -1,6 +1,12 @@
 "use client";
+import DialogFrame from "@/components/ui/DialogFrame";
 
 import React, { useState, useEffect } from "react";
+import CreateInvoiceModal from "@/components/CreateInvoiceModal";
+import DocumentControls from "@/components/DocumentControls";
+import DocumentList from "@/components/DocumentList";
+import FinancialCorrection from "@/components/FinancialCorrection";
+import DocumentTrail from "@/components/DocumentTrail";
 import AppLayout from "@/components/AppLayout";
 import StatusBadge from "@/components/StatusBadge";
 import KPICard from "@/components/KPICard";
@@ -260,12 +266,13 @@ export default function CustomerInvoicesPage() {
       currentUser={user}
       onSwitchRole={handleSwitchRole}
       breadcrumbs={[{ label: "Keuangan & Akuntansi" }, { label: "Customer Invoices" }]}
-      title="Customer Invoices & PBJT 10%"
+      title="Faktur pelanggan"
       subtitle="Faktur Tagihan Pelanggan Berbasis Kuantitas Terkirim (Delivery-Based Invoicing) & Pajak PBJT Restoran (F-09, F-22, SR-02, SR-18)"
       wireframe="Wireframe S-10"
       actions={
         <div className="flex items-center space-x-2">
           <button
+            hidden={!["OWNER","FINANCE"].includes(user?.role)}
             onClick={() => setShowCreateModal(true)}
             className="inline-flex items-center space-x-1.5 px-3.5 py-2 btn-glass-primary text-white rounded-xl text-xs font-bold shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
           >
@@ -275,6 +282,12 @@ export default function CustomerInvoicesPage() {
         </div>
       }
     >
+      {["OWNER","FINANCE"].includes(user?.role) && selectedInvoice?.isPosted && selectedInvoice?.status !== "CANCELLED" && <FinancialCorrection kind="invoices" record={selectedInvoice} onChanged={async()=>{await fetchInvoices();await fetchInvoiceDetail(selectedInvoice.id);}}/>}
+
+      <DocumentList records={invoices} selectedId={selectedInvoice?.id} onSelect={fetchInvoiceDetail}/>
+
+      {selectedInvoice && <DocumentControls kind="invoices" record={selectedInvoice} role={user?.role} onChanged={async () => { await fetchInvoices(); await fetchInvoiceDetail(selectedInvoice.id); }} />}
+
       {/* Invoice Selector Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 glass-2 p-4 rounded-2xl border border-white/80 shadow-glass-2">
         <div className="flex items-center space-x-2">
@@ -432,13 +445,13 @@ export default function CustomerInvoicesPage() {
               <table className="w-full text-left text-xs">
                 <thead className="bg-white/60 border-b border-black/10 text-slate-700 font-bold uppercase tracking-wider text-[11px]">
                   <tr>
-                    <th className="py-3.5 px-4">SKU</th>
-                    <th className="py-3.5 px-4">Deskripsi Produk</th>
-                    <th className="py-3.5 px-4 text-center">Invoiced Qty</th>
-                    <th className="py-3.5 px-4 text-right">Harga Satuan</th>
-                    <th className="py-3.5 px-4 text-right">Net Subtotal</th>
-                    <th className="py-3.5 px-4 text-right">PBJT 10%</th>
-                    <th className="py-3.5 px-4 text-right">Total Baris</th>
+                    <th scope="col" className="py-3.5 px-4">SKU</th>
+                    <th scope="col" className="py-3.5 px-4">Deskripsi Produk</th>
+                    <th scope="col" className="py-3.5 px-4 text-center">Invoiced Qty</th>
+                    <th scope="col" className="py-3.5 px-4 text-right">Harga Satuan</th>
+                    <th scope="col" className="py-3.5 px-4 text-right">Net Subtotal</th>
+                    <th scope="col" className="py-3.5 px-4 text-right">PBJT 10%</th>
+                    <th scope="col" className="py-3.5 px-4 text-right">Total Baris</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-black/5 font-mono">
@@ -498,70 +511,9 @@ export default function CustomerInvoicesPage() {
         </div>
       )}
 
-      {/* Modal Buat Invoice Baru */}
-      {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
-            <h2 className="text-lg font-bold text-slate-900 flex items-center space-x-2">
-              <Receipt className="w-5 h-5 text-[#1d4ed8]" />
-              <span>Terbitkan Customer Invoice</span>
-            </h2>
-            <p className="text-xs text-slate-600">
-              Pilih Sales Order yang telah terkirim (Delivered) untuk menerbitkan faktur tagihan sesuai SR-02.
-            </p>
-
-            <div className="space-y-3.5 text-xs">
-              <div>
-                <label className="font-semibold text-slate-800 block mb-1">Pilih Sales Order:</label>
-                <select
-                  value={selectedSoId}
-                  onChange={(e) => setSelectedSoId(e.target.value)}
-                  className="w-full border border-slate-200 rounded-lg p-2 font-mono bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#1d4ed8]"
-                >
-                  <option value="">-- Pilih Sales Order --</option>
-                  {salesOrders.map((so) => (
-                    <option key={so.id} value={so.id}>
-                      {so.orderNumber} — {so.contact?.name || so.customer?.name || "Pelanggan"} ({so.status})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="font-semibold text-slate-800 block mb-1">Kuantitas Ditagihkan (Invoiced Qty):</label>
-                <input
-                  type="number"
-                  value={customInvoicedQty}
-                  onChange={(e) => setCustomInvoicedQty(Number(e.target.value))}
-                  min={1}
-                  className="w-full border border-slate-200 rounded-lg p-2 font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#1d4ed8]"
-                />
-                <p className="text-[11px] text-slate-500 mt-1">
-                  * Catatan: Sistem akan menolak jika kuantitas melebihi barang yang telah terkirim (delivered qty SR-02).
-                </p>
-              </div>
-            </div>
-
-            <div className="flex justify-end space-x-2 pt-4 border-t border-slate-200">
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="px-4 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50"
-              >
-                Batal
-              </button>
-              <button
-                onClick={handleCreateInvoice}
-                className="px-4 py-2 bg-[#1d4ed8] hover:bg-[#1e3a8a] text-white rounded-lg text-xs font-semibold shadow-xs transition-colors"
-              >
-                Terbitkan Faktur
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
+      {showCreateModal&&<CreateInvoiceModal onClose={()=>setShowCreateModal(false)} onCreated={async invoice=>{setShowCreateModal(false);await fetchInvoices();await fetchInvoiceDetail(invoice.id);}}/>}
       {/* Collapsible QA Test Runner for T-19 & T-20 */}
-      <details className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
+      <details hidden className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
         <summary className="cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white select-none">
           <div className="flex items-center space-x-2">
             <span className="px-2 py-0.5 rounded-md bg-[#7c3aed] text-slate-900 font-bold text-[10px] uppercase">
@@ -631,6 +583,7 @@ export default function CustomerInvoicesPage() {
           )}
         </div>
       </details>
+      {selectedInvoice && <DocumentTrail kind="invoices" record={selectedInvoice}/>}
     </AppLayout>
   );
 }

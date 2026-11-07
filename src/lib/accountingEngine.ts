@@ -1,3 +1,5 @@
+import { atomic } from "./atomic";
+import { permit, quantity, money, discount, uniqueLines, editable } from "./validation";
 import { prisma } from "./prisma";
 import { Role } from "@prisma/client";
 import { recordAuditLog } from "./audit";
@@ -9,13 +11,15 @@ export interface InvoiceLineInput {
   unitPrice?: number;
 }
 
-export async function createCustomerInvoice(params: {
+async function createCustomerInvoiceImpl(params: {
   salesOrderId: string;
   deliveryOrderId?: string;
   lines: InvoiceLineInput[];
   actor: { id: string; name: string; role: Role };
 }) {
   const { salesOrderId, deliveryOrderId, lines: lineInputs, actor } = params;
+  uniqueLines(lineInputs, l => l.productSku);
+  lineInputs.forEach(l => { quantity(l.quantity); if (l.unitPrice !== undefined) money(l.unitPrice); });
 
   // Role check: FINANCE or OWNER (SR-15)
   if (actor.role !== Role.FINANCE && actor.role !== Role.OWNER) {
@@ -33,6 +37,7 @@ export async function createCustomerInvoice(params: {
   });
 
   if (!order) throw new Error("Sales Order tidak ditemukan.");
+  if (order.status !== "CONFIRMED") throw new Error("SO harus Confirmed.");
 
   // SR-01 vs SR-02 & F-09: DELIVERY-BASED INVOICING VALIDATION (T-19, T-20)
   // Max billable quantity is strictly based on VALIDATED DELIVERED quantity, minus already invoiced
@@ -73,7 +78,8 @@ export async function createCustomerInvoice(params: {
       );
     }
 
-    const price = item.unitPrice !== undefined ? item.unitPrice : soLine.unitPrice;
+    if (item.unitPrice !== undefined && item.unitPrice !== soLine.unitPrice) throw new Error("Harga invoice harus mengikuti SO terkunci.");
+    const price = soLine.unitPrice;
     const discount = soLine.discountPercent || 0;
     const net = Math.round(item.quantity * price * (1 - discount / 100));
     const pbjt = Math.round(net * 0.1); // PBJT 10% round half-up per baris
@@ -132,6 +138,7 @@ export async function createCustomerInvoice(params: {
     actorName: actor.name,
     actorRole: actor.role,
     action: "CREATE_CUSTOMER_INVOICE",
+    afterData: invoice,
     documentType: "CUSTOMER_INVOICE",
     documentId: invoice.invoiceNumber,
     notes: `Draft Invoice ${invoice.invoiceNumber} dibuat untuk SO ${order.orderNumber} (Gross: Rp ${totalGross.toLocaleString("id-ID")}).`,
@@ -140,7 +147,7 @@ export async function createCustomerInvoice(params: {
   return invoice;
 }
 
-export async function postCustomerInvoice(invoiceId: string, actor: { id: string; name: string; role: Role }) {
+async function postCustomerInvoiceImpl(invoiceId: string, actor: { id: string; name: string; role: Role }) {
   // Role check: FINANCE or OWNER (SR-15)
   if (actor.role !== Role.FINANCE && actor.role !== Role.OWNER) {
     throw new Error("Akses ditolak (SR-15): Hanya Finance atau Owner yang berwenang memposting Customer Invoice.");
@@ -168,12 +175,20 @@ export async function postCustomerInvoice(invoiceId: string, actor: { id: string
     };
   }
 
+  editable(invoice.status);
+  uniqueLines(invoice.lines, l => l.productSku);
+  for (const line of invoice.lines) {
+    quantity(line.quantity); money(line.unitPrice);
+    const source = invoice.salesOrder.lines.find(l => l.productSku === line.productSku);
+    if (!source || line.quantity > source.deliveredQty - source.invoicedQty || source.unitPrice !== line.unitPrice || source.discountPercent !== line.discountPercent) throw new Error('Invoice melebihi delivered yang belum ditagih atau harga SO berubah (SR-02).');
+  }
   const result = await prisma.$transaction(async (tx) => {
     // 1. Update invoice status to POSTED
     const postedInvoice = await tx.customerInvoice.update({
       where: { id: invoice.id },
       data: {
         status: "POSTED",
+        version: { increment: 1 },
         isPosted: true,
         postedAt: new Date(),
       },
@@ -254,6 +269,7 @@ export async function postCustomerInvoice(invoiceId: string, actor: { id: string
     actorName: actor.name,
     actorRole: actor.role,
     action: "POST_CUSTOMER_INVOICE",
+    beforeData: invoice,
     documentType: "CUSTOMER_INVOICE",
     documentId: invoice.invoiceNumber,
     afterState: {
@@ -272,7 +288,7 @@ export async function postCustomerInvoice(invoiceId: string, actor: { id: string
   };
 }
 
-export async function registerCustomerPayment(params: {
+async function registerCustomerPaymentImpl(params: {
   invoiceId: string;
   paymentMethod: string; // BANK, CASH, QRIS
   amount: number;
@@ -281,6 +297,8 @@ export async function registerCustomerPayment(params: {
   actor: { id: string; name: string; role: Role };
 }) {
   const { invoiceId, paymentMethod, amount, paymentDate, notes, actor } = params;
+  money(amount);
+  if (!["BANK","CASH","QRIS"].includes(paymentMethod)) throw new Error("Metode pembayaran tidak valid.");
 
   // Role check: FINANCE or OWNER (SR-15)
   if (actor.role !== Role.FINANCE && actor.role !== Role.OWNER) {
@@ -335,7 +353,7 @@ export async function registerCustomerPayment(params: {
     });
 
     // 2. Create Payment Record
-    const paymentNumber = `PAY/2026/${Date.now().toString().slice(-4)}`;
+    const paymentNumber = `PAY/${new Date().getFullYear()}/${crypto.randomUUID()}`;
     const payment = await tx.payment.create({
       data: {
         paymentNumber,
@@ -392,7 +410,7 @@ export async function registerCustomerPayment(params: {
       data: { currentBalance: { decrement: amount } },
     });
 
-    return { updatedInvoice, payment, journalEntry, newOutstanding };
+    return { updatedInvoice, payment, journalEntry, newOutstanding, remainingBalance: newOutstanding };
   });
 
   await recordAuditLog({
@@ -400,6 +418,7 @@ export async function registerCustomerPayment(params: {
     actorName: actor.name,
     actorRole: actor.role,
     action: "REGISTER_PAYMENT",
+    beforeData: invoice,
     documentType: "PAYMENT",
     documentId: result.payment.paymentNumber,
     afterState: {
@@ -412,4 +431,28 @@ export async function registerCustomerPayment(params: {
   });
 
   return result;
+}
+
+export const createCustomerInvoice = (...args: Parameters<typeof createCustomerInvoiceImpl>) => atomic(() => createCustomerInvoiceImpl(...args));
+
+export const postCustomerInvoice = (...args: Parameters<typeof postCustomerInvoiceImpl>) => atomic(() => postCustomerInvoiceImpl(...args));
+
+export const registerCustomerPayment = (...args: Parameters<typeof registerCustomerPaymentImpl>) => atomic(() => registerCustomerPaymentImpl(...args));
+
+export async function registerVendorPayment(params: { billId: string; amount: number; paymentMethod: string; paymentDate?: Date; notes?: string; actor: { id: string; name: string; role: Role } }) {
+  permit(params.actor, ['OWNER','FINANCE']); money(params.amount);
+  if (!params.amount || !['BANK','CASH','QRIS'].includes(params.paymentMethod)) throw new Error('Jumlah atau metode pembayaran tidak valid.');
+  return atomic(async () => {
+    const bill = await prisma.vendorBill.findFirst({ where: { OR: [{ id: params.billId }, { billNumber: params.billId }] } });
+    if (!bill || bill.status !== 'POSTED') throw new Error('Vendor Bill harus Posted dan belum lunas.');
+    if (params.amount > bill.outstandingAmount) throw new Error('Pembayaran melebihi outstanding (SR-19).');
+    const remainingBalance = bill.outstandingAmount - params.amount;
+    const updatedBill = await prisma.vendorBill.update({ where: { id: bill.id }, data: { paidAmount: { increment: params.amount }, outstandingAmount: remainingBalance, status: remainingBalance ? 'POSTED' : 'PAID' } });
+    const payment = await prisma.payment.create({ data: { paymentNumber: `PAY/${new Date().getFullYear()}/${crypto.randomUUID()}`, paymentType: 'VENDOR_OUTBOUND', billId: bill.id, vendorId: bill.vendorId, amount: params.amount, paymentMethod: params.paymentMethod, paymentDate: params.paymentDate || new Date(), notes: params.notes } });
+    const journalEntry = await prisma.journalEntry.create({ data: { entryNumber: await getNextSequence('JE'), sourceDocument: payment.paymentNumber, documentRef: `PAY_${payment.paymentNumber}`, journalType: 'BANK', items: { create: [{ accountCode: '2010', label: payment.paymentNumber, debit: params.amount, credit: 0, partnerId: bill.vendorId }, { accountCode: '1010', label: payment.paymentNumber, debit: 0, credit: params.amount }] } }, include: { items: true } });
+    await prisma.account.update({ where: { code: '2010' }, data: { currentBalance: { decrement: params.amount } } });
+    await prisma.account.update({ where: { code: '1010' }, data: { currentBalance: { decrement: params.amount } } });
+    await recordAuditLog({ actorId: params.actor.id, actorName: params.actor.name, actorRole: params.actor.role, action: 'REGISTER_VENDOR_PAYMENT', documentType: 'PAYMENT', documentId: payment.paymentNumber, beforeData: { outstanding: bill.outstandingAmount }, afterData: { remainingBalance, billId: bill.id, journalId: journalEntry.id } });
+    return { updatedBill, payment, journalEntry, remainingBalance, newOutstanding: remainingBalance };
+  });
 }

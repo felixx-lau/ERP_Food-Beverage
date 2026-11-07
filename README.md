@@ -29,7 +29,7 @@ Sistem mengintegrasikan seluruh alur bisnis secara *end-to-end* dengan data pers
 * **Frontend Framework:** [Next.js 15](https://nextjs.org/) (App Router, Server Components & Client Interactive Components).
 * **Programming Language:** [TypeScript 5](https://www.typescriptlang.org/) (Strict typing across domain models).
 * **Database & ORM:** [Prisma ORM](https://www.prisma.io/) dengan database relasional persisten **SQLite** (`prisma/erp.db`).
-* **Styling & UI Components:** [Tailwind CSS](https://tailwindcss.com/) dengan Odoo 17.0 visual aesthetics (Palet ungu khas `#714B67`, App Switcher, breadcrumb, status bar dokumen, Log Notes, dan Smart Buttons).
+* **Styling & UI Components:** [Tailwind CSS](https://tailwindcss.com/) dengan Odoo 17.0 visual aesthetics (Palet biru dan ungu, App Switcher, breadcrumb, status bar dokumen, Log Notes, dan Smart Buttons).
 * **Autentikasi & RBAC:** JSON Web Token (JWT) berbasis `jose`, *stateless cookie*, password terenkripsi `bcryptjs`, dan *backend role-based authorization*.
 * **Pajak Daerah:** PBJT (Pajak Barang dan Jasa Tertentu) Makanan & Minuman 10% dihitung per baris penjualan setelah diskon (pembulatan *half up* ke Rupiah terdekat).
 
@@ -41,14 +41,14 @@ Sistem menyediakan 6 akun pengguna pengujian bawaan sesuai tabel peran tugas:
 
 | No | Role | Nama Pengguna | Email Login | Password Default | Tanggung Jawab & Hak Akses |
 | :-: | :--- | :--- | :--- | :--- | :--- |
-| 1 | **OWNER** | Maya Prasetyo | `owner@rasaaruna.com` | `password123` | Akses penuh (*Full Access*) ke seluruh 8 aplikasi, approval diskon > 10%, otorisasi Reset Seed. |
-| 2 | **SALES** | Dini Anggraini | `sales@rasaaruna.com` | `password123` | Manajemen CRM Leads, Kontak Pelanggan, Pembuatan Quotation, Konfirmasi SO (diskon maks 10%). |
-| 3 | **WAREHOUSE** | Sinta Maharani | `warehouse@rasaaruna.com` | `password123` | Master Produk, Surat Jalan (Delivery Order), Penerimaan Barang (Goods Receipt), Internal Transfer. |
-| 4 | **PROCUREMENT** | Arief Wicaksono | `procurement@rasaaruna.com` | `password123` | Permintaan Penawaran (RFQ), Konfirmasi Purchase Order (PO), monitoring penerimaan barang. |
-| 5 | **FINANCE** | Reza Firdaus | `finance@rasaaruna.com` | `password123` | Customer Invoice, Vendor Bill, 3-Way Match, Pembayaran (Payments), General Ledger & Rekonsiliasi. |
-| 6 | **CASHIER** | Bagas Putra | `cashier@rasaaruna.com` | `password123` | Kasir Point of Sale (POS) Gerai CAFE-JKT, pembukaan dan penutupan sesi kasir. *Dilarang akses GL (SR-15).* |
+| 1 | **OWNER** | Maya Prasetyo | `owner@rasaaruna.com` | `Password123!` | Akses penuh (*Full Access*) ke seluruh 8 aplikasi, approval diskon > 10%, otorisasi Reset Seed. |
+| 2 | **SALES** | Dini Anggraini | `sales@rasaaruna.com` | `Password123!` | Manajemen CRM Leads, Kontak Pelanggan, Pembuatan Quotation, Konfirmasi SO (diskon maks 10%). |
+| 3 | **WAREHOUSE** | Sinta Maharani | `warehouse@rasaaruna.com` | `Password123!` | Master Produk, Surat Jalan (Delivery Order), Penerimaan Barang (Goods Receipt), Internal Transfer. |
+| 4 | **PROCUREMENT** | Arief Wicaksono | `procurement@rasaaruna.com` | `Password123!` | Permintaan Penawaran (RFQ), Konfirmasi Purchase Order (PO), monitoring penerimaan barang. |
+| 5 | **FINANCE** | Reza Firdaus | `finance@rasaaruna.com` | `Password123!` | Customer Invoice, Vendor Bill, 3-Way Match, Pembayaran (Payments), General Ledger & Rekonsiliasi. |
+| 6 | **CASHIER** | Bagas Putra | `cashier@rasaaruna.com` | `Password123!` | Kasir Point of Sale (POS) Gerai CAFE-JKT, pembukaan dan penutupan sesi kasir. *Dilarang akses GL (SR-15).* |
 
-> **Catatan Penguji:** Penguji dapat berganti role secara instan melalui *Role Switcher Dropdown* di sudut kanan atas navbar tanpa perlu logout manual.
+> **Akses akun:** gunakan logout dan login dengan kredensial role yang dituju. Pergantian role tanpa password dan reset/demo seed dinonaktifkan pada aplikasi operasional. JWT_SECRET produksi wajib unik, minimal 32 karakter.
 
 ---
 
@@ -74,16 +74,15 @@ Sistem menyediakan 6 akun pengguna pengujian bawaan sesuai tabel peran tugas:
    Pastikan file `.env` tersedia dengan isi:
    ```env
    DATABASE_URL="file:./erp.db"
-   JWT_SECRET="rasa-aruna-kitchen-secure-jwt-token-key-2026"
+   JWT_SECRET="<buat-secret-acak-unik-minimal-32-karakter>"
    ```
 
-4. **Migrasi Database & Baseline Seed:**
-   Jalankan inisialisasi schema dan isi dataset awal standar skenario:
+4. **Database yang sudah berisi data:**
    ```bash
-   npx prisma db push
-   npx tsx scripts/seed.ts
+   npm run db:migrate:check
+   npm run db:migrate
    ```
-   *Output akan mengonfirmasi pemuatan 15 SKU, 6 pelanggan, 4 vendor, 15 akun CoA, total stok 616 unit, valuasi Rp 12.214.000, dan jurnal saldo awal seimbang.*
+   Migrasi diuji pada salinan dahulu, lalu membuat backup sebelum penerapan. Jangan menjalankan `db push` atau seed pada database bisnis yang sudah dipakai. Database baru dapat diinisialisasi dengan schema Prisma, tetapi baseline seed mengganti seluruh isi target dan membutuhkan flag `ALLOW_BASELINE_REPLACE=I_UNDERSTAND_THIS_REPLACES_DATA` yang disengaja.
 
 5. **Jalankan Server Pengembang:**
    ```bash
@@ -101,22 +100,19 @@ Sistem menyediakan 6 akun pengguna pengujian bawaan sesuai tabel peran tugas:
 
 ## 5. Cara Menjalankan Automated Test Suites (T-01 s.d. T-32)
 
-Seluruh 32 test case yang diwajibkan skenario PDF dapat diuji secara otomatis dan menyeluruh melalui script pengujian:
+Pengujian mutasi dijalankan pada proyek dan database sementara; database perusahaan asli diperiksa hash-nya sebelum dan sesudah pengujian.
 
 ```bash
-# 1. Menjalankan seluruh regression test dari Tahap 2 hingga Tahap 8:
-npx tsx scripts/seed.ts && \
-npx tsx scripts/test_phase2_3.ts && \
-npx tsx scripts/test_phase4.ts && \
-npx tsx scripts/test_phase5.ts && \
-npx tsx scripts/test_phase6.ts && \
-npx tsx scripts/test_phase7.ts && \
-npx tsx scripts/seed.ts && \
-npx tsx scripts/test_phase8.ts && \
-npx tsx scripts/seed.ts
+npm test
+# Termasuk build produksi pada salinan terpisah:
+python3 scripts/verify_isolated.py --suites test_crud test_pdf_cases test_integrity --audit-probes --build
 ```
 
-Setiap test case memvalidasi kondisi `Given / When / Then`, integritas relasi tabel, dan aturan bisnis `SR-01` sampai `SR-20`. Rincian hasil dapat dilihat pada file [docs/reports/TEST_RESULTS.md](./docs/reports/TEST_RESULTS.md).
+T01–T32 dimulai dari baseline baru per kasus pada suite `test_pdf_cases`. Ini membuktikan perilaku layanan/API, bukan sertifikasi seluruh tampilan browser atau hosting publik. Bukti terbaru dan batas verifikasi tercantum di [laporan implementasi](docs/implementation-2026-11-06/IMPLEMENTATION.md).
+
+Master pelanggan, vendor, produk, kategori, satuan, lokasi, akun, harga vendor, dan lead tersedia pada menu **Master Data**. Record yang sudah dipakai transaksi diarsipkan; hapus permanen tersedia hanya untuk record yang belum digunakan. Dokumen draft dapat diedit/dibatalkan. Koreksi transaksi yang sudah diposting menggunakan reversal, retur/credit note, atau refund POS dengan alasan dan audit.
+
+SQLite memerlukan satu host aplikasi dengan penyimpanan persisten dan backup. Salinan database sementara pada Vercel/Lambda telah dinonaktifkan karena kehilangan perubahan saat restart. Hosting publik belum diverifikasi. Gunakan HTTPS dan secret produksi unik saat menyiapkan host persisten.
 
 ---
 
@@ -184,7 +180,7 @@ Aplikasi memiliki 8 modul inti yang dapat diakses melalui Home App Switcher:
 5. **Invoicing (`/accounting/invoices`):** Penagihan berbasis pengiriman (Delivery-based Invoicing) dan tagihan vendor (`/accounting/vendor-bills`) dengan Three-Way Match.
 6. **Accounting (`/accounting/journal-entries`):** Buku Besar Umum (General Ledger), CoA, pengakuan COGS otomatis, dan pencatatan pembayaran (`/accounting/payments`).
 7. **Point of Sale (`/pos`):** Kasir gerai CAFE-JKT, keranjang pesanan, pembayaran QRIS/Bank, dan penutupan sesi kasir.
-8. **Dashboard (`/dashboard`):** Ringkasan 8 KPI operasional waktu-nyata, matriks rekonsiliasi buku besar, dan simulator deteksi anomali persediaan (SR-20).
+8. **Dashboard (`/dashboard`):** Ringkasan KPI operasional waktu-nyata, matriks rekonsiliasi buku besar, dan deteksi anomali persediaan (SR-20).
 
 ---
 

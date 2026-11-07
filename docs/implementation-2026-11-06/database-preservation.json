@@ -1,0 +1,838 @@
+[
+  {
+    "database": "prisma/companies/comp_pt-kuliner-nusantara_yqes.db",
+    "allOriginalRowsPreserved": true,
+    "tables": [
+      {
+        "table": "User",
+        "originalRows": 6,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "Contact",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "ProductVariant",
+        "originalRows": 1,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "WarehouseLocation",
+        "originalRows": 2,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "StockLevel",
+        "originalRows": 2,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "StockMove",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "Account",
+        "originalRows": 15,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "JournalEntry",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "JournalItem",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "CrmLead",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "SalesOrder",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "SalesOrderLine",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "DeliveryOrder",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "DeliveryOrderLine",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "PurchaseOrder",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "PurchaseOrderLine",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "GoodsReceipt",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "GoodsReceiptLine",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "CustomerInvoice",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "CustomerInvoiceLine",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "VendorBill",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "VendorBillLine",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "Payment",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "PosSession",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "PosOrder",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "PosOrderLine",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "ReturnRequest",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "ReturnRequestLine",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "CreditNote",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "CreditNoteLine",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "InternalTransfer",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "InternalTransferLine",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "AuditLog",
+        "originalRows": 2,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      }
+    ],
+    "quickCheck": "ok",
+    "foreignKeyViolations": [],
+    "negativeOrOverreservedStockRows": 0,
+    "existingInventoryValuation": 225000.0,
+    "existingInventoryLedger": 0
+  },
+  {
+    "database": "prisma/companies/comp_pt-morie-matcha_qkc6.db",
+    "allOriginalRowsPreserved": true,
+    "tables": [
+      {
+        "table": "User",
+        "originalRows": 6,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "Contact",
+        "originalRows": 10,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "ProductVariant",
+        "originalRows": 15,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "WarehouseLocation",
+        "originalRows": 2,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "StockLevel",
+        "originalRows": 30,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "StockMove",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "Account",
+        "originalRows": 15,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "JournalEntry",
+        "originalRows": 1,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "JournalItem",
+        "originalRows": 5,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "CrmLead",
+        "originalRows": 1,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "SalesOrder",
+        "originalRows": 1,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "SalesOrderLine",
+        "originalRows": 1,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "DeliveryOrder",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "DeliveryOrderLine",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "PurchaseOrder",
+        "originalRows": 2,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "PurchaseOrderLine",
+        "originalRows": 2,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "GoodsReceipt",
+        "originalRows": 1,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "GoodsReceiptLine",
+        "originalRows": 1,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "CustomerInvoice",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "CustomerInvoiceLine",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "VendorBill",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "VendorBillLine",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "Payment",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "PosSession",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "PosOrder",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "PosOrderLine",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "ReturnRequest",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "ReturnRequestLine",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "CreditNote",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "CreditNoteLine",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "InternalTransfer",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "InternalTransferLine",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "AuditLog",
+        "originalRows": 6,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      }
+    ],
+    "quickCheck": "ok",
+    "foreignKeyViolations": [],
+    "negativeOrOverreservedStockRows": 0,
+    "existingInventoryValuation": 12214000.0,
+    "existingInventoryLedger": 12214000.0
+  },
+  {
+    "database": "prisma/companies/comp_pt-resto-nusantara-b_lfr7.db",
+    "allOriginalRowsPreserved": true,
+    "tables": [
+      {
+        "table": "User",
+        "originalRows": 6,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "Contact",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "ProductVariant",
+        "originalRows": 1,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "WarehouseLocation",
+        "originalRows": 2,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "StockLevel",
+        "originalRows": 2,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "StockMove",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "Account",
+        "originalRows": 15,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "JournalEntry",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "JournalItem",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "CrmLead",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "SalesOrder",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "SalesOrderLine",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "DeliveryOrder",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "DeliveryOrderLine",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "PurchaseOrder",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "PurchaseOrderLine",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "GoodsReceipt",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "GoodsReceiptLine",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "CustomerInvoice",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "CustomerInvoiceLine",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "VendorBill",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "VendorBillLine",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "Payment",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "PosSession",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "PosOrder",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "PosOrderLine",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "ReturnRequest",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "ReturnRequestLine",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "CreditNote",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "CreditNoteLine",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "InternalTransfer",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "InternalTransferLine",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "AuditLog",
+        "originalRows": 3,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      }
+    ],
+    "quickCheck": "ok",
+    "foreignKeyViolations": [],
+    "negativeOrOverreservedStockRows": 0,
+    "existingInventoryValuation": 225000.0,
+    "existingInventoryLedger": 0
+  },
+  {
+    "database": "prisma/erp.db",
+    "allOriginalRowsPreserved": true,
+    "tables": [
+      {
+        "table": "User",
+        "originalRows": 6,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "Contact",
+        "originalRows": 10,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "ProductVariant",
+        "originalRows": 15,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "WarehouseLocation",
+        "originalRows": 2,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "StockLevel",
+        "originalRows": 30,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "StockMove",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "Account",
+        "originalRows": 15,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "JournalEntry",
+        "originalRows": 1,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "JournalItem",
+        "originalRows": 5,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "CrmLead",
+        "originalRows": 1,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "SalesOrder",
+        "originalRows": 1,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "SalesOrderLine",
+        "originalRows": 1,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "DeliveryOrder",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "DeliveryOrderLine",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "PurchaseOrder",
+        "originalRows": 1,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "PurchaseOrderLine",
+        "originalRows": 1,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "GoodsReceipt",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "GoodsReceiptLine",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "CustomerInvoice",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "CustomerInvoiceLine",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "VendorBill",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "VendorBillLine",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "Payment",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "PosSession",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "PosOrder",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "PosOrderLine",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "ReturnRequest",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "ReturnRequestLine",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "CreditNote",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "CreditNoteLine",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "InternalTransfer",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "InternalTransferLine",
+        "originalRows": 0,
+        "missingOrChangedRows": 0,
+        "additionalRows": 0
+      },
+      {
+        "table": "AuditLog",
+        "originalRows": 2,
+        "missingOrChangedRows": 0,
+        "additionalRows": 2
+      }
+    ],
+    "quickCheck": "ok",
+    "foreignKeyViolations": [],
+    "negativeOrOverreservedStockRows": 0,
+    "existingInventoryValuation": 12214000.0,
+    "existingInventoryLedger": 12214000.0
+  }
+]

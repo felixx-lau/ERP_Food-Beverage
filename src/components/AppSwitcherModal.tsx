@@ -1,16 +1,17 @@
 "use client";
+import DialogFrame from "./ui/DialogFrame";
 
 import React from "react";
-import { 
-  X, 
-  ShoppingCart, 
-  Users2, 
-  Truck, 
-  Package, 
-  BookOpen, 
-  Receipt, 
-  Store, 
-  BarChart3, 
+import {
+  X,
+  ShoppingCart,
+  Users2,
+  Truck,
+  Package,
+  BookOpen,
+  Receipt,
+  Store,
+  BarChart3,
   Lock
 } from "lucide-react";
 import { canAccessModule } from "@/lib/auth";
@@ -123,7 +124,7 @@ export default function AppSwitcherModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-4 animate-in fade-in duration-200">
+    <DialogFrame onClose={onClose}>
       <div className="glass-modal border border-white/80 w-full max-w-4xl rounded-3xl p-8 shadow-glass-modal relative animate-in zoom-in-95 duration-200">
         {/* Close Button */}
         <button
@@ -194,6 +195,6 @@ export default function AppSwitcherModal({
           })}
         </div>
       </div>
-    </div>
+    </DialogFrame>
   );
 }

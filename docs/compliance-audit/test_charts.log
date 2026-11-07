@@ -1,0 +1,35 @@
+================================================================================
+             CHART & DASHBOARD ANALYTICS AUTOMATED TEST SUITE                   
+          Rasa Aruna Kitchen - F&B ERP Analytics Engine & API Verification      
+================================================================================
+
+--- 1. Testing getDashboardChartMetrics Base Execution & 5 KPIs ---
+[PASS] C-01.1   | KPI Total Penjualan valid & non-negatif              | totalSales = Rp 316.800
+[PASS] C-01.2   | KPI Total Pembelian valid & non-negatif              | totalPurchases = Rp 120.000
+[PASS] C-01.3   | KPI Nilai Stok Fisik valid & positif                 | stockValuation = Rp 12.214.000
+[PASS] C-01.4   | KPI Stok di Bawah Minimum valid list                 | lowStockCount = 0 items (threshold < 20)
+[PASS] C-01.5   | KPI Estimasi Laba Kotor & Margin % terhitung         | Gross Profit = Rp 160.800 (50.8%)
+
+--- 2. Testing Line Chart Sales Trend & Period Granularity ---
+[PASS] C-02.1   | Trend Harian: Labels, Revenues, dan OrderCounts sinkron | Data points count: 1
+[PASS] C-02.2   | Trend Mingguan: Grouping mingguan valid              | Minggu terdeteksi: Mg 2 Nov
+[PASS] C-02.3   | Trend Bulanan: Grouping bulanan valid                | Bulan terdeteksi: Nov 2026
+
+--- 3. Testing Bar Charts Integrity ---
+[PASS] C-03.1   | Top 10 Produk Terlaris: Maksimal 10 item & panjang array konsisten | Items returned: 1 items (Top: Nasi Ayam Panggang)
+[PASS] C-03.2   | Kategori F&B: Array Labels, Amounts, dan Percentages konsisten | Kategori: Makanan Utama (Rice Box)
+[PASS] C-03.3   | Perbandingan Pembelian vs Penjualan: Tepat 6 bulan historis | 6 Bulan: Jun 2026, Jul 2026, Agu 2026, Sep 2026, Okt 2026, Nov 2026
+
+--- 4. Testing Graceful Empty State Handling ---
+[PASS] C-04.1   | Empty Date Filter: Line chart mengembalikan array kosong tanpa error | labels: 0, revenues: 0
+[PASS] C-04.2   | Empty Date Filter: Valuasi stok tetap valid dari kondisi gudang real-time | stockValuation = Rp 12.214.000
+
+--- 5. Testing Next.js Route Handler /api/dashboard/charts ---
+[PASS] C-05.1   | API Route Handler: HTTP Status 200 OK                | HTTP Status: 200
+[PASS] C-05.2   | API Route Handler: JSON response memuat semua payload chart yang dibutuhkan UI | Payload keys: kpis, salesTrend, topProducts, salesByCategory, purchasesVsSalesMonthly, hasData
+[PASS] C-05.3   | API Route Handler: Query parameter period=week direspons dengan benar | salesTrend.period: week
+
+================================================================================
+ HASIL TEST ANALYTICS & CHARTS: 16 PASSED | 0 FAILED 
+================================================================================
+

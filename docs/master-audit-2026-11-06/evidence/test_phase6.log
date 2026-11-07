@@ -1,0 +1,36 @@
+=================================================================
+🧪 RUNNING COMPREHENSIVE TEST SUITE: PHASE 6 (T-19, T-20, T-23 s.d. T-26)
+=================================================================
+
+--- 0. Restoring Fresh Baseline Seed ---
+
+--- Setting up Fixture T-11 (8 Ordered, 5 Delivered) ---
+✅ [PASS] FIXTURE-T11: T-11 Fixture ready: 5 units of RICE-CHICK-S delivered, 3 units backorder
+
+--- T-20: Invoicing Policy Edge Case (SR-01 / SR-02 / F-09) ---
+✅ [PASS] T-20: SR-02 delivery-based invoicing enforced: Invoicing 8 units blocked when only 5 delivered: "Validasi Penagihan Gagal (SR-02 / F-09 / T-20): Kuantitas tagihan (8) melebihi kuantitas yang telah dikirim (Delivered: 5, Sudah Ditagih: 0, Maksimal Boleh Ditagih: 5). Penagihan barang yang belum dikirim dilarang."
+✅ [PASS] T-20-VERIFY: Attempt to invoice un-delivered units (8 requested vs 5 delivered) blocked
+
+--- T-19: Customer Invoice Normal & PBJT 10% (Fitur F-09 / F-22) ---
+✅ [PASS] T-19-CALC: Invoice calculations: Net Rp240.000, PBJT 10% Rp24.000, Gross Rp264.000
+✅ [PASS] T-19: Journal JE/2026/0002: Dr 1020 A/R Rp264.000 = Cr 4010 Revenue Rp240.000 + Cr 2020 PBJT Rp24.000. Balanced Dr=Cr.
+
+--- T-24: Overpayment Guard Edge Case (SR-19 / F-15) ---
+✅ [PASS] T-24: SR-19 verified: Overpayment of Rp300.000 on outstanding Rp264.000 rejected: "Validasi Pembayaran Gagal (SR-19 / F-15 / T-24): Jumlah pembayaran (Rp 300.000) melebihi sisa tagihan outstanding (Rp 264.000). Pembayaran melebihi outstanding ditolak."
+✅ [PASS] T-24-VERIFY: Overpayment strictly blocked
+
+--- T-23: Partial Payment Normal (Fitur F-15) ---
+✅ [PASS] T-23: Payment registered: Gross Rp264.000, Paid Rp100.000, Outstanding Rp164.000. Bank +Rp100.000, A/R -Rp100.000. Journal: Dr Bank Rp100.000 = Cr A/R Rp100.000.
+
+--- T-25: Ledger and COGS Journal Normal (Fitur F-14) ---
+✅ [PASS] T-25-DELIVERY-JOURNAL: Delivery Journal: Dr 5010 COGS Rp130.000 = Cr 1030 Inventory Rp130.000
+✅ [PASS] T-25-INVOICE-JOURNAL: Invoice Journal: Dr 1020 A/R Rp264.000 = Cr Revenue Rp240.000 + Cr PBJT Rp24.000
+✅ [PASS] T-25: Total Combined Debit = Credit = Rp394.000 (Dr Rp394.000 = Cr Rp394.000). Double-entry balanced perfectly.
+
+--- T-26: Document Re-posting Idempotency (SR-13 / F-14) ---
+✅ [PASS] T-26: SR-13 verified: Re-posting delivery/invoice is idempotent. Journal count remains 4, COGS balance intact at Rp 130.000 (zero duplicate journals).
+
+=================================================================
+🏁 PHASE 6 TEST SUMMARY: 12 / 12 TESTS PASSED
+=================================================================
+🎉 ALL TESTS T-19, T-20, T-23, T-24, T-25, T-26 COMPLETED WITH 100% SUCCESS AND ZERO DEFECTS!

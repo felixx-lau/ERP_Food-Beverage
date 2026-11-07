@@ -1,0 +1,36 @@
+=================================================================
+🧪 RUNNING COMPREHENSIVE TEST SUITE: PHASE 5 (T-15 s.d. T-18, T-21, T-22)
+=================================================================
+
+--- 0. Restoring Fresh Baseline Seed ---
+
+--- T-15: RFQ and Purchase Order Normal (Fitur F-11) ---
+✅ [PASS] T-15-RFQ: RFQ created: Subtotal Rp120.000, Tax 0%, Total Rp120.000
+✅ [PASS] T-15: PO P00007 Confirmed. On-hand remains unchanged at 20 units (procurement commitment recorded, no physical stock change yet).
+
+--- T-16: Purchase Order Re-confirmation Idempotency (SR-13 / F-11) ---
+✅ [PASS] T-16: SR-13 verified: Re-confirming PO P00007 is idempotent. Receipt count remains 1, no duplicate receipt or commitment created.
+
+--- T-17: Receipt and Quality Acceptance Normal (Fitur F-12) ---
+✅ [PASS] T-17-INITIAL: WH on-hand before receipt: 20 units
+✅ [PASS] T-17-STOCK: WH on-hand increased 20 -> 28 (+8 accepted units). 2 rejected units did NOT enter inventory.
+✅ [PASS] T-17: Journal Entry JE/2026/0001: Dr 1030 Inventory Rp96.000 = Cr 1040 GRNI Rp96.000. Balanced Dr=Cr.
+
+--- T-18: Three-Way Match Violation Edge Case (SR-06 / F-12) ---
+✅ [PASS] T-18: Three-Way Match strictly blocked billing 10 units: "Validasi Three-Way Match Gagal (SR-06 / T-18): Kuantitas tagihan (10) melebihi kuantitas penerimaan yang lolos inspeksi (Accepted: 8, Sudah Ditagih: 0, Maksimal Boleh Ditagih: 8). Tagihan terhadap barang ditolak/belum diterima dilarang."
+✅ [PASS] T-18-VERIFY: Attempt to bill rejected units (10 requested vs 8 accepted) successfully blocked
+
+--- T-21: Vendor Bill & Three-Way Match Normal (Fitur F-13) ---
+✅ [PASS] T-21-BILL: Draft Vendor Bill BILL/2026/0007: Net Rp96.000, Tax 0, Total Rp96.000 (3-Way Match Verified)
+✅ [PASS] T-21: Vendor Bill Posted. Journal JE/2026/0002: Dr 1040 GRNI Rp96.000 = Cr 2010 A/P Rp96.000. GRNI cleared to 0.
+✅ [PASS] T-21-GRNI-ZERO: GRNI account balance for this transaction is Rp 0 (cleared to 0)
+
+--- T-22: Duplicate Vendor Bill Posting Edge Case (SR-06 / SR-13) ---
+✅ [PASS] T-22-IDEMPOTENT: Re-posting the same Vendor Bill returns alreadyPosted=true without duplicate journal
+✅ [PASS] T-22: Creating duplicate bill for already-billed units blocked: "Validasi Three-Way Match Gagal (SR-06 / T-18): Kuantitas tagihan (8) melebihi kuantitas penerimaan yang lolos inspeksi (Accepted: 8, Sudah Ditagih: 8, Maksimal Boleh Ditagih: 0). Tagihan terhadap barang ditolak/belum diterima dilarang."
+✅ [PASS] T-22-VERIFY: Duplicate billing strictly prevented by 3-Way Match engine
+
+=================================================================
+🏁 PHASE 5 TEST SUMMARY: 14 / 14 TESTS PASSED
+=================================================================
+🎉 ALL TESTS T-15, T-16, T-17, T-18, T-21, T-22 COMPLETED WITH 100% SUCCESS AND ZERO DEFECTS!

@@ -1,0 +1,32 @@
+================================================================================
+             TAHAP 8 AUTOMATED TEST SUITE: T-31 & T-32 VERIFICATION             
+          Rasa Aruna Kitchen - Executive Operational & Financial Dashboard       
+================================================================================
+
+--- 0. Restoring Fresh Baseline Seed ---
+✅ Baseline Seed restored successfully.
+
+--- Menjalankan Uji T-31: Executive Operational KPI Integrity ---
+[PASS] T-31.1 | Total Stok Fisik Perusahaan                          | Diharapkan 616 unit, aktual: 616 unit
+[PASS] T-31.2 | Distribusi Lokasi WH-JKT & CAFE-JKT                  | WH: 410 (exp: 410), CAFE: 206 (exp: 206)
+[PASS] T-31.3 | Stok Direservasi & Tersedia                          | Reserved: 6 (exp: 6), Available: 610 (exp: 610)
+[PASS] T-31.4 | Valuasi Persediaan Baseline                          | Diharapkan Rp 12.214.000, aktual: Rp 12.214.000
+[PASS] T-31.5 | Total Piutang Usaha (A/R)                            | Diharapkan Rp 1.500.000, aktual: Rp 1.500.000
+[PASS] T-31.6 | Total Utang Usaha (A/P)                              | Diharapkan Rp 1.000.000, aktual: Rp 1.000.000
+[PASS] T-31.7 | Saldo Kas & Bank BCA (Akun 1010)                     | Diharapkan Rp 20.000.000, aktual: Rp 20.000.000
+[PASS] T-31.8 | Peluang CRM Aktif & Nilai Prospek                    | Leads: 1 (exp: 1), Value: Rp 1.200.000 (exp: 1.2jt)
+[PASS] T-31.9 | Order Terkonfirmasi (SO & PO)                        | SO: 1 (S00006), PO: 1 (P00006)
+[PASS] T-31.10 | Ketersediaan Smart-Links Navigasi                    | Seluruh 8 KPI memiliki tautan navigasi valid ke modul sumber
+
+--- Menjalankan Uji T-32: Financial Reconciliation & SR-20 Compliance ---
+[PASS] T-32.1 | Keseimbangan Double-Entry Buku Besar                 | Debit Rp 33.714.000 == Kredit Rp 33.714.000 (Seimbang: true)
+[PASS] T-32.2 | Subledger Matching A/R & A/P                         | A/R: Rp 1.500.000 == 1020, A/P: Rp 1.000.000 == 2010
+[PASS] T-32.3 | Rekonsiliasi Persediaan Normal                       | Status: BALANCED, Selisih Unit: 0, Selisih Nilai: Rp 0
+[PASS] T-32.4 | Deteksi Anomali Selisih 1 Unit                       | Status: MISMATCH (Diharapkan MISMATCH), Selisih: +1 unit
+[PASS] T-32.5 | Peringatan Audit Anomali Muncul                      | Pesan Peringatan: "PERINGATAN REKONSILIASI (SR-20 / T-32): Terdeteksi selisih +1 unit (senilai..."
+[PASS] T-32.6 | Kepatuhan SR-20: Pem-post-an Otomatis Ditolak        | autoPostBlocked: true (Sistem menolak manipulasi jurnal penyeimbang)
+[PASS] T-32.7 | Integritas Database Terjaga (Zero Artificial Journal) | Jumlah jurnal sebelum: 1, sesudah: 1 (Tidak ada modifikasi ilegal)
+
+================================================================================
+HASIL AKHIR PENGUJIAN TAHAP 8: 17 PASS, 0 FAIL
+================================================================================

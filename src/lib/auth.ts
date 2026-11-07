@@ -2,17 +2,25 @@ import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { NextRequest } from "next/server";
 import { Role } from "@prisma/client";
-import { prisma } from "./prisma";
+import { prisma, getActiveCompanyId } from "./prisma";
+import { randomBytes } from "node:crypto";
 
-const SECRET_KEY = new TextEncoder().encode(
-  process.env.JWT_SECRET || "rasa-aruna-kitchen-secure-jwt-token-key-2026"
-);
+const authGlobal = globalThis as typeof globalThis & { erpDevelopmentSecret?: string };
+function secretKey() {
+  const configured = process.env.JWT_SECRET;
+  if (configured && configured !== 'rasa-aruna-kitchen-secure-jwt-token-key-2026' && configured.length >= 32) return new TextEncoder().encode(configured);
+  if (process.env.NODE_ENV === 'production') throw new Error('JWT_SECRET unik minimal 32 karakter wajib dikonfigurasi.');
+  authGlobal.erpDevelopmentSecret ||= randomBytes(48).toString('hex');
+  return new TextEncoder().encode(authGlobal.erpDevelopmentSecret);
+}
 
 export interface SessionUser {
   id: string;
   email: string;
   name: string;
   role: Role;
+  companyId?: string;
+  sessionVersion?: number;
 }
 
 export async function createSessionToken(user: SessionUser): Promise<string> {
@@ -21,17 +29,22 @@ export async function createSessionToken(user: SessionUser): Promise<string> {
     email: user.email,
     name: user.name,
     role: user.role,
+    companyId: user.companyId || await getActiveCompanyId(),
+    sessionVersion: user.sessionVersion ?? 0,
   })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("24h")
-    .sign(SECRET_KEY);
+    .sign(secretKey());
 }
 
 export async function verifySessionToken(token: string): Promise<SessionUser | null> {
   try {
-    const { payload } = await jwtVerify(token, SECRET_KEY);
+    const { payload } = await jwtVerify(token, secretKey(), { algorithms: ["HS256"] });
+    if (typeof payload.id !== "string" || !Object.values(Role).includes(payload.role as Role) || typeof payload.companyId !== "string") return null;
     return {
+      companyId: payload.companyId,
+      sessionVersion: Number(payload.sessionVersion),
       id: payload.id as string,
       email: payload.email as string,
       name: payload.name as string,
@@ -58,7 +71,13 @@ export async function getCurrentUser(request?: NextRequest): Promise<SessionUser
   }
 
   if (!token) return null;
-  return await verifySessionToken(token);
+  const session = await verifySessionToken(token);
+  const companyId = request?.cookies.get('rasa_aruna_company')?.value || await getActiveCompanyId();
+  if (!session || session.companyId !== companyId) return null;
+  const current = await prisma.user.findUnique({ where: { id: session.id } });
+  if (!current || !current.active || current.sessionVersion !== session.sessionVersion || current.email !== session.email || current.role !== session.role) return null;
+  return { id: current.id, email: current.email, name: current.name, role: current.role, companyId, sessionVersion: current.sessionVersion };
+
 }
 
 export const MODULE_PERMISSIONS: Record<string, Role[]> = {
@@ -69,7 +88,7 @@ export const MODULE_PERMISSIONS: Record<string, Role[]> = {
   accounting: [Role.OWNER, Role.FINANCE],
   invoicing: [Role.OWNER, Role.FINANCE, Role.SALES],
   pos: [Role.OWNER, Role.CASHIER],
-  dashboard: [Role.OWNER, Role.FINANCE, Role.SALES, Role.WAREHOUSE, Role.PROCUREMENT],
+  dashboard: [Role.OWNER, Role.FINANCE],
 };
 
 export function canAccessModule(role: Role, module: string): boolean {

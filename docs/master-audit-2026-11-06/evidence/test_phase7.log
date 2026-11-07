@@ -1,0 +1,44 @@
+=================================================================
+🧪 RUNNING COMPREHENSIVE TEST SUITE: PHASE 7
+   (T-13, T-14, T-27, T-28, T-29, T-30)
+=================================================================
+
+--- 0. Restoring Fresh Baseline Seed ---
+✅ Baseline restored successfully.
+
+--- T-13: Internal Stock Transfer Normal (Fitur F-19 / Wireframe S-07) ---
+✅ [PASS] T-13-BASELINE: Initial Stock COF-LATT-ICE: WH-JKT=25, CAFE-JKT=18 (Expected 25 & 18)
+✅ [PASS] T-13-DRAFT: Draft Transfer WH/INT/0007 created: 4 x Rp13.000 = Rp 52.000
+✅ [PASS] T-13: WH turun 25->21; CAFE naik 18->22; Company stock tetap 43 unit (nilai pindah Rp52.000, total nilai persediaan konstan).
+
+--- T-14: Internal Transfer Over Available Stock Edge Case (SR-04 / SR-12 / F-19) ---
+✅ [PASS] T-14: SR-04 & SR-12 verified: Transfer 28 units from WH (on-hand 21) rejected: "Validasi Transfer Gagal (SR-04 / SR-12 / T-14): Kuantitas transfer (28) melebihi stok yang tersedia (21, on-hand: 21) di lokasi sumber WH-JKT. Transfer dibatalkan.".
+✅ [PASS] T-14-VERIFY: WH-JKT on-hand preserved intact at 21 (zero negative stock).
+
+--- T-27: Point of Sale Restoran Normal (Fitur F-16 / Wireframe S-14) ---
+✅ [PASS] T-27-SESSION: Session POS01 opened at CAFE-JKT.
+✅ [PASS] T-27-STOCK-BEFORE: Initial CAFE-JKT on-hand: COF-LATT-HOT=24, COOKIE-CHO-1=20
+✅ [PASS] T-27-FINANCIAL: Financials: Net=Rp 80.000, PBJT=Rp 8.000, Total Paid=Rp 88.000, COGS=Rp 33.000
+✅ [PASS] T-27-STOCK-AFTER: CAFE-JKT Stock: COF-LATT-HOT 24->22 (-2), COOKIE-CHO-1 20->19 (-1)
+✅ [PASS] T-27: T-27 Complete: Net Rp80k, PBJT Rp8k, paid Rp88k; COGS Rp33k; CAFE Hot 24->22, Cookie 20->19; Bank naik Rp88k; Journal balanced Rp121.000.
+
+--- T-28: POS Stock Evaluation & Session Closing (SR-03/SR-04/SR-14 / F-16 / F-17) ---
+✅ [PASS] T-28-STOCK-EVAL: SR-04 verified: POS checkout 25 units when on-hand is 22 blocked: "Validasi POS Gagal (SR-04 / T-28): Kuantitas pesanan (25) melebihi stok fisik On-Hand (22) di CAFE-JKT. Stok minus dilarang.".
+✅ [PASS] T-28-CLOSE-SESSION: Session POS01 closed. Total sales=Rp 88.000, Difference=Rp 0.
+✅ [PASS] T-28: SR-14 & SR-13 verified: Re-closing session is idempotent ("Sesi POS01 sudah ditutup sebelumnya. Penutupan ulang tidak membuat jurnal ganda."), zero duplicate journals.
+
+--- T-29: Return Inspection dan Credit Note Normal (Fitur F-18 / Wireframe S-15) ---
+✅ [PASS] T-29-FIXTURE: Fixture ready: Invoice INV/2026/0007 posted. WH-JKT on-hand: 35
+✅ [PASS] T-29-RETURN-REQ: Return Request RET/2026/0007 created with status PENDING.
+✅ [PASS] T-29-INSPECTION: Quality inspection completed: Status=ACCEPTED.
+✅ [PASS] T-29: T-29 Complete: WH on-hand 35->36; Reverse cost Rp26.000; Credit Note net Rp48.000, PBJT Rp4.800, total Rp52.800; A/R invoice berkurang Rp52.800 (Outstanding: Rp211.200).
+
+--- T-30: Return Without Inspection Accepted Edge Case (SR-11 / F-18) ---
+✅ [PASS] T-30: SR-11 verified: Restock and Credit Note blocked when inspection is not ACCEPTED: "Validasi Retur Gagal (SR-11 / T-30): Barang retur belum lolos pemeriksaan kualitas (Status saat ini: PENDING). Restok persediaan dan penerbitan Credit Note diblokir.".
+✅ [PASS] T-30-VERIFY: WH-JKT stock protected at 36 (uninspected goods did NOT enter inventory).
+
+=================================================================
+🏁 PHASE 7 TEST SUMMARY: 19 / 19 TESTS PASSED
+=================================================================
+🎉 ALL TESTS T-13, T-14, T-27, T-28, T-29, T-30 COMPLETED WITH 100% SUCCESS AND ZERO DEFECTS!
+

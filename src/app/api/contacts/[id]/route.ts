@@ -1,3 +1,6 @@
+import { withUser } from "@/lib/apiResult";
+import { changeMaster } from "@/lib/masterData";
+import { authorizeApi } from "@/lib/apiAuthorization";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
@@ -7,6 +10,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const accessDenied = await authorizeApi(request);
+  if (accessDenied) return accessDenied;
+
   try {
     const user = await getCurrentUser(request);
     if (!user) {
@@ -43,3 +49,6 @@ export async function GET(
     return NextResponse.json({ error: "Failed to fetch contact detail" }, { status: 500 });
   }
 }
+
+export async function PATCH(request: NextRequest,{params}:{params:Promise<{id:string}>}) { return withUser(request,async user=>{const {id}=await params; const contact=await prisma.contact.findUnique({where:{id}});return {success:true,contact:await changeMaster(contact?.type==='VENDOR'?'vendors':'customers',id,await request.json(),user)};}); }
+export async function DELETE(request: NextRequest,{params}:{params:Promise<{id:string}>}) { return withUser(request,async user=>{const {id}=await params;const contact=await prisma.contact.findUnique({where:{id}});return {success:true,...await changeMaster(contact?.type==='VENDOR'?'vendors':'customers',id,{version:Number(request.nextUrl.searchParams.get('version') ?? NaN)},user,true)};}); }

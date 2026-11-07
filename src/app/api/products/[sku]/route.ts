@@ -1,3 +1,7 @@
+import { withUser } from "@/lib/apiResult";
+import { changeMaster } from "@/lib/masterData";
+import { adjustStock } from "@/lib/inventoryEngine";
+import { authorizeApi } from "@/lib/apiAuthorization";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
@@ -8,6 +12,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ sku: string }> }
 ) {
+  const accessDenied = await authorizeApi(request);
+  if (accessDenied) return accessDenied;
+
   try {
     const user = await getCurrentUser(request);
     if (!user) {
@@ -21,7 +28,7 @@ export async function GET(
         stockLevels: {
           include: { location: true },
         },
-        defaultVendor: true,
+        defaultVendor: { select: { id: true, name: true } },
       },
     });
 
@@ -29,6 +36,7 @@ export async function GET(
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
+    if (user.role === "CASHIER") return NextResponse.json({ success: true, product: { sku: product.sku, name: product.name, size: product.size, color: product.color, unit: product.unit, salesPrice: product.salesPrice, stock: product.stockLevels.filter(s => s.locationCode === "CAFE-JKT").map(s=>({locationCode:s.locationCode,onHand:s.onHand,reserved:s.reserved})) } });
     const wh = product.stockLevels.find((s) => s.locationCode === "WH-JKT") || { onHand: 0, reserved: 0 };
     const cafe = product.stockLevels.find((s) => s.locationCode === "CAFE-JKT") || { onHand: 0, reserved: 0 };
 
@@ -72,92 +80,16 @@ export async function GET(
   }
 }
 
-// PATCH endpoint to update stock (used for SR-17 & T-06 stock adjustment)
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ sku: string }> }
-) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ sku: string }> }) {
+  const denied = await authorizeApi(request); if (denied) return denied;
   try {
-    const user = await getCurrentUser(request);
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Role check: Only WAREHOUSE or OWNER can adjust stock
-    if (user.role !== Role.WAREHOUSE && user.role !== Role.OWNER) {
-      return NextResponse.json(
-        { error: "Akses ditolak: Hanya Warehouse atau Owner yang dapat mengubah level stok." },
-        { status: 403 }
-      );
-    }
-
+    const user = (await getCurrentUser(request))!;
     const { sku } = await params;
     const body = await request.json();
-    const { locationCode, newOnHand } = body;
-
-    if (!locationCode || newOnHand === undefined || typeof newOnHand !== "number" || newOnHand < 0) {
-      return NextResponse.json(
-        { error: "locationCode dan newOnHand (>= 0) wajib disertakan." },
-        { status: 400 }
-      );
-    }
-
-    const existingStock = await prisma.stockLevel.findUnique({
-      where: {
-        productSku_locationCode: {
-          productSku: sku,
-          locationCode,
-        },
-      },
-    });
-
-    if (!existingStock) {
-      return NextResponse.json({ error: "Stock record not found" }, { status: 404 });
-    }
-
-    // SR-04: Cannot reduce below reserved
-    if (newOnHand < existingStock.reserved) {
-      return NextResponse.json(
-        {
-          error: `Stok fisik (${newOnHand}) tidak boleh lebih kecil dari kuantitas yang telah di-reserve (${existingStock.reserved}).`,
-        },
-        { status: 400 }
-      );
-    }
-
-    const beforeState = { onHand: existingStock.onHand, reserved: existingStock.reserved };
-    const updated = await prisma.stockLevel.update({
-      where: {
-        productSku_locationCode: {
-          productSku: sku,
-          locationCode,
-        },
-      },
-      data: {
-        onHand: newOnHand,
-      },
-    });
-    const afterState = { onHand: updated.onHand, reserved: updated.reserved };
-
-    await recordAuditLog({
-      actorId: user.id,
-      actorName: user.name,
-      actorRole: user.role,
-      action: "STOCK_ADJUSTMENT",
-      documentType: "STOCK_LEVEL",
-      documentId: `${sku}@${locationCode}`,
-      beforeState,
-      afterState,
-      notes: `Stok ${sku} di ${locationCode} diubah dari ${beforeState.onHand} ke ${newOnHand}`,
-    });
-
-    return NextResponse.json({
-      success: true,
-      message: `Stok ${sku} di ${locationCode} berhasil diperbarui.`,
-      stock: updated,
-    });
-  } catch (error) {
-    console.error("Update stock error:", error);
-    return NextResponse.json({ error: "Failed to update stock" }, { status: 500 });
-  }
+    if (body.newOnHand === undefined) return withUser(request, async actor => ({ success: true, product: await changeMaster("products",sku,body,actor) }));
+    const result = await adjustStock({ sku, locationCode: body.locationCode, newOnHand: body.newOnHand, reason: body.reason, actor: user });
+    return NextResponse.json({ success: true, ...result });
+  } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : 'Penyesuaian gagal.' }, { status: 400 }); }
 }
+
+export async function DELETE(request:NextRequest,{params}:{params:Promise<{sku:string}>}) {return withUser(request,async user=>({success:true,...await changeMaster('products',(await params).sku,{version:Number(request.nextUrl.searchParams.get('version') ?? NaN)},user,true)}));}

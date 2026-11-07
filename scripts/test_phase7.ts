@@ -142,7 +142,7 @@ async function runPhase7Tests() {
   // Open POS session
   const posSession = await openPosSession({
     sessionCode: "POS01",
-    cashierId: "u-cashier",
+    cashierId: cashierActor.id,
     locationCode: "CAFE-JKT",
     openingCash: 0,
     actor: cashierActor,
@@ -287,7 +287,7 @@ async function runPhase7Tests() {
 
   await validateDeliveryOrder({
     deliveryOrderId: delivery!.id,
-    items: [{ productSku: "RICE-CHICK-S", deliveredQty: 5 }],
+    items: [{ lineId: delivery.lines[0].id, productSku: "RICE-CHICK-S", deliveredQty: 5 }],
     actor: warehouseActor,
   });
 

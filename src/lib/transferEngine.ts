@@ -1,3 +1,5 @@
+import { atomic } from "./atomic";
+import { permit, quantity, money, discount, uniqueLines, editable } from "./validation";
 import { prisma } from "./prisma";
 import { getNextSequence } from "./sequences";
 import { logAudit } from "./audit";
@@ -20,9 +22,12 @@ export interface CreateTransferInput {
 /**
  * Buat draft Internal Stock Transfer (S-07 / F-19)
  */
-export async function createInternalTransfer(input: CreateTransferInput) {
+async function createInternalTransferImpl(input: CreateTransferInput) {
   const { sourceLocation = "WH-JKT", destLocation = "CAFE-JKT", lines, actor } = input;
 
+  permit(actor, ["OWNER","WAREHOUSE"]);
+  uniqueLines(lines, l => l.productSku); lines.forEach(l => quantity(l.quantity));
+  for (const code of [sourceLocation,destLocation]) if (!await prisma.warehouseLocation.findFirst({ where: { code, archivedAt: null } })) throw new Error("Lokasi tidak terdaftar.");
   if (sourceLocation === destLocation) {
     throw new Error("Lokasi sumber dan tujuan transfer tidak boleh sama.");
   }
@@ -99,7 +104,8 @@ export async function createInternalTransfer(input: CreateTransferInput) {
 /**
  * Validasi dan eksekusi perpindahan stok internal (T-13 / T-14 / SR-04 / SR-12)
  */
-export async function validateInternalTransfer(transferId: string, actor: { id?: string; name: string; role: Role | string }) {
+async function validateInternalTransferImpl(transferId: string, actor: { id?: string; name: string; role: Role | string }) {
+  permit(actor, ["OWNER","WAREHOUSE"]);
   return await prisma.$transaction(async (tx) => {
     const transfer = await tx.internalTransfer.findUnique({
       where: { id: transferId },
@@ -119,6 +125,8 @@ export async function validateInternalTransfer(transferId: string, actor: { id?:
       };
     }
 
+    editable(transfer.status);
+    uniqueLines(transfer.lines, l => l.productSku);
     const movements: Array<{
       productSku: string;
       sourceBefore: number;
@@ -201,6 +209,7 @@ export async function validateInternalTransfer(transferId: string, actor: { id?:
         },
       });
 
+      await tx.stockMove.create({ data: { moveNumber: `SM/INT/${crypto.randomUUID()}`, productSku: line.productSku, sourceLocation: transfer.sourceLocation, destLocation: transfer.destLocation, quantity: line.quantity, unitCost: line.unitCost, totalValue: line.totalValue, documentType: "TRANSFER", actorId: actor.id, reason: "TRANSFER", documentRef: transfer.transferNumber } });
       movements.push({
         productSku: line.productSku,
         sourceBefore: srcBefore,
@@ -232,7 +241,7 @@ export async function validateInternalTransfer(transferId: string, actor: { id?:
       documentNumber: updatedTransfer.transferNumber,
       notes: `Internal transfer ${updatedTransfer.transferNumber} selesai divalidasi. Stok dipindahkan dari ${transfer.sourceLocation} ke ${transfer.destLocation}.`,
       beforeData: transfer,
-      afterData: updatedTransfer,
+      afterData: { ...updatedTransfer, movements },
       tx,
     });
 
@@ -243,3 +252,7 @@ export async function validateInternalTransfer(transferId: string, actor: { id?:
     };
   });
 }
+
+export const createInternalTransfer = (...args: Parameters<typeof createInternalTransferImpl>) => atomic(() => createInternalTransferImpl(...args));
+
+export const validateInternalTransfer = (...args: Parameters<typeof validateInternalTransferImpl>) => atomic(() => validateInternalTransferImpl(...args));

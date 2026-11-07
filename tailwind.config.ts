@@ -8,11 +8,14 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      spacing: {
+        "4.5": "1.125rem", // 18px — fills gap between p-4 (16px) and p-5 (20px)
+      },
       colors: {
         // Modern Blue + Purple (Indigo-Violet) Brand design tokens
         brand: {
-          blue: "#1d4ed8",       // Primary action, active menu (Royal Blue)
-          "blue-dark": "#1e3a8a",// Hover/Dark (Navy/Deep Blue)
+          blue: "#2563eb",       // Primary action, active menu (Royal Blue)
+          "blue-dark": "#1d4ed8",// Hover/Dark (Navy/Deep Blue)
           "blue-light": "#2563eb",// Vibrant Blue
           "blue-tint": "rgba(29, 78, 216, 0.08)",
           purple: "#7c3aed",     // Accent color (Vibrant Violet/Purple)
@@ -93,8 +96,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: [
-          "Plus Jakarta Sans",
-          "Inter",
+                    "Inter",
           "-apple-system",
           "BlinkMacSystemFont",
           "Segoe UI",
@@ -104,8 +106,7 @@ const config: Config = {
           "sans-serif",
         ],
         display: [
-          "Plus Jakarta Sans",
-          "Inter",
+                    "Inter",
           "-apple-system",
           "BlinkMacSystemFont",
           "Segoe UI",

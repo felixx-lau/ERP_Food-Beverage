@@ -1,0 +1,22 @@
+{"id":"B01","title":"Cashier cannot create an Owner account","expected":"403, no new account","actual":{"http":200,"createdRole":"OWNER"},"status":"FAIL"}
+{"id":"B02","title":"Anonymous company edits and deletion are rejected","expected":"401 for both requests, fixture file retained","actual":{"editHttp":200,"deleteHttp":200,"fileExists":false},"status":"FAIL"}
+📊 Menghasilkan Dataset Historis Demo untuk Dashboard Charts...
+✅ Demo Charts Dataset Berhasil Dimuat:
+   - 15 Transaksi POS Baru
+   - 8 Sales Order Korporat Baru
+   - 6 Purchase Order Pembelian Baru
+{"id":"B03","title":"Anonymous demo seed cannot create posted documents","expected":"401; database unchanged","actual":{"http":200,"before":{"orders":0,"journals":1},"after":{"orders":15,"journals":1}},"status":"FAIL"}
+{"id":"B04","title":"Stock adjustments create movement and valuation journal","expected":"Movement +1, Inventory +26000, balanced adjustment journal","actual":{"http":200,"before":{"moves":0,"inventory":12214000},"after":{"moves":0,"inventory":12214000}},"status":"FAIL"}
+{"id":"B05","title":"Cashier product creation cannot bypass operations permission","expected":"403; no product","actual":{"http":200,"price":-100,"cost":-50,"vendor":"C01","stock":[{"location":"CAFE-JKT","onHand":0},{"location":"WH-JKT","onHand":7}]},"status":"FAIL"}
+{"id":"B06","title":"Customer contact fields persist and opening balance cannot be minted","expected":"Contact details persist; opening receivable requires balanced migration workflow","actual":{"http":200,"reopenedName":"Audit Contact","email":null,"phone":null,"address":null,"openingAR":123456,"ledgerBefore":1500000,"ledgerAfter":1500000},"status":"FAIL","persistenceCheck":"PASS"}
+{"id":"B07","title":"CRM creation validates Proposition minimum fields","expected":"403 for Cashier or 400 invalid lead","actual":{"http":200,"stage":"PROPOSITION","customer":"C01","revenue":0},"status":"FAIL"}
+{"id":"B08","title":"Negative sales quantities are rejected before reservation","expected":"Reject quantity -2; reserved remains 6","actual":{"blocked":false,"reserved":4},"status":"FAIL"}
+{"id":"B09","title":"Draft line edit enforces maximum discount of 20 percent","expected":"Reject unauthorized 50 percent discount","actual":{"blocked":false,"discount":50},"status":"FAIL"}
+{"id":"B10","title":"POS respects session location and reserved inventory","expected":"Reject WH sale with CAFE session; WH stock40/reserved6 unchanged","actual":{"http":200,"onHand":5,"reserved":6},"status":"FAIL"}
+{"id":"B11","title":"Cashier cannot validate warehouse transfers","expected":"403 on create and validate","actual":{"createHttp":200,"validateHttp":200},"status":"FAIL"}
+{"id":"B12","title":"POS repeated request is posted exactly once","expected":"One order for repeated idempotency key","actual":{"first":200,"retry":200,"orders":2},"status":"FAIL"}
+{"id":"B13","title":"Vendor bill aggregates repeated SKU quantities","expected":"Reject total16 billed for8 accepted","actual":{"blocked":false,"gross":192000},"status":"FAIL"}
+{"id":"B14","title":"Receipt rejects repeated lines exceeding demand","expected":"Reject repeated receipt item; WH remains20","actual":{"blocked":false,"onHand":36},"status":"FAIL"}
+{"id":"B15","title":"Dashboard payable total agrees with posted bills and ledger","expected":"AP1096000 in dashboard and ledger","actual":{"dashboard":1192000,"ledger":1096000},"status":"FAIL"}
+{"id":"B16","title":"Sales confirmation cannot reserve beyond available stock","expected":"Block35 when40 onHand and6 reserved, or explicit waiting reservation policy","actual":{"blocked":false,"onHand":40,"reserved":41,"available":-1},"status":"FAIL"}
+{"id":"B17","title":"Dashboard preserves genuine zero bank balances","expected":0,"actual":20000000,"status":"FAIL","note":"Synthetic zero-balance fixture in isolated database"}

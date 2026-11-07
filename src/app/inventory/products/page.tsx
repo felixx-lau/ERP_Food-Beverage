@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import useTableView from "@/components/ui/useTableView";
+import { TableSearch, SortLabel, TablePagination } from "@/components/ui/TableControls";
 import AppLayout from "@/components/AppLayout";
 import StatusBadge from "@/components/StatusBadge";
 import KPICard from "@/components/KPICard";
@@ -131,10 +133,10 @@ export default function ProductsPage() {
       const hotInitialWh = dataHotInit.product.locations.find((l: any) => l.locationCode === "WH-JKT").onHand;
       const iceInitialWh = dataIceInit.product.locations.find((l: any) => l.locationCode === "WH-JKT").onHand;
 
-      await fetch("/api/products/COF-LATT-HOT/stock", {
+      await fetch("/api/products/COF-LATT-HOT", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ locationCode: "WH-JKT", newOnHand: hotInitialWh + 4 }),
+        body: JSON.stringify({ locationCode: "WH-JKT", newOnHand: hotInitialWh + 4, reason: "Uji varian terisolasi T-06" }),
       });
 
       const resHotAfter = await fetch("/api/products/COF-LATT-HOT");
@@ -147,10 +149,10 @@ export default function ProductsPage() {
 
       const passed = hotAfterWh === hotInitialWh + 4 && iceAfterWh === iceInitialWh;
 
-      await fetch("/api/products/COF-LATT-HOT/stock", {
+      await fetch("/api/products/COF-LATT-HOT", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ locationCode: "WH-JKT", newOnHand: hotInitialWh }),
+        body: JSON.stringify({ locationCode: "WH-JKT", newOnHand: hotInitialWh, reason: "Pembalikan uji varian T-06" }),
       });
 
       setTestResult({
@@ -167,14 +169,15 @@ export default function ProductsPage() {
     }
   };
 
+  const table = useTableView(products, p => `${p.sku} ${p.name} ${p.size} ${p.color}`, (p, key) => key === "name" ? p.name : p[key] ?? 0);
   return (
     <AppLayout
       currentUser={user}
       onSwitchRole={handleSwitchRole}
       breadcrumbs={[{ label: "Persediaan & Gudang" }, { label: "15 SKU Master Produk" }]}
-      title="Master Produk & Variant SKU"
-      subtitle="Katalog 15 SKU Makanan & Minuman, Standar Biaya, dan Stok Multi-Lokasi WH-JKT & CAFE-JKT (F-03, SR-17)"
-      wireframe="Wireframe S-05"
+      title="Produk & persediaan"
+      subtitle="Kelola menu, harga, dan ketersediaan stok di setiap lokasi."
+      wireframe="Wireframe S-03"
       actions={
         <div className="flex items-center flex-wrap gap-2">
           {/* View mode toggle */}
@@ -258,7 +261,7 @@ export default function ProductsPage() {
               <div className="flex items-center space-x-2">
                 <Package className="w-4 h-4 text-[#1d4ed8]" />
                 <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">
-                  Tabel Ringkasan Master 15 SKU Varian
+                  Katalog produk
                 </h3>
               </div>
               <p className="text-xs text-slate-600 font-medium mt-0.5">
@@ -276,25 +279,27 @@ export default function ProductsPage() {
             </div>
           </div>
 
+          <div className="px-5"><TableSearch value={table.query} onChange={table.setQuery} label="Cari nama produk atau SKU…" /></div>
           {/* Table Container */}
           <div className="overflow-x-auto glass-3 border-t border-white/80">
             <table className="w-full text-left text-xs text-slate-900">
               <thead className="bg-white/60 text-slate-900 font-bold uppercase tracking-wider text-[11px] border-b border-black/10">
                 <tr>
-                  <th className="px-5 py-3.5">SKU &amp; Nama Produk</th>
-                  <th className="px-4 py-3.5">Varian &amp; Satuan</th>
-                  <th className="px-4 py-3.5 text-right">WH-JKT</th>
-                  <th className="px-4 py-3.5 text-right">CAFE-JKT</th>
-                  <th className="px-4 py-3.5 text-right">Total On-Hand</th>
-                  <th className="px-4 py-3.5 text-center">Status Stok</th>
-                  <th className="px-4 py-3.5 text-right">Harga Jual</th>
-                  <th className="px-4 py-3.5 text-right">Biaya HPP</th>
-                  <th className="px-4 py-3.5 text-right">Margin</th>
-                  <th className="px-4 py-3.5 text-center">Aksi</th>
+                  <th scope="col" className="px-5 py-3.5" aria-sort={table.sort.key === "name" ? table.sort.direction === "asc" ? "ascending" : "descending" : "none"}><SortLabel active={table.sort.key === "name"} direction={table.sort.direction} onClick={() => table.toggleSort("name")}>SKU &amp; Nama Produk</SortLabel></th>
+                  <th scope="col" className="px-4 py-3.5">Varian &amp; Satuan</th>
+                  <th scope="col" className="px-4 py-3.5 text-right">WH-JKT</th>
+                  <th scope="col" className="px-4 py-3.5 text-right">CAFE-JKT</th>
+                  <th scope="col" className="px-4 py-3.5 text-right" aria-sort={table.sort.key === "totalOnHand" ? table.sort.direction === "asc" ? "ascending" : "descending" : "none"}><SortLabel active={table.sort.key === "totalOnHand"} direction={table.sort.direction} onClick={() => table.toggleSort("totalOnHand")}>Total On-Hand</SortLabel></th>
+                  <th scope="col" className="px-4 py-3.5 text-center">Status Stok</th>
+                  <th scope="col" className="px-4 py-3.5 text-right" aria-sort={table.sort.key === "salesPrice" ? table.sort.direction === "asc" ? "ascending" : "descending" : "none"}><SortLabel active={table.sort.key === "salesPrice"} direction={table.sort.direction} onClick={() => table.toggleSort("salesPrice")}>Harga Jual</SortLabel></th>
+                  <th scope="col" className="px-4 py-3.5 text-right">Biaya HPP</th>
+                  <th scope="col" className="px-4 py-3.5 text-right">Margin</th>
+                  <th scope="col" className="px-4 py-3.5 text-center">Aksi</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-black/5 font-mono">
-                {products.map((p) => {
+              <tbody className="divide-y divide-black/5 tabular-nums">
+                {table.total === 0 && <tr><td colSpan={10} className="text-center py-12 text-slate-500">Tidak ada produk yang cocok dengan pencarian.</td></tr>}
+                {table.rows.map((p) => {
                   const isLow = (p.totalOnHand ?? 0) < 20;
                   const marginPct = p.salesPrice > 0 ? Math.round(((p.salesPrice - p.standardCost) / p.salesPrice) * 100) : 0;
 
@@ -357,6 +362,7 @@ export default function ProductsPage() {
               </tbody>
             </table>
           </div>
+          <TablePagination {...table} onChange={table.setPage} />
         </div>
       ) : productDetail && (
         <div className="glass-2 rounded-2xl shadow-glass-2 border border-white/80 overflow-hidden">
@@ -426,11 +432,11 @@ export default function ProductsPage() {
               <table className="w-full text-left text-xs">
                 <thead className="bg-white/60 font-bold text-slate-900 uppercase tracking-wider text-[11px] border-b border-black/10">
                   <tr>
-                    <th className="px-6 py-3.5">Lokasi Gudang / Gerai</th>
-                    <th className="px-6 py-3.5 text-right">Stok Fisik (On Hand)</th>
-                    <th className="px-6 py-3.5 text-right">Stok Direservasi (SR-04)</th>
-                    <th className="px-6 py-3.5 text-right text-emerald-950 font-bold">Tersedia (Available)</th>
-                    <th className="px-6 py-3.5 text-right">Valuasi Stok</th>
+                    <th scope="col" className="px-6 py-3.5">Lokasi Gudang / Gerai</th>
+                    <th scope="col" className="px-6 py-3.5 text-right">Stok Fisik (On Hand)</th>
+                    <th scope="col" className="px-6 py-3.5 text-right">Stok Direservasi (SR-04)</th>
+                    <th scope="col" className="px-6 py-3.5 text-right text-emerald-950 font-bold">Tersedia (Available)</th>
+                    <th scope="col" className="px-6 py-3.5 text-right">Valuasi Stok</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-black/5 font-mono">
@@ -458,7 +464,7 @@ export default function ProductsPage() {
       )}
 
       {/* Collapsible QA Test Runner for T-05 & T-06 */}
-      <details className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
+      <details hidden className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
         <summary className="cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white select-none">
           <div className="flex items-center space-x-2">
             <span className="px-2 py-0.5 rounded-md bg-[#7c3aed] text-[#ffffff] font-bold text-[10px] uppercase">

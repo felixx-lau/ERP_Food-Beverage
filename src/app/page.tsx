@@ -8,13 +8,13 @@ import CreateContactModal from "@/components/CreateContactModal";
 import CreateSalesOrderModal from "@/components/CreateSalesOrderModal";
 import CreatePurchaseOrderModal from "@/components/CreatePurchaseOrderModal";
 import CreateCompanyModal from "@/components/CreateCompanyModal";
-import { 
-  Building2, 
-  MapPin, 
-  ShieldCheck, 
-  Lock, 
-  CheckCircle2, 
-  Play, 
+import {
+  Building2,
+  MapPin,
+  ShieldCheck,
+  Lock,
+  CheckCircle2,
+  Play,
   LayoutGrid,
   List,
   ChevronRight,
@@ -165,13 +165,12 @@ export default function HomePage() {
       currentUser={user}
       onSwitchRole={handleSwitchRole}
       breadcrumbs={[{ label: "Beranda" }]}
-      title={`Sistem ERP ${activeCompany?.name || "PT Rasa Aruna Bersama"}`}
-      subtitle="Platform Manajemen Operasional Terpadu • Lokasi: WH-JKT (Gudang Utama)"
+      title="Ruang kerja Anda"
+      subtitle={`${activeCompany?.name || "PT Rasa Aruna Bersama"} · Semua operasional dalam satu tempat.`}
       actions={
-        <div className="flex items-center space-x-1 glass-3 p-1 rounded-2xl border border-white/80 shadow-xs" role="tablist" aria-label="Mode Tampilan Modul">
+        <div className="flex items-center space-x-1 glass-3 p-1 rounded-2xl border border-white/80 shadow-xs" role="group" aria-label="Mode Tampilan Modul">
           <button
-            role="tab"
-            aria-selected={activeTab === "kanban"}
+                        aria-pressed={activeTab === "kanban"}
             aria-label="Tampilan Grid Kartu"
             onClick={() => setActiveTab("kanban")}
             className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none ${
@@ -184,8 +183,7 @@ export default function HomePage() {
             <span>Tampilan Grid</span>
           </button>
           <button
-            role="tab"
-            aria-selected={activeTab === "list"}
+                        aria-pressed={activeTab === "list"}
             aria-label="Tampilan Tabel Modul"
             onClick={() => setActiveTab("list")}
             className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none ${
@@ -200,124 +198,32 @@ export default function HomePage() {
         </div>
       }
     >
-      {/* Welcome & Quick Action Hub: Modern Royal Blue to Violet Gradient */}
-      <section 
-        aria-label="Pusat Input dan Aksi Cepat"
-        className="bg-gradient-to-br from-[#1e3a8a] via-[#1d4ed8] to-[#4c1d95] rounded-2xl p-4 sm:p-5 text-white border border-indigo-500/30 shadow-lg space-y-3 relative overflow-hidden"
-      >
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-          <div>
-            <span className="inline-flex items-center space-x-1.5 px-3 py-0.5 rounded-full text-xs font-bold bg-white/15 text-white border border-white/25 shadow-xs">
-              <Sparkles className="w-3.5 h-3.5 text-[#7c3aed]" aria-hidden="true" />
-              <span>Pusat Input & Aksi Cepat</span>
-            </span>
-            {/* Secondary heading clearly smaller than H1 */}
-            <h2 className="text-base sm:text-lg font-semibold tracking-tight text-white mt-1">
-              Halo, {user?.name || "Pengguna"}! Ingin input data apa hari ini?
-            </h2>
-            <p className="text-xs text-[#e0e7ff] mt-0.5 max-w-2xl font-normal">
-              Pilih salah satu tombol di bawah untuk langsung menambah data baru tanpa harus berpindah halaman.
-            </p>
-          </div>
-          <div className="shrink-0 flex items-center space-x-2">
-            <button
-              onClick={() => router.push("/pos")}
-              aria-label="Buka Kasir POS (Point of Sale)"
-              className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-[#7c3aed] to-[#6366f1] hover:from-[#6d28d9] hover:to-[#4f46e5] active:from-[#5b21b6] active:to-[#4338ca] text-white font-extrabold text-xs rounded-xl shadow-md shadow-violet-900/30 transition-all active:scale-95 border border-white/30 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none cursor-pointer"
-            >
-              <Store className="w-4 h-4 text-white" aria-hidden="true" />
-              <span>Buka Kasir POS</span>
-            </button>
-          </div>
+      <section className="welcome-panel rounded-2xl border border-indigo-100 p-6 sm:p-8 relative overflow-hidden" aria-label="Aksi cepat">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+          <div><p className="text-[11px] font-semibold tracking-[.12em] uppercase text-indigo-100 mb-2">RASA ARUNA · BUSINESS WORKSPACE</p><h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-white">Selamat datang, {user?.name?.split(" ")[0] || "Pengguna"}.</h2><p className="text-sm text-indigo-100 mt-2">Kelola bisnis Anda, mulai dari pesanan hingga laporan keuangan.</p></div>
+          <button onClick={() => router.push("/pos")} className="btn-primary welcome-cta self-start shrink-0"><Store className="w-4 h-4" />Buka kasir POS<ChevronRight className="w-4 h-4" /></button>
         </div>
-
-        {/* 4 Quick Input Tiles (WCAG AAA Compliant contrast, consistent white icons) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-0.5">
-          <button
-            onClick={() => setProductModalOpen(true)}
-            aria-label="Tambah Produk Baru: Menu baru dan stok awal"
-            className="btn-glass-tile flex items-center space-x-3 p-3.5 rounded-xl text-left group cursor-pointer focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
-          >
-            <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center text-white transition-colors duration-200 border border-white/20 shrink-0">
-              <Package className="w-4 h-4 text-white" aria-hidden="true" />
-            </div>
-            <div className="min-w-0">
-              <span className="text-xs font-bold text-white block tracking-wide">
-                + Tambah Produk
-              </span>
-              <span className="text-xs text-[#e0e7ff] font-normal truncate block mt-0.5">
-                Menu baru & stok awal
-              </span>
-            </div>
-          </button>
-
-          <button
-            onClick={() => setSalesOrderModalOpen(true)}
-            aria-label="Buat Penjualan SO: Pesanan catering dan resto"
-            className="btn-glass-tile flex items-center space-x-3 p-3.5 rounded-xl text-left group cursor-pointer focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
-          >
-            <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center text-white transition-colors duration-200 border border-white/20 shrink-0">
-              <ShoppingCart className="w-4 h-4 text-white" aria-hidden="true" />
-            </div>
-            <div className="min-w-0">
-              <span className="text-xs font-bold text-white block tracking-wide">
-                + Buat Penjualan (SO)
-              </span>
-              <span className="text-xs text-[#e0e7ff] font-normal truncate block mt-0.5">
-                Pesanan catering & resto
-              </span>
-            </div>
-          </button>
-
-          <button
-            onClick={() => setContactModalOpen(true)}
-            aria-label="Tambah Pelanggan Baru: Customer dan vendor baru"
-            className="btn-glass-tile flex items-center space-x-3 p-3.5 rounded-xl text-left group cursor-pointer focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
-          >
-            <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center text-white transition-colors duration-200 border border-white/20 shrink-0">
-              <UserPlus className="w-4 h-4 text-white" aria-hidden="true" />
-            </div>
-            <div className="min-w-0">
-              <span className="text-xs font-bold text-white block tracking-wide">
-                + Tambah Pelanggan
-              </span>
-              <span className="text-xs text-[#e0e7ff] font-normal truncate block mt-0.5">
-                Customer & vendor baru
-              </span>
-            </div>
-          </button>
-
-          <button
-            onClick={() => setPurchaseOrderModalOpen(true)}
-            aria-label="Buat Pesanan Beli PO: Pengadaan PO ke vendor"
-            className="btn-glass-tile flex items-center space-x-3 p-3.5 rounded-xl text-left group cursor-pointer focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
-          >
-            <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center text-white transition-colors duration-200 border border-white/20 shrink-0">
-              <ShoppingBag className="w-4 h-4 text-white" aria-hidden="true" />
-            </div>
-            <div className="min-w-0">
-              <span className="text-xs font-bold text-white block tracking-wide">
-                + Buat Pesanan Beli
-              </span>
-              <span className="text-xs text-[#e0e7ff] font-normal truncate block mt-0.5">
-                Pengadaan PO ke vendor
-              </span>
-            </div>
-          </button>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mt-7">
+          {[
+            { label: "Tambah produk", hint: "Menu & stok awal", icon: Package, action: () => setProductModalOpen(true) },
+            { label: "Buat penjualan", hint: "Pesanan pelanggan", icon: ShoppingCart, action: () => setSalesOrderModalOpen(true) },
+            { label: "Tambah pelanggan", hint: "Kontak & mitra bisnis", icon: UserPlus, action: () => setContactModalOpen(true) },
+            { label: "Buat pembelian", hint: "Pengadaan dari vendor", icon: ShoppingBag, action: () => setPurchaseOrderModalOpen(true) },
+          ].map(action => <button key={action.label} onClick={action.action} className="flex items-center gap-3 text-left bg-white border border-slate-200/80 rounded-xl p-4 hover:border-indigo-300 hover:shadow-sm transition-all group"><span className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0"><action.icon className="w-5 h-5" /></span><span><span className="block text-[13px] font-semibold text-slate-800">{action.label}</span><span className="block text-xs text-slate-500 mt-1">{action.hint}</span></span><Plus className="w-4 h-4 text-slate-400 ml-auto shrink-0 group-hover:text-indigo-600" /></button>)}
         </div>
       </section>
 
       {/* Akses Modul / Aplikasi */}
-      <section 
+      <section
         aria-label="Katalog Modul dan Aplikasi Utama"
         className="bg-white/90 rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden"
       >
         <div className="px-5 py-3.5 bg-transparent border-b border-slate-100 flex items-center justify-between">
           <div>
             <h2 className="text-sm font-semibold text-slate-800 tracking-normal">
-              Modul & Aplikasi Utama
+              Jelajahi aplikasi
             </h2>
-            <p className="text-xs text-slate-700 font-medium mt-0.5">
+            <p className="text-sm text-slate-500 mt-1">
               Pilih modul untuk mengelola alur operasional sesuai wewenang role <strong className="font-bold text-[#1d4ed8]">{user?.role || "GUEST"}</strong>.
             </p>
           </div>
@@ -325,7 +231,7 @@ export default function HomePage() {
 
         {activeTab === "kanban" ? (
           /* Kanban Mode */
-          <div className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="motion-stagger p-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             {APPS_CATALOG.map((app) => {
               const hasAccess = user ? app.roles.includes(user.role) : false;
               const IconComponent = app.icon;
@@ -348,6 +254,7 @@ export default function HomePage() {
               return (
                 <div
                   key={app.key}
+                  data-available={hasAccess}
                   tabIndex={0}
                   role="button"
                   aria-label={`Buka modul ${app.name}: ${app.destination}${hasAccess ? "" : " (Terkunci)"}`}
@@ -358,17 +265,17 @@ export default function HomePage() {
                       handleNavigate();
                     }
                   }}
-                  className={`rounded-2xl border p-5 transition-all relative flex flex-col justify-between cursor-pointer group focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none min-h-[160px] ${
+                  className={`module-card rounded-xl border p-5 flex flex-col justify-between cursor-pointer group focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none min-h-[184px] transition-all duration-200 ${
                     hasAccess
-                      ? "bg-white border border-slate-200/80 hover:border-indigo-300 hover:shadow-md rounded-xl transition-all duration-200 cursor-pointer group"
-                      : "bg-slate-50/70 opacity-55 border border-dashed border-slate-200 rounded-xl"
+                      ? "bg-white border-slate-200/80 hover:border-indigo-300/70 hover:shadow-md hover:-translate-y-px"
+                      : "bg-slate-50/60 border-dashed border-slate-200"
                   }`}
                 >
                   <div>
                     <div className="flex items-start justify-between mb-4">
                       {/* Icon container — fixed size, proper padding so icon never touches border */}
                       <div
-                        className="w-10 h-10 rounded-lg flex items-center justify-center bg-blue-50 border border-blue-100 flex-shrink-0 group-hover:bg-blue-100 transition-colors duration-200"
+                        className="module-icon w-10 h-10 rounded-lg flex items-center justify-center bg-blue-50 border border-blue-100 flex-shrink-0 group-hover:bg-blue-100 transition-colors duration-200"
                       >
                         <IconComponent className="w-5 h-5 text-blue-600 group-hover:text-indigo-700 transition-colors duration-200" aria-hidden="true" />
                       </div>
@@ -382,7 +289,7 @@ export default function HomePage() {
                       )}
                     </div>
 
-                    <h3 className="font-semibold text-sm text-[#0f172a] group-hover:text-blue-700 transition-colors">
+                    <h3 className="font-semibold text-[15px] text-[#0f172a] group-hover:text-blue-700 transition-colors">
                       {app.name}
                     </h3>
                     <p className="text-xs text-slate-600 font-medium mt-1.5 leading-relaxed line-clamp-2">
@@ -410,11 +317,11 @@ export default function HomePage() {
             <table className="w-full text-left text-xs text-slate-900">
               <thead className="bg-white/60 text-slate-800 font-bold uppercase tracking-wider text-xs border-b border-black/10">
                 <tr>
-                  <th className="px-6 py-3.5">Aplikasi</th>
-                  <th className="px-6 py-3.5">Halaman Tujuan</th>
-                  <th className="px-6 py-3.5">Wewenang Role</th>
-                  <th className="px-6 py-3.5">Status Akses</th>
-                  <th className="px-6 py-3.5 text-right">Aksi</th>
+                  <th scope="col" className="px-6 py-3.5">Aplikasi</th>
+                  <th scope="col" className="px-6 py-3.5">Halaman Tujuan</th>
+                  <th scope="col" className="px-6 py-3.5">Wewenang Role</th>
+                  <th scope="col" className="px-6 py-3.5">Status Akses</th>
+                  <th scope="col" className="px-6 py-3.5 text-right">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-black/5">

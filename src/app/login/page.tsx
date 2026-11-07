@@ -20,42 +20,42 @@ const DEMO_ACCOUNTS = [
     role: "OWNER",
     name: "Maya Prasetyo",
     email: "owner@rasaaruna.com",
-    label: "👑 Owner (Akses Penuh)",
+    label: "Owner (Akses Penuh)",
     color: "bg-emerald-50 text-emerald-800 border-emerald-200",
   },
   {
     role: "SALES",
     name: "Dini Anggraini",
     email: "sales@rasaaruna.com",
-    label: "💼 Sales & CRM",
+    label: "Sales & CRM",
     color: "bg-blue-50 text-blue-800 border-blue-200",
   },
   {
     role: "CASHIER",
     name: "Bagas Putra",
     email: "cashier@rasaaruna.com",
-    label: "🏪 Kasir POS",
+    label: "Kasir POS",
     color: "bg-amber-50 text-amber-800 border-amber-200",
   },
   {
     role: "WAREHOUSE",
     name: "Sinta Maharani",
     email: "warehouse@rasaaruna.com",
-    label: "📦 Gudang & Logistik",
+    label: "Gudang & Logistik",
     color: "bg-teal-50 text-teal-800 border-teal-200",
   },
   {
     role: "PROCUREMENT",
     name: "Arief Wicaksono",
     email: "procurement@rasaaruna.com",
-    label: "🛍️ Pengadaan (PO)",
+    label: "Pengadaan (PO)",
     color: "bg-purple-50 text-purple-800 border-purple-200",
   },
   {
     role: "FINANCE",
     name: "Reza Firdaus",
     email: "finance@rasaaruna.com",
-    label: "💰 Keuangan & Faktur",
+    label: "Keuangan & Faktur",
     color: "bg-rose-50 text-rose-800 border-rose-200",
   },
 ];
@@ -63,7 +63,7 @@ const DEMO_ACCOUNTS = [
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("owner@rasaaruna.com");
-  const [password, setPassword] = useState("password123");
+  const [password, setPassword] = useState("Password123!");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -102,40 +102,46 @@ export default function LoginPage() {
 
   const selectDemoAccount = (accountEmail: string) => {
     setEmail(accountEmail);
-    setPassword("password123");
+    setPassword("Password123!");
     setErrorMsg(null);
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center px-4 py-8 relative">
+    <div className="login-layout min-h-screen grid lg:grid-cols-2">
+      <aside className="hidden lg:flex flex-col justify-between p-12 xl:p-20 bg-[#101b3b] text-white relative overflow-hidden">
+        <div className="flex items-center gap-3"><div className="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center text-sm font-bold">RA</div><span className="font-semibold tracking-tight">Rasa Aruna<span className="text-indigo-300 font-normal"> / Workspace</span></span></div>
+        <div className="max-w-lg py-16"><span className="text-xs tracking-[.15em] text-indigo-300 uppercase font-medium">F&B enterprise management</span><h2 className="text-4xl xl:text-5xl font-semibold tracking-tight leading-[1.16] mt-5">Satu ruang kerja.<br /><span className="text-indigo-300">Seluruh bisnis Anda.</span></h2><p className="mt-6 text-base leading-relaxed text-slate-300">Dari dapur hingga laporan keuangan. Hubungkan tim, sederhanakan operasional, dan fokus pada pertumbuhan bisnis.</p><div className="mt-10 space-y-4">{["Penjualan & layanan pelanggan", "Persediaan & pengadaan", "Keuangan & laporan bisnis"].map(t => <div key={t} className="flex items-center gap-3 text-sm text-slate-200"><CheckCircle2 className="w-5 h-5 text-indigo-300" />{t}</div>)}</div></div>
+        <p className="text-xs text-slate-400">PT Rasa Aruna Bersama · Enterprise ERP</p>
+      </aside>
+      <div className="flex items-center justify-center px-5 py-10 sm:px-10">
       {/* Container */}
       <div className="w-full max-w-md space-y-6 relative z-10 animate-fade-in-up">
         {/* Brand Logo & Header */}
-        <div className="text-center space-y-2">
+        <div className="space-y-3">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 text-white font-semibold text-xl shadow-md shadow-blue-500/20 border border-white/20 transform transition-transform hover:scale-105 duration-200">
             RA
           </div>
           <div>
-            <h1 className="text-xl font-semibold text-slate-900 tracking-tight">
-              PT Rasa Aruna Bersama
+            <h1 className="text-3xl font-semibold text-slate-900 tracking-tight">
+              Selamat datang kembali
             </h1>
             <p className="text-xs text-slate-600 font-medium mt-0.5">
-              Sistem ERP Terpadu Makanan & Minuman
+              Masuk untuk melanjutkan ke ruang kerja Anda.
             </p>
           </div>
         </div>
 
         {/* Login Card (Glass-2) */}
-        <div className="bg-white/95 rounded-2xl p-6 sm:p-7 shadow-lg border border-slate-200/80 space-y-5">
+        <div className="space-y-6">
           <div>
-            <h2 className="text-sm font-semibold text-slate-800">Masuk ke Akun Anda</h2>
-            <p className="text-xs text-slate-600 font-normal mt-0.5">
+            <h2 className="sr-only">Masuk ke Akun Anda</h2>
+            <p className="sr-only">
               Silakan masukkan email dan password terdaftar
             </p>
           </div>
 
           {errorMsg && (
-            <div className="p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-xs text-rose-900 font-bold flex items-center space-x-2 backdrop-blur-xs">
+            <div role="alert" className="p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-xs text-rose-900 font-bold flex items-center space-x-2 backdrop-blur-xs">
               <span className="w-2 h-2 rounded-full bg-rose-600 shrink-0" />
               <span>{errorMsg}</span>
             </div>
@@ -144,12 +150,13 @@ export default function LoginPage() {
           <form onSubmit={handleLogin} className="space-y-4">
             {/* Email Field */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label htmlFor="page-field-0" className="block text-xs font-semibold text-slate-700 mb-1.5">
                 Alamat Email
               </label>
               <div className="relative">
                 <Mail className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
-                <input
+                <input id="page-field-0"
+                  autoComplete="username"
                   type="email"
                   required
                   placeholder="nama@rasaaruna.com"
@@ -162,12 +169,13 @@ export default function LoginPage() {
 
             {/* Password Field */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label htmlFor="page-field-1" className="block text-xs font-semibold text-slate-700 mb-1.5">
                 Kata Sandi (Password)
               </label>
               <div className="relative">
                 <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
-                <input
+                <input id="page-field-1"
+                  autoComplete="current-password"
                   type={showPassword ? "text" : "password"}
                   required
                   placeholder="••••••••"
@@ -178,7 +186,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-2.5 text-slate-500 hover:text-slate-900 p-0.5 transition-colors focus-brand-ring rounded"
+                  className="absolute right-1 top-0.5 w-10 h-10 flex items-center justify-center text-slate-500 hover:text-slate-900 p-0.5 transition-colors focus-brand-ring rounded"
                   title={showPassword ? "Sembunyikan password" : "Tampilkan password"}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -210,7 +218,7 @@ export default function LoginPage() {
                 <Sparkles className="w-3.5 h-3.5 text-violet-600" />
                 <span>Pilih Akun Cepat (Skenario Demo)</span>
               </span>
-              <span className="text-[10px] text-slate-600 font-mono font-medium">pass: password123</span>
+              <span className="text-[10px] text-slate-600 font-mono font-medium">pass: Password123!</span>
             </div>
 
             <div className="grid grid-cols-2 gap-2">
@@ -237,9 +245,10 @@ export default function LoginPage() {
         <div className="text-center text-xs text-slate-700 font-semibold space-y-1">
           <p>© 2026 PT Rasa Aruna Bersama · F&B Enterprise ERP</p>
           <p className="text-[10px] text-slate-600 font-bold">
-            Akses aman terenkripsi JWT & role-based access control (RBAC)
+            Akses sesuai peran dan perusahaan Anda.
           </p>
         </div>
+      </div>
       </div>
     </div>
   );

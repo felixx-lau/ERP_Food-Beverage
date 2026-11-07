@@ -1,6 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import DocumentControls from "@/components/DocumentControls";
+import DocumentList from "@/components/DocumentList";
+import DocumentTrail from "@/components/DocumentTrail";
 import AppLayout from "@/components/AppLayout";
 import StatusBadge from "@/components/StatusBadge";
 import KPICard from "@/components/KPICard";
@@ -33,7 +36,7 @@ export default function GoodsReceiptsPage() {
         const data = await res.json();
         setReceipts(data.receipts || []);
         if (data.receipts?.length > 0 && !selectedReceipt) {
-          setSelectedReceipt(data.receipts[0]);
+          setSelectedReceipt(data.receipts.find((r: any) => r.id === new URLSearchParams(window.location.search).get("id")) || data.receipts[0]);
         }
       }
     } finally {
@@ -173,7 +176,7 @@ export default function GoodsReceiptsPage() {
       currentUser={user}
       onSwitchRole={handleSwitchRole}
       breadcrumbs={[{ label: "Persediaan & Gudang" }, { label: "Penerimaan Barang" }]}
-      title="Goods Receipts & Quality Inspection"
+      title="Penerimaan barang"
       subtitle="Penerimaan Barang dari Vendor, Inspeksi Mutu (Accepted vs Rejected) & Akrual GRNI Otomatis (F-12, SR-06)"
       wireframe="Wireframe S-09"
       actions={
@@ -193,6 +196,10 @@ export default function GoodsReceiptsPage() {
         </div>
       }
     >
+      <DocumentList records={receipts} selectedId={selectedReceipt?.id} onSelect={fetchReceiptDetail}/>
+
+      {selectedReceipt && <DocumentControls kind="receipts" record={selectedReceipt} role={user?.role} onChanged={async () => { await fetchReceipts(); await fetchReceiptDetail(selectedReceipt.id); }} />}
+
       {/* Selected Receipt Detail */}
       {selectedReceipt && (
         <div className="bg-white rounded-xl shadow-xs border border-[#E5E9E4] overflow-hidden">
@@ -278,11 +285,11 @@ export default function GoodsReceiptsPage() {
               <table className="w-full text-left text-xs">
                 <thead className="bg-[#f1f5f9] font-semibold text-[#64748b] uppercase tracking-wider text-[11px] border-b border-[#E5E9E4]">
                   <tr>
-                    <th className="px-6 py-3.5">SKU Varian & Nama Produk</th>
-                    <th className="px-6 py-3.5 text-right">Dipesan (Demand)</th>
-                    <th className="px-6 py-3.5 text-right text-emerald-800">Diterima (Accepted)</th>
-                    <th className="px-6 py-3.5 text-right text-rose-800">Ditolak (Rejected)</th>
-                    <th className="px-6 py-3.5">Catatan Inspeksi Mutu</th>
+                    <th scope="col" className="px-6 py-3.5">SKU Varian & Nama Produk</th>
+                    <th scope="col" className="px-6 py-3.5 text-right">Dipesan (Demand)</th>
+                    <th scope="col" className="px-6 py-3.5 text-right text-emerald-800">Diterima (Accepted)</th>
+                    <th scope="col" className="px-6 py-3.5 text-right text-rose-800">Ditolak (Rejected)</th>
+                    <th scope="col" className="px-6 py-3.5">Catatan Inspeksi Mutu</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#E5E9E4] font-mono">
@@ -312,7 +319,7 @@ export default function GoodsReceiptsPage() {
       )}
 
       {/* Collapsible QA Test Runner for T-17 & T-18 */}
-      <details className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
+      <details hidden className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
         <summary className="cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white select-none">
           <div className="flex items-center space-x-2">
             <span className="px-2 py-0.5 rounded-md bg-[#7c3aed] text-[#ffffff] font-bold text-[10px] uppercase">
@@ -385,6 +392,7 @@ export default function GoodsReceiptsPage() {
           )}
         </div>
       </details>
+      {selectedReceipt && <DocumentTrail kind="receipts" record={selectedReceipt}/>}
     </AppLayout>
   );
 }

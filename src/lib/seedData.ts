@@ -197,6 +197,11 @@ export async function executeSeed(prisma: PrismaClient, actorName = "System", ac
   // We execute all cleaning and seeding in a clean transaction or sequence
   // 1. Clean existing transactional and master data
   await prisma.$transaction(async (tx) => {
+    await tx.requestIdentity.deleteMany();
+    await tx.documentSequence.deleteMany();
+    await tx.stockReservation.deleteMany();
+    await tx.vendorPrice.deleteMany();
+    await tx.posRefund.deleteMany();
     await tx.auditLog.deleteMany();
     await tx.internalTransferLine.deleteMany();
     await tx.internalTransfer.deleteMany();
@@ -226,6 +231,8 @@ export async function executeSeed(prisma: PrismaClient, actorName = "System", ac
     await tx.stockMove.deleteMany();
     await tx.stockLevel.deleteMany();
     await tx.productVariant.deleteMany();
+    await tx.category.deleteMany();
+    await tx.unitOfMeasure.deleteMany();
     await tx.warehouseLocation.deleteMany();
     await tx.account.deleteMany();
     await tx.contact.deleteMany();
@@ -245,6 +252,7 @@ export async function executeSeed(prisma: PrismaClient, actorName = "System", ac
     });
   }
 
+  for (const unit of new Set(SEED_PRODUCTS.map(p => p.unit))) await prisma.unitOfMeasure.create({ data: { code: unit, name: unit } });
   // 3. Seed Warehouse Locations
   for (const loc of SEED_LOCATIONS) {
     await prisma.warehouseLocation.create({
@@ -432,6 +440,9 @@ export async function executeSeed(prisma: PrismaClient, actorName = "System", ac
     },
   });
 
+  for (const product of SEED_PRODUCTS) await prisma.vendorPrice.create({ data: { vendorId: product.defaultVendorId, productSku: product.sku, price: product.cost, minimumQty: 1 } });
+  const seedOrderLines = await prisma.salesOrderLine.findMany({ where: { salesOrder: { status: 'CONFIRMED' } } });
+  for (const line of seedOrderLines) await prisma.stockReservation.create({ data: { salesOrderLineId: line.id, locationCode: 'WH-JKT', quantity: line.quantity - line.deliveredQty } });
   return {
     success: true,
     message: "Baseline Seed successfully loaded.",

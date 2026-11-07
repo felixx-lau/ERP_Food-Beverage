@@ -1,7 +1,11 @@
+import { authorizeApi } from "@/lib/apiAuthorization";
 import { NextRequest, NextResponse } from "next/server";
 import { getCompanyById } from "@/lib/companyManager";
 
 export async function POST(request: NextRequest) {
+  const accessDenied = await authorizeApi(request);
+  if (accessDenied) return accessDenied;
+
   try {
     const body = await request.json();
     const { companyId } = body;
@@ -21,6 +25,7 @@ export async function POST(request: NextRequest) {
       activeCompany: company,
     });
 
+    response.cookies.delete("rasa_aruna_session");
     response.cookies.set("rasa_aruna_company", company.id, {
       path: "/",
       httpOnly: false,

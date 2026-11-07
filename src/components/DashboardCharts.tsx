@@ -14,7 +14,7 @@ import {
   Legend,
   Filler,
 } from "chart.js";
-import { Line, Bar } from "react-chartjs-2";
+import { Line, Bar, Doughnut } from "react-chartjs-2";
 import {
   TrendingUp,
   TrendingDown,
@@ -31,6 +31,8 @@ import {
   ChevronDown,
   Info,
 } from "lucide-react";
+import KPICard from "./KPICard";
+import LoadingState from "./ui/LoadingState";
 import { DashboardChartData } from "@/lib/dashboardEngine";
 
 // Register Chart.js plugins
@@ -48,8 +50,11 @@ ChartJS.register(
 );
 
 export default function DashboardCharts() {
+  const [reducedMotion, setReducedMotion] = useState(true);
+  useEffect(() => { const media = window.matchMedia("(prefers-reduced-motion: reduce)"); const update = () => setReducedMotion(media.matches); update(); media.addEventListener("change", update); return () => media.removeEventListener("change", update); }, []);
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<DashboardChartData | null>(null);
   const [period, setPeriod] = useState<"day" | "week" | "month">("day");
 
@@ -85,6 +90,7 @@ export default function DashboardCharts() {
     e = endDate
   ) => {
     setLoading(true);
+    setError(null);
     try {
       const q = new URLSearchParams();
       q.set("period", p);
@@ -92,6 +98,7 @@ export default function DashboardCharts() {
       if (e) q.set("endDate", e);
 
       const res = await fetch(`/api/dashboard/charts?${q.toString()}`);
+      if (!res.ok) throw new Error("Data analitik tidak tersedia untuk akun ini.");
       if (res.ok) {
         const json = await res.json();
         if (json.success) {
@@ -99,7 +106,8 @@ export default function DashboardCharts() {
         }
       }
     } catch (err) {
-      console.error("Failed to load chart metrics:", err);
+      setError(err instanceof Error ? err.message : "Gagal memuat analitik.");
+      setData(null);
     } finally {
       setLoading(false);
     }
@@ -199,6 +207,7 @@ export default function DashboardCharts() {
   };
 
   const lineChartOptions: any = {
+    animation: reducedMotion ? false : { duration: 240 },
     responsive: true,
     maintainAspectRatio: false,
     interaction: {
@@ -210,7 +219,7 @@ export default function DashboardCharts() {
         position: "top",
         labels: {
           boxWidth: 12,
-          font: { family: "sans-serif", size: 11, weight: "bold" },
+          font: { family: "Inter", size: 12, weight: "normal" },
           color: "#202824",
         },
       },
@@ -245,8 +254,8 @@ export default function DashboardCharts() {
         position: "left",
         grid: { color: "rgba(0, 0, 0, 0.05)" },
         ticks: {
-          font: { size: 10, weight: "bold" },
-          color: "#0A110E",
+          font: { size: 11, weight: "normal" },
+          color: "#64748b",
           callback: function (val: any) {
             if (val >= 1000000) return `Rp ${(val / 1000000).toFixed(1)}M`;
             if (val >= 1000) return `Rp ${(val / 1000).toFixed(0)}k`;
@@ -260,7 +269,7 @@ export default function DashboardCharts() {
         position: "right",
         grid: { drawOnChartArea: false },
         ticks: {
-          font: { size: 10, weight: "bold" },
+          font: { size: 11, weight: "normal" },
           color: "#8B6920",
           stepSize: 1,
           callback: function (val: any) {
@@ -271,8 +280,8 @@ export default function DashboardCharts() {
       x: {
         grid: { display: false },
         ticks: {
-          font: { size: 10, weight: "bold" },
-          color: "#0A110E",
+          font: { size: 11, weight: "normal" },
+          color: "#64748b",
           maxRotation: 45,
         },
       },
@@ -296,6 +305,7 @@ export default function DashboardCharts() {
 
   const topProductsOptions: any = {
     indexAxis: "y",
+    animation: reducedMotion ? false : { duration: 240 },
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -316,13 +326,13 @@ export default function DashboardCharts() {
     scales: {
       x: {
         grid: { color: "rgba(0, 0, 0, 0.05)" },
-        ticks: { font: { size: 10, weight: "bold" }, color: "#0A110E" },
+        ticks: { font: { size: 11, weight: "normal" }, color: "#64748b" },
       },
       y: {
         grid: { display: false },
         ticks: {
-          font: { size: 10, weight: "bold" },
-          color: "#0A110E",
+          font: { size: 11, weight: "normal" },
+          color: "#64748b",
           autoSkip: false,
         },
       },
@@ -351,6 +361,7 @@ export default function DashboardCharts() {
   };
 
   const categoryOptions: any = {
+    animation: reducedMotion ? false : { duration: 240 },
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -376,8 +387,8 @@ export default function DashboardCharts() {
       y: {
         grid: { color: "rgba(0, 0, 0, 0.05)" },
         ticks: {
-          font: { size: 10, weight: "bold" },
-          color: "#0A110E",
+          font: { size: 11, weight: "normal" },
+          color: "#64748b",
           callback: function (val: any) {
             if (val >= 1000000) return `Rp ${(val / 1000000).toFixed(1)}M`;
             if (val >= 1000) return `Rp ${(val / 1000).toFixed(0)}k`;
@@ -388,8 +399,8 @@ export default function DashboardCharts() {
       x: {
         grid: { display: false },
         ticks: {
-          font: { size: 10, weight: "bold" },
-          color: "#0A110E",
+          font: { size: 11, weight: "normal" },
+          color: "#64748b",
           maxRotation: 30,
         },
       },
@@ -418,6 +429,7 @@ export default function DashboardCharts() {
   };
 
   const monthlyOptions: any = {
+    animation: reducedMotion ? false : { duration: 240 },
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -426,7 +438,7 @@ export default function DashboardCharts() {
         labels: {
           boxWidth: 12,
           font: { size: 11, weight: "bold" },
-          color: "#0A110E",
+          color: "#64748b",
         },
       },
       tooltip: {
@@ -448,8 +460,8 @@ export default function DashboardCharts() {
       y: {
         grid: { color: "rgba(0, 0, 0, 0.05)" },
         ticks: {
-          font: { size: 10, weight: "bold" },
-          color: "#0A110E",
+          font: { size: 11, weight: "normal" },
+          color: "#64748b",
           callback: function (val: any) {
             if (val >= 1000000) return `Rp ${(val / 1000000).toFixed(1)}M`;
             if (val >= 1000) return `Rp ${(val / 1000).toFixed(0)}k`;
@@ -459,135 +471,21 @@ export default function DashboardCharts() {
       },
       x: {
         grid: { display: false },
-        ticks: { font: { size: 10, weight: "bold" }, color: "#0A110E" },
+        ticks: { font: { size: 11, weight: "normal" }, color: "#64748b" },
       },
     },
   };
 
   return (
     <div className="space-y-6">
-      {/* 5 Executive KPI Cards (Fase 2) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        {/* KPI 1: Total Penjualan */}
-        <div className="glass-2 glass-2-interactive rounded-2xl border border-white/70 p-5 shadow-glass-2 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-[var(--glass-text-secondary)] uppercase tracking-wider">
-              Total Penjualan
-            </span>
-            <div className="w-9 h-9 rounded-xl glass-3 text-blue-700 border border-blue-500/25 flex items-center justify-center shadow-xs">
-              <DollarSign className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-3">
-            <div className="text-2xl font-bold text-[var(--glass-text-primary)] tracking-tight">
-              {formatRupiah(data?.kpis.totalSales || 0)}
-            </div>
-            <p className="text-[11px] text-blue-800 font-semibold mt-1 flex items-center space-x-1">
-              <TrendingUp className="w-3.5 h-3.5" />
-              <span>Gabungan SO Korporat & POS Kasir</span>
-            </p>
-          </div>
-        </div>
-
-        {/* KPI 2: Total Pembelian */}
-        <div className="glass-2 glass-2-interactive rounded-2xl border border-white/70 p-5 shadow-glass-2 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-[var(--glass-text-secondary)] uppercase tracking-wider">
-              Total Pembelian
-            </span>
-            <div className="w-9 h-9 rounded-xl glass-3 text-violet-700 border border-violet-500/25 flex items-center justify-center shadow-xs">
-              <ShoppingBag className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-3">
-            <div className="text-2xl font-bold text-[var(--glass-text-primary)] tracking-tight">
-              {formatRupiah(data?.kpis.totalPurchases || 0)}
-            </div>
-            <p className="text-[11px] text-[var(--glass-text-muted)] font-medium mt-1">
-              Komitmen Pengadaan PO ke Vendor
-            </p>
-          </div>
-        </div>
-
-        {/* KPI 3: Nilai Stok */}
-        <div className="glass-2 glass-2-interactive rounded-2xl border border-white/70 p-5 shadow-glass-2 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-[var(--glass-text-secondary)] uppercase tracking-wider">
-              Nilai Stok Terkini
-            </span>
-            <div className="w-9 h-9 rounded-xl glass-3 text-blue-700 border border-blue-500/25 flex items-center justify-center shadow-xs">
-              <Package className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-3">
-            <div className="text-2xl font-bold text-[var(--glass-text-primary)] tracking-tight">
-              {formatRupiah(data?.kpis.stockValuation || 0)}
-            </div>
-            <p className="text-[11px] text-[var(--glass-text-muted)] font-medium mt-1">
-              Valuasi On-Hand Gudang & Kafe
-            </p>
-          </div>
-        </div>
-
-        {/* KPI 4: Stok di Bawah Minimum */}
-        <div
-          onClick={() => setShowLowStockList(!showLowStockList)}
-          className={`glass-2 glass-2-interactive rounded-2xl border p-5 shadow-glass-2 flex flex-col justify-between cursor-pointer ${
-            (data?.kpis.lowStockCount || 0) > 0
-              ? "border-amber-500/50 bg-amber-500/10"
-              : "border-white/70"
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-[var(--glass-text-secondary)] uppercase tracking-wider">
-              Stok &lt; Batas Minimum
-            </span>
-            <div
-              className={`w-9 h-9 rounded-xl glass-3 flex items-center justify-center border shadow-xs ${
-                (data?.kpis.lowStockCount || 0) > 0
-                  ? "text-amber-800 border-amber-500/30"
-                  : "text-emerald-700 border-emerald-500/30"
-              }`}
-            >
-              <AlertTriangle className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-3">
-            <div className="flex items-baseline space-x-2">
-              <span className="text-2xl font-bold text-[var(--glass-text-primary)] tracking-tight">
-                {data?.kpis.lowStockCount || 0}
-              </span>
-              <span className="text-xs font-semibold text-[var(--glass-text-muted)]">SKU Kritis</span>
-            </div>
-            <p className="text-[11px] text-amber-800 font-semibold mt-1 flex items-center justify-between">
-              <span>Ambang: &lt; 20 unit</span>
-              <span className="underline text-[10px]">
-                {showLowStockList ? "Tutup detail ▲" : "Lihat daftar ▼"}
-              </span>
-            </p>
-          </div>
-        </div>
-
-        {/* KPI 5: Estimasi Laba Kotor */}
-        <div className="glass-2 glass-2-interactive rounded-2xl border border-white/70 p-5 shadow-glass-2 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-[var(--glass-text-secondary)] uppercase tracking-wider">
-              Estimasi Laba Kotor
-            </span>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-700 text-violet-200 shadow-xs">
-              Margin {data?.kpis.grossProfitMarginPercent || 0}%
-            </span>
-          </div>
-          <div className="mt-3">
-            <div className="text-2xl font-bold text-blue-700 tracking-tight">
-              {formatRupiah(data?.kpis.estimatedGrossProfit || 0)}
-            </div>
-            <p className="text-[11px] text-[var(--glass-text-muted)] font-medium mt-1">
-              Pendapatan dikurangi HPP (COGS)
-            </p>
-          </div>
-        </div>
-      </div>
+      {error && <div role="alert" className="bg-amber-50 text-amber-900 border border-amber-200 p-4 rounded-xl text-sm">{error}</div>}
+      {loading ? <LoadingState cards={4} /> : <div className="motion-stagger grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <KPICard title="Total penjualan" value={data ? formatRupiah(data.kpis.totalSales) : "—"} subtitle="Pesanan penjualan & kasir" icon={DollarSign} />
+        <KPICard title="Total pembelian" value={data ? formatRupiah(data.kpis.totalPurchases) : "—"} subtitle="Komitmen pengadaan vendor" icon={ShoppingBag} variant="gold" />
+        <KPICard title="Estimasi margin pesanan" value={data ? formatRupiah(data.kpis.estimatedGrossProfit) : "—"} subtitle={data ? `Margin ${data.kpis.grossProfitMarginPercent}% · Nilai bersih tanpa PBJT − biaya standar` : "Data belum tersedia"} icon={TrendingUp} variant="sage" />
+        <KPICard title="Stok perlu perhatian" value={data ? `${data.kpis.lowStockCount} SKU` : "—"} subtitle={showLowStockList ? "Tutup rincian stok" : "Lihat stok di bawah 20 unit"} icon={Package} variant={data && data.kpis.lowStockCount > 0 ? "warning" : "primary"} onClick={() => setShowLowStockList(!showLowStockList)} />
+      </div>}
+      {showLowStockList && data?.kpis.lowStockProducts.length === 0 && <div role="status" className="surface-card p-5 text-sm text-emerald-700">Tidak ada produk di bawah batas minimum.</div>}
 
       {/* Dropdown Panel: Daftar SKU Stok Kritis */}
       {showLowStockList && data && data.kpis.lowStockProducts.length > 0 && (
@@ -644,6 +542,7 @@ export default function DashboardCharts() {
           ].map((t) => (
             <button
               key={t.key}
+              aria-pressed={period === t.key}
               onClick={() => setPeriod(t.key as any)}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 period === t.key
@@ -667,6 +566,7 @@ export default function DashboardCharts() {
             ].map((p) => (
               <button
                 key={p.key}
+                aria-pressed={preset === p.key}
                 onClick={() => handleApplyPreset(p.key as any)}
                 className={`px-2.5 py-1.2 text-[11px] rounded-lg font-bold transition-all ${
                   preset === p.key
@@ -682,10 +582,11 @@ export default function DashboardCharts() {
 
         {/* Date Inputs & Actions */}
         <div className="flex items-center flex-wrap gap-2.5">
-          <div className="flex items-center space-x-1.5 text-xs text-[var(--glass-text-primary)] glass-3 border border-white/80 rounded-xl px-2.5 py-1 shadow-xs">
+          <div className="flex flex-wrap items-center gap-1.5 max-w-full text-xs text-[var(--glass-text-primary)] glass-3 border border-white/80 rounded-xl px-2.5 py-1 shadow-xs">
             <Calendar className="w-3.5 h-3.5 text-[var(--glass-text-muted)] shrink-0" />
             <input
               type="date"
+              aria-label="Tanggal mulai"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
               className="bg-transparent text-xs text-[var(--glass-text-primary)] font-semibold focus:outline-none"
@@ -693,6 +594,7 @@ export default function DashboardCharts() {
             <span className="text-[var(--glass-text-muted)]">s/d</span>
             <input
               type="date"
+              aria-label="Tanggal akhir"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
               className="bg-transparent text-xs text-[var(--glass-text-primary)] font-semibold focus:outline-none"
@@ -709,15 +611,7 @@ export default function DashboardCharts() {
             <span className="hidden sm:inline">Segarkan</span>
           </button>
 
-          <button
-            onClick={handleLoadDemoData}
-            disabled={seedingDemo}
-            className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-gradient-to-r from-violet-50 to-indigo-50 hover:from-violet-100 hover:to-indigo-100 text-violet-900 border border-violet-300/60 rounded-xl text-xs font-extrabold shadow-xs transition-all disabled:opacity-50"
-            title="Muat transaksi demo historis untuk visualisasi chart"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-violet-600" />
-            <span>{seedingDemo ? "Memuat Demo..." : "Muat Data Demo"}</span>
-          </button>
+
         </div>
       </div>
 
@@ -728,7 +622,7 @@ export default function DashboardCharts() {
             <div className="flex items-center space-x-2">
               <TrendingUp className="w-4 h-4 text-blue-700" />
               <h3 className="text-sm font-bold text-[var(--glass-text-primary)] uppercase tracking-wide">
-                Tren Pendapatan & Volume Transaksi (Line Chart)
+                Tren pendapatan
               </h3>
             </div>
             <p className="text-xs text-[var(--glass-text-secondary)] mt-0.5">
@@ -757,19 +651,13 @@ export default function DashboardCharts() {
                   Tidak Ada Transaksi Penjualan pada Rentang Tanggal Ini
                 </p>
                 <p className="text-[11px] text-[var(--glass-text-secondary)]">
-                  Silakan ubah filter tanggal atau klik tombol <strong>"Muat Data Demo"</strong> di atas untuk memunculkan simulasi grafik secara langsung.
+                  Ubah rentang tanggal untuk melihat transaksi yang sudah tercatat.
                 </p>
               </div>
-              <button
-                onClick={handleLoadDemoData}
-                disabled={seedingDemo}
-                className="btn-glass-primary px-4 py-2 text-xs font-bold rounded-xl shadow-xs"
-              >
-                + Muat Data Demo Sekarang
-              </button>
+
             </div>
           ) : (
-            <Line data={lineChartData} options={lineChartOptions} />
+            <Line aria-label="Tren pendapatan dan jumlah transaksi" role="img" data={lineChartData} options={lineChartOptions} />
           )}
         </div>
       </div>
@@ -782,7 +670,7 @@ export default function DashboardCharts() {
             <div className="flex items-center space-x-2 pb-2.5 border-b border-black/5">
               <BarChart3 className="w-4 h-4 text-blue-700" />
               <h4 className="text-xs font-bold text-[var(--glass-text-primary)] uppercase tracking-wide">
-                Top 10 Produk Terlaris
+                Produk terlaris
               </h4>
             </div>
             <p className="text-[11px] text-[var(--glass-text-secondary)] mt-1">
@@ -800,7 +688,7 @@ export default function DashboardCharts() {
                 Belum ada data produk terjual.
               </div>
             ) : (
-              <Bar data={topProductsData} options={topProductsOptions} />
+              <Bar aria-label="Produk terlaris menurut jumlah terjual" role="img" data={topProductsData} options={topProductsOptions} />
             )}
           </div>
         </div>
@@ -811,7 +699,7 @@ export default function DashboardCharts() {
             <div className="flex items-center space-x-2 pb-2.5 border-b border-black/5">
               <PieChart className="w-4 h-4 text-violet-700" />
               <h4 className="text-xs font-bold text-[var(--glass-text-primary)] uppercase tracking-wide">
-                Penjualan per Kategori F&amp;B
+                Komposisi penjualan
               </h4>
             </div>
             <p className="text-[11px] text-[var(--glass-text-secondary)] mt-1">
@@ -829,7 +717,7 @@ export default function DashboardCharts() {
                 Belum ada data kategori.
               </div>
             ) : (
-              <Bar data={categoryData} options={categoryOptions} />
+              <Doughnut data={categoryData} options={{ animation: reducedMotion ? false : { duration: 240 }, responsive: true, maintainAspectRatio: false, cutout: "72%", plugins: { legend: { position: "bottom", labels: { usePointStyle: true, boxWidth: 8, padding: 16, color: "#475569" } }, tooltip: { callbacks: { label: ctx => `${ctx.label}: ${formatRupiah(Number(ctx.raw))}` } } } }} aria-label="Komposisi penjualan per kategori" role="img" />
             )}
           </div>
         </div>
@@ -840,7 +728,7 @@ export default function DashboardCharts() {
             <div className="flex items-center space-x-2 pb-2.5 border-b border-black/5">
               <TrendingUp className="w-4 h-4 text-blue-700" />
               <h4 className="text-xs font-bold text-[var(--glass-text-primary)] uppercase tracking-wide">
-                Beli vs Jual (6 Bulan)
+                Penjualan & pembelian
               </h4>
             </div>
             <p className="text-[11px] text-[var(--glass-text-secondary)] mt-1">
@@ -858,11 +746,27 @@ export default function DashboardCharts() {
                 Belum ada perbandingan bulanan.
               </div>
             ) : (
-              <Bar data={monthlyData} options={monthlyOptions} />
+              <Bar aria-label="Perbandingan penjualan dan pembelian bulanan" role="img" data={monthlyData} options={monthlyOptions} />
             )}
           </div>
         </div>
       </div>
+      {data && <details className="surface-card p-5 text-sm text-slate-600"><summary className="cursor-pointer font-medium">Lihat data grafik dalam tabel</summary><div className="mt-4 space-y-5">
+        {[{title: "Pendapatan & transaksi", headers: ["Periode", "Pendapatan (Rp)", "Transaksi"], rows: data.salesTrend.labels.map((label, i) => [label, data.salesTrend.revenues[i], data.salesTrend.orderCounts[i]])},
+          {title: "Produk terlaris", headers: ["Produk", "Jumlah", "Pendapatan (Rp)"], rows: data.topProducts.labels.map((label, i) => [label, data.topProducts.quantities[i], data.topProducts.revenues[i]])},
+          {title: "Penjualan per kategori", headers: ["Kategori", "Penjualan (Rp)", "Persentase"], rows: data.salesByCategory.labels.map((label, i) => [label, data.salesByCategory.amounts[i], data.salesByCategory.percentages[i]])},
+          {title: "Penjualan & pembelian", headers: ["Bulan", "Penjualan (Rp)", "Pembelian (Rp)"], rows: data.purchasesVsSalesMonthly.labels.map((label, i) => [label, data.purchasesVsSalesMonthly.sales[i], data.purchasesVsSalesMonthly.purchases[i]])}
+        ].map(section => <div key={section.title} className="overflow-x-auto"><table><caption className="text-left font-semibold py-2">{section.title}</caption><thead><tr>{section.headers.map(h => <th key={h} scope="col" className="text-left px-3">{h}</th>)}</tr></thead><tbody>{section.rows.map((row, i) => <tr key={i}>{row.map((v, j) => <td key={j} className="px-3">{typeof v === "number" ? v.toLocaleString("id-ID") : v}</td>)}</tr>)}</tbody></table></div>)}
+      </div></details>}
+      <details hidden className="surface-card p-4 text-xs text-slate-500"><summary className="cursor-pointer font-medium">Alat demo analitik</summary><p className="my-3">Menambahkan transaksi contoh ke perusahaan aktif. Gunakan hanya untuk demonstrasi.</p>          <button
+            onClick={handleLoadDemoData}
+            disabled={seedingDemo}
+            className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-gradient-to-r from-violet-50 to-indigo-50 hover:from-violet-100 hover:to-indigo-100 text-violet-900 border border-violet-300/60 rounded-xl text-xs font-extrabold shadow-xs transition-all disabled:opacity-50"
+            title="Muat transaksi demo historis untuk visualisasi chart"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-violet-600" />
+            <span>{seedingDemo ? "Memuat Demo..." : "Muat Data Demo"}</span>
+          </button></details>
     </div>
   );
 }

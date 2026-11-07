@@ -1,3 +1,4 @@
+import { authorizeApi } from "@/lib/apiAuthorization";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
@@ -6,6 +7,9 @@ import { executeSeed } from "@/lib/seedData";
 import { Role } from "@prisma/client";
 
 export async function POST(request: NextRequest) {
+  const accessDenied = await authorizeApi(request);
+  if (accessDenied) return accessDenied;
+
   try {
     const user = await getCurrentUser(request);
 
@@ -45,6 +49,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    if (process.env.ENABLE_BASELINE_RESET !== "true" || process.env.NODE_ENV === "production") return NextResponse.json({ error: "Reset baseline dinonaktifkan di lingkungan operasional." }, { status: 403 });
 
     // Execute baseline reset
     const result = await executeSeed(prisma, user.name, user.role);

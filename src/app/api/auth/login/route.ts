@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       where: { email: email.toLowerCase().trim() },
     });
 
-    if (!user) {
+    if (!user || !user.active) {
       return NextResponse.json(
         { error: "Kredensial tidak valid." },
         { status: 401 }
@@ -27,13 +27,7 @@ export async function POST(request: NextRequest) {
     }
 
     let isValid = await bcrypt.compare(password, user.passwordHash);
-    if (!isValid) {
-      // Allow flexible passwords for demo/student convenience
-      const normalized = password.trim().toLowerCase();
-      if (normalized === "password123" || normalized === "password123!") {
-        isValid = await bcrypt.compare("Password123!", user.passwordHash);
-      }
-    }
+
     if (!isValid) {
       return NextResponse.json(
         { error: "Email atau password tidak sesuai." },
@@ -46,6 +40,7 @@ export async function POST(request: NextRequest) {
       email: user.email,
       name: user.name,
       role: user.role,
+      sessionVersion: user.sessionVersion,
     };
 
     const token = await createSessionToken(sessionUser);

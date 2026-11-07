@@ -1,3 +1,5 @@
+import { getActiveCompanyId } from "./prisma";
+import { getCompanyById } from "./companyManager";
 import { prisma } from "./prisma";
 
 export interface OperationalMetrics {
@@ -22,6 +24,7 @@ export interface OperationalMetrics {
     billedPayable: number;
     sourceLink: string;
   };
+  tax: { balance: number; sourceLink: string };
   bank: {
     balance: number;
     accountCode: string;
@@ -117,9 +120,10 @@ export async function getOperationalDashboardMetrics(): Promise<OperationalMetri
   const openReceivableSeed = customers.reduce((sum, c) => sum + c.openReceivable, 0);
 
   const customerInvoices = await prisma.customerInvoice.findMany({
-    where: { isPosted: true, status: { not: "PAID" } },
+    where: { isPosted: true, status: { in: ["POSTED","PAID"] } },
   });
-  const invoicedReceivable = customerInvoices.reduce((sum, inv) => sum + inv.outstandingAmount, 0);
+  const creditNotes = await prisma.creditNote.aggregate({where:{returnRequest:{invoice:{status:{in:["POSTED","PAID"]}}}},_sum:{totalGross:true}});
+  const invoicedReceivable = customerInvoices.reduce((sum, inv) => sum + inv.totalGross - inv.paidAmount, 0) - (creditNotes._sum.totalGross || 0);
   const totalAR = openReceivableSeed + invoicedReceivable;
 
   // 3. Utang Usaha (A/P) - baseline vendor payables + posted unpaid bills
@@ -129,7 +133,7 @@ export async function getOperationalDashboardMetrics(): Promise<OperationalMetri
   const openPayableSeed = vendors.reduce((sum, v) => sum + v.openPayable, 0);
 
   const vendorBills = await prisma.vendorBill.findMany({
-    where: { isPosted: true, status: { not: "PAID" } },
+    where: { isPosted: true, status: { in: ["POSTED","PAID"] } },
   });
   const billedPayable = vendorBills.reduce((sum, b) => sum + b.outstandingAmount, 0);
   const totalAP = openPayableSeed + billedPayable;
@@ -138,10 +142,10 @@ export async function getOperationalDashboardMetrics(): Promise<OperationalMetri
   const bankAccount = await prisma.account.findUnique({
     where: { code: "1010" },
   });
-  const bankBalance = bankAccount?.currentBalance || 20000000;
+  const bankBalance = bankAccount?.currentBalance ?? 0;
 
   // 5. CRM Leads
-  const leads = await prisma.crmLead.findMany();
+  const leads = await prisma.crmLead.findMany({where:{archivedAt:null}});
   const leadsCount = leads.length;
   const leadsValue = leads.reduce((sum, l) => sum + l.expectedRevenue, 0);
 
@@ -167,7 +171,8 @@ export async function getOperationalDashboardMetrics(): Promise<OperationalMetri
   const posOrders = await prisma.posOrder.findMany({
     where: { status: "PAID" },
   });
-  const posRevenue = posOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+  const posRevenue = posOrders.reduce((sum, o) => sum + o.subtotalNet, 0);
+  const company = getCompanyById(await getActiveCompanyId());
 
   return {
     inventory: {
@@ -191,6 +196,7 @@ export async function getOperationalDashboardMetrics(): Promise<OperationalMetri
       billedPayable,
       sourceLink: "/accounting/vendor-bills",
     },
+    tax: {balance:(await prisma.account.findUnique({where:{code:"2020"}}))?.currentBalance ?? 0,sourceLink:"/accounting/journal-entries"},
     bank: {
       balance: bankBalance,
       accountCode: "1010",
@@ -204,7 +210,7 @@ export async function getOperationalDashboardMetrics(): Promise<OperationalMetri
     },
     sales: {
       confirmedOrdersCount,
-      reservedStockUnits: reservedUnits || reservedStockUnits,
+      reservedStockUnits: reservedUnits,
       sourceLink: "/sales/orders",
     },
     purchase: {
@@ -217,9 +223,9 @@ export async function getOperationalDashboardMetrics(): Promise<OperationalMetri
       sourceLink: "/pos",
     },
     metadata: {
-      companyName: "PT Rasa Aruna Bersama",
-      reportingDate: "20 Okt 2026",
-      dataset: "Baseline Seed",
+      companyName: company.name,
+      reportingDate: new Intl.DateTimeFormat("id-ID",{timeZone:"Asia/Jakarta",dateStyle:"medium"}).format(new Date()),
+      dataset: "Data perusahaan aktif",
     },
   };
 }
@@ -258,16 +264,17 @@ export async function getFinancialReconciliation(simulatedStockDiff: number = 0)
   const inventoryAccount = await prisma.account.findUnique({
     where: { code: "1030" },
   });
-  const ledgerBalance = inventoryAccount?.currentBalance || 12214000;
+  const ledgerBalance = inventoryAccount?.currentBalance ?? 0;
 
   const unitDiscrepancy = simulatedStockDiff;
   const valueDiscrepancy = physicalValuation - ledgerBalance;
   const isStockReconciled = simulatedStockDiff === 0 && Math.abs(valueDiscrepancy) === 0;
 
+  const sourceMoves = await prisma.stockMove.findMany({ orderBy: { date: 'desc' }, take: 100 });
   const sourceTrail = [
-    "StockLevel: 15 SKU Varian terdistribusi di WH-JKT dan CAFE-JKT",
-    "JournalEntry: JE/2026/0000 Saldo Awal Persediaan Rp 12.214.000",
-    "Chart of Accounts: 1030 Persediaan Barang Dagang",
+    `StockLevel: ${new Set(stockLevels.map(s => s.productSku)).size} SKU, ${new Set(stockLevels.map(s => s.locationCode)).size} lokasi`,
+    `Chart of Accounts: 1030, saldo ${ledgerBalance}`,
+    ...sourceMoves.map(m => `${m.moveNumber}: ${m.productSku} ${m.quantity} ${m.sourceLocation} → ${m.destLocation}; ${m.documentType} ${m.documentRef}`),
   ];
 
   let warningMessage: string | undefined = undefined;
@@ -278,14 +285,17 @@ export async function getFinancialReconciliation(simulatedStockDiff: number = 0)
 
   // 3. Subledger Matching
   const customers = await prisma.contact.findMany({ where: { type: "CUSTOMER" } });
-  const arSubledgerTotal = customers.reduce((sum, c) => sum + c.openReceivable, 0);
+  const liveInvoices = await prisma.customerInvoice.findMany({ where: { isPosted: true, status: { in: ["POSTED","PAID"] } } });
+  const liveCredits = await prisma.creditNote.aggregate({where:{returnRequest:{invoice:{status:{in:["POSTED","PAID"]}}}},_sum:{totalGross:true}});
+  const arSubledgerTotal = customers.reduce((sum, c) => sum + c.openReceivable, 0) + liveInvoices.reduce((sum,i) => sum + i.totalGross - i.paidAmount, 0) - (liveCredits._sum.totalGross || 0);
   const arAccount = await prisma.account.findUnique({ where: { code: "1020" } });
-  const arLedgerAccountBalance = arAccount?.currentBalance || 1500000;
+  const arLedgerAccountBalance = arAccount?.currentBalance ?? 0;
 
   const vendors = await prisma.contact.findMany({ where: { type: "VENDOR" } });
-  const apSubledgerTotal = vendors.reduce((sum, v) => sum + v.openPayable, 0);
+  const liveBills = await prisma.vendorBill.findMany({ where: { isPosted: true, status: { in: ["POSTED","PAID"] } } });
+  const apSubledgerTotal = vendors.reduce((sum, v) => sum + v.openPayable, 0) + liveBills.reduce((sum,b) => sum + b.outstandingAmount, 0);
   const apAccount = await prisma.account.findUnique({ where: { code: "2010" } });
-  const apLedgerAccountBalance = apAccount?.currentBalance || 1000000;
+  const apLedgerAccountBalance = apAccount?.currentBalance ?? 0;
 
   return {
     generalLedger: {
@@ -421,18 +431,21 @@ export async function getDashboardChartMetrics(params: ChartFilterParams = {}): 
   // 2. Perhitungan 5 Metrik Utama (KPI Cards)
   let totalSales = 0;
   let totalSalesCost = 0;
+  let totalSalesNet = 0;
   
   salesOrders.forEach((so) => {
     totalSales += so.totalGross || 0;
+    totalSalesNet += so.subtotalNet;
     so.lines.forEach((l) => {
-      totalSalesCost += (l.quantity || 0) * (l.standardCost || l.product?.standardCost || 0);
+      totalSalesCost += (l.quantity || 0) * (l.standardCost ?? l.product?.standardCost ?? 0);
     });
   });
 
   posOrders.forEach((po) => {
     totalSales += po.totalAmount || 0;
+    totalSalesNet += po.subtotalNet;
     po.lines.forEach((l) => {
-      totalSalesCost += (l.quantity || 0) * (l.standardCost || l.product?.standardCost || 0);
+      totalSalesCost += (l.quantity || 0) * (l.standardCost ?? l.product?.standardCost ?? 0);
     });
   });
 
@@ -475,8 +488,8 @@ export async function getDashboardChartMetrics(params: ChartFilterParams = {}): 
   });
 
   const lowStockCount = lowStockProducts.length;
-  const estimatedGrossProfit = totalSales - totalSalesCost;
-  const grossProfitMarginPercent = totalSales > 0 ? (estimatedGrossProfit / totalSales) * 100 : 0;
+  const estimatedGrossProfit = totalSalesNet - totalSalesCost;
+  const grossProfitMarginPercent = totalSalesNet > 0 ? (estimatedGrossProfit / totalSalesNet) * 100 : 0;
 
   // 3. LINE CHART: Tren Pendapatan / Penjualan
   // Kumpulkan semua transaksi penjualan dengan tanggalnya

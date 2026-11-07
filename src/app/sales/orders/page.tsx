@@ -1,16 +1,19 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import DocumentControls from "@/components/DocumentControls";
+import DocumentList from "@/components/DocumentList";
+import DocumentTrail from "@/components/DocumentTrail";
 import AppLayout from "@/components/AppLayout";
 import StatusBadge from "@/components/StatusBadge";
 import KPICard from "@/components/KPICard";
 import CreateSalesOrderModal from "@/components/CreateSalesOrderModal";
-import { 
-  CheckCircle, 
-  Lock, 
-  Play, 
-  ShieldCheck, 
-  FileText, 
+import {
+  CheckCircle,
+  Lock,
+  Play,
+  ShieldCheck,
+  FileText,
   CreditCard,
   Plus,
   ShoppingCart,
@@ -46,7 +49,7 @@ export default function SalesOrdersPage() {
         const data = await res.json();
         setOrders(data.orders || []);
         if (data.orders?.length > 0 && !selectedOrder) {
-          setSelectedOrder(data.orders[0]);
+          setSelectedOrder(data.orders.find((r: any) => r.id === new URLSearchParams(window.location.search).get("id")) || data.orders[0]);
         }
       }
     } finally {
@@ -193,7 +196,7 @@ export default function SalesOrdersPage() {
       currentUser={user}
       onSwitchRole={handleSwitchRole}
       breadcrumbs={[{ label: "Penjualan & CRM" }, { label: "Sales Orders" }]}
-      title="Sales Orders & Quotations"
+      title="Pesanan penjualan"
       subtitle="Penerbitan Penawaran, Konfirmasi Pesanan, Otorisasi Diskon & Kunci Harga (F-05, F-06, F-10, SR-07, SR-08)"
       wireframe="Wireframe S-04"
       actions={
@@ -220,6 +223,10 @@ export default function SalesOrdersPage() {
         </div>
       }
     >
+      <DocumentList records={orders} selectedId={selectedOrder?.id} onSelect={fetchOrderDetail}/>
+
+      {selectedOrder && <DocumentControls kind="sales" record={selectedOrder} role={user?.role} onChanged={async () => { await fetchOrders(); await fetchOrderDetail(selectedOrder.id); }} />}
+
       {/* Selected Order Form View */}
       {selectedOrder && (
         <div className="glass-2 rounded-2xl shadow-glass-2 border border-white/80 overflow-hidden">
@@ -304,13 +311,13 @@ export default function SalesOrdersPage() {
               <table className="w-full text-left text-xs">
                 <thead className="bg-white/60 font-bold text-slate-900 uppercase tracking-wider text-[11px] border-b border-black/10">
                   <tr>
-                    <th className="px-6 py-3.5">SKU Varian & Nama Produk</th>
-                    <th className="px-6 py-3.5 text-right">Kuantitas</th>
-                    <th className="px-6 py-3.5 text-right">Harga Satuan</th>
-                    <th className="px-6 py-3.5 text-right">Diskon %</th>
-                    <th className="px-6 py-3.5 text-right">Net Subtotal</th>
-                    <th className="px-6 py-3.5 text-right">PBJT (10%)</th>
-                    <th className="px-6 py-3.5 text-right">Total Gross</th>
+                    <th scope="col" className="px-6 py-3.5">SKU Varian & Nama Produk</th>
+                    <th scope="col" className="px-6 py-3.5 text-right">Kuantitas</th>
+                    <th scope="col" className="px-6 py-3.5 text-right">Harga Satuan</th>
+                    <th scope="col" className="px-6 py-3.5 text-right">Diskon %</th>
+                    <th scope="col" className="px-6 py-3.5 text-right">Net Subtotal</th>
+                    <th scope="col" className="px-6 py-3.5 text-right">PBJT (10%)</th>
+                    <th scope="col" className="px-6 py-3.5 text-right">Total Gross</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-black/5 font-mono">
@@ -358,7 +365,7 @@ export default function SalesOrdersPage() {
       )}
 
       {/* Collapsible QA Test Runner for T-09 & T-10 */}
-      <details className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
+      <details hidden className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
         <summary className="cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white select-none">
           <div className="flex items-center space-x-2">
             <span className="px-2 py-0.5 rounded-md bg-[#7c3aed] text-[#ffffff] font-bold text-[10px] uppercase">
@@ -438,6 +445,7 @@ export default function SalesOrdersPage() {
           if (newOrder) setSelectedOrder(newOrder);
         }}
       />
+      {selectedOrder && <DocumentTrail kind="sales" record={selectedOrder}/>}
     </AppLayout>
   );
 }

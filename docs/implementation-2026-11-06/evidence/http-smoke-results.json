@@ -1,0 +1,54 @@
+[
+  {
+    "name": "Anonymous master API denied",
+    "status": "PASS"
+  },
+  {
+    "name": "Real HTTP login and authenticated session",
+    "status": "PASS"
+  },
+  {
+    "name": "customers: create, retry, read, update, stale conflict, archive, restore, delete",
+    "status": "PASS"
+  },
+  {
+    "name": "vendors: create, retry, read, update, stale conflict, archive, restore, delete",
+    "status": "PASS"
+  },
+  {
+    "name": "products: create, retry, read, update, stale conflict, archive, restore, delete",
+    "status": "PASS"
+  },
+  {
+    "name": "categories: create, retry, read, update, stale conflict, archive, restore, delete",
+    "status": "PASS"
+  },
+  {
+    "name": "units: create, retry, read, update, stale conflict, archive, restore, delete",
+    "status": "PASS"
+  },
+  {
+    "name": "locations: create, retry, read, update, stale conflict, archive, restore, delete",
+    "status": "PASS"
+  },
+  {
+    "name": "accounts: create, retry, read, update, stale conflict, archive, restore, delete",
+    "status": "PASS"
+  },
+  {
+    "name": "vendor-prices: create, retry, read, update, stale conflict, archive, restore, delete",
+    "status": "PASS"
+  },
+  {
+    "name": "leads: create, retry, read, update, stale conflict, archive, restore, delete",
+    "status": "PASS"
+  },
+  {
+    "name": "Sales HTTP draft edit and safe cancellation",
+    "status": "PASS"
+  },
+  {
+    "name": "Cashier is denied GL and master mutations over HTTP",
+    "status": "PASS"
+  }
+]

@@ -1,6 +1,8 @@
 "use client";
+import DialogFrame from "@/components/ui/DialogFrame";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import PosReceipt from "@/components/PosReceipt";
 import AppLayout from "@/components/AppLayout";
 import StatusBadge from "@/components/StatusBadge";
 import KPICard from "@/components/KPICard";
@@ -35,11 +37,11 @@ export default function PointOfSalePage() {
   const [categoryFilter, setCategoryFilter] = useState("ALL");
 
   // Cart / Basket State
-  const [cart, setCart] = useState<Array<{ sku: string; name: string; qty: number; price: number }>>([
-    { sku: "COF-LATT-HOT", name: "Latte Hot", qty: 2, price: 30000 },
-    { sku: "COOKIE-CHO-1", name: "Cookie Cokelat", qty: 1, price: 20000 },
-  ]);
-  const [paymentMethod, setPaymentMethod] = useState("QRIS / Bank");
+  const [cart, setCart] = useState<Array<{ sku: string; name: string; qty: number; price: number }>>([]);
+  const [receipt,setReceipt]=useState<any>(null),[checkingOut,setCheckingOut]=useState(false);
+  const checkoutPending=useRef(false),checkoutKeys=useRef(new Map<string,string>());
+
+  const [paymentMethod, setPaymentMethod] = useState("QRIS");
   const [tableInfo, setTableInfo] = useState("Takeaway");
 
   // Manual / Custom Item Input State
@@ -184,6 +186,7 @@ export default function PointOfSalePage() {
 
   // Checkout order action
   const handleCheckout = async () => {
+    if(checkoutPending.current)return;
     if (!activeSession) {
       alert("Tidak ada sesi kasir aktif. Silakan buka sesi terlebih dahulu.");
       return;
@@ -194,13 +197,16 @@ export default function PointOfSalePage() {
       return;
     }
 
+    checkoutPending.current=true;setCheckingOut(true);
+    const fingerprint=JSON.stringify({sessionId:activeSession.id,cart,tableInfo,paymentMethod});
+    if(!checkoutKeys.current.has(fingerprint))checkoutKeys.current.set(fingerprint,crypto.randomUUID());
     try {
       const res = await fetch("/api/pos/orders", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "Idempotency-Key": checkoutKeys.current.get(fingerprint)! },
         body: JSON.stringify({
           sessionId: activeSession.id,
-          locationCode: "CAFE-JKT",
+          locationCode: activeSession.locationCode,
           tableInfo,
           paymentMethod,
           lines: cart.map((item) => ({
@@ -218,12 +224,13 @@ export default function PointOfSalePage() {
         return;
       }
 
-      alert(`Pesanan ${data.order?.orderNumber} berhasil dibayar senilai Rp${data.order?.totalAmount?.toLocaleString("id-ID")}!`);
+      setReceipt(data.order);
+      checkoutKeys.current.delete(fingerprint);
       setCart([]);
       await fetchSessionsAndOrders();
     } catch (e) {
-      console.error(e);
-    }
+      alert("Pembayaran belum terkonfirmasi. Coba kembali dengan keranjang yang sama.");
+    } finally { checkoutPending.current=false;setCheckingOut(false); }
   };
 
   // Open New Session
@@ -446,17 +453,17 @@ export default function PointOfSalePage() {
       ]}
     >
       <div className="space-y-6">
-        {/* Module Header & Session Bar */}
+        {receipt&&<PosReceipt order={receipt} onClose={()=>setReceipt(null)} onRefunded={fetchSessionsAndOrders} canRefund={currentUser?.role==='OWNER'||(receipt.session?.cashierId===currentUser?.id&&receipt.session?.status==='OPEN')||(!receipt.session&&activeSession?.id===receipt.sessionId&&activeSession?.status==='OPEN')}/>}
+      <section className="surface-card p-5 space-y-3"><h2 className="text-lg font-semibold">Riwayat transaksi & struk</h2>{orders.length?<div className="overflow-x-auto"><table className="w-full text-sm text-left"><thead><tr><th scope="col" className="p-3">Nomor</th><th scope="col" className="p-3">Tanggal</th><th scope="col" className="p-3">Status</th><th scope="col" className="p-3">Total</th><th scope="col" className="p-3">Tindakan</th></tr></thead><tbody>{orders.map(order=><tr className="border-t" key={order.id}><td className="p-3">{order.orderNumber}</td><td className="p-3">{new Date(order.orderDate).toLocaleString('id-ID')}</td><td className="p-3">{order.status}</td><td className="p-3">Rp{order.totalAmount.toLocaleString('id-ID')}</td><td className="p-3"><button className="text-blue-700 underline" onClick={()=>setReceipt(order)}>Lihat struk / refund</button></td></tr>)}</tbody></table></div>:<p className="text-sm text-slate-500">Belum ada transaksi.</p>}</section>
+      {/* Module Header & Session Bar */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-2 p-5 rounded-2xl border border-white/80 shadow-glass-2">
           <div>
             <div className="flex items-center space-x-2">
               <span className="w-2.5 h-2.5 rounded-full bg-[#1d4ed8]" />
-              <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+              <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
                 Point of Sale Restoran (CAFE-JKT)
               </h1>
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#1d4ed8]/10 text-[#1d4ed8] border border-[#1d4ed8]/20">
-                Wireframe S-14
-              </span>
+
             </div>
             <p className="text-xs text-slate-600 font-medium mt-1">
               Kasir gerai cepat, sinkronisasi stok fisik instan, PBJT 10% & penutupan sesi kasir (F-16, F-17, SR-03, SR-04, SR-14).
@@ -540,7 +547,7 @@ export default function PointOfSalePage() {
                 <div className="flex items-center space-x-2">
                   <div className="relative">
                     <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                    <input
+                    <input aria-label="Cari menu..."
                       type="text"
                       placeholder="Cari menu..."
                       value={searchProduct}
@@ -551,6 +558,7 @@ export default function PointOfSalePage() {
 
                   <button
                     type="button"
+                    hidden
                     onClick={() => setManualModalOpen(true)}
                     className="px-3 py-1.5 btn-glass-primary rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 shrink-0 focus-brand-ring"
                   >
@@ -625,11 +633,11 @@ export default function PointOfSalePage() {
                 <table className="w-full text-left text-xs text-slate-900">
                   <thead className="bg-white/60 border-b border-black/10 text-slate-900 font-black uppercase text-[11px]">
                     <tr>
-                      <th className="py-3 px-3">No. Struk POS</th>
-                      <th className="py-3 px-3">Waktu</th>
-                      <th className="py-3 px-3">Metode Bayar</th>
-                      <th className="py-3 px-3 text-right">Total Tagihan</th>
-                      <th className="py-3 px-3 text-center">Status</th>
+                      <th scope="col" className="py-3 px-3">No. Struk POS</th>
+                      <th scope="col" className="py-3 px-3">Waktu</th>
+                      <th scope="col" className="py-3 px-3">Metode Bayar</th>
+                      <th scope="col" className="py-3 px-3 text-right">Total Tagihan</th>
+                      <th scope="col" className="py-3 px-3 text-center">Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-black/5 font-mono">
@@ -703,6 +711,7 @@ export default function PointOfSalePage() {
                 <div className="flex items-center space-x-2">
                   <button
                     type="button"
+                    hidden
                     onClick={() => setManualModalOpen(true)}
                     className="text-[11px] font-semibold text-[#1d4ed8] bg-[#1d4ed8]/10 hover:bg-[#1d4ed8]/20 px-2.5 py-1 rounded-lg transition-colors flex items-center space-x-1 focus-brand-ring"
                   >
@@ -807,14 +816,14 @@ export default function PointOfSalePage() {
                   onChange={(e) => setPaymentMethod(e.target.value)}
                   className="w-full input-glass rounded-xl p-2 font-mono font-bold text-xs text-slate-900 focus-brand-ring"
                 >
-                  <option value="QRIS / Bank">QRIS / Bank (BCA 1010)</option>
-                  <option value="Cash / Kas">Cash / Kas Tunai (1010)</option>
+                  <option value="QRIS">QRIS</option><option value="BANK">Transfer Bank</option>
+                  <option value="CASH">Tunai</option>
                 </select>
               </div>
 
               <button
+                disabled={checkingOut || !cart.length || activeSession?.status !== "OPEN"}
                 onClick={handleCheckout}
-                disabled={cart.length === 0 || activeSession?.status !== "OPEN"}
                 className="w-full py-3 btn-glass-primary font-bold rounded-xl text-xs flex items-center justify-center space-x-2 shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50 focus-brand-ring"
               >
                 <Receipt className="w-4 h-4 text-[#7c3aed]" />
@@ -826,7 +835,7 @@ export default function PointOfSalePage() {
 
         {/* Modal Ketik Menu Manual / Bebas */}
         {manualModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-2xs p-4 animate-in fade-in">
+          <DialogFrame onClose={() => setManualModalOpen(false)}>
             <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-[#e2e8f0]">
               <div className="flex items-center justify-between border-b border-[#e2e8f0] pb-3">
                 <div className="flex items-center space-x-2">
@@ -856,7 +865,7 @@ export default function PointOfSalePage() {
                   <label className="font-semibold text-[#0f172a] block mb-1">
                     Nama Menu / Produk <span className="text-rose-500">*</span>
                   </label>
-                  <input
+                  <input aria-label="Contoh: Es Kopi Gula Aren, Croissant..."
                     type="text"
                     required
                     list="pos-manual-suggestions"
@@ -940,12 +949,12 @@ export default function PointOfSalePage() {
                 </div>
               </form>
             </div>
-          </div>
+          </DialogFrame>
         )}
 
         {/* Modal Tutup Sesi */}
         {closeModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-in fade-in">
+          <DialogFrame onClose={() => setCloseModalOpen(false)}>
             <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-[#e2e8f0]">
               <div className="flex items-center justify-between border-b border-[#e2e8f0] pb-3">
                 <h2 className="text-base font-bold text-[#0f172a] flex items-center space-x-2">
@@ -1011,11 +1020,11 @@ export default function PointOfSalePage() {
                 </button>
               </div>
             </div>
-          </div>
+          </DialogFrame>
         )}
 
         {/* Collapsible QA Automated Test Runner: T-27 & T-28 */}
-        <details className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
+        <details hidden className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
           <summary className="cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white select-none">
             <div className="flex items-center space-x-2">
               <span className="px-2 py-0.5 rounded-md bg-[#7c3aed] text-[#ffffff] font-bold text-[10px] uppercase">

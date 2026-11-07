@@ -5,22 +5,22 @@ import AppLayout from "@/components/AppLayout";
 import StatusBadge from "@/components/StatusBadge";
 import KPICard from "@/components/KPICard";
 import { useCompany } from "@/context/CompanyContext";
-import { 
-  BarChart3, 
-  Layers, 
-  Package, 
-  ShoppingCart, 
-  Truck, 
-  Wallet, 
-  Users2, 
-  Scale, 
-  ShieldAlert, 
-  CheckCircle2, 
-  AlertTriangle, 
-  RefreshCw, 
-  Play, 
-  ArrowRight, 
-  Check, 
+import {
+  BarChart3,
+  Layers,
+  Package,
+  ShoppingCart,
+  Truck,
+  Wallet,
+  Users2,
+  Scale,
+  ShieldAlert,
+  CheckCircle2,
+  AlertTriangle,
+  RefreshCw,
+  Play,
+  ArrowRight,
+  Check,
   FileText,
   Building2,
   TrendingUp,
@@ -29,15 +29,17 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { OperationalMetrics, FinancialReconciliation } from "@/lib/dashboardEngine";
+import LoadingState from "@/components/ui/LoadingState";
 import DashboardCharts from "@/components/DashboardCharts";
 
 export default function DashboardPage() {
   const { activeCompany } = useCompany();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [dataError, setDataError] = useState<string | null>(null);
   const [metrics, setMetrics] = useState<OperationalMetrics | null>(null);
   const [reconciliation, setReconciliation] = useState<FinancialReconciliation | null>(null);
-  
+
   // Simulation & Testing States
   const [simulatedDiff, setSimulatedDiff] = useState<number>(0);
   const [testResult, setTestResult] = useState<{
@@ -64,9 +66,11 @@ export default function DashboardPage() {
 
   const fetchDashboardData = async (diff: number = simulatedDiff) => {
     setLoading(true);
+    setDataError(null);
     try {
       // 1. Fetch Operational Metrics
       const mRes = await fetch("/api/dashboard/metrics");
+      if (!mRes.ok) { setMetrics(null); setDataError("Metrik tidak tersedia untuk akun ini."); }
       if (mRes.ok) {
         const mData = await mRes.json();
         setMetrics(mData.data);
@@ -74,11 +78,13 @@ export default function DashboardPage() {
 
       // 2. Fetch Financial Reconciliation
       const rRes = await fetch(`/api/dashboard/reconciliation?simulatedDiff=${diff}`);
+      if (!rRes.ok) { setReconciliation(null); setDataError("Sebagian data tidak tersedia. Periksa akses akun atau coba segarkan."); }
       if (rRes.ok) {
         const rData = await rRes.json();
         setReconciliation(rData.data);
       }
     } catch (err) {
+      setDataError("Gagal memuat data. Silakan coba segarkan.");
       console.error("Failed to load dashboard data:", err);
     } finally {
       setLoading(false);
@@ -102,7 +108,8 @@ export default function DashboardPage() {
     }
   };
 
-  const formatRupiah = (val: number) => {
+  const formatRupiah = (val: number | undefined) => {
+    if (val === undefined) return "—";
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
       currency: "IDR",
@@ -184,7 +191,7 @@ export default function DashboardPage() {
       setReconciliation(dataMismatch);
 
       const step1Passed = dataBalanced.generalLedger.isBalanced && dataBalanced.inventoryReconciliation.status === "BALANCED";
-      const step2Passed = dataMismatch.inventoryReconciliation.status === "MISMATCH" && 
+      const step2Passed = dataMismatch.inventoryReconciliation.status === "MISMATCH" &&
                           dataMismatch.inventoryReconciliation.unitDiscrepancy === 1 &&
                           dataMismatch.inventoryReconciliation.autoPostBlocked === true &&
                           !!dataMismatch.inventoryReconciliation.warningMessage;
@@ -225,7 +232,7 @@ export default function DashboardPage() {
       currentUser={user}
       onSwitchRole={handleSwitchRole}
       breadcrumbs={[{ label: "Analitik" }, { label: "Executive Dashboard" }]}
-      title="Executive Operational & Financial Dashboard"
+      title="Dashboard eksekutif"
       subtitle={`${activeCompany?.name || "PT Rasa Aruna Bersama"} · Brand: ${activeCompany?.brand || "Rasa Aruna Kitchen"} · Workspace Aktif`}
       wireframe="Wireframe S-16"
       actions={
@@ -302,337 +309,33 @@ export default function DashboardPage() {
       {/* Interactive Charts & Executive Analytics (Fase 2) */}
       <DashboardCharts />
 
-      {/* Operational KPI Cards (F-20) */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-bold text-[#0f172a] uppercase tracking-wide flex items-center space-x-2">
-            <Layers className="w-4 h-4 text-[#1d4ed8]" />
-            <span>Ringkasan Metrik Operasional (Fitur F-20)</span>
-          </h2>
-          <span className="text-xs text-[#64748b]">
-            Kalkulasi langsung dari database (Zero Mock Data)
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Card 1: Total Stok Fisik */}
-          <div className="glass-2 glass-2-interactive rounded-2xl border border-white/70 p-4.5 shadow-glass-2 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-[var(--glass-text-secondary)] uppercase tracking-wider">
-                  Stok Fisik Gudang
-                </span>
-                <div className="w-8 h-8 rounded-xl glass-3 text-[#1d4ed8] border border-[#1d4ed8]/20 flex items-center justify-center shadow-xs">
-                  <Package className="w-4 h-4" />
-                </div>
-              </div>
-              <div className="text-2xl font-bold text-[var(--glass-text-primary)]">
-                {metrics?.inventory.totalUnits.toLocaleString("id-ID") || 616}{" "}
-                <span className="text-xs font-medium text-[var(--glass-text-muted)]">Unit</span>
-              </div>
-              <div className="mt-2 text-[11px] text-[var(--glass-text-secondary)] space-y-0.5 border-t border-black/5 pt-2">
-                <div className="flex justify-between">
-                  <span>WH-JKT:</span>
-                  <span className="font-semibold">{metrics?.inventory.whUnits || 410} unit</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>CAFE-JKT:</span>
-                  <span className="font-semibold">{metrics?.inventory.cafeUnits || 206} unit</span>
-                </div>
-                <div className="flex justify-between text-amber-800">
-                  <span>Reserved (S00006):</span>
-                  <span className="font-semibold">{metrics?.inventory.reservedUnits || 6} unit</span>
-                </div>
-              </div>
-            </div>
-            <Link
-              href="/inventory/products"
-              className="mt-3 flex items-center justify-between text-[11px] text-[#1d4ed8] hover:text-[#1e3a8a] font-bold pt-2 border-t border-black/5 focus-brand-ring rounded"
-            >
-              <span>15 SKU Master Produk</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-
-          {/* Card 2: Valuasi Persediaan */}
-          <div className="glass-2 glass-2-interactive rounded-2xl border border-white/70 p-4.5 shadow-glass-2 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-[var(--glass-text-secondary)] uppercase tracking-wider">
-                  Valuasi Persediaan
-                </span>
-                <div className="w-8 h-8 rounded-xl glass-3 text-[#1d4ed8] border border-[#1d4ed8]/20 flex items-center justify-center shadow-xs">
-                  <TrendingUp className="w-4 h-4" />
-                </div>
-              </div>
-              <div className="text-2xl font-bold text-[var(--glass-text-primary)]">
-                {formatRupiah(metrics?.inventory.totalValuation || 12214000)}
-              </div>
-              <div className="mt-2 text-[11px] text-[var(--glass-text-secondary)] space-y-0.5 border-t border-black/5 pt-2">
-                <div className="flex justify-between">
-                  <span>Metode Biaya:</span>
-                  <span className="font-semibold">Standard Costing</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Akun CoA:</span>
-                  <span className="font-semibold text-[#1d4ed8]">1030 Persediaan</span>
-                </div>
-                <div className="flex justify-between text-emerald-800">
-                  <span>Kesesuaian Fisik:</span>
-                  <span className="font-semibold">100% Cocok</span>
-                </div>
-              </div>
-            </div>
-            <Link
-              href="/inventory/products"
-              className="mt-3 flex items-center justify-between text-[11px] text-[#1d4ed8] hover:text-[#1e3a8a] font-bold pt-2 border-t border-black/5 focus-brand-ring rounded"
-            >
-              <span>Detail Biaya Produk</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-
-          {/* Card 3: Piutang Dagang (A/R) */}
-          <div className="glass-2 glass-2-interactive rounded-2xl border border-white/70 p-4.5 shadow-glass-2 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-[var(--glass-text-secondary)] uppercase tracking-wider">
-                  Piutang Usaha (A/R)
-                </span>
-                <div className="w-8 h-8 rounded-xl glass-3 text-amber-700 border border-amber-500/25 flex items-center justify-center shadow-xs">
-                  <Wallet className="w-4 h-4" />
-                </div>
-              </div>
-              <div className="text-2xl font-bold text-[var(--glass-text-primary)]">
-                {formatRupiah(metrics?.receivables.totalAR || 1500000)}
-              </div>
-              <div className="mt-2 text-[11px] text-[var(--glass-text-secondary)] space-y-0.5 border-t border-black/5 pt-2">
-                <div className="flex justify-between">
-                  <span>PT Boga Kuliner:</span>
-                  <span className="font-semibold">Rp 1.000.000</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>CV Katering Berkah:</span>
-                  <span className="font-semibold">Rp 500.000</span>
-                </div>
-                <div className="flex justify-between text-[#1d4ed8]">
-                  <span>Akun CoA:</span>
-                  <span className="font-semibold">1020 Piutang</span>
-                </div>
-              </div>
-            </div>
-            <Link
-              href="/sales/contacts"
-              className="mt-3 flex items-center justify-between text-[11px] text-[#1d4ed8] hover:text-[#1e3a8a] font-bold pt-2 border-t border-black/5 focus-brand-ring rounded"
-            >
-              <span>Kontak & Limit Kredit</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-
-          {/* Card 4: Utang Usaha (A/P) */}
-          <div className="glass-2 glass-2-interactive rounded-2xl border border-white/70 p-4.5 shadow-glass-2 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-[var(--glass-text-secondary)] uppercase tracking-wider">
-                  Utang Usaha (A/P)
-                </span>
-                <div className="w-8 h-8 rounded-xl glass-3 text-rose-700 border border-rose-500/25 flex items-center justify-center shadow-xs">
-                  <FileText className="w-4 h-4" />
-                </div>
-              </div>
-              <div className="text-2xl font-bold text-[var(--glass-text-primary)]">
-                {formatRupiah(metrics?.payables.totalAP || 1000000)}
-              </div>
-              <div className="mt-2 text-[11px] text-[var(--glass-text-secondary)] space-y-0.5 border-t border-black/5 pt-2">
-                <div className="flex justify-between">
-                  <span>PT Sumber Pangan:</span>
-                  <span className="font-semibold">Rp 600.000</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>CV Rempah Wangi:</span>
-                  <span className="font-semibold">Rp 400.000</span>
-                </div>
-                <div className="flex justify-between text-[#1d4ed8]">
-                  <span>Akun CoA:</span>
-                  <span className="font-semibold">2010 Utang Usaha</span>
-                </div>
-              </div>
-            </div>
-            <Link
-              href="/accounting/vendor-bills"
-              className="mt-3 flex items-center justify-between text-[11px] text-[#1d4ed8] hover:text-[#1e3a8a] font-bold pt-2 border-t border-black/5 focus-brand-ring rounded"
-            >
-              <span>Tagihan Vendor (3-Way)</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-
-          {/* Card 5: Kas & Bank */}
-          <div className="glass-2 glass-2-interactive rounded-2xl border border-white/70 p-4.5 shadow-glass-2 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-[var(--glass-text-secondary)] uppercase tracking-wider">
-                  Saldo Kas & Bank
-                </span>
-                <div className="w-8 h-8 rounded-xl glass-3 text-[#6d28d9] border border-[#7c3aed]/30 flex items-center justify-center shadow-xs">
-                  <Building2 className="w-4 h-4" />
-                </div>
-              </div>
-              <div className="text-2xl font-bold text-[var(--glass-text-primary)]">
-                {formatRupiah(metrics?.bank.balance || 20000000)}
-              </div>
-              <div className="mt-2 text-[11px] text-[var(--glass-text-secondary)] space-y-0.5 border-t border-black/5 pt-2">
-                <div className="flex justify-between">
-                  <span>Bank Utama:</span>
-                  <span className="font-semibold">{metrics?.bank.accountName || "Bank BCA"}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Akun CoA:</span>
-                  <span className="font-semibold text-[#1d4ed8]">1010 Kas & Bank</span>
-                </div>
-                <div className="flex justify-between text-emerald-800">
-                  <span>Likuiditas:</span>
-                  <span className="font-semibold">Aktif & Stabil</span>
-                </div>
-              </div>
-            </div>
-            <Link
-              href="/accounting/journal-entries"
-              className="mt-3 flex items-center justify-between text-[11px] text-[#1d4ed8] hover:text-[#1e3a8a] font-bold pt-2 border-t border-black/5 focus-brand-ring rounded"
-            >
-              <span>Buka Jurnal Kas</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-
-          {/* Card 6: CRM Opportunities */}
-          <div className="glass-2 glass-2-interactive rounded-2xl border border-white/70 p-4.5 shadow-glass-2 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-[var(--glass-text-secondary)] uppercase tracking-wider">
-                  Pipeline Leads CRM
-                </span>
-                <div className="w-8 h-8 rounded-xl glass-3 text-blue-700 border border-blue-500/25 flex items-center justify-center shadow-xs">
-                  <Users2 className="w-4 h-4" />
-                </div>
-              </div>
-              <div className="text-2xl font-bold text-[var(--glass-text-primary)]">
-                {metrics?.crm.leadsCount || 1}{" "}
-                <span className="text-xs font-medium text-[var(--glass-text-muted)]">Lead</span>
-              </div>
-              <div className="mt-2 text-[11px] text-[var(--glass-text-secondary)] space-y-0.5 border-t border-black/5 pt-2">
-                <div className="flex justify-between">
-                  <span>Estimasi Omset:</span>
-                  <span className="font-semibold text-emerald-800">{formatRupiah(metrics?.crm.leadsValue || 1200000)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Tahapan:</span>
-                  <span className="font-semibold">Qualified Stage</span>
-                </div>
-                <div className="flex justify-between text-blue-800">
-                  <span>Kode:</span>
-                  <span className="font-semibold">LD0003</span>
-                </div>
-              </div>
-            </div>
-            <Link
-              href="/crm/leads"
-              className="mt-3 flex items-center justify-between text-[11px] text-[#1d4ed8] hover:text-[#1e3a8a] font-bold pt-2 border-t border-black/5 focus-brand-ring rounded"
-            >
-              <span>Buka Kanban Leads</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-
-          {/* Card 7: Confirmed Sales Orders */}
-          <div className="glass-2 glass-2-interactive rounded-2xl border border-white/70 p-4.5 shadow-glass-2 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-[var(--glass-text-secondary)] uppercase tracking-wider">
-                  Sales Orders Aktif
-                </span>
-                <div className="w-8 h-8 rounded-xl glass-3 text-[#1d4ed8] border border-[#1d4ed8]/20 flex items-center justify-center shadow-xs">
-                  <ShoppingCart className="w-4 h-4" />
-                </div>
-              </div>
-              <div className="text-2xl font-bold text-[var(--glass-text-primary)]">
-                {metrics?.sales.confirmedOrdersCount || 1}{" "}
-                <span className="text-xs font-medium text-[var(--glass-text-muted)]">SO</span>
-              </div>
-              <div className="mt-2 text-[11px] text-[var(--glass-text-secondary)] space-y-0.5 border-t border-black/5 pt-2">
-                <div className="flex justify-between">
-                  <span>Nomor Dokumen:</span>
-                  <span className="font-semibold text-[#1d4ed8]">S00006</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Stok Reserved:</span>
-                  <span className="font-semibold text-amber-800">{metrics?.sales.reservedStockUnits || 6} unit</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Nilai Order:</span>
-                  <span className="font-semibold">Rp 1.155.000</span>
-                </div>
-              </div>
-            </div>
-            <Link
-              href="/sales/orders"
-              className="mt-3 flex items-center justify-between text-[11px] text-[#1d4ed8] hover:text-[#1e3a8a] font-bold pt-2 border-t border-black/5 focus-brand-ring rounded"
-            >
-              <span>Kelola Sales Orders</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-
-          {/* Card 8: Confirmed Purchase Orders */}
-          <div className="glass-2 glass-2-interactive rounded-2xl border border-white/70 p-4.5 shadow-glass-2 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-[var(--glass-text-secondary)] uppercase tracking-wider">
-                  Purchase Orders Aktif
-                </span>
-                <div className="w-8 h-8 rounded-xl glass-3 text-amber-700 border border-amber-500/25 flex items-center justify-center shadow-xs">
-                  <Truck className="w-4 h-4" />
-                </div>
-              </div>
-              <div className="text-2xl font-bold text-[var(--glass-text-primary)]">
-                {metrics?.purchase.confirmedOrdersCount || 1}{" "}
-                <span className="text-xs font-medium text-[var(--glass-text-muted)]">PO</span>
-              </div>
-              <div className="mt-2 text-[11px] text-[var(--glass-text-secondary)] space-y-0.5 border-t border-black/5 pt-2">
-                <div className="flex justify-between">
-                  <span>Nomor Dokumen:</span>
-                  <span className="font-semibold text-[#1d4ed8]">P00006</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Vendor:</span>
-                  <span className="font-semibold truncate max-w-[120px]">PT Sumber Pangan</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Komitmen:</span>
-                  <span className="font-semibold">Rp 800.000</span>
-                </div>
-              </div>
-            </div>
-            <Link
-              href="/purchase/orders"
-              className="mt-3 flex items-center justify-between text-[11px] text-[#1d4ed8] hover:text-[#1e3a8a] font-bold pt-2 border-t border-black/5 focus-brand-ring rounded"
-            >
-              <span>Kelola Pengadaan (RFQ/PO)</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-        </div>
-      </div>
+      {dataError && <div role="alert" className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">{dataError}</div>}
+      <section className="space-y-4" aria-label="Ringkasan operasional">
+        <div><h2 className="text-lg font-semibold text-slate-900">Operasional hari ini</h2><p className="text-sm text-slate-500 mt-1">{metrics ? `${metrics.metadata.companyName} · ${metrics.metadata.reportingDate} · ${metrics.metadata.dataset}` : "Persediaan, arus kas, dan aktivitas perusahaan."}</p></div>
+        {loading ? <LoadingState cards={8} /> : metrics ? <div className="motion-stagger grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          {[
+            {title: "Stok fisik", value: metrics.inventory.totalUnits.toLocaleString("id-ID"), subtitle: `WH ${metrics.inventory.whUnits} · Kafe ${metrics.inventory.cafeUnits} unit`, icon: Package, href: "/inventory/products"},
+            {title: "Valuasi persediaan", value: formatRupiah(metrics.inventory.totalValuation), subtitle: "Biaya standar seluruh lokasi", icon: Layers, href: "/inventory/products"},
+            {title: "Piutang usaha", value: formatRupiah(metrics.receivables.totalAR), subtitle: "Tagihan pelanggan berjalan", icon: Wallet, href: "/accounting/invoices"},
+            {title: "Utang usaha", value: formatRupiah(metrics.payables.totalAP), subtitle: "Kewajiban pembayaran vendor", icon: FileText, href: "/accounting/vendor-bills"},
+            {title: "PBJT terutang", value: formatRupiah(metrics.tax.balance), subtitle: "Akun 2020 · setelah retur", icon: FileText, href: metrics.tax.sourceLink},
+            {title: "Penjualan bersih POS", value: formatRupiah(metrics.pos.revenue), subtitle: `${metrics.pos.ordersCount} transaksi selesai`, icon: ShoppingCart, href: metrics.pos.sourceLink},
+            {title: "Kas & bank", value: formatRupiah(metrics.bank.balance), subtitle: `${metrics.bank.accountCode} · ${metrics.bank.accountName}`, icon: Building2, href: "/accounting/payments"},
+            {title: "Peluang penjualan", value: metrics.crm.leadsCount, subtitle: `Nilai ${formatRupiah(metrics.crm.leadsValue)}`, icon: Users2, href: "/crm/leads"},
+            {title: "Pesanan penjualan", value: metrics.sales.confirmedOrdersCount, subtitle: `${metrics.sales.reservedStockUnits} unit direservasi`, icon: ShoppingCart, href: "/sales/orders"},
+            {title: "Pesanan pembelian", value: metrics.purchase.confirmedOrdersCount, subtitle: "Pesanan terkonfirmasi", icon: Truck, href: "/purchase/orders"},
+          ].map((card, i) => <Link key={card.title} href={card.href} className="rounded-2xl block hover:shadow-sm transition-shadow"><KPICard {...card} variant={i % 2 ? "gold" : "primary"} className="h-full" /></Link>)}
+        </div> : <p className="surface-card p-8 text-sm text-slate-500">Data operasional belum tersedia.</p>}
+      </section>
 
       {/* Financial Balancing & Reconciliation Matrix (F-21 & SR-20) */}
-      <div className="glass-2 rounded-3xl border border-white/70 p-6 shadow-glass-2 space-y-6">
+      {reconciliation && <div className="glass-2 rounded-3xl border border-white/70 p-6 shadow-glass-2 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-black/5 gap-3">
           <div>
             <div className="flex items-center space-x-2">
               <Scale className="w-5 h-5 text-[#1d4ed8]" />
               <h2 className="text-base font-bold text-[var(--glass-text-primary)]">
-                Matriks Rekonsiliasi & Integritas Keuangan (F-21 & SR-20)
+                Rekonsiliasi keuangan
               </h2>
             </div>
             <p className="text-xs text-[var(--glass-text-secondary)] mt-0.5">
@@ -642,7 +345,7 @@ export default function DashboardPage() {
 
           <div className="flex items-center flex-wrap gap-2">
             <span className={`px-3 py-1 rounded-full text-xs font-bold flex items-center space-x-1.5 ${
-              reconciliation?.generalLedger.isBalanced 
+              reconciliation?.generalLedger.isBalanced
                 ? "glass-badge-success"
                 : "glass-badge-danger"
             }`}>
@@ -694,19 +397,19 @@ export default function DashboardPage() {
               <div className="flex justify-between py-1 border-b border-[#E5E9E4]">
                 <span className="text-[#64748b]">Total Akumulasi Debit:</span>
                 <span className="font-mono font-bold text-[#0f172a]">
-                  {formatRupiah(reconciliation?.generalLedger.totalDebit || 33714000)}
+                  {formatRupiah(reconciliation?.generalLedger.totalDebit)}
                 </span>
               </div>
               <div className="flex justify-between py-1 border-b border-[#E5E9E4]">
                 <span className="text-[#64748b]">Total Akumulasi Kredit:</span>
                 <span className="font-mono font-bold text-[#0f172a]">
-                  {formatRupiah(reconciliation?.generalLedger.totalCredit || 33714000)}
+                  {formatRupiah(reconciliation?.generalLedger.totalCredit)}
                 </span>
               </div>
               <div className="flex justify-between py-1 font-semibold">
                 <span className="text-[#0f172a]">Selisih Debit - Kredit:</span>
                 <span className={`font-mono font-bold ${reconciliation?.generalLedger.difference === 0 ? "text-emerald-700" : "text-rose-700"}`}>
-                  {formatRupiah(reconciliation?.generalLedger.difference || 0)}
+                  {formatRupiah(reconciliation?.generalLedger.difference)}
                 </span>
               </div>
             </div>
@@ -718,7 +421,7 @@ export default function DashboardPage() {
               </p>
               <p className="flex items-center space-x-1.5">
                 <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                <span>Total {reconciliation?.generalLedger.totalEntries || 1} Jurnal Aktif Terverifikasi</span>
+                <span>Total {reconciliation?.generalLedger.totalEntries} Jurnal Aktif Terverifikasi</span>
               </p>
             </div>
           </div>
@@ -740,19 +443,19 @@ export default function DashboardPage() {
               <div className="flex justify-between py-1 border-b border-[#E5E9E4]">
                 <span className="text-[#64748b]">Stok Fisik Gudang & Kafe:</span>
                 <span className="font-mono font-bold text-[#0f172a]">
-                  {reconciliation?.inventoryReconciliation.physicalUnits || 616} Unit
+                  {reconciliation?.inventoryReconciliation.physicalUnits} Unit
                 </span>
               </div>
               <div className="flex justify-between py-1 border-b border-[#E5E9E4]">
                 <span className="text-[#64748b]">Valuasi Fisik (Std Cost):</span>
                 <span className="font-mono font-bold text-[#0f172a]">
-                  {formatRupiah(reconciliation?.inventoryReconciliation.physicalValuation || 12214000)}
+                  {formatRupiah(reconciliation?.inventoryReconciliation.physicalValuation)}
                 </span>
               </div>
               <div className="flex justify-between py-1 border-b border-[#E5E9E4]">
                 <span className="text-[#64748b]">Saldo Buku Akun 1030:</span>
                 <span className="font-mono font-bold text-[#1d4ed8]">
-                  {formatRupiah(reconciliation?.inventoryReconciliation.ledgerBalance || 12214000)}
+                  {formatRupiah(reconciliation?.inventoryReconciliation.ledgerBalance)}
                 </span>
               </div>
               <div className="flex justify-between py-1 font-semibold">
@@ -797,25 +500,25 @@ export default function DashboardPage() {
               <div className="flex justify-between py-1 border-b border-[#E5E9E4]">
                 <span className="text-[#64748b]">Subledger Piutang Pelanggan:</span>
                 <span className="font-mono font-bold text-[#0f172a]">
-                  {formatRupiah(reconciliation?.subledgerMatching.arSubledgerTotal || 1500000)}
+                  {formatRupiah(reconciliation?.subledgerMatching.arSubledgerTotal)}
                 </span>
               </div>
               <div className="flex justify-between py-1 border-b border-[#E5E9E4]">
                 <span className="text-[#64748b]">Saldo Akun 1020 (Piutang):</span>
                 <span className="font-mono font-bold text-[#1d4ed8]">
-                  {formatRupiah(reconciliation?.subledgerMatching.arLedgerAccountBalance || 1500000)}
+                  {formatRupiah(reconciliation?.subledgerMatching.arLedgerAccountBalance)}
                 </span>
               </div>
               <div className="flex justify-between py-1 border-b border-[#E5E9E4]">
                 <span className="text-[#64748b]">Subledger Utang Vendor:</span>
                 <span className="font-mono font-bold text-[#0f172a]">
-                  {formatRupiah(reconciliation?.subledgerMatching.apSubledgerTotal || 1000000)}
+                  {formatRupiah(reconciliation?.subledgerMatching.apSubledgerTotal)}
                 </span>
               </div>
               <div className="flex justify-between py-1 font-semibold">
                 <span className="text-[#64748b]">Saldo Akun 2010 (Utang):</span>
                 <span className="font-mono font-bold text-[#1d4ed8]">
-                  {formatRupiah(reconciliation?.subledgerMatching.apLedgerAccountBalance || 1000000)}
+                  {formatRupiah(reconciliation?.subledgerMatching.apLedgerAccountBalance)}
                 </span>
               </div>
             </div>
@@ -846,10 +549,10 @@ export default function DashboardPage() {
             ))}
           </ul>
         </div>
-      </div>
+      </div>}
 
       {/* Collapsible Interactive Test Runners (T-31 & T-32) */}
-      <details className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
+      <details hidden className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
         <summary className="cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white select-none">
           <div className="flex items-center space-x-2">
             <span className="px-2 py-0.5 rounded-md bg-[#7c3aed] text-[#ffffff] font-bold text-[10px] uppercase">
@@ -869,7 +572,7 @@ export default function DashboardPage() {
                 Pengujian otomatis integritas metrik dashboard operasional dan rekonsiliasi keuangan (SR-20).
               </p>
             </div>
-            
+
             <div className="flex items-center space-x-2">
               <button
                 onClick={runTestT31}

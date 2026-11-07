@@ -53,40 +53,26 @@ export default function KPICard({
 
   return (
     <div
+      data-tone={variant}
       onClick={onClick}
-      className={`glass-2 glass-2-interactive group rounded-2xl p-5 border border-white/70 shadow-glass-2 relative overflow-hidden ${
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } } : undefined}
+      className={`surface-card kpi-card group rounded-2xl p-5  relative overflow-hidden ${
         onClick ? "cursor-pointer" : ""
       } ${className}`}
     >
-      <div className="flex items-start justify-between">
-        <div className="space-y-1.5">
-          <div className="flex items-center space-x-2">
-            <p className="text-xs font-semibold text-slate-600 tracking-wider uppercase">
-              {title}
-            </p>
-            {badgeText && (
-              <span
-                className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${badgeVariants}`}
-              >
-                {badgeText}
-              </span>
-            )}
-          </div>
-          <p className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-            {value}
-          </p>
-        </div>
-        
-        {/* Glass Icon Bubble with Hover Scale */}
-        <div className={`w-11 h-11 rounded-2xl glass-3 flex items-center justify-center border shadow-xs flex-shrink-0 group-hover:scale-115 transition-transform duration-300 ${iconVariants}`}>
-          <Icon className="w-5 h-5" />
-        </div>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-[13px] font-medium text-slate-500">{title}</p>
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${iconVariants}`}><Icon className="w-5 h-5" aria-hidden="true" /></div>
       </div>
+      <p className="mt-3 text-[clamp(20px,1.7vw,28px)] font-semibold tracking-tight text-slate-900 break-words tabular-nums">{value}</p>
+      {badgeText && <span className={`inline-flex mt-2 px-2 py-0.5 rounded-full text-[11px] border ${badgeVariants}`}>{badgeText}</span>}
 
       {(subtitle || trend) && (
-        <div className="mt-4 pt-3 border-t border-black/5 flex items-center justify-between text-xs">
+        <div className="mt-4 pt-3 border-t border-slate-100 flex flex-wrap gap-2 items-center justify-between text-xs">
           {subtitle && (
-            <span className="text-slate-700 font-semibold truncate">
+            <span className="text-slate-500 leading-relaxed">
               {subtitle}
             </span>
           )}

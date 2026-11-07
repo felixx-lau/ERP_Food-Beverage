@@ -1,6 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import useTableView from "@/components/ui/useTableView";
+import { TablePagination, SortLabel } from "@/components/ui/TableControls";
+import VendorPaymentForm from "@/components/VendorPaymentForm";
+import FinancialCorrection from "@/components/FinancialCorrection";
 import AppLayout from "@/components/AppLayout";
 import StatusBadge from "@/components/StatusBadge";
 import KPICard from "@/components/KPICard";
@@ -33,6 +37,9 @@ export default function RegisterPaymentPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [methodFilter, setMethodFilter] = useState("ALL");
+
+  const [submitting,setSubmitting]=useState(false);
+  const paymentPending=useRef(false), paymentKey=useRef(crypto.randomUUID());
 
   // Test Runner state
   const [testResult, setTestResult] = useState<any>(null);
@@ -68,7 +75,7 @@ export default function RegisterPaymentPage() {
         const invList = dataInv.invoices || [];
         setInvoices(invList);
         if (invList.length > 0 && !selectedInvoiceId) {
-          setSelectedInvoiceId(invList[0].id);
+          setSelectedInvoiceId(new URLSearchParams(window.location.search).get("invoiceId") || invList.find((i:any)=>i.status==="POSTED"&&i.outstandingAmount>0)?.id || "");
         }
       }
     } finally {
@@ -97,34 +104,16 @@ export default function RegisterPaymentPage() {
 
   // Submit Payment Action
   const handleRegisterPayment = async () => {
-    if (!selectedInvoiceId) {
-      alert("Pilih invoice yang akan dibayar");
-      return;
-    }
-
+    if(paymentPending.current)return;
+    if(!selectedInvoiceId||paymentAmount<=0){alert("Pilih invoice dan jumlah pembayaran yang valid.");return;}
+    paymentPending.current=true;setSubmitting(true);
     try {
-      const res = await fetch("/api/accounting/payments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          invoiceId: selectedInvoiceId,
-          amount: paymentAmount,
-          paymentMethod,
-          notes: "Pembayaran terdaftar via UI Form S-12",
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        alert(data.error || "Gagal mencatat pembayaran");
-        return;
-      }
-
-      alert(`Pembayaran berhasil dicatat! Sisa piutang: Rp${data.remainingBalance?.toLocaleString("id-ID")}`);
-      await fetchPaymentsAndInvoices();
-    } catch (e) {
-      console.error(e);
-    }
+      const res=await fetch('/api/accounting/payments',{method:'POST',headers:{'Content-Type':'application/json','Idempotency-Key':paymentKey.current},body:JSON.stringify({invoiceId:selectedInvoiceId,amount:paymentAmount,paymentMethod})});
+      const data=await res.json();if(!res.ok){alert(data.error||'Pembayaran gagal.');return;}
+      alert(`Pembayaran tersimpan. Sisa tagihan Rp${data.remainingBalance.toLocaleString('id-ID')}.`);
+      paymentKey.current=crypto.randomUUID();setPaymentAmount(0);setSelectedInvoiceId('');await fetchPaymentsAndInvoices();
+    } catch(e){alert('Koneksi gagal. Coba kembali; request yang sama tidak diposting dua kali.');}
+    finally{paymentPending.current=false;setSubmitting(false);}
   };
 
   // Run Test T-23
@@ -222,9 +211,9 @@ export default function RegisterPaymentPage() {
     return payments.filter((p) => {
       const matchSearch =
         p.paymentNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.customer?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (p.customer?.name || p.vendor?.name)?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.vendor?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.invoice?.invoiceNumber?.toLowerCase().includes(searchQuery.toLowerCase());
+        (p.invoice?.invoiceNumber || p.bill?.billNumber)?.toLowerCase().includes(searchQuery.toLowerCase());
       const matchMethod = methodFilter === "ALL" || p.paymentMethod === methodFilter;
       return matchSearch && matchMethod;
     });
@@ -234,6 +223,7 @@ export default function RegisterPaymentPage() {
     return payments.reduce((acc, p) => acc + (p.amount || 0), 0);
   }, [payments]);
 
+  const table = useTableView(filteredPayments, p => "", (p, key) => p[key] ?? "");
   return (
     <AppLayout
       currentUser={currentUser}
@@ -243,18 +233,20 @@ export default function RegisterPaymentPage() {
         { label: "Pembayaran & Kas (S-12)" },
       ]}
     >
+      <section className="surface-card p-5 space-y-3"><h2 className="font-semibold">Koreksi pembayaran</h2><p className="text-sm text-slate-500">Pembayaran yang salah dikoreksi dengan reversal; riwayat asli tetap tersimpan.</p>{payments.filter(p=>!p.reversedAt).map(payment=><div key={payment.id} className="flex flex-wrap justify-between gap-3 border rounded-xl p-3 text-sm"><span>{payment.paymentNumber} · {payment.customer?.name||payment.vendor?.name} · Rp{payment.amount.toLocaleString('id-ID')}</span><FinancialCorrection kind="payments" record={payment} onChanged={fetchPaymentsAndInvoices}/></div>)}</section>
+
+      <VendorPaymentForm onPaid={fetchPaymentsAndInvoices}/>
+
       <div className="space-y-6">
         {/* Module Header & Sub-Nav */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-2 p-5 rounded-2xl border border-white/80 shadow-glass-2">
           <div>
             <div className="flex items-center space-x-2">
               <span className="w-2.5 h-2.5 rounded-full bg-[#1d4ed8]" />
-              <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+              <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
                 Register Payment & Cash Receipt
               </h1>
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#1d4ed8]/10 text-[#1d4ed8] border border-[#1d4ed8]/20">
-                Wireframe S-12
-              </span>
+
             </div>
             <p className="text-xs text-slate-700 font-semibold mt-1">
               Pencatatan kas masuk, pelunasan piutang parsial & penegakan proteksi overpayment (SR-19 / F-15).
@@ -378,12 +370,13 @@ export default function RegisterPaymentPage() {
                 className="w-full text-xs font-mono font-bold input-glass rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-[#1d4ed8]"
               />
               <span className="text-[11px] text-slate-700 font-semibold block mt-1.5">
-                Contoh: Rp100.000 untuk pengujian T-23
+                Tidak boleh melebihi sisa tagihan.
               </span>
             </div>
 
             <div className="flex flex-col justify-end">
               <button
+                disabled={submitting}
                 onClick={handleRegisterPayment}
                 className="w-full py-2.5 btn-glass-primary text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-2 shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
               >
@@ -476,7 +469,7 @@ export default function RegisterPaymentPage() {
             <div className="flex items-center space-x-3">
               <div className="relative">
                 <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input
+                <input aria-label="Cari no. bayar / customer / invoice..."
                   type="text"
                   placeholder="Cari no. bayar / customer / invoice..."
                   value={searchQuery}
@@ -502,13 +495,13 @@ export default function RegisterPaymentPage() {
             <table className="w-full text-left text-xs text-slate-900">
               <thead className="bg-white/60 border-b border-black/10 text-slate-700 font-bold uppercase tracking-wider text-[11px]">
                 <tr>
-                  <th className="py-3.5 px-4">No. Bukti Bayar</th>
-                  <th className="py-3.5 px-4">Tanggal</th>
-                  <th className="py-3.5 px-4">Customer / Partner</th>
-                  <th className="py-3.5 px-4">Invoice / Referensi</th>
-                  <th className="py-3.5 px-4">Metode</th>
-                  <th className="py-3.5 px-4 text-right">Nominal Bayar</th>
-                  <th className="py-3.5 px-4 text-center">Status</th>
+                  <th scope="col" className="py-3.5 px-4">No. Bukti Bayar</th>
+                  <th scope="col" className="py-3.5 px-4" aria-sort={table.sort.key === "paymentDate" ? table.sort.direction === "asc" ? "ascending" : "descending" : "none"}><SortLabel active={table.sort.key === "paymentDate"} direction={table.sort.direction} onClick={() => table.toggleSort("paymentDate")}>Tanggal</SortLabel></th>
+                  <th scope="col" className="py-3.5 px-4">Customer / Partner</th>
+                  <th scope="col" className="py-3.5 px-4">Invoice / Referensi</th>
+                  <th scope="col" className="py-3.5 px-4">Metode</th>
+                  <th scope="col" className="py-3.5 px-4 text-right" aria-sort={table.sort.key === "amount" ? table.sort.direction === "asc" ? "ascending" : "descending" : "none"}><SortLabel active={table.sort.key === "amount"} direction={table.sort.direction} onClick={() => table.toggleSort("amount")}>Nominal Bayar</SortLabel></th>
+                  <th scope="col" className="py-3.5 px-4 text-center">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-black/5 font-mono">
@@ -519,7 +512,7 @@ export default function RegisterPaymentPage() {
                     </td>
                   </tr>
                 ) : (
-                  filteredPayments.map((p) => (
+                  table.rows.map((p) => (
                     <tr key={p.id} className="hover:bg-emerald-500/10 transition-colors duration-150">
                       <td className="py-3.5 px-4 font-bold text-[#1d4ed8]">
                         {p.paymentNumber}
@@ -528,10 +521,10 @@ export default function RegisterPaymentPage() {
                         {new Date(p.paymentDate).toLocaleDateString("id-ID")}
                       </td>
                       <td className="py-3.5 px-4 font-sans text-slate-900 font-medium">
-                        {p.customer?.name || p.vendor?.name || "-"}
+                        {(p.customer?.name || p.vendor?.name) || p.vendor?.name || "-"}
                       </td>
                       <td className="py-3.5 px-4 text-[#1d4ed8] font-semibold">
-                        {p.invoice?.invoiceNumber || p.bill?.billNumber || "-"}
+                        {(p.invoice?.invoiceNumber || p.bill?.billNumber) || p.bill?.billNumber || "-"}
                       </td>
                       <td className="py-3.5 px-4">
                         <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#1d4ed8]/10 text-[#1d4ed8] border border-[#1d4ed8]/20">
@@ -550,10 +543,11 @@ export default function RegisterPaymentPage() {
               </tbody>
             </table>
           </div>
+          <TablePagination {...table} onChange={table.setPage} />
         </div>
 
         {/* Collapsible QA Automated Test Runner: T-23 & T-24 */}
-        <details className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
+        <details hidden className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
           <summary className="cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white select-none">
             <div className="flex items-center space-x-2">
               <span className="px-2 py-0.5 rounded-md bg-[#7c3aed] text-slate-900 font-bold text-[10px] uppercase">

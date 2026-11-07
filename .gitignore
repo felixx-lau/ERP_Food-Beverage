@@ -27,3 +27,6 @@ dist/
 # Legacy archives (keep original UTS files in repo, but zip can be ignored if desired, or keep as untracked)
 .vercel
 .env*
+
+# Local database backups (may contain business data)
+backups/

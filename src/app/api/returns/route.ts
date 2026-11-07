@@ -1,9 +1,14 @@
+import { idempotent } from "@/lib/atomic";
+import { authorizeApi } from "@/lib/apiAuthorization";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { createReturnRequest } from "@/lib/returnEngine";
 
 export async function GET(request: NextRequest) {
+  const accessDenied = await authorizeApi(request);
+  if (accessDenied) return accessDenied;
+
   try {
     const user = await getCurrentUser(request);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -26,6 +31,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const accessDenied = await authorizeApi(request);
+  if (accessDenied) return accessDenied;
+
   try {
     const user = await getCurrentUser(request);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -33,11 +41,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { invoiceId, lines } = body;
 
-    const returnReq = await createReturnRequest({
+    const returnReq = await idempotent(user,"CREATE_RETURN",request.headers.get("idempotency-key")||undefined,body,()=>createReturnRequest({
       invoiceId,
       lines,
       actor: user,
-    });
+    }));
 
     return NextResponse.json({ success: true, returnRequest: returnReq });
   } catch (error: unknown) {

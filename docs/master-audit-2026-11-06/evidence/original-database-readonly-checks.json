@@ -1,0 +1,82 @@
+[
+  {
+    "database": "prisma/companies/comp_pt-kuliner-nusantara_yqes.db",
+    "summary": {
+      "User": 6,
+      "Contact": 0,
+      "ProductVariant": 1,
+      "WarehouseLocation": 2,
+      "SalesOrder": 0,
+      "PurchaseOrder": 0,
+      "CustomerInvoice": 0,
+      "VendorBill": 0,
+      "PosOrder": 0,
+      "StockMove": 0,
+      "JournalEntry": 0,
+      "onHand": 15,
+      "invalidStockRows": 0,
+      "quickCheck": "ok",
+      "foreignKeyViolationCount": 0
+    }
+  },
+  {
+    "database": "prisma/companies/comp_pt-morie-matcha_qkc6.db",
+    "summary": {
+      "User": 6,
+      "Contact": 10,
+      "ProductVariant": 15,
+      "WarehouseLocation": 2,
+      "SalesOrder": 1,
+      "PurchaseOrder": 2,
+      "CustomerInvoice": 0,
+      "VendorBill": 0,
+      "PosOrder": 0,
+      "StockMove": 0,
+      "JournalEntry": 1,
+      "onHand": 616,
+      "invalidStockRows": 0,
+      "quickCheck": "ok",
+      "foreignKeyViolationCount": 0
+    }
+  },
+  {
+    "database": "prisma/companies/comp_pt-resto-nusantara-b_lfr7.db",
+    "summary": {
+      "User": 6,
+      "Contact": 0,
+      "ProductVariant": 1,
+      "WarehouseLocation": 2,
+      "SalesOrder": 0,
+      "PurchaseOrder": 0,
+      "CustomerInvoice": 0,
+      "VendorBill": 0,
+      "PosOrder": 0,
+      "StockMove": 0,
+      "JournalEntry": 0,
+      "onHand": 15,
+      "invalidStockRows": 0,
+      "quickCheck": "ok",
+      "foreignKeyViolationCount": 0
+    }
+  },
+  {
+    "database": "prisma/erp.db",
+    "summary": {
+      "User": 6,
+      "Contact": 10,
+      "ProductVariant": 15,
+      "WarehouseLocation": 2,
+      "SalesOrder": 1,
+      "PurchaseOrder": 1,
+      "CustomerInvoice": 0,
+      "VendorBill": 0,
+      "PosOrder": 0,
+      "StockMove": 0,
+      "JournalEntry": 1,
+      "onHand": 616,
+      "invalidStockRows": 0,
+      "quickCheck": "ok",
+      "foreignKeyViolationCount": 0
+    }
+  }
+]

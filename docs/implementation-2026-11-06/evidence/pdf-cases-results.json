@@ -1,0 +1,834 @@
+[
+  {
+    "id": "T01",
+    "status": "PASS",
+    "scope": "service/API handler; fresh baseline",
+    "observations": [
+      {
+        "label": "Owner apps",
+        "actual": 8,
+        "expected": 8
+      },
+      {
+        "label": "valid owner token",
+        "actual": "string",
+        "expected": "string"
+      }
+    ]
+  },
+  {
+    "id": "T02",
+    "status": "PASS",
+    "scope": "service/API handler; fresh baseline",
+    "observations": [
+      {
+        "label": "real GL handler denial",
+        "actual": 403,
+        "expected": 403
+      },
+      {
+        "label": "denied audit persisted",
+        "actual": 1,
+        "expected": 1
+      }
+    ]
+  },
+  {
+    "id": "T03",
+    "status": "PASS",
+    "scope": "service/API handler; fresh baseline",
+    "observations": [
+      {
+        "label": "C01",
+        "actual": [
+          3000000,
+          1200000,
+          1800000
+        ],
+        "expected": [
+          3000000,
+          1200000,
+          1800000
+        ]
+      },
+      {
+        "label": "C02",
+        "actual": [
+          350000,
+          300000,
+          50000
+        ],
+        "expected": [
+          350000,
+          300000,
+          50000
+        ]
+      }
+    ]
+  },
+  {
+    "id": "T04",
+    "status": "PASS",
+    "scope": "service/API handler; fresh baseline",
+    "observations": [
+      {
+        "label": "gross",
+        "actual": 105600,
+        "expected": 105600
+      },
+      {
+        "label": "credit confirmation",
+        "actual": "rejected",
+        "expected": "rejected"
+      },
+      {
+        "label": "headroom unchanged",
+        "actual": 50000,
+        "expected": 50000
+      }
+    ]
+  },
+  {
+    "id": "T05",
+    "status": "PASS",
+    "scope": "service/API handler; fresh baseline",
+    "observations": [
+      {
+        "label": "variant stock and cost",
+        "actual": [
+          48000,
+          26000,
+          40,
+          6,
+          34,
+          12,
+          52
+        ],
+        "expected": [
+          48000,
+          26000,
+          40,
+          6,
+          34,
+          12,
+          52
+        ]
+      }
+    ]
+  },
+  {
+    "id": "T06",
+    "status": "PASS",
+    "scope": "service/API handler; fresh baseline",
+    "observations": [
+      {
+        "label": "Hot/iced independent",
+        "actual": [
+          25,
+          25
+        ],
+        "expected": [
+          25,
+          25
+        ]
+      },
+      {
+        "label": "inventory adjustment ledger",
+        "actual": 12274000,
+        "expected": 12274000
+      }
+    ]
+  },
+  {
+    "id": "T07",
+    "status": "PASS",
+    "scope": "service/API handler; fresh baseline",
+    "observations": [
+      {
+        "label": "qualified lead",
+        "actual": [
+          "C03",
+          "Klinik Harmoni",
+          "QUALIFIED",
+          1200000
+        ],
+        "expected": [
+          "C03",
+          "Klinik Harmoni",
+          "QUALIFIED",
+          1200000
+        ]
+      }
+    ]
+  },
+  {
+    "id": "T08",
+    "status": "PASS",
+    "scope": "service/API handler; fresh baseline",
+    "observations": [
+      {
+        "label": "Proposition requires revenue",
+        "actual": "rejected",
+        "expected": "rejected"
+      },
+      {
+        "label": "stage unchanged",
+        "actual": "NEW",
+        "expected": "NEW"
+      }
+    ]
+  },
+  {
+    "id": "T09",
+    "status": "PASS",
+    "scope": "service/API handler; fresh baseline",
+    "observations": [
+      {
+        "label": "quotation",
+        "actual": [
+          316000,
+          31600,
+          347600,
+          172000
+        ],
+        "expected": [
+          316000,
+          31600,
+          347600,
+          172000
+        ]
+      },
+      {
+        "label": "confirmed exposure",
+        "actual": [
+          1547600,
+          1452400
+        ],
+        "expected": [
+          1547600,
+          1452400
+        ]
+      }
+    ]
+  },
+  {
+    "id": "T10",
+    "status": "PASS",
+    "scope": "service/API handler; fresh baseline",
+    "observations": [
+      {
+        "label": "discount",
+        "actual": [
+          76800,
+          7680,
+          false
+        ],
+        "expected": [
+          76800,
+          7680,
+          false
+        ]
+      },
+      {
+        "label": "unapproved confirmation",
+        "actual": "rejected",
+        "expected": "rejected"
+      },
+      {
+        "label": "confirmed price lock",
+        "actual": "rejected",
+        "expected": "rejected"
+      }
+    ]
+  },
+  {
+    "id": "T11",
+    "status": "PASS",
+    "scope": "service/API handler; fresh baseline",
+    "observations": [
+      {
+        "label": "independent physical/reserved/available",
+        "actual": [
+          35,
+          9,
+          26
+        ],
+        "expected": [
+          35,
+          9,
+          26
+        ]
+      },
+      {
+        "label": "backorder",
+        "actual": 3,
+        "expected": 3
+      },
+      {
+        "label": "COGS and invoice eligibility",
+        "actual": [
+          130000,
+          264000
+        ],
+        "expected": [
+          130000,
+          264000
+        ]
+      }
+    ]
+  },
+  {
+    "id": "T12",
+    "status": "PASS",
+    "scope": "service/API handler; fresh baseline",
+    "observations": [
+      {
+        "label": "38 exceeds available 34, sufficient customer credit",
+        "actual": "stock guard rejected",
+        "expected": "stock guard rejected"
+      },
+      {
+        "label": "physical/reserved protected",
+        "actual": [
+          40,
+          6
+        ],
+        "expected": [
+          40,
+          6
+        ]
+      }
+    ]
+  },
+  {
+    "id": "T13",
+    "status": "PASS",
+    "scope": "service/API handler; fresh baseline",
+    "observations": [
+      {
+        "label": "location/company totals",
+        "actual": [
+          21,
+          22
+        ],
+        "expected": [
+          21,
+          22
+        ]
+      },
+      {
+        "label": "valuation unchanged",
+        "actual": 12214000,
+        "expected": 12214000
+      },
+      {
+        "label": "permanent transfer moves",
+        "actual": 1,
+        "expected": 1
+      }
+    ]
+  },
+  {
+    "id": "T14",
+    "status": "PASS",
+    "scope": "service/API handler; fresh baseline",
+    "observations": [
+      {
+        "label": "transfer over available",
+        "actual": "rejected",
+        "expected": "rejected"
+      },
+      {
+        "label": "stock unchanged",
+        "actual": 25,
+        "expected": 25
+      }
+    ]
+  },
+  {
+    "id": "T15",
+    "status": "PASS",
+    "scope": "service/API handler; fresh baseline",
+    "observations": [
+      {
+        "label": "PO quantity price tax total",
+        "actual": [
+          10,
+          12000,
+          0,
+          120000
+        ],
+        "expected": [
+          10,
+          12000,
+          0,
+          120000
+        ]
+      },
+      {
+        "label": "RFQ has no physical effect",
+        "actual": 20,
+        "expected": 20
+      }
+    ]
+  },
+  {
+    "id": "T16",
+    "status": "PASS",
+    "scope": "service/API handler; fresh baseline",
+    "observations": [
+      {
+        "label": "same receipt",
+        "actual": "cmw5237u701hzozf6xwptdtlb",
+        "expected": "cmw5237u701hzozf6xwptdtlb"
+      },
+      {
+        "label": "one receipt",
+        "actual": 1,
+        "expected": 1
+      },
+      {
+        "label": "no stock effect",
+        "actual": 20,
+        "expected": 20
+      }
+    ]
+  },
+  {
+    "id": "T17",
+    "status": "PASS",
+    "scope": "service/API handler; fresh baseline",
+    "observations": [
+      {
+        "label": "accepted stock/value/GRNI",
+        "actual": [
+          28,
+          12310000,
+          96000
+        ],
+        "expected": [
+          28,
+          12310000,
+          96000
+        ]
+      },
+      {
+        "label": "rejected replacement backorder",
+        "actual": 2,
+        "expected": 2
+      }
+    ]
+  },
+  {
+    "id": "T18",
+    "status": "PASS",
+    "scope": "service/API handler; fresh baseline",
+    "observations": [
+      {
+        "label": "bill cannot include rejected units",
+        "actual": "rejected",
+        "expected": "rejected"
+      },
+      {
+        "label": "no bill posted",
+        "actual": 0,
+        "expected": 0
+      }
+    ]
+  },
+  {
+    "id": "T19",
+    "status": "PASS",
+    "scope": "service/API handler; fresh baseline",
+    "observations": [
+      {
+        "label": "invoice",
+        "actual": [
+          240000,
+          24000,
+          264000
+        ],
+        "expected": [
+          240000,
+          24000,
+          264000
+        ]
+      },
+      {
+        "label": "AR ledger",
+        "actual": 1764000,
+        "expected": 1764000
+      }
+    ]
+  },
+  {
+    "id": "T20",
+    "status": "PASS",
+    "scope": "service/API handler; fresh baseline",
+    "observations": [
+      {
+        "label": "invoice cannot exceed 5 delivered",
+        "actual": "rejected",
+        "expected": "rejected"
+      },
+      {
+        "label": "no invoice",
+        "actual": 0,
+        "expected": 0
+      }
+    ]
+  },
+  {
+    "id": "T21",
+    "status": "PASS",
+    "scope": "service/API handler; fresh baseline",
+    "observations": [
+      {
+        "label": "matched bill",
+        "actual": [
+          96000,
+          0,
+          1096000
+        ],
+        "expected": [
+          96000,
+          0,
+          1096000
+        ]
+      },
+      {
+        "label": "AP not double counted",
+        "actual": 1096000,
+        "expected": 1096000
+      }
+    ]
+  },
+  {
+    "id": "T22",
+    "status": "PASS",
+    "scope": "service/API handler; fresh baseline",
+    "observations": [
+      {
+        "label": "duplicate billed quantities",
+        "actual": "rejected",
+        "expected": "rejected"
+      },
+      {
+        "label": "no duplicate posting",
+        "actual": {
+          "journals": 3,
+          "moves": 1,
+          "payments": 0
+        },
+        "expected": {
+          "journals": 3,
+          "moves": 1,
+          "payments": 0
+        }
+      }
+    ]
+  },
+  {
+    "id": "T23",
+    "status": "PASS",
+    "scope": "service/API handler; fresh baseline",
+    "observations": [
+      {
+        "label": "partial payment",
+        "actual": [
+          164000,
+          20100000,
+          1664000
+        ],
+        "expected": [
+          164000,
+          20100000,
+          1664000
+        ]
+      }
+    ]
+  },
+  {
+    "id": "T24",
+    "status": "PASS",
+    "scope": "service/API handler; fresh baseline",
+    "observations": [
+      {
+        "label": "overpayment 300000",
+        "actual": "rejected",
+        "expected": "rejected"
+      },
+      {
+        "label": "no partial payment effects",
+        "actual": {
+          "journals": 3,
+          "moves": 1,
+          "payments": 0
+        },
+        "expected": {
+          "journals": 3,
+          "moves": 1,
+          "payments": 0
+        }
+      }
+    ]
+  },
+  {
+    "id": "T25",
+    "status": "PASS",
+    "scope": "service/API handler; fresh baseline",
+    "observations": [
+      {
+        "label": "two source journals",
+        "actual": 2,
+        "expected": 2
+      },
+      {
+        "label": "balanced WH/OUT/0007",
+        "actual": 0,
+        "expected": 0
+      },
+      {
+        "label": "balanced INV/2026/0007",
+        "actual": 0,
+        "expected": 0
+      },
+      {
+        "label": "journal debit 130000 + 264000",
+        "actual": 394000,
+        "expected": 394000
+      }
+    ]
+  },
+  {
+    "id": "T26",
+    "status": "PASS",
+    "scope": "service/API handler; fresh baseline",
+    "observations": [
+      {
+        "label": "repeat validation/post unchanged",
+        "actual": {
+          "journals": 3,
+          "moves": 1,
+          "payments": 0
+        },
+        "expected": {
+          "journals": 3,
+          "moves": 1,
+          "payments": 0
+        }
+      }
+    ]
+  },
+  {
+    "id": "T27",
+    "status": "PASS",
+    "scope": "service/API handler; fresh baseline",
+    "observations": [
+      {
+        "label": "POS totals",
+        "actual": [
+          80000,
+          8000,
+          88000,
+          33000
+        ],
+        "expected": [
+          80000,
+          8000,
+          88000,
+          33000
+        ]
+      },
+      {
+        "label": "cafe stock",
+        "actual": [
+          22,
+          19
+        ],
+        "expected": [
+          22,
+          19
+        ]
+      },
+      {
+        "label": "bank",
+        "actual": 20088000,
+        "expected": 20088000
+      },
+      {
+        "label": "permanent source moves",
+        "actual": 2,
+        "expected": 2
+      }
+    ]
+  },
+  {
+    "id": "T28",
+    "status": "PASS",
+    "scope": "service/API handler; fresh baseline",
+    "observations": [
+      {
+        "label": "25 Hot exceeds cafe24",
+        "actual": "rejected",
+        "expected": "rejected"
+      },
+      {
+        "label": "close retry preserves summary",
+        "actual": 0,
+        "expected": 0
+      },
+      {
+        "label": "close retry no posting",
+        "actual": {
+          "journals": 1,
+          "moves": 0,
+          "payments": 0
+        },
+        "expected": {
+          "journals": 1,
+          "moves": 0,
+          "payments": 0
+        }
+      }
+    ]
+  },
+  {
+    "id": "T29",
+    "status": "PASS",
+    "scope": "service/API handler; fresh baseline",
+    "observations": [
+      {
+        "label": "credit net tax gross cost",
+        "actual": [
+          48000,
+          4800,
+          52800,
+          26000
+        ],
+        "expected": [
+          48000,
+          4800,
+          52800,
+          26000
+        ]
+      },
+      {
+        "label": "restock and AR",
+        "actual": [
+          36,
+          1711200
+        ],
+        "expected": [
+          36,
+          1711200
+        ]
+      }
+    ]
+  },
+  {
+    "id": "T30",
+    "status": "PASS",
+    "scope": "service/API handler; fresh baseline",
+    "observations": [
+      {
+        "label": "pending QC cannot post",
+        "actual": "rejected",
+        "expected": "rejected"
+      },
+      {
+        "label": "no stock/ledger credit effects",
+        "actual": {
+          "journals": 3,
+          "moves": 1,
+          "payments": 0
+        },
+        "expected": {
+          "journals": 3,
+          "moves": 1,
+          "payments": 0
+        }
+      },
+      {
+        "label": "stock protected",
+        "actual": 35,
+        "expected": 35
+      },
+      {
+        "label": "no credit note",
+        "actual": 0,
+        "expected": 0
+      }
+    ]
+  },
+  {
+    "id": "T31",
+    "status": "PASS",
+    "scope": "service/API handler; fresh baseline",
+    "observations": [
+      {
+        "label": "untouched dashboard",
+        "actual": [
+          616,
+          12214000,
+          1500000,
+          1000000,
+          20000000,
+          1,
+          1,
+          6,
+          1,
+          0
+        ],
+        "expected": [
+          616,
+          12214000,
+          1500000,
+          1000000,
+          20000000,
+          1,
+          1,
+          6,
+          1,
+          0
+        ]
+      }
+    ]
+  },
+  {
+    "id": "T32",
+    "status": "PASS",
+    "scope": "service/API handler; fresh baseline",
+    "observations": [
+      {
+        "label": "simulated mismatch",
+        "actual": [
+          "MISMATCH",
+          true
+        ],
+        "expected": [
+          "MISMATCH",
+          true
+        ]
+      },
+      {
+        "label": "no automatic correction",
+        "actual": {
+          "journals": 1,
+          "moves": 0,
+          "payments": 0
+        },
+        "expected": {
+          "journals": 1,
+          "moves": 0,
+          "payments": 0
+        }
+      },
+      {
+        "label": "actual stock unchanged",
+        "actual": 616,
+        "expected": 616
+      }
+    ]
+  }
+]

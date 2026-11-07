@@ -1,0 +1,96 @@
+
+> rasa-aruna-erp@1.0.0 build
+> next build
+
+   ▲ Next.js 15.5.28
+   - Environments: .env
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 2.7s
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/49) ...
+   Generating static pages (12/49) 
+   Generating static pages (24/49) 
+   Generating static pages (36/49) 
+ ✓ Generating static pages (49/49)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                     Size  First Load JS
+┌ ○ /                                        4.81 kB         145 kB
+├ ○ /_not-found                                999 B         104 kB
+├ ○ /accounting/invoices                     5.36 kB         133 kB
+├ ○ /accounting/journal-entries              6.67 kB         134 kB
+├ ○ /accounting/payments                     7.12 kB         135 kB
+├ ○ /accounting/vendor-bills                 3.76 kB         132 kB
+├ ƒ /api/accounting/general-ledger             253 B         103 kB
+├ ƒ /api/accounting/invoices                   253 B         103 kB
+├ ƒ /api/accounting/invoices/[id]              253 B         103 kB
+├ ƒ /api/accounting/invoices/[id]/post         253 B         103 kB
+├ ƒ /api/accounting/journal-entries            253 B         103 kB
+├ ƒ /api/accounting/payments                   253 B         103 kB
+├ ƒ /api/accounting/vendor-bills               253 B         103 kB
+├ ƒ /api/accounting/vendor-bills/[id]          253 B         103 kB
+├ ƒ /api/accounting/vendor-bills/[id]/post     253 B         103 kB
+├ ƒ /api/audit/logs                            253 B         103 kB
+├ ƒ /api/auth/login                            253 B         103 kB
+├ ƒ /api/auth/logout                           253 B         103 kB
+├ ƒ /api/auth/me                               253 B         103 kB
+├ ƒ /api/auth/switch-role                      253 B         103 kB
+├ ƒ /api/companies                             253 B         103 kB
+├ ƒ /api/companies/switch                      253 B         103 kB
+├ ƒ /api/contacts                              253 B         103 kB
+├ ƒ /api/contacts/[id]                         253 B         103 kB
+├ ƒ /api/crm/leads                             253 B         103 kB
+├ ƒ /api/crm/leads/[id]                        253 B         103 kB
+├ ƒ /api/dashboard/charts                      253 B         103 kB
+├ ƒ /api/dashboard/metrics                     253 B         103 kB
+├ ƒ /api/dashboard/reconciliation              253 B         103 kB
+├ ƒ /api/inventory/deliveries                  253 B         103 kB
+├ ƒ /api/inventory/deliveries/[id]             253 B         103 kB
+├ ƒ /api/inventory/deliveries/[id]/validate    253 B         103 kB
+├ ƒ /api/inventory/receipts                    253 B         103 kB
+├ ƒ /api/inventory/receipts/[id]               253 B         103 kB
+├ ƒ /api/inventory/receipts/[id]/validate      253 B         103 kB
+├ ƒ /api/inventory/transfers                   253 B         103 kB
+├ ƒ /api/inventory/transfers/[id]/validate     253 B         103 kB
+├ ƒ /api/pos/orders                            253 B         103 kB
+├ ƒ /api/pos/sessions                          253 B         103 kB
+├ ƒ /api/pos/sessions/[id]/close               253 B         103 kB
+├ ƒ /api/products                              253 B         103 kB
+├ ƒ /api/products/[sku]                        253 B         103 kB
+├ ƒ /api/purchase/orders                       253 B         103 kB
+├ ƒ /api/purchase/orders/[id]                  253 B         103 kB
+├ ƒ /api/purchase/orders/[id]/confirm          253 B         103 kB
+├ ƒ /api/returns                               253 B         103 kB
+├ ƒ /api/returns/[id]/inspect                  253 B         103 kB
+├ ƒ /api/returns/[id]/process                  253 B         103 kB
+├ ƒ /api/sales/orders                          253 B         103 kB
+├ ƒ /api/sales/orders/[id]                     253 B         103 kB
+├ ƒ /api/sales/orders/[id]/approve-discount    253 B         103 kB
+├ ƒ /api/sales/orders/[id]/confirm             253 B         103 kB
+├ ƒ /api/seed/demo-charts                      253 B         103 kB
+├ ƒ /api/seed/reset                            253 B         103 kB
+├ ƒ /api/users                                 253 B         103 kB
+├ ○ /crm/leads                               4.37 kB         132 kB
+├ ○ /dashboard                               81.7 kB         210 kB
+├ ○ /inventory/delivery                      3.77 kB         132 kB
+├ ○ /inventory/products                      6.57 kB         138 kB
+├ ○ /inventory/receipts                      3.92 kB         132 kB
+├ ○ /inventory/returns                       7.64 kB         135 kB
+├ ○ /inventory/transfers                     4.79 kB         133 kB
+├ ○ /login                                   5.45 kB         108 kB
+├ ○ /pos                                     8.29 kB         136 kB
+├ ○ /purchase/orders                         3.77 kB         135 kB
+├ ○ /sales/contacts                          3.81 kB         134 kB
+└ ○ /sales/orders                            3.94 kB         135 kB
++ First Load JS shared by all                 103 kB
+  ├ chunks/1255-dc3ddf72a1dc71a7.js          46.6 kB
+  ├ chunks/4bd1b696-f785427dddbba9fb.js      54.2 kB
+  └ other shared chunks (total)              1.93 kB
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

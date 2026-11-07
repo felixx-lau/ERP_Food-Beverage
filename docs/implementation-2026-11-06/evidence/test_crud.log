@@ -1,0 +1,18 @@
+[PASS] Contact create persists communication fields and terms
+[PASS] Invalid contact values and unauthorized credit edits are rejected
+[PASS] Referenced contacts cannot be deleted; archived customer cannot enter new sales
+[PASS] All appropriate masters support create/edit/archive/restore/safe-delete
+[PASS] Products persist metadata and protect valued stock/history
+prisma:error 
+Invalid `any)[c.model].create()` invocation in
+/private/var/folders/3h/s316nc3x1qd8thr1k5mh0kg80000gn/T/rasa-aruna-verification-ld2pqvug/src/lib/masterData.ts:141:49
+
+  138 const c=masterConfig(resource); permit(actor,[...c.roles]);
+  139 return atomic(async()=>{
+  140   const data=await validated(resource,input,actor);
+→ 141   const record=await (prisma as any)[c.model].create(
+Unique constraint failed on the fields: (`code`)
+[PASS] HTTP handlers enforce permissions, duplicate identities and stale writes
+[PASS] Legacy CRM endpoints share master validation, version checks and request identity
+[PASS] Core account/location archival is forbidden and audit is preserved
+CRUD SUMMARY: 8 scenario groups passed

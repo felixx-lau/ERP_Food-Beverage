@@ -1,6 +1,7 @@
 "use client";
+import DialogFrame from "./ui/DialogFrame";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { ShoppingBag, Plus, Trash2, X, Check, Building } from "lucide-react";
 
 interface POLineItem {
@@ -22,10 +23,16 @@ export default function CreatePurchaseOrderModal({
   onOrderCreated,
 }: CreatePurchaseOrderModalProps) {
   const [vendors, setVendors] = useState<any[]>([]);
+  const [vendorPrices, setVendorPrices] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [selectedVendorId, setSelectedVendorId] = useState("");
   const [lines, setLines] = useState<POLineItem[]>([]);
 
+  const pending = useRef(false);
+  const requestKey = useRef("");
+  const [dirty, setDirty] = useState(false);
+  const close = () => { if (!pending.current && (!dirty || window.confirm("Abaikan perubahan yang belum disimpan?"))) { setDirty(false); onClose(); } };
+  useEffect(() => { if (!isOpen) return; const warn = (e: BeforeUnloadEvent) => { if(dirty){e.preventDefault();e.returnValue="";} }; window.addEventListener("beforeunload",warn); return ()=>window.removeEventListener("beforeunload",warn); },[isOpen,dirty]);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -35,8 +42,10 @@ export default function CreatePurchaseOrderModal({
       Promise.all([
         fetch("/api/contacts?type=VENDOR").then((r) => r.json()),
         fetch("/api/products").then((r) => r.json()),
+        fetch("/api/master/options").then((r) => r.json()),
       ])
-        .then(([vData, pData]) => {
+        .then(([vData, pData, optionData]) => {
+          setVendorPrices(optionData.vendorPrices || []);
           const vList = vData.contacts || [];
           const pList = pData.products || [];
           setVendors(vList);
@@ -62,6 +71,8 @@ export default function CreatePurchaseOrderModal({
     }
   }, [isOpen]);
 
+  const priceFor = (sku: string, qty: number, vendorId: string) => vendorPrices.find(p=>p.vendorId===vendorId&&p.productSku===sku&&p.minimumQty<=qty)?.price ?? products.find(p=>p.sku===sku)?.standardCost ?? 0;
+  useEffect(()=>{if(selectedVendorId) setLines(current=>current.map(line=>({...line,unitPrice:priceFor(line.productSku,line.orderedQty,selectedVendorId)})));},[selectedVendorId,vendorPrices]);
   const totalAmount = useMemo(() => {
     return lines.reduce((sum, item) => sum + item.orderedQty * item.unitPrice, 0);
   }, [lines]);
@@ -93,14 +104,13 @@ export default function CreatePurchaseOrderModal({
 
       const match = products.find(
         (p) =>
-          p.sku.toLowerCase() === typedText.toLowerCase().trim() ||
-          p.name.toLowerCase() === typedText.toLowerCase().trim()
+          p.sku.toLowerCase() === typedText.toLowerCase().trim()
       );
 
       if (match) {
         cur.productSku = match.sku;
         cur.productName = match.name;
-        cur.unitPrice = match.standardCost;
+        cur.unitPrice = priceFor(match.sku,cur.orderedQty,selectedVendorId);
       } else {
         cur.productSku = typedText;
       }
@@ -117,6 +127,7 @@ export default function CreatePurchaseOrderModal({
 
       if (field === "orderedQty") {
         cur.orderedQty = Math.max(1, Number(val) || 1);
+        cur.unitPrice = priceFor(cur.productSku,cur.orderedQty,selectedVendorId);
       } else if (field === "unitPrice") {
         cur.unitPrice = Math.max(0, Number(val) || 0);
       }
@@ -128,6 +139,7 @@ export default function CreatePurchaseOrderModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (pending.current) return;
     setErrorMsg(null);
     setSuccessMsg(null);
 
@@ -148,12 +160,14 @@ export default function CreatePurchaseOrderModal({
       }
     }
 
+    pending.current = true;
+    requestKey.current ||= crypto.randomUUID();
     setLoading(true);
 
     try {
       const res = await fetch("/api/purchase/orders", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "Idempotency-Key": requestKey.current },
         body: JSON.stringify({
           vendorId: selectedVendorId,
           lines: lines.map((l) => ({
@@ -167,6 +181,7 @@ export default function CreatePurchaseOrderModal({
 
       const data = await res.json();
       if (!res.ok) {
+        if (res.status < 500 && res.status !== 409) requestKey.current = "";
         setErrorMsg(data.error || "Gagal membuat Purchase Order.");
         return;
       }
@@ -175,21 +190,22 @@ export default function CreatePurchaseOrderModal({
         `Pesanan Pembelian ${data.order.poNumber} berhasil dibuat dengan status ${data.order.status}!`
       );
 
-      setTimeout(() => {
-        onOrderCreated(data.order);
-        onClose();
-        setSuccessMsg(null);
-      }, 800);
+      setDirty(false); requestKey.current = "";
+      onOrderCreated(data.order);
+      onClose();
+      setLines([]);
+      setSuccessMsg(null);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       setErrorMsg(msg || "Terjadi kesalahan.");
     } finally {
+      pending.current = false;
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-4 animate-in fade-in duration-200">
+    <DialogFrame onClose={close}>
       <div className="glass-modal w-full max-w-2xl rounded-3xl shadow-glass-modal border border-white/80 overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="px-6 py-4 bg-white/40 border-b border-black/5 flex items-center justify-between">
@@ -205,7 +221,8 @@ export default function CreatePurchaseOrderModal({
             </div>
           </div>
           <button
-            onClick={onClose}
+            onClick={close}
+            aria-label="Tutup dialog"
             className="p-1.5 rounded-full hover:bg-white/80 text-slate-600 hover:text-slate-900 transition-colors shadow-xs"
           >
             <X className="w-5 h-5" />
@@ -213,9 +230,9 @@ export default function CreatePurchaseOrderModal({
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4 flex-1">
+        <form onChange={()=>{setDirty(true);requestKey.current="";}} onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4 flex-1">
           {errorMsg && (
-            <div className="p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-xs text-rose-900 font-bold">
+            <div role="alert" className="p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-xs text-rose-900 font-bold">
               {errorMsg}
             </div>
           )}
@@ -228,10 +245,10 @@ export default function CreatePurchaseOrderModal({
 
           {/* Vendor Selection */}
           <div>
-            <label className="block text-xs font-bold text-slate-800 mb-1">
+            <label htmlFor="createpurchaseordermodal-field-0" className="block text-xs font-bold text-slate-800 mb-1">
               Vendor / Pemasok <span className="text-rose-500">*</span>
             </label>
-            <select
+            <select id="createpurchaseordermodal-field-0"
               value={selectedVendorId}
               onChange={(e) => setSelectedVendorId(e.target.value)}
               className="w-full text-xs px-3.5 py-2.5 input-glass rounded-xl font-semibold text-slate-900"
@@ -266,7 +283,7 @@ export default function CreatePurchaseOrderModal({
             {/* Datalist for suggestions */}
             <datalist id="po-product-suggestions">
               {products.map((p) => (
-                <option key={p.sku} value={p.name}>
+                <option key={p.sku} value={p.sku}>
                   {p.sku} — HPP Rp {p.standardCost?.toLocaleString("id-ID")}
                 </option>
               ))}
@@ -279,10 +296,10 @@ export default function CreatePurchaseOrderModal({
                   className="p-3.5 rounded-xl bg-[#f1f5f9] border border-slate-200 grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center"
                 >
                   <div className="sm:col-span-6">
-                    <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">
+                    <label htmlFor="createpurchaseordermodal-field-1" className="block text-[10px] font-semibold text-slate-500 mb-0.5">
                       Nama Barang / Bahan <span className="text-rose-500">*</span>
                     </label>
-                    <input
+                    <input id="createpurchaseordermodal-field-1"
                       type="text"
                       required
                       list="po-product-suggestions"
@@ -294,8 +311,8 @@ export default function CreatePurchaseOrderModal({
                   </div>
 
                   <div className="sm:col-span-2">
-                    <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">Kuantitas</label>
-                    <input
+                    <label htmlFor="createpurchaseordermodal-field-2" className="block text-[10px] font-semibold text-slate-500 mb-0.5">Kuantitas</label>
+                    <input id="createpurchaseordermodal-field-2"
                       type="number"
                       min={1}
                       value={line.orderedQty}
@@ -305,8 +322,8 @@ export default function CreatePurchaseOrderModal({
                   </div>
 
                   <div className="sm:col-span-3">
-                    <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">Harga Beli / Satuan (Rp)</label>
-                    <input
+                    <label htmlFor="createpurchaseordermodal-field-3" className="block text-[10px] font-semibold text-slate-500 mb-0.5">Harga Beli / Satuan (Rp)</label>
+                    <input id="createpurchaseordermodal-field-3"
                       type="number"
                       min={0}
                       step={500}
@@ -347,7 +364,8 @@ export default function CreatePurchaseOrderModal({
           <div className="pt-2 flex justify-end space-x-2 border-t border-black/5">
             <button
               type="button"
-              onClick={onClose}
+              onClick={close}
+            aria-label="Tutup dialog"
               className="px-4 py-2 text-xs font-bold btn-glass-secondary rounded-xl hover:-translate-y-0.5 transition-all"
             >
               Batal
@@ -369,6 +387,6 @@ export default function CreatePurchaseOrderModal({
           </div>
         </form>
       </div>
-    </div>
+    </DialogFrame>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
+import DialogFrame from "./ui/DialogFrame";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { ShoppingCart, Plus, Trash2, X, Check, AlertCircle, Sparkles } from "lucide-react";
 
 interface OrderLineItem {
@@ -13,12 +14,16 @@ interface OrderLineItem {
 
 interface CreateSalesOrderModalProps {
   isOpen: boolean;
+  leadId?: string;
+  initialCustomerId?: string;
   onClose: () => void;
   onOrderCreated: (newOrder?: any) => void;
 }
 
 export default function CreateSalesOrderModal({
   isOpen,
+  leadId,
+  initialCustomerId,
   onClose,
   onOrderCreated,
 }: CreateSalesOrderModalProps) {
@@ -27,6 +32,11 @@ export default function CreateSalesOrderModal({
   const [selectedContactId, setSelectedContactId] = useState("");
   const [lines, setLines] = useState<OrderLineItem[]>([]);
 
+  const pending = useRef(false);
+  const requestKey = useRef("");
+  const [dirty, setDirty] = useState(false);
+  const close = () => { if (!pending.current && (!dirty || window.confirm("Abaikan perubahan yang belum disimpan?"))) { setDirty(false); onClose(); } };
+  useEffect(() => { if (!isOpen) return; const warn = (e: BeforeUnloadEvent) => { if(dirty){e.preventDefault();e.returnValue="";} }; window.addEventListener("beforeunload",warn); return ()=>window.removeEventListener("beforeunload",warn); },[isOpen,dirty]);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -43,8 +53,8 @@ export default function CreateSalesOrderModal({
           setContacts(cList);
           setProducts(pList);
 
-          if (cList.length > 0 && !selectedContactId) {
-            setSelectedContactId(cList[0].id);
+          if (cList.length > 0 && (initialCustomerId || !selectedContactId)) {
+            setSelectedContactId(initialCustomerId || cList[0].id);
           }
 
           // Initial 1 line item if empty
@@ -116,8 +126,7 @@ export default function CreateSalesOrderModal({
       // Check if typed text matches an existing SKU or product Name
       const match = products.find(
         (p) =>
-          p.sku.toLowerCase() === typedText.toLowerCase().trim() ||
-          p.name.toLowerCase() === typedText.toLowerCase().trim()
+          p.sku.toLowerCase() === typedText.toLowerCase().trim()
       );
 
       if (match) {
@@ -153,6 +162,7 @@ export default function CreateSalesOrderModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (pending.current) return;
     setErrorMsg(null);
     setSuccessMsg(null);
 
@@ -173,14 +183,17 @@ export default function CreateSalesOrderModal({
       }
     }
 
+    pending.current = true;
+    requestKey.current ||= crypto.randomUUID();
     setLoading(true);
 
     try {
       const res = await fetch("/api/sales/orders", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "Idempotency-Key": requestKey.current },
         body: JSON.stringify({
           contactId: selectedContactId,
+          leadId,
           lines: lines.map((l) => ({
             productSku: l.productSku || l.productName,
             productName: l.productName || l.productSku,
@@ -193,6 +206,7 @@ export default function CreateSalesOrderModal({
 
       const data = await res.json();
       if (!res.ok) {
+        if (res.status < 500 && res.status !== 409) requestKey.current = "";
         setErrorMsg(data.error || "Gagal membuat Sales Order.");
         return;
       }
@@ -201,21 +215,22 @@ export default function CreateSalesOrderModal({
         `Pesanan ${data.order.orderNumber} berhasil dibuat dengan status ${data.order.status}!`
       );
 
-      setTimeout(() => {
-        onOrderCreated(data.order);
-        onClose();
-        setSuccessMsg(null);
-      }, 800);
+      setDirty(false); requestKey.current = "";
+      onOrderCreated(data.order);
+      onClose();
+      setLines([]);
+      setSuccessMsg(null);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       setErrorMsg(msg || "Terjadi kesalahan.");
     } finally {
+      pending.current = false;
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-4 animate-in fade-in duration-200">
+    <DialogFrame onClose={close}>
       <div className="glass-modal w-full max-w-2xl rounded-3xl shadow-glass-modal border border-white/80 overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="px-6 py-4 bg-white/40 border-b border-black/5 flex items-center justify-between">
@@ -226,12 +241,13 @@ export default function CreateSalesOrderModal({
             <div>
               <h2 className="text-base font-bold text-slate-900 tracking-tight">Buat Pesanan Penjualan (Sales Order)</h2>
               <p className="text-xs text-slate-600 font-medium">
-                Ketik nama menu, kuantitas, dan harga sesuai pesanan
+                Pilih SKU menu, kuantitas, dan harga sesuai pesanan
               </p>
             </div>
           </div>
           <button
-            onClick={onClose}
+            onClick={close}
+            aria-label="Tutup dialog"
             className="p-1.5 rounded-full hover:bg-white/80 text-slate-600 hover:text-slate-900 transition-colors shadow-xs"
           >
             <X className="w-5 h-5" />
@@ -239,9 +255,9 @@ export default function CreateSalesOrderModal({
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4 flex-1">
+        <form onChange={()=>{setDirty(true);requestKey.current="";}} onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4 flex-1">
           {errorMsg && (
-            <div className="p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-xs text-rose-900 font-bold">
+            <div role="alert" className="p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-xs text-rose-900 font-bold">
               {errorMsg}
             </div>
           )}
@@ -254,10 +270,10 @@ export default function CreateSalesOrderModal({
 
           {/* Customer Selection */}
           <div>
-            <label className="block text-xs font-bold text-slate-800 mb-1">
+            <label htmlFor="createsalesordermodal-field-0" className="block text-xs font-bold text-slate-800 mb-1">
               Pelanggan / Pemesan <span className="text-rose-500">*</span>
             </label>
-            <select
+            <select id="createsalesordermodal-field-0"
               value={selectedContactId}
               onChange={(e) => setSelectedContactId(e.target.value)}
               className="w-full text-xs px-3.5 py-2.5 input-glass rounded-xl font-semibold text-slate-900"
@@ -276,7 +292,7 @@ export default function CreateSalesOrderModal({
               <div>
                 <label className="text-xs font-semibold text-[#0f172a]">Item Menu & Pesanan</label>
                 <p className="text-[10px] text-slate-400">
-                  Ketik nama produk sendiri (atau pilih dari saran), atur kuantitas, dan harga satuan
+                  Pilih SKU produk sendiri (atau pilih dari saran), atur kuantitas, dan harga satuan
                 </p>
               </div>
               <button
@@ -292,7 +308,7 @@ export default function CreateSalesOrderModal({
             {/* Datalist for Product Autocomplete Suggestions */}
             <datalist id="sales-product-suggestions">
               {products.map((p) => (
-                <option key={p.sku} value={p.name}>
+                <option key={p.sku} value={p.sku}>
                   {p.sku} — Rp {p.salesPrice?.toLocaleString("id-ID")}
                 </option>
               ))}
@@ -305,10 +321,10 @@ export default function CreateSalesOrderModal({
                   className="p-3.5 rounded-xl bg-[#f1f5f9] border border-slate-200 grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center"
                 >
                   <div className="sm:col-span-5">
-                    <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">
+                    <label htmlFor="createsalesordermodal-field-1" className="block text-[10px] font-semibold text-slate-500 mb-0.5">
                       Nama Produk / Menu <span className="text-rose-500">*</span>
                     </label>
-                    <input
+                    <input id="createsalesordermodal-field-1"
                       type="text"
                       required
                       list="sales-product-suggestions"
@@ -320,10 +336,10 @@ export default function CreateSalesOrderModal({
                   </div>
 
                   <div className="sm:col-span-2">
-                    <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">
+                    <label htmlFor="createsalesordermodal-field-2" className="block text-[10px] font-semibold text-slate-500 mb-0.5">
                       Kuantitas
                     </label>
-                    <input
+                    <input id="createsalesordermodal-field-2"
                       type="number"
                       min={1}
                       value={line.quantity}
@@ -333,10 +349,10 @@ export default function CreateSalesOrderModal({
                   </div>
 
                   <div className="sm:col-span-3">
-                    <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">
+                    <label htmlFor="createsalesordermodal-field-3" className="block text-[10px] font-semibold text-slate-500 mb-0.5">
                       Harga Satuan (Rp)
                     </label>
-                    <input
+                    <input id="createsalesordermodal-field-3"
                       type="number"
                       min={0}
                       step={500}
@@ -347,10 +363,10 @@ export default function CreateSalesOrderModal({
                   </div>
 
                   <div className="sm:col-span-1">
-                    <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">
+                    <label htmlFor="createsalesordermodal-field-4" className="block text-[10px] font-semibold text-slate-500 mb-0.5">
                       Diskon %
                     </label>
-                    <input
+                    <input id="createsalesordermodal-field-4"
                       type="number"
                       min={0}
                       max={20}
@@ -407,7 +423,8 @@ export default function CreateSalesOrderModal({
           <div className="pt-2 flex justify-end space-x-2 border-t border-black/5">
             <button
               type="button"
-              onClick={onClose}
+              onClick={close}
+            aria-label="Tutup dialog"
               className="px-4 py-2 text-xs font-bold btn-glass-secondary rounded-xl hover:-translate-y-0.5 transition-all"
             >
               Batal
@@ -429,6 +446,6 @@ export default function CreateSalesOrderModal({
           </div>
         </form>
       </div>
-    </div>
+    </DialogFrame>
   );
 }

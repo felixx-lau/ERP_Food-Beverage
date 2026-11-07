@@ -1,6 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import DocumentControls from "@/components/DocumentControls";
+import DocumentList from "@/components/DocumentList";
+import DocumentTrail from "@/components/DocumentTrail";
 import AppLayout from "@/components/AppLayout";
 import StatusBadge from "@/components/StatusBadge";
 import KPICard from "@/components/KPICard";
@@ -33,7 +36,7 @@ export default function DeliveryPage() {
         const data = await res.json();
         setDeliveries(data.deliveries || []);
         if (data.deliveries?.length > 0 && !selectedDelivery) {
-          setSelectedDelivery(data.deliveries[0]);
+          setSelectedDelivery(data.deliveries.find((r: any) => r.id === new URLSearchParams(window.location.search).get("id")) || data.deliveries[0]);
         }
       }
     } finally {
@@ -161,7 +164,7 @@ export default function DeliveryPage() {
       currentUser={user}
       onSwitchRole={handleSwitchRole}
       breadcrumbs={[{ label: "Persediaan & Gudang" }, { label: "Delivery Orders" }]}
-      title="Delivery Orders & Backorders"
+      title="Pengiriman barang"
       subtitle="Surat Jalan Pengiriman, Pemenuhan Sebagian (Partial Delivery), dan Pemisahan Dokumen Backorder (F-07, F-08, SR-04, SR-10)"
       wireframe="Wireframe S-06"
       actions={
@@ -181,6 +184,10 @@ export default function DeliveryPage() {
         </div>
       }
     >
+      <DocumentList records={deliveries} selectedId={selectedDelivery?.id} onSelect={fetchDeliveryDetail}/>
+
+      {selectedDelivery && <DocumentControls kind="deliveries" record={selectedDelivery} role={user?.role} onChanged={async () => { await fetchDeliveries(); await fetchDeliveryDetail(selectedDelivery.id); }} />}
+
       {/* Selected Delivery Order Detail */}
       {selectedDelivery && (
         <div className="bg-white rounded-xl shadow-xs border border-[#E5E9E4] overflow-hidden">
@@ -266,10 +273,10 @@ export default function DeliveryPage() {
               <table className="w-full text-left text-xs">
                 <thead className="bg-[#f1f5f9] font-semibold text-[#64748b] uppercase tracking-wider text-[11px] border-b border-[#E5E9E4]">
                   <tr>
-                    <th className="px-6 py-3.5">SKU Varian & Nama Produk</th>
-                    <th className="px-6 py-3.5 text-right">Dipesan (Ordered)</th>
-                    <th className="px-6 py-3.5 text-right text-emerald-800">Terkirim (Done)</th>
-                    <th className="px-6 py-3.5 text-right text-amber-800">Backorder Qty</th>
+                    <th scope="col" className="px-6 py-3.5">SKU Varian & Nama Produk</th>
+                    <th scope="col" className="px-6 py-3.5 text-right">Dipesan (Ordered)</th>
+                    <th scope="col" className="px-6 py-3.5 text-right text-emerald-800">Terkirim (Done)</th>
+                    <th scope="col" className="px-6 py-3.5 text-right text-amber-800">Backorder Qty</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#E5E9E4] font-mono">
@@ -296,7 +303,7 @@ export default function DeliveryPage() {
       )}
 
       {/* Collapsible QA Test Runner for T-11 & T-12 */}
-      <details className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
+      <details hidden className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
         <summary className="cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white select-none">
           <div className="flex items-center space-x-2">
             <span className="px-2 py-0.5 rounded-md bg-[#7c3aed] text-[#ffffff] font-bold text-[10px] uppercase">
@@ -369,6 +376,7 @@ export default function DeliveryPage() {
           )}
         </div>
       </details>
+      {selectedDelivery && <DocumentTrail kind="deliveries" record={selectedDelivery}/>}
     </AppLayout>
   );
 }

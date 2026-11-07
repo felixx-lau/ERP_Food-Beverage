@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Menu,
   LayoutGrid,
@@ -15,6 +15,8 @@ import {
   UserPlus,
   LogOut,
 } from "lucide-react";
+import Link from "next/link";
+import NavigationSearch from "./NavigationSearch";
 import ManageTeamModal from "@/components/ManageTeamModal";
 import CompanySwitcher from "@/components/CompanySwitcher";
 import { useCompany } from "@/context/CompanyContext";
@@ -58,6 +60,14 @@ export default function Topbar({
   const [switching, setSwitching] = useState(false);
   const [customUsers, setCustomUsers] = useState<any[]>([]);
 
+  const profileRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!roleMenuOpen) return;
+    const dismiss = (e: MouseEvent) => { if (!profileRef.current?.contains(e.target as Node)) setRoleMenuOpen(false); };
+    const key = (e: KeyboardEvent) => { if (e.key === "Escape") { setRoleMenuOpen(false); profileRef.current?.querySelector("button")?.focus(); } };
+    document.addEventListener("mousedown", dismiss); document.addEventListener("keydown", key);
+    return () => { document.removeEventListener("mousedown", dismiss); document.removeEventListener("keydown", key); };
+  }, [roleMenuOpen]);
   const fetchUsers = async () => {
     try {
       const res = await fetch("/api/users");
@@ -106,10 +116,10 @@ export default function Topbar({
 
   return (
     <>
-      <header className="glass-1 sticky top-0 z-40 text-[var(--glass-text-primary)] select-none border-b border-white/40 shadow-glass-1">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
+      <header className="app-topbar sticky top-0 z-40">
+        <div className="mx-auto px-4 sm:px-6 lg:px-8 h-[72px] flex items-center justify-between">
           {/* Left: Mobile Toggle, Apps Launcher & Breadcrumbs */}
-          <div className="flex items-center space-x-3 min-w-0">
+          <div className="flex items-center gap-2 min-w-0">
             {/* Mobile Hamburger Toggle */}
             <button
               onClick={onToggleMobileSidebar}
@@ -124,7 +134,7 @@ export default function Topbar({
               onClick={onOpenAppSwitcher}
               aria-label="Buka Hub Aplikasi (App Switcher)"
               title="Hub Aplikasi (▦ Apps)"
-              className="flex items-center justify-center w-8 h-8 rounded-lg bg-transparent hover:bg-slate-100/80 transition-colors text-slate-500 hover:text-slate-800 border-0 shadow-none focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none"
+              className="hidden sm:flex items-center justify-center w-8 h-8 rounded-lg bg-transparent hover:bg-slate-100/80 transition-colors text-slate-500 hover:text-slate-800 border-0 shadow-none focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none"
             >
               <LayoutGrid className="w-4 h-4" aria-hidden="true" />
             </button>
@@ -132,36 +142,14 @@ export default function Topbar({
             {/* Multi-Company Switcher (Retained company name) */}
             <CompanySwitcher currentUser={currentUser} />
 
-            {/* Breadcrumbs (Deduplicated company name) */}
-            <nav aria-label="Breadcrumb" className="hidden lg:flex items-center space-x-2 text-xs font-semibold text-slate-800 truncate">
-              {breadcrumbs && breadcrumbs.length > 0 ? (
-                breadcrumbs.map((b, idx) => (
-                  <React.Fragment key={idx}>
-                    {idx > 0 && <span className="text-black/30" aria-hidden="true">/</span>}
-                    <span className={idx === breadcrumbs.length - 1 ? "font-bold text-blue-700" : "text-slate-700 font-medium"}>
-                      {b.label}
-                    </span>
-                  </React.Fragment>
-                ))
-              ) : (
-                <span className="font-bold text-blue-700">Beranda</span>
-              )}
-            </nav>
-
-            {/* Default location indicator */}
-            <div 
-              className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100/80 text-slate-600 border border-slate-200/60 backdrop-blur-xs shrink-0"
-              title="Lokasi Operasional: WH-JKT (Gudang Utama) · Gerai: CAFE-JKT"
-            >
-              <MapPin className="w-3.5 h-3.5 text-violet-600" aria-hidden="true" />
-              <span>WH-JKT</span>
-            </div>
           </div>
 
           {/* Right: Team Manage, Audit Trail, and User Role Switcher */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+            <NavigationSearch role={currentUser?.role} />
             {/* Manage Team Shortcut */}
             <button
+              hidden={currentUser?.role !== "OWNER"}
               onClick={() => setManageTeamOpen(true)}
               aria-label="Kelola Tim & Anggota Kelompok"
               className="hidden lg:inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 rounded-lg border border-transparent hover:border-slate-200/60 transition-colors focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none"
@@ -183,7 +171,7 @@ export default function Topbar({
             </button>
 
             {/* User Profile & Role Switcher */}
-            <div className="relative">
+            <div className="relative" ref={profileRef}>
               <button
                 onClick={() => setRoleMenuOpen(!roleMenuOpen)}
                 aria-label={`Menu pengguna: ${currentUser?.name || "Pengguna"}, Role: ${currentUser?.role || "OWNER"}`}
@@ -207,105 +195,23 @@ export default function Topbar({
 
               {/* Role Switcher Dropdown */}
               {roleMenuOpen && (
-                <div className="absolute right-0 mt-2 w-80 glass-modal rounded-2xl shadow-glass-modal py-2 z-dropdown text-[var(--glass-text-primary)] border border-white/80 animate-in fade-in slide-in-from-top-1 duration-150">
+                <div className="absolute right-0 mt-2 w-[min(340px,calc(100vw-32px))] max-h-[calc(100dvh-88px)] overflow-y-auto glass-modal rounded-2xl shadow-glass-modal py-2 z-dropdown text-[var(--glass-text-primary)] border border-white/80 dropdown-motion">
                   <div className="px-4 py-2.5 border-b border-black/5 bg-white/40">
                     <p className="text-[10px] font-bold text-[var(--glass-text-muted)] uppercase tracking-wider">
-                      Simulasi Akun Role (SR-15)
+                      Akun & akses
                     </p>
                     <p className="text-[11px] text-[var(--glass-text-secondary)] mt-0.5">
-                      Pilih akun skenario atau anggota tim untuk menguji otorisasi RBAC.
+                      Identitas dan akses ruang kerja.
                     </p>
                   </div>
 
-                  <div className="py-1 max-h-80 overflow-y-auto divide-y divide-black/5">
-                    {/* 6 Baseline Scenario Roles */}
-                    <div>
-                      <p className="px-3.5 py-1 text-[10px] font-bold text-[var(--glass-text-muted)] bg-white/30 uppercase">
-                        6 Akun Skenario PDF Tugas:
-                      </p>
-                      {ROLES_LIST.map((r) => {
-                        const isSelected = currentUser?.role === r.role && !customUsers.some(cu => cu.id === currentUser?.id);
-                        return (
-                          <button
-                            key={r.role}
-                            onClick={() => handleSelectRole(r.role)}
-                            disabled={switching}
-                            className={`w-full text-left px-3.5 py-2 flex items-start space-x-2.5 text-xs transition-colors ${
-                              isSelected
-                                ? "bg-blue-600/15 text-blue-700 font-bold"
-                                : "hover:bg-white/60 text-[var(--glass-text-primary)]"
-                            }`}
-                          >
-                            <div className="mt-0.5">
-                              {isSelected ? (
-                                <Check className="w-4 h-4 text-blue-700" />
-                              ) : (
-                                <div className="w-4 h-4 rounded-full border border-black/20" />
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between">
-                                <span className="font-bold text-[var(--glass-text-primary)] truncate">{r.name}</span>
-                                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/70 font-mono font-bold text-blue-700 border border-white/60">
-                                  {r.role}
-                                </span>
-                              </div>
-                              <p className="text-[11px] text-[var(--glass-text-muted)] font-normal truncate">
-                                {r.title}
-                              </p>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {/* Custom Group Members */}
-                    {customUsers.length > 0 && (
-                      <div>
-                        <p className="px-3.5 py-1 text-[10px] font-bold text-blue-700 bg-blue-50/80 uppercase">
-                          Anggota Tim Kelompok ({customUsers.length}):
-                        </p>
-                        {customUsers.map((u) => {
-                          const isSelected = currentUser?.id === u.id;
-                          return (
-                            <button
-                              key={u.id}
-                              onClick={() => handleSelectRole(u.role, u.id)}
-                              disabled={switching}
-                              className={`w-full text-left px-3.5 py-2 flex items-start space-x-2.5 text-xs transition-colors ${
-                                isSelected
-                                  ? "bg-violet-50 text-violet-800 font-semibold"
-                                  : "hover:bg-[#f1f5f9] text-[#202824]"
-                              }`}
-                            >
-                              <div className="mt-0.5">
-                                {isSelected ? (
-                                  <Check className="w-4 h-4 text-violet-600" />
-                                ) : (
-                                  <div className="w-4 h-4 rounded-full border border-slate-300" />
-                                )}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between">
-                                  <span className="font-bold text-[#202824] truncate">{u.name}</span>
-                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 font-mono font-semibold text-blue-800">
-                                    {u.role}
-                                  </span>
-                                </div>
-                                <p className="text-[11px] text-slate-500 font-normal truncate">
-                                  {u.email}
-                                </p>
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
+                  <div className="px-4 py-3 text-xs text-slate-600">Masuk sebagai {currentUser?.email}. Untuk berganti akun, keluar lalu login menggunakan kredensial pengguna tersebut.</div>
 
                   {/* Actions: Manage Team, Dev Reset Seed, & Logout */}
                   <div className="p-2 border-t border-slate-200 bg-[#f8fafc] space-y-1.5">
+                    <button className="btn-secondary w-full" onClick={() => { setRoleMenuOpen(false); onOpenAuditDrawer(); }}>Riwayat aktivitas & audit</button>
                     <button
+                      hidden={currentUser?.role !== "OWNER"}
                       onClick={() => {
                         setRoleMenuOpen(false);
                         setManageTeamOpen(true);
@@ -317,7 +223,7 @@ export default function Topbar({
                     </button>
 
                     {/* Developer/Demo Tool: Reset Seed with confirmation dialog */}
-                    {(process.env.NODE_ENV !== "production" || activeCompany?.isDefault) && (
+                    {false && (
                       <button
                         onClick={() => {
                           setRoleMenuOpen(false);
@@ -329,7 +235,7 @@ export default function Topbar({
                         title="Buka dialog konfirmasi reset seed database (Hanya mode Demo / Dev)"
                       >
                         <RotateCcw className="w-3.5 h-3.5 text-amber-800" aria-hidden="true" />
-                        <span>🛠️ Reset Baseline Seed (Demo / Dev)</span>
+                        <span>Reset data demo</span>
                       </button>
                     )}
 
@@ -346,6 +252,10 @@ export default function Topbar({
             </div>
           </div>
         </div>
+        <nav aria-label="Breadcrumb" className="px-4 sm:px-6 lg:px-8 pb-3 flex items-center gap-2 text-xs text-slate-500 overflow-x-auto whitespace-nowrap">
+          <Link href="/" className="hover:text-blue-700">Workspace</Link>
+          {(breadcrumbs || [{label: "Beranda"}]).map((b, idx, all) => <React.Fragment key={idx}><span aria-hidden="true" className="text-slate-300">/</span>{b.href && idx < all.length - 1 ? <Link href={b.href} className="hover:text-blue-700">{b.label}</Link> : <span aria-current={idx === all.length - 1 ? "page" : undefined} className={idx === all.length - 1 ? "font-medium text-slate-700" : ""}>{b.label}</span>}</React.Fragment>)}
+        </nav>
       </header>
 
       {/* Manage Team Modal */}

@@ -1,0 +1,490 @@
+{
+  "T-01": [
+    {
+      "suite": "test_phase2_3.log",
+      "line": "✅ [PASS] T-01-A: Owner session token verified"
+    },
+    {
+      "suite": "test_phase2_3.log",
+      "line": "✅ [PASS] T-01: Owner has access to all 8 core apps: sales, crm, purchase, inventory, accounting, invoicing, pos, dashboard and company PT Rasa Aruna Bersama"
+    }
+  ],
+  "T-02": [
+    {
+      "suite": "test_phase2_3.log",
+      "line": "✅ [PASS] T-02-A: Backend RBAC check denies CASHIER from accounting/GL module"
+    },
+    {
+      "suite": "test_phase2_3.log",
+      "line": "✅ [PASS] T-02: Access denied event successfully recorded in Audit Trail (Actor: Bagas Putra, Role: CASHIER, Action: ACCESS_DENIED)"
+    }
+  ],
+  "T-03": [
+    {
+      "suite": "test_phase4.log",
+      "line": "✅ [PASS] T-03-C01: C01 Credit Status: Limit Rp3.000.000, Piutang Rp1.200.000, Headroom Rp1.800.000 (Actual: Limit=3000000, AR=1200000, Headroom=1800000)"
+    },
+    {
+      "suite": "test_phase4.log",
+      "line": "✅ [PASS] T-03-C02: C02 Credit Status: Limit Rp350.000, Piutang Rp300.000, Headroom Rp50.000 (Actual: Limit=350000, AR=300000, Headroom=50000)"
+    }
+  ],
+  "T-04": [
+    {
+      "suite": "test_phase4.log",
+      "line": "✅ [PASS] T-04-A: Gross order C02 is Rp105.600 (Actual: 105600)"
+    },
+    {
+      "suite": "test_phase4.log",
+      "line": "✅ [PASS] T-04: System correctly blocked confirmation exceeding headroom: \"Batas Kredit Terlampaui (SR-09 / T-04): Pesanan baru senilai Rp 105.600 melebihi sisa credit headroom Rp 50.000 (Defisit Rp 55.600).\""
+    },
+    {
+      "suite": "test_phase4.log",
+      "line": "✅ [PASS] T-04: System correctly blocked confirmation exceeding headroom: \"Batas Kredit Terlampaui (SR-09 / T-04): Pesanan baru senilai Rp 105.600 melebihi sisa credit headroom Rp 50.000 (Defisit Rp 55.600).\""
+    },
+    {
+      "suite": "test_phase4.log",
+      "line": "✅ [PASS] T-04-VERIFY: Confirmation blocked: Gross Rp105.600 > Headroom Rp50.000"
+    },
+    {
+      "suite": "test_phase4.log",
+      "line": "✅ [PASS] T-04-HEADROOM: C02 headroom protected at Rp50.000 (Actual: 50000)"
+    }
+  ],
+  "T-05": [
+    {
+      "suite": "test_phase4.log",
+      "line": "✅ [PASS] T-05: RICE-CHICK-S: Price=48k, Cost=26k, WH=40, CAFE=12, Total=52, Reserved WH=6, Available WH=34"
+    }
+  ],
+  "T-06": [
+    {
+      "suite": "test_phase4.log",
+      "line": "✅ [PASS] T-06-BEFORE: Initial: Hot WH=20, Ice WH=25"
+    },
+    {
+      "suite": "test_phase4.log",
+      "line": "✅ [PASS] T-06: SR-17 verified: Hot changed to 25, Ice variant remained completely unaffected at 25"
+    }
+  ],
+  "T-07": [
+    {
+      "suite": "test_phase4.log",
+      "line": "✅ [PASS] T-07: LD0003: Stage=Qualified, Expected Revenue=Rp1.200.000, Contact=C03 (Klinik Harmoni)"
+    }
+  ],
+  "T-08": [
+    {
+      "suite": "test_phase4.log",
+      "line": "✅ [PASS] T-08: Moving lead without expected revenue to Proposition is blocked by SR-16 minimum data validation."
+    }
+  ],
+  "T-09": [
+    {
+      "suite": "test_phase4.log",
+      "line": "✅ [PASS] T-09-CALC: Quotation Totals: Net=316.000, PBJT=31.600, Gross=347.600, Cost=172.000"
+    },
+    {
+      "suite": "test_phase4.log",
+      "line": "✅ [PASS] T-09-CONFIRM: Sales Order successfully confirmed"
+    },
+    {
+      "suite": "test_phase4.log",
+      "line": "✅ [PASS] T-09: C01 Exposure=Rp1.547.600, Headroom=Rp1.452.400 (Expected: 1.547.600 & 1.452.400)"
+    }
+  ],
+  "T-10": [
+    {
+      "suite": "test_phase4.log",
+      "line": "✅ [PASS] T-10-CALC: 20% Discount Quotation: Net=76.800, PBJT=7.680, DiscountApproved=false"
+    },
+    {
+      "suite": "test_phase4.log",
+      "line": "✅ [PASS] T-10-APPROVAL-REQUIRED: Confirmation blocked without Owner approval: \"Persetujuan Diperlukan (SR-08 / T-10): Diskon 20% melebihi batas 10%. Memerlukan persetujuan Owner sebelum order dapat dikonfirmasi.\""
+    },
+    {
+      "suite": "test_phase4.log",
+      "line": "✅ [PASS] T-10-APPROVAL-REQUIRED: Confirmation blocked without Owner approval: \"Persetujuan Diperlukan (SR-08 / T-10): Diskon 20% melebihi batas 10%. Memerlukan persetujuan Owner sebelum order dapat dikonfirmasi.\""
+    },
+    {
+      "suite": "test_phase4.log",
+      "line": "✅ [PASS] T-10-BLOCKED: 20% discount confirmation blocked successfully"
+    },
+    {
+      "suite": "test_phase4.log",
+      "line": "✅ [PASS] T-10-APPROVED: Owner approved discount successfully"
+    },
+    {
+      "suite": "test_phase4.log",
+      "line": "✅ [PASS] T-10-LOCKED: SO confirmed and price locked"
+    },
+    {
+      "suite": "test_phase4.log",
+      "line": "✅ [PASS] T-10: SR-08 Price lock verified: Post-confirmation price edit rejected: \"Perubahan Tak Sah (SR-08 / F-06): Harga dan diskon telah dikunci setelah Sales Order dikonfirmasi. Perubahan ditolak.\""
+    },
+    {
+      "suite": "test_phase4.log",
+      "line": "✅ [PASS] T-10-PRICE-LOCK-VERIFY: Price lock strictly enforced"
+    }
+  ],
+  "T-11": [
+    {
+      "suite": "test_phase4.log",
+      "line": "✅ [PASS] T-11-DO: Delivery validated: Delivered=5, Backorder=3"
+    },
+    {
+      "suite": "test_phase4.log",
+      "line": "✅ [PASS] T-11-BACKORDER: Backorder created: DO=WH/OUT/0010, Qty=3"
+    },
+    {
+      "suite": "test_phase4.log",
+      "line": "✅ [PASS] T-11-FINANCIAL: Financial impact: COGS=Rp130.000, Eligible Invoice Net=Rp240.000, PBJT=Rp24.000, Gross=Rp264.000"
+    },
+    {
+      "suite": "test_phase4.log",
+      "line": "✅ [PASS] T-11-STOCK: WH On-Hand: 40 - 5 = 35 (Actual: 35)"
+    },
+    {
+      "suite": "test_phase6.log",
+      "line": "✅ [PASS] FIXTURE-T11: T-11 Fixture ready: 5 units of RICE-CHICK-S delivered, 3 units backorder"
+    }
+  ],
+  "T-12": [
+    {
+      "suite": "test_phase4.log",
+      "line": "✅ [PASS] T-12: SR-04 / SR-10 verified: Over-delivery of 38 units blocked: \"Validasi Gagal (SR-04 / T-12): Kuantitas pengiriman (38) melebihi stok fisik On-Hand (35) di WH-JKT. Stok negatif dilarang.\""
+    },
+    {
+      "suite": "test_phase4.log",
+      "line": "✅ [PASS] T-12: SR-04 / SR-10 verified: Over-delivery of 38 units blocked: \"Validasi Gagal (SR-04 / T-12): Kuantitas pengiriman (38) melebihi stok fisik On-Hand (35) di WH-JKT. Stok negatif dilarang.\""
+    },
+    {
+      "suite": "test_phase4.log",
+      "line": "✅ [PASS] T-12-VERIFY: Over-delivery blocked and zero negative stock preserved"
+    }
+  ],
+  "T-13": [
+    {
+      "suite": "test_phase7.log",
+      "line": "✅ [PASS] T-13-BASELINE: Initial Stock COF-LATT-ICE: WH-JKT=25, CAFE-JKT=18 (Expected 25 & 18)"
+    },
+    {
+      "suite": "test_phase7.log",
+      "line": "✅ [PASS] T-13-DRAFT: Draft Transfer WH/INT/0007 created: 4 x Rp13.000 = Rp 52.000"
+    },
+    {
+      "suite": "test_phase7.log",
+      "line": "✅ [PASS] T-13: WH turun 25->21; CAFE naik 18->22; Company stock tetap 43 unit (nilai pindah Rp52.000, total nilai persediaan konstan)."
+    }
+  ],
+  "T-14": [
+    {
+      "suite": "test_phase7.log",
+      "line": "✅ [PASS] T-14: SR-04 & SR-12 verified: Transfer 28 units from WH (on-hand 21) rejected: \"Validasi Transfer Gagal (SR-04 / SR-12 / T-14): Kuantitas transfer (28) melebihi stok yang tersedia (21, on-hand: 21) di lokasi sumber WH-JKT. Transfer dibatalkan.\"."
+    },
+    {
+      "suite": "test_phase7.log",
+      "line": "✅ [PASS] T-14: SR-04 & SR-12 verified: Transfer 28 units from WH (on-hand 21) rejected: \"Validasi Transfer Gagal (SR-04 / SR-12 / T-14): Kuantitas transfer (28) melebihi stok yang tersedia (21, on-hand: 21) di lokasi sumber WH-JKT. Transfer dibatalkan.\"."
+    },
+    {
+      "suite": "test_phase7.log",
+      "line": "✅ [PASS] T-14-VERIFY: WH-JKT on-hand preserved intact at 21 (zero negative stock)."
+    }
+  ],
+  "T-15": [
+    {
+      "suite": "test_phase5.log",
+      "line": "✅ [PASS] T-15-RFQ: RFQ created: Subtotal Rp120.000, Tax 0%, Total Rp120.000"
+    },
+    {
+      "suite": "test_phase5.log",
+      "line": "✅ [PASS] T-15: PO P00007 Confirmed. On-hand remains unchanged at 20 units (procurement commitment recorded, no physical stock change yet)."
+    }
+  ],
+  "T-16": [
+    {
+      "suite": "test_phase5.log",
+      "line": "✅ [PASS] T-16: SR-13 verified: Re-confirming PO P00007 is idempotent. Receipt count remains 1, no duplicate receipt or commitment created."
+    }
+  ],
+  "T-17": [
+    {
+      "suite": "test_phase5.log",
+      "line": "✅ [PASS] T-17-INITIAL: WH on-hand before receipt: 20 units"
+    },
+    {
+      "suite": "test_phase5.log",
+      "line": "✅ [PASS] T-17-STOCK: WH on-hand increased 20 -> 28 (+8 accepted units). 2 rejected units did NOT enter inventory."
+    },
+    {
+      "suite": "test_phase5.log",
+      "line": "✅ [PASS] T-17: Journal Entry JE/2026/0001: Dr 1030 Inventory Rp96.000 = Cr 1040 GRNI Rp96.000. Balanced Dr=Cr."
+    }
+  ],
+  "T-18": [
+    {
+      "suite": "test_phase5.log",
+      "line": "✅ [PASS] T-18: Three-Way Match strictly blocked billing 10 units: \"Validasi Three-Way Match Gagal (SR-06 / T-18): Kuantitas tagihan (10) melebihi kuantitas penerimaan yang lolos inspeksi (Accepted: 8, Sudah Ditagih: 0, Maksimal Boleh Ditagih: 8). Tagihan terhadap barang ditolak/belum diterima dilarang.\""
+    },
+    {
+      "suite": "test_phase5.log",
+      "line": "✅ [PASS] T-18: Three-Way Match strictly blocked billing 10 units: \"Validasi Three-Way Match Gagal (SR-06 / T-18): Kuantitas tagihan (10) melebihi kuantitas penerimaan yang lolos inspeksi (Accepted: 8, Sudah Ditagih: 0, Maksimal Boleh Ditagih: 8). Tagihan terhadap barang ditolak/belum diterima dilarang.\""
+    },
+    {
+      "suite": "test_phase5.log",
+      "line": "✅ [PASS] T-18-VERIFY: Attempt to bill rejected units (10 requested vs 8 accepted) successfully blocked"
+    },
+    {
+      "suite": "test_phase5.log",
+      "line": "✅ [PASS] T-22: Creating duplicate bill for already-billed units blocked: \"Validasi Three-Way Match Gagal (SR-06 / T-18): Kuantitas tagihan (8) melebihi kuantitas penerimaan yang lolos inspeksi (Accepted: 8, Sudah Ditagih: 8, Maksimal Boleh Ditagih: 0). Tagihan terhadap barang ditolak/belum diterima dilarang.\""
+    }
+  ],
+  "T-19": [
+    {
+      "suite": "test_phase6.log",
+      "line": "✅ [PASS] T-19-CALC: Invoice calculations: Net Rp240.000, PBJT 10% Rp24.000, Gross Rp264.000"
+    },
+    {
+      "suite": "test_phase6.log",
+      "line": "✅ [PASS] T-19: Journal JE/2026/0002: Dr 1020 A/R Rp264.000 = Cr 4010 Revenue Rp240.000 + Cr 2020 PBJT Rp24.000. Balanced Dr=Cr."
+    }
+  ],
+  "T-20": [
+    {
+      "suite": "test_phase6.log",
+      "line": "✅ [PASS] T-20: SR-02 delivery-based invoicing enforced: Invoicing 8 units blocked when only 5 delivered: \"Validasi Penagihan Gagal (SR-02 / F-09 / T-20): Kuantitas tagihan (8) melebihi kuantitas yang telah dikirim (Delivered: 5, Sudah Ditagih: 0, Maksimal Boleh Ditagih: 5). Penagihan barang yang belum dikirim dilarang.\""
+    },
+    {
+      "suite": "test_phase6.log",
+      "line": "✅ [PASS] T-20: SR-02 delivery-based invoicing enforced: Invoicing 8 units blocked when only 5 delivered: \"Validasi Penagihan Gagal (SR-02 / F-09 / T-20): Kuantitas tagihan (8) melebihi kuantitas yang telah dikirim (Delivered: 5, Sudah Ditagih: 0, Maksimal Boleh Ditagih: 5). Penagihan barang yang belum dikirim dilarang.\""
+    },
+    {
+      "suite": "test_phase6.log",
+      "line": "✅ [PASS] T-20-VERIFY: Attempt to invoice un-delivered units (8 requested vs 5 delivered) blocked"
+    }
+  ],
+  "T-21": [
+    {
+      "suite": "test_phase5.log",
+      "line": "✅ [PASS] T-21-BILL: Draft Vendor Bill BILL/2026/0007: Net Rp96.000, Tax 0, Total Rp96.000 (3-Way Match Verified)"
+    },
+    {
+      "suite": "test_phase5.log",
+      "line": "✅ [PASS] T-21: Vendor Bill Posted. Journal JE/2026/0002: Dr 1040 GRNI Rp96.000 = Cr 2010 A/P Rp96.000. GRNI cleared to 0."
+    },
+    {
+      "suite": "test_phase5.log",
+      "line": "✅ [PASS] T-21-GRNI-ZERO: GRNI account balance for this transaction is Rp 0 (cleared to 0)"
+    }
+  ],
+  "T-22": [
+    {
+      "suite": "test_phase5.log",
+      "line": "✅ [PASS] T-22-IDEMPOTENT: Re-posting the same Vendor Bill returns alreadyPosted=true without duplicate journal"
+    },
+    {
+      "suite": "test_phase5.log",
+      "line": "✅ [PASS] T-22: Creating duplicate bill for already-billed units blocked: \"Validasi Three-Way Match Gagal (SR-06 / T-18): Kuantitas tagihan (8) melebihi kuantitas penerimaan yang lolos inspeksi (Accepted: 8, Sudah Ditagih: 8, Maksimal Boleh Ditagih: 0). Tagihan terhadap barang ditolak/belum diterima dilarang.\""
+    },
+    {
+      "suite": "test_phase5.log",
+      "line": "✅ [PASS] T-22-VERIFY: Duplicate billing strictly prevented by 3-Way Match engine"
+    }
+  ],
+  "T-23": [
+    {
+      "suite": "test_phase6.log",
+      "line": "✅ [PASS] T-23: Payment registered: Gross Rp264.000, Paid Rp100.000, Outstanding Rp164.000. Bank +Rp100.000, A/R -Rp100.000. Journal: Dr Bank Rp100.000 = Cr A/R Rp100.000."
+    }
+  ],
+  "T-24": [
+    {
+      "suite": "test_phase6.log",
+      "line": "✅ [PASS] T-24: SR-19 verified: Overpayment of Rp300.000 on outstanding Rp264.000 rejected: \"Validasi Pembayaran Gagal (SR-19 / F-15 / T-24): Jumlah pembayaran (Rp 300.000) melebihi sisa tagihan outstanding (Rp 264.000). Pembayaran melebihi outstanding ditolak.\""
+    },
+    {
+      "suite": "test_phase6.log",
+      "line": "✅ [PASS] T-24: SR-19 verified: Overpayment of Rp300.000 on outstanding Rp264.000 rejected: \"Validasi Pembayaran Gagal (SR-19 / F-15 / T-24): Jumlah pembayaran (Rp 300.000) melebihi sisa tagihan outstanding (Rp 264.000). Pembayaran melebihi outstanding ditolak.\""
+    },
+    {
+      "suite": "test_phase6.log",
+      "line": "✅ [PASS] T-24-VERIFY: Overpayment strictly blocked"
+    }
+  ],
+  "T-25": [
+    {
+      "suite": "test_phase6.log",
+      "line": "✅ [PASS] T-25-DELIVERY-JOURNAL: Delivery Journal: Dr 5010 COGS Rp130.000 = Cr 1030 Inventory Rp130.000"
+    },
+    {
+      "suite": "test_phase6.log",
+      "line": "✅ [PASS] T-25-INVOICE-JOURNAL: Invoice Journal: Dr 1020 A/R Rp264.000 = Cr Revenue Rp240.000 + Cr PBJT Rp24.000"
+    },
+    {
+      "suite": "test_phase6.log",
+      "line": "✅ [PASS] T-25: Total Combined Debit = Credit = Rp394.000 (Dr Rp394.000 = Cr Rp394.000). Double-entry balanced perfectly."
+    }
+  ],
+  "T-26": [
+    {
+      "suite": "test_phase6.log",
+      "line": "✅ [PASS] T-26: SR-13 verified: Re-posting delivery/invoice is idempotent. Journal count remains 4, COGS balance intact at Rp 130.000 (zero duplicate journals)."
+    }
+  ],
+  "T-27": [
+    {
+      "suite": "test_phase7.log",
+      "line": "✅ [PASS] T-27-SESSION: Session POS01 opened at CAFE-JKT."
+    },
+    {
+      "suite": "test_phase7.log",
+      "line": "✅ [PASS] T-27-STOCK-BEFORE: Initial CAFE-JKT on-hand: COF-LATT-HOT=24, COOKIE-CHO-1=20"
+    },
+    {
+      "suite": "test_phase7.log",
+      "line": "✅ [PASS] T-27-FINANCIAL: Financials: Net=Rp 80.000, PBJT=Rp 8.000, Total Paid=Rp 88.000, COGS=Rp 33.000"
+    },
+    {
+      "suite": "test_phase7.log",
+      "line": "✅ [PASS] T-27-STOCK-AFTER: CAFE-JKT Stock: COF-LATT-HOT 24->22 (-2), COOKIE-CHO-1 20->19 (-1)"
+    },
+    {
+      "suite": "test_phase7.log",
+      "line": "✅ [PASS] T-27: T-27 Complete: Net Rp80k, PBJT Rp8k, paid Rp88k; COGS Rp33k; CAFE Hot 24->22, Cookie 20->19; Bank naik Rp88k; Journal balanced Rp121.000."
+    },
+    {
+      "suite": "test_phase7.log",
+      "line": "✅ [PASS] T-27: T-27 Complete: Net Rp80k, PBJT Rp8k, paid Rp88k; COGS Rp33k; CAFE Hot 24->22, Cookie 20->19; Bank naik Rp88k; Journal balanced Rp121.000."
+    }
+  ],
+  "T-28": [
+    {
+      "suite": "test_phase7.log",
+      "line": "✅ [PASS] T-28-STOCK-EVAL: SR-04 verified: POS checkout 25 units when on-hand is 22 blocked: \"Validasi POS Gagal (SR-04 / T-28): Kuantitas pesanan (25) melebihi stok fisik On-Hand (22) di CAFE-JKT. Stok minus dilarang.\"."
+    },
+    {
+      "suite": "test_phase7.log",
+      "line": "✅ [PASS] T-28-STOCK-EVAL: SR-04 verified: POS checkout 25 units when on-hand is 22 blocked: \"Validasi POS Gagal (SR-04 / T-28): Kuantitas pesanan (25) melebihi stok fisik On-Hand (22) di CAFE-JKT. Stok minus dilarang.\"."
+    },
+    {
+      "suite": "test_phase7.log",
+      "line": "✅ [PASS] T-28-CLOSE-SESSION: Session POS01 closed. Total sales=Rp 88.000, Difference=Rp 0."
+    },
+    {
+      "suite": "test_phase7.log",
+      "line": "✅ [PASS] T-28: SR-14 & SR-13 verified: Re-closing session is idempotent (\"Sesi POS01 sudah ditutup sebelumnya. Penutupan ulang tidak membuat jurnal ganda.\"), zero duplicate journals."
+    }
+  ],
+  "T-29": [
+    {
+      "suite": "test_phase7.log",
+      "line": "✅ [PASS] T-29-FIXTURE: Fixture ready: Invoice INV/2026/0007 posted. WH-JKT on-hand: 35"
+    },
+    {
+      "suite": "test_phase7.log",
+      "line": "✅ [PASS] T-29-RETURN-REQ: Return Request RET/2026/0007 created with status PENDING."
+    },
+    {
+      "suite": "test_phase7.log",
+      "line": "✅ [PASS] T-29-INSPECTION: Quality inspection completed: Status=ACCEPTED."
+    },
+    {
+      "suite": "test_phase7.log",
+      "line": "✅ [PASS] T-29: T-29 Complete: WH on-hand 35->36; Reverse cost Rp26.000; Credit Note net Rp48.000, PBJT Rp4.800, total Rp52.800; A/R invoice berkurang Rp52.800 (Outstanding: Rp211.200)."
+    },
+    {
+      "suite": "test_phase7.log",
+      "line": "✅ [PASS] T-29: T-29 Complete: WH on-hand 35->36; Reverse cost Rp26.000; Credit Note net Rp48.000, PBJT Rp4.800, total Rp52.800; A/R invoice berkurang Rp52.800 (Outstanding: Rp211.200)."
+    }
+  ],
+  "T-30": [
+    {
+      "suite": "test_phase7.log",
+      "line": "✅ [PASS] T-30: SR-11 verified: Restock and Credit Note blocked when inspection is not ACCEPTED: \"Validasi Retur Gagal (SR-11 / T-30): Barang retur belum lolos pemeriksaan kualitas (Status saat ini: PENDING). Restok persediaan dan penerbitan Credit Note diblokir.\"."
+    },
+    {
+      "suite": "test_phase7.log",
+      "line": "✅ [PASS] T-30: SR-11 verified: Restock and Credit Note blocked when inspection is not ACCEPTED: \"Validasi Retur Gagal (SR-11 / T-30): Barang retur belum lolos pemeriksaan kualitas (Status saat ini: PENDING). Restok persediaan dan penerbitan Credit Note diblokir.\"."
+    },
+    {
+      "suite": "test_phase7.log",
+      "line": "✅ [PASS] T-30-VERIFY: WH-JKT stock protected at 36 (uninspected goods did NOT enter inventory)."
+    }
+  ],
+  "T-31": [
+    {
+      "suite": "test_phase8.log",
+      "line": "[PASS] T-31.1 | Total Stok Fisik Perusahaan                          | Diharapkan 616 unit, aktual: 616 unit"
+    },
+    {
+      "suite": "test_phase8.log",
+      "line": "[PASS] T-31.2 | Distribusi Lokasi WH-JKT & CAFE-JKT                  | WH: 410 (exp: 410), CAFE: 206 (exp: 206)"
+    },
+    {
+      "suite": "test_phase8.log",
+      "line": "[PASS] T-31.3 | Stok Direservasi & Tersedia                          | Reserved: 6 (exp: 6), Available: 610 (exp: 610)"
+    },
+    {
+      "suite": "test_phase8.log",
+      "line": "[PASS] T-31.4 | Valuasi Persediaan Baseline                          | Diharapkan Rp 12.214.000, aktual: Rp 12.214.000"
+    },
+    {
+      "suite": "test_phase8.log",
+      "line": "[PASS] T-31.5 | Total Piutang Usaha (A/R)                            | Diharapkan Rp 1.500.000, aktual: Rp 1.500.000"
+    },
+    {
+      "suite": "test_phase8.log",
+      "line": "[PASS] T-31.6 | Total Utang Usaha (A/P)                              | Diharapkan Rp 1.000.000, aktual: Rp 1.000.000"
+    },
+    {
+      "suite": "test_phase8.log",
+      "line": "[PASS] T-31.7 | Saldo Kas & Bank BCA (Akun 1010)                     | Diharapkan Rp 20.000.000, aktual: Rp 20.000.000"
+    },
+    {
+      "suite": "test_phase8.log",
+      "line": "[PASS] T-31.8 | Peluang CRM Aktif & Nilai Prospek                    | Leads: 1 (exp: 1), Value: Rp 1.200.000 (exp: 1.2jt)"
+    },
+    {
+      "suite": "test_phase8.log",
+      "line": "[PASS] T-31.9 | Order Terkonfirmasi (SO & PO)                        | SO: 1 (S00006), PO: 1 (P00006)"
+    },
+    {
+      "suite": "test_phase8.log",
+      "line": "[PASS] T-31.10 | Ketersediaan Smart-Links Navigasi                    | Seluruh 8 KPI memiliki tautan navigasi valid ke modul sumber"
+    }
+  ],
+  "T-32": [
+    {
+      "suite": "test_phase8.log",
+      "line": "[PASS] T-32.1 | Keseimbangan Double-Entry Buku Besar                 | Debit Rp 33.714.000 == Kredit Rp 33.714.000 (Seimbang: true)"
+    },
+    {
+      "suite": "test_phase8.log",
+      "line": "[PASS] T-32.2 | Subledger Matching A/R & A/P                         | A/R: Rp 1.500.000 == 1020, A/P: Rp 1.000.000 == 2010"
+    },
+    {
+      "suite": "test_phase8.log",
+      "line": "[PASS] T-32.3 | Rekonsiliasi Persediaan Normal                       | Status: BALANCED, Selisih Unit: 0, Selisih Nilai: Rp 0"
+    },
+    {
+      "suite": "test_phase8.log",
+      "line": "[PASS] T-32.4 | Deteksi Anomali Selisih 1 Unit                       | Status: MISMATCH (Diharapkan MISMATCH), Selisih: +1 unit"
+    },
+    {
+      "suite": "test_phase8.log",
+      "line": "[PASS] T-32.5 | Peringatan Audit Anomali Muncul                      | Pesan Peringatan: \"PERINGATAN REKONSILIASI (SR-20 / T-32): Terdeteksi selisih +1 unit (senilai...\""
+    },
+    {
+      "suite": "test_phase8.log",
+      "line": "[PASS] T-32.5 | Peringatan Audit Anomali Muncul                      | Pesan Peringatan: \"PERINGATAN REKONSILIASI (SR-20 / T-32): Terdeteksi selisih +1 unit (senilai...\""
+    },
+    {
+      "suite": "test_phase8.log",
+      "line": "[PASS] T-32.6 | Kepatuhan SR-20: Pem-post-an Otomatis Ditolak        | autoPostBlocked: true (Sistem menolak manipulasi jurnal penyeimbang)"
+    },
+    {
+      "suite": "test_phase8.log",
+      "line": "[PASS] T-32.7 | Integritas Database Terjaga (Zero Artificial Journal) | Jumlah jurnal sebelum: 1, sesudah: 1 (Tidak ada modifikasi ilegal)"
+    }
+  ]
+}

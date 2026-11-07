@@ -1,3 +1,5 @@
+import { atomic } from "./atomic";
+import { permit, quantity, money, discount, uniqueLines, editable } from "./validation";
 import { prisma } from "./prisma";
 import { Role } from "@prisma/client";
 import { recordAuditLog } from "./audit";
@@ -9,12 +11,15 @@ export interface DeliveryValidationItem {
   deliveredQty: number;
 }
 
-export async function validateDeliveryOrder(params: {
+async function validateDeliveryOrderImpl(params: {
   deliveryOrderId: string;
   items: DeliveryValidationItem[];
   actor: { id: string; name: string; role: Role };
 }) {
   const { deliveryOrderId, items, actor } = params;
+  uniqueLines(items, l => l.lineId);
+  uniqueLines(items, l => l.productSku);
+  items.forEach(i => quantity(i.deliveredQty, true));
 
   // Role check: Only WAREHOUSE or OWNER can validate delivery
   if (actor.role !== Role.WAREHOUSE && actor.role !== Role.OWNER) {
@@ -34,6 +39,10 @@ export async function validateDeliveryOrder(params: {
     return { delivery, message: "Delivery Order sudah selesai (idempotent)." };
   }
 
+  if (delivery.salesOrder.status !== 'CONFIRMED' || !['DRAFT','CONFIRMED'].includes(delivery.status)) throw new Error('Pengiriman memerlukan Sales Order Confirmed dan delivery aktif (SR-04 / SR-10).');
+  for (const item of items) if (!delivery.lines.some(l => l.id === item.lineId && l.productSku === item.productSku)) throw new Error('Baris pengiriman dan SKU tidak sesuai.');
+  const completeItems = delivery.lines.map(l => items.find(i => i.lineId === l.id) || { lineId: l.id, productSku: l.productSku, deliveredQty: 0 });
+  if (!completeItems.some(i => i.deliveredQty > 0)) throw new Error("Isi minimal satu kuantitas pengiriman positif.");
   const sourceLocation = delivery.sourceLocation || "WH-JKT";
 
   // Execute in an atomic database transaction
@@ -43,13 +52,15 @@ export async function validateDeliveryOrder(params: {
     let hasBackorder = false;
     const backorderLinesToCreate: Array<{ productSku: string; orderedQty: number }> = [];
 
-    for (const item of items) {
-      const line = delivery.lines.find((l) => l.id === item.lineId || l.productSku === item.productSku);
+    for (const item of completeItems) {
+      const line = delivery.lines.find((l) => l.id === item.lineId && l.productSku === item.productSku);
       if (!line) throw new Error(`Baris produk ${item.productSku} tidak ditemukan di Delivery Order.`);
 
       const orderedQty = line.orderedQty;
       const deliverQty = item.deliveredQty;
 
+      const sourceLine = delivery.salesOrder.lines.find(l => l.productSku === item.productSku);
+      if (!sourceLine || deliverQty > orderedQty || deliverQty > sourceLine.quantity - sourceLine.deliveredQty) throw new Error("Over-delivery ditolak (SR-10).");
       if (deliverQty < 0) {
         throw new Error("Kuantitas pengiriman tidak boleh negatif.");
       }
@@ -71,7 +82,10 @@ export async function validateDeliveryOrder(params: {
       // SR-04 & T-12: Zero negative stock & protecting other orders' reserved stock
       // Calculate how much is reserved by OTHER orders
       // For this order, line.orderedQty was reserved when SO was confirmed
-      const otherReserved = Math.max(0, stock.reserved - orderedQty);
+      const allocation = await tx.stockReservation.findUnique({ where: { salesOrderLineId_locationCode: { salesOrderLineId: sourceLine.id, locationCode: sourceLocation } } });
+      if (!allocation || allocation.quantity < deliverQty) throw new Error("Reservasi order tidak mencukupi (SR-04).");
+      if (stock.reserved < orderedQty) throw new Error("Reservasi order tidak valid (SR-04).");
+      const otherReserved = stock.reserved - allocation.quantity;
       const availableForThisOrder = stock.onHand - otherReserved;
 
       if (deliverQty > stock.onHand) {
@@ -111,6 +125,7 @@ export async function validateDeliveryOrder(params: {
         },
       });
 
+      await tx.stockReservation.update({ where: { id: allocation.id }, data: { quantity: { decrement: deliverQty } } });
       // 2. Update Delivery Order Line
       await tx.deliveryOrderLine.update({
         where: { id: line.id },
@@ -132,8 +147,9 @@ export async function validateDeliveryOrder(params: {
         totalDeliveredValueNet += deliverQty * soLine.unitPrice * (1 - soLine.discountPercent / 100);
       }
 
+      if (deliverQty === 0) continue;
       // 4. Record Stock Move
-      const standardCost = line.product.standardCost;
+      const standardCost = sourceLine.standardCost;
       const lineCogs = deliverQty * standardCost;
       totalCogs += lineCogs;
 
@@ -146,7 +162,7 @@ export async function validateDeliveryOrder(params: {
           quantity: deliverQty,
           unitCost: standardCost,
           totalValue: lineCogs,
-          documentType: "DELIVERY",
+          documentType: "DELIVERY", actorId: actor.id, reason: "DELIVERY",
           documentRef: delivery.deliveryNumber,
           state: "DONE",
         },
@@ -230,6 +246,7 @@ export async function validateDeliveryOrder(params: {
       });
     }
 
+    if (cogsJournal) await tx.stockMove.updateMany({where:{documentRef:delivery.deliveryNumber},data:{journalEntryId:cogsJournal.id}});
     return {
       updatedDelivery,
       backorderDoc,
@@ -246,6 +263,7 @@ export async function validateDeliveryOrder(params: {
     actorName: actor.name,
     actorRole: actor.role,
     action: "VALIDATE_DELIVERY",
+    beforeData: delivery,
     documentType: "DELIVERY",
     documentId: delivery.deliveryNumber,
     afterState: {
@@ -261,3 +279,5 @@ export async function validateDeliveryOrder(params: {
 
   return result;
 }
+
+export const validateDeliveryOrder = (...args: Parameters<typeof validateDeliveryOrderImpl>) => atomic(() => validateDeliveryOrderImpl(...args));

@@ -1,0 +1,666 @@
+[
+  {
+    "route": "/api/accounting/general-ledger",
+    "file": "src/app/api/accounting/general-ledger/route.ts",
+    "methods": [
+      {
+        "method": "GET",
+        "line": 7
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/accounting/invoices/[id]/post",
+    "file": "src/app/api/accounting/invoices/[id]/post/route.ts",
+    "methods": [
+      {
+        "method": "POST",
+        "line": 5
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/accounting/invoices/[id]",
+    "file": "src/app/api/accounting/invoices/[id]/route.ts",
+    "methods": [
+      {
+        "method": "GET",
+        "line": 5
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/accounting/invoices",
+    "file": "src/app/api/accounting/invoices/route.ts",
+    "methods": [
+      {
+        "method": "GET",
+        "line": 6
+      },
+      {
+        "method": "POST",
+        "line": 28
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/accounting/journal-entries",
+    "file": "src/app/api/accounting/journal-entries/route.ts",
+    "methods": [
+      {
+        "method": "GET",
+        "line": 6
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/accounting/payments",
+    "file": "src/app/api/accounting/payments/route.ts",
+    "methods": [
+      {
+        "method": "GET",
+        "line": 6
+      },
+      {
+        "method": "POST",
+        "line": 28
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/accounting/vendor-bills/[id]/post",
+    "file": "src/app/api/accounting/vendor-bills/[id]/post/route.ts",
+    "methods": [
+      {
+        "method": "POST",
+        "line": 5
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/accounting/vendor-bills/[id]",
+    "file": "src/app/api/accounting/vendor-bills/[id]/route.ts",
+    "methods": [
+      {
+        "method": "GET",
+        "line": 5
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/accounting/vendor-bills",
+    "file": "src/app/api/accounting/vendor-bills/route.ts",
+    "methods": [
+      {
+        "method": "GET",
+        "line": 6
+      },
+      {
+        "method": "POST",
+        "line": 27
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/audit/logs",
+    "file": "src/app/api/audit/logs/route.ts",
+    "methods": [
+      {
+        "method": "GET",
+        "line": 5
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/auth/login",
+    "file": "src/app/api/auth/login/route.ts",
+    "methods": [
+      {
+        "method": "POST",
+        "line": 7
+      }
+    ],
+    "handlerHasUserCheck": false,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/auth/logout",
+    "file": "src/app/api/auth/logout/route.ts",
+    "methods": [
+      {
+        "method": "POST",
+        "line": 5
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/auth/me",
+    "file": "src/app/api/auth/me/route.ts",
+    "methods": [
+      {
+        "method": "GET",
+        "line": 4
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/auth/switch-role",
+    "file": "src/app/api/auth/switch-role/route.ts",
+    "methods": [
+      {
+        "method": "POST",
+        "line": 7
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/companies",
+    "file": "src/app/api/companies/route.ts",
+    "methods": [
+      {
+        "method": "GET",
+        "line": 11
+      },
+      {
+        "method": "POST",
+        "line": 31
+      },
+      {
+        "method": "PATCH",
+        "line": 78
+      },
+      {
+        "method": "DELETE",
+        "line": 113
+      }
+    ],
+    "handlerHasUserCheck": false,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/companies/switch",
+    "file": "src/app/api/companies/switch/route.ts",
+    "methods": [
+      {
+        "method": "POST",
+        "line": 4
+      }
+    ],
+    "handlerHasUserCheck": false,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/contacts/[id]",
+    "file": "src/app/api/contacts/[id]/route.ts",
+    "methods": [
+      {
+        "method": "GET",
+        "line": 6
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/contacts",
+    "file": "src/app/api/contacts/route.ts",
+    "methods": [
+      {
+        "method": "GET",
+        "line": 8
+      },
+      {
+        "method": "POST",
+        "line": 49
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/crm/leads/[id]",
+    "file": "src/app/api/crm/leads/[id]/route.ts",
+    "methods": [
+      {
+        "method": "GET",
+        "line": 7
+      },
+      {
+        "method": "PATCH",
+        "line": 37
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/crm/leads",
+    "file": "src/app/api/crm/leads/route.ts",
+    "methods": [
+      {
+        "method": "GET",
+        "line": 8
+      },
+      {
+        "method": "POST",
+        "line": 29
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/dashboard/charts",
+    "file": "src/app/api/dashboard/charts/route.ts",
+    "methods": [
+      {
+        "method": "GET",
+        "line": 4
+      }
+    ],
+    "handlerHasUserCheck": false,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/dashboard/metrics",
+    "file": "src/app/api/dashboard/metrics/route.ts",
+    "methods": [
+      {
+        "method": "GET",
+        "line": 4
+      }
+    ],
+    "handlerHasUserCheck": false,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/dashboard/reconciliation",
+    "file": "src/app/api/dashboard/reconciliation/route.ts",
+    "methods": [
+      {
+        "method": "GET",
+        "line": 4
+      }
+    ],
+    "handlerHasUserCheck": false,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/inventory/deliveries/[id]",
+    "file": "src/app/api/inventory/deliveries/[id]/route.ts",
+    "methods": [
+      {
+        "method": "GET",
+        "line": 5
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/inventory/deliveries/[id]/validate",
+    "file": "src/app/api/inventory/deliveries/[id]/validate/route.ts",
+    "methods": [
+      {
+        "method": "POST",
+        "line": 5
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/inventory/deliveries",
+    "file": "src/app/api/inventory/deliveries/route.ts",
+    "methods": [
+      {
+        "method": "GET",
+        "line": 5
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/inventory/receipts/[id]",
+    "file": "src/app/api/inventory/receipts/[id]/route.ts",
+    "methods": [
+      {
+        "method": "GET",
+        "line": 5
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/inventory/receipts/[id]/validate",
+    "file": "src/app/api/inventory/receipts/[id]/validate/route.ts",
+    "methods": [
+      {
+        "method": "POST",
+        "line": 5
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/inventory/receipts",
+    "file": "src/app/api/inventory/receipts/route.ts",
+    "methods": [
+      {
+        "method": "GET",
+        "line": 5
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/inventory/transfers/[id]/validate",
+    "file": "src/app/api/inventory/transfers/[id]/validate/route.ts",
+    "methods": [
+      {
+        "method": "POST",
+        "line": 5
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/inventory/transfers",
+    "file": "src/app/api/inventory/transfers/route.ts",
+    "methods": [
+      {
+        "method": "GET",
+        "line": 6
+      },
+      {
+        "method": "POST",
+        "line": 25
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/pos/orders",
+    "file": "src/app/api/pos/orders/route.ts",
+    "methods": [
+      {
+        "method": "GET",
+        "line": 6
+      },
+      {
+        "method": "POST",
+        "line": 26
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/pos/sessions/[id]/close",
+    "file": "src/app/api/pos/sessions/[id]/close/route.ts",
+    "methods": [
+      {
+        "method": "POST",
+        "line": 5
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/pos/sessions",
+    "file": "src/app/api/pos/sessions/route.ts",
+    "methods": [
+      {
+        "method": "GET",
+        "line": 6
+      },
+      {
+        "method": "POST",
+        "line": 26
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/products/[sku]",
+    "file": "src/app/api/products/[sku]/route.ts",
+    "methods": [
+      {
+        "method": "GET",
+        "line": 7
+      },
+      {
+        "method": "PATCH",
+        "line": 76
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/products",
+    "file": "src/app/api/products/route.ts",
+    "methods": [
+      {
+        "method": "GET",
+        "line": 6
+      },
+      {
+        "method": "POST",
+        "line": 62
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/purchase/orders/[id]/confirm",
+    "file": "src/app/api/purchase/orders/[id]/confirm/route.ts",
+    "methods": [
+      {
+        "method": "POST",
+        "line": 5
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/purchase/orders/[id]",
+    "file": "src/app/api/purchase/orders/[id]/route.ts",
+    "methods": [
+      {
+        "method": "GET",
+        "line": 5
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/purchase/orders",
+    "file": "src/app/api/purchase/orders/route.ts",
+    "methods": [
+      {
+        "method": "GET",
+        "line": 6
+      },
+      {
+        "method": "POST",
+        "line": 28
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/returns/[id]/inspect",
+    "file": "src/app/api/returns/[id]/inspect/route.ts",
+    "methods": [
+      {
+        "method": "POST",
+        "line": 5
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/returns/[id]/process",
+    "file": "src/app/api/returns/[id]/process/route.ts",
+    "methods": [
+      {
+        "method": "POST",
+        "line": 5
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/returns",
+    "file": "src/app/api/returns/route.ts",
+    "methods": [
+      {
+        "method": "GET",
+        "line": 6
+      },
+      {
+        "method": "POST",
+        "line": 28
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/sales/orders/[id]/approve-discount",
+    "file": "src/app/api/sales/orders/[id]/approve-discount/route.ts",
+    "methods": [
+      {
+        "method": "POST",
+        "line": 5
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/sales/orders/[id]/confirm",
+    "file": "src/app/api/sales/orders/[id]/confirm/route.ts",
+    "methods": [
+      {
+        "method": "POST",
+        "line": 5
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/sales/orders/[id]",
+    "file": "src/app/api/sales/orders/[id]/route.ts",
+    "methods": [
+      {
+        "method": "GET",
+        "line": 7
+      },
+      {
+        "method": "PATCH",
+        "line": 46
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/sales/orders",
+    "file": "src/app/api/sales/orders/route.ts",
+    "methods": [
+      {
+        "method": "GET",
+        "line": 6
+      },
+      {
+        "method": "POST",
+        "line": 28
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/seed/demo-charts",
+    "file": "src/app/api/seed/demo-charts/route.ts",
+    "methods": [
+      {
+        "method": "POST",
+        "line": 5
+      }
+    ],
+    "handlerHasUserCheck": false,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/seed/reset",
+    "file": "src/app/api/seed/reset/route.ts",
+    "methods": [
+      {
+        "method": "POST",
+        "line": 8
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  },
+  {
+    "route": "/api/users",
+    "file": "src/app/api/users/route.ts",
+    "methods": [
+      {
+        "method": "GET",
+        "line": 8
+      },
+      {
+        "method": "POST",
+        "line": 33
+      }
+    ],
+    "handlerHasUserCheck": true,
+    "note": "Auth field is lexical only: engine role checks and operation scope require manual review."
+  }
+]

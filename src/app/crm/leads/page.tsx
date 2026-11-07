@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import AppLayout from "@/components/AppLayout";
 import StatusBadge from "@/components/StatusBadge";
 import KPICard from "@/components/KPICard";
+import MasterRecordEditor from "@/components/MasterRecordEditor";
+import CreateSalesOrderModal from "@/components/CreateSalesOrderModal";
 import CreateLeadModal from "@/components/CreateLeadModal";
 import { Users2, Play, Plus, Building, DollarSign, Check, ChevronRight } from "lucide-react";
 import Link from "next/link";
@@ -20,6 +22,8 @@ export default function CrmLeadsPage() {
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [editingLead,setEditingLead] = useState<any>(null);
+  const [quotingLead,setQuotingLead] = useState<any>(null);
 
   // Test Runner state
   const [testResult, setTestResult] = useState<any>(null);
@@ -139,9 +143,9 @@ export default function CrmLeadsPage() {
       currentUser={user}
       onSwitchRole={handleSwitchRole}
       breadcrumbs={[{ label: "Penjualan & CRM" }, { label: "CRM Leads Kanban" }]}
-      title="CRM Pipeline Kanban"
+      title="Pipeline CRM"
       subtitle="Manajemen Pipeline Prospek & Peluang Penjualan Katering / Restoran (Fitur F-04, SR-16)"
-      wireframe="Wireframe S-02"
+      wireframe="Wireframe S-04"
       actions={
         <div className="flex items-center space-x-2">
           <div className="text-right hidden sm:block">
@@ -194,6 +198,7 @@ export default function CrmLeadsPage() {
                   stageLeads.map((lead) => (
                     <div
                       key={lead.id}
+                      role="button" tabIndex={0} onClick={()=>setEditingLead(lead)} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();setEditingLead(lead);}}}
                       className="glass-3 border border-white/80 hover:border-[#1d4ed8]/40 rounded-xl p-3.5 shadow-xs space-y-2.5 cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-1 hover:bg-white/95 focus-brand-ring"
                     >
                       <div className="flex items-center justify-between">
@@ -226,8 +231,11 @@ export default function CrmLeadsPage() {
         })}
       </div>
 
+      <div className="surface-card p-4 space-y-3"><h2 className="font-semibold">Kelola peluang & penawaran</h2><div className="flex flex-wrap gap-2">{leads.map(lead=><div className="border rounded-xl p-3" key={lead.id}><span className="text-sm mr-3">{lead.name}</span><button className="text-blue-700 underline text-sm mr-3" onClick={()=>setEditingLead(lead)}>Edit / ubah tahap</button><button className="text-blue-700 underline text-sm" onClick={()=>setQuotingLead(lead)}>Buat penawaran</button></div>)}</div><Link href="/master/leads" className="text-sm text-blue-700 underline">Daftar, pencarian, dan arsip peluang</Link></div>
+      {editingLead&&<MasterRecordEditor resource="leads" record={editingLead} onClose={()=>setEditingLead(null)} onSaved={()=>{setEditingLead(null);fetchLeads();}}/>}
+      {quotingLead&&<CreateSalesOrderModal isOpen leadId={quotingLead.id} initialCustomerId={quotingLead.contactId} onClose={()=>setQuotingLead(null)} onOrderCreated={()=>setQuotingLead(null)}/>}
       {/* Collapsible QA Test Runner for T-07 & T-08 */}
-      <details className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
+      <details hidden className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
         <summary className="cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white select-none">
           <div className="flex items-center space-x-2">
             <span className="px-2 py-0.5 rounded-md bg-[#7c3aed] text-[#ffffff] font-bold text-[10px] uppercase">

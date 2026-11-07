@@ -1,4 +1,5 @@
 "use client";
+import DialogFrame from "./ui/DialogFrame";
 
 import React, { useState } from "react";
 import { Building2, X, Plus, Sparkles, Check, Database, AlertCircle } from "lucide-react";
@@ -58,7 +59,7 @@ export default function CreateCompanyModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in">
+    <DialogFrame onClose={onClose}>
       <div className="relative w-full max-w-lg glass-modal rounded-3xl shadow-2xl border border-white/80 overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="px-6 py-5 bg-gradient-to-r from-blue-700 via-indigo-700 to-violet-700 text-white flex items-center justify-between border-b border-white/20">
@@ -75,6 +76,7 @@ export default function CreateCompanyModal({
           </div>
           <button
             onClick={onClose}
+            aria-label="Tutup dialog"
             className="p-1.5 rounded-xl text-white/80 hover:text-white hover:bg-white/20 transition-all cursor-pointer"
           >
             <X className="w-5 h-5" />
@@ -84,17 +86,17 @@ export default function CreateCompanyModal({
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
           {errorMsg && (
-            <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center space-x-2 font-bold shadow-xs">
+            <div role="alert" className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center space-x-2 font-bold shadow-xs">
               <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
               <span>{errorMsg}</span>
             </div>
           )}
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-800 block">
+            <label htmlFor="createcompanymodal-field-0" className="text-xs font-bold text-slate-800 block">
               Nama Resmi Perusahaan <span className="text-rose-600">*</span>
             </label>
-            <input
+            <input id="createcompanymodal-field-0"
               type="text"
               required
               value={name}
@@ -109,10 +111,10 @@ export default function CreateCompanyModal({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-800 block">
+              <label htmlFor="createcompanymodal-field-1" className="text-xs font-bold text-slate-800 block">
                 Nama Merek / Brand Usaha
               </label>
-              <input
+              <input id="createcompanymodal-field-1"
                 type="text"
                 value={brand}
                 onChange={(e) => setBrand(e.target.value)}
@@ -122,10 +124,10 @@ export default function CreateCompanyModal({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-800 block">
+              <label htmlFor="createcompanymodal-field-2" className="text-xs font-bold text-slate-800 block">
                 Kota Operasional
               </label>
-              <input
+              <input id="createcompanymodal-field-2"
                 type="text"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
@@ -192,6 +194,7 @@ export default function CreateCompanyModal({
             <button
               type="button"
               onClick={onClose}
+            aria-label="Tutup dialog"
               className="px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200/80 rounded-xl transition-colors cursor-pointer"
             >
               Batal
@@ -213,6 +216,6 @@ export default function CreateCompanyModal({
           </div>
         </form>
       </div>
-    </div>
+    </DialogFrame>
   );
 }

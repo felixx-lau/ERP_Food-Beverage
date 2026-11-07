@@ -37,6 +37,8 @@ export default function AppLayout({
 }: AppLayoutProps) {
   const [user, setUser] = useState(initialUser || null);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  useEffect(() => { try { setIsCollapsed(localStorage.getItem("erp-sidebar-collapsed") === "true"); } catch {} }, []);
+  const toggleSidebar = () => { setIsCollapsed(prev => { try { localStorage.setItem("erp-sidebar-collapsed", String(!prev)); } catch {} return !prev; }); };
   const [isOpenMobile, setIsOpenMobile] = useState(false);
 
   const [appSwitcherOpen, setAppSwitcherOpen] = useState(false);
@@ -96,12 +98,13 @@ export default function AppLayout({
   };
 
   return (
-    <div className="min-h-screen bg-transparent text-[var(--glass-text-primary)] flex">
+    <div className="app-shell min-h-screen flex">
+      <a href="#main-content" className="skip-link">Lewati navigasi</a>
       {/* Sidebar */}
       <Sidebar
-        userRole={user?.role || "OWNER"}
+        userRole={user?.role || ""}
         isCollapsed={isCollapsed}
-        onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
+        onToggleCollapse={toggleSidebar}
         isOpenMobile={isOpenMobile}
         onCloseMobile={() => setIsOpenMobile(false)}
       />
@@ -109,7 +112,7 @@ export default function AppLayout({
       {/* Main Container */}
       <div
         className={`flex-1 flex flex-col min-w-0 transition-all duration-200 ease-in-out ${
-          isCollapsed ? "lg:pl-16" : "lg:pl-64"
+          isCollapsed ? "lg:pl-20" : "lg:pl-[272px]"
         }`}
       >
         {/* Topbar */}
@@ -124,24 +127,20 @@ export default function AppLayout({
         />
 
         {/* Content Body */}
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6 space-y-4">
+        <main id="main-content" tabIndex={-1} className="app-main flex-1 w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
           {/* Optional unified page header if title is passed */}
           {title && (
-            <div className="bg-white/90 rounded-xl py-3 px-4 sm:px-5 sm:py-3.5 border border-slate-200/70 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="page-heading flex flex-col xl:flex-row xl:items-center justify-between gap-4">
               <div className="space-y-0.5">
                 <div className="flex items-center space-x-2.5">
-                  <h1 className="text-lg sm:text-xl font-bold tracking-tight text-[var(--glass-text-primary)]">
+                  <h1 className="text-2xl sm:text-[28px] font-semibold tracking-tight text-[var(--glass-text-primary)]">
                     {title}
                   </h1>
-                  {wireframe && (
-                    <span className="hidden sm:inline-block px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold text-blue-700 bg-blue-50 border border-blue-200">
-                      {wireframe}
-                    </span>
-                  )}
+
                 </div>
                 {subtitle && (
-                  <p className="text-xs text-[var(--glass-text-secondary)] font-medium">
-                    {subtitle}
+                  <p className="text-sm text-slate-500 leading-relaxed max-w-3xl">
+                    {subtitle.replace(/\s*\((?:Fitur |F-|SR-|S-)\S*[^)]*\)/g, "")}
                   </p>
                 )}
               </div>

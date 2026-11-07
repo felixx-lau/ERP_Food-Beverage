@@ -1,3 +1,4 @@
+import { transactionContext } from "./transactionContext";
 import { PrismaClient } from "@prisma/client";
 import { ensureDatabaseExists } from "./dbInit";
 import { getCompanyById, getDatabasePathForCompany, getPrismaDir } from "./companyManager";
@@ -43,7 +44,7 @@ export function resolveDbFilePath(rawPath: string): string {
   if (fs.existsSync(candidateDirect)) {
     return candidateDirect;
   }
-  return path.join(prismaDir, "erp.db");
+  throw new Error(`Database tidak ditemukan: ${path.basename(clean)}. Tidak beralih ke perusahaan lain.`);
 }
 
 export function getClientForDbPath(dbPath: string): PrismaClient {
@@ -65,15 +66,8 @@ export async function getActivePrismaClient(): Promise<PrismaClient> {
     return getClientForDbPath(defaultUrl);
   }
 
-  try {
-    const company = getCompanyById(companyId);
-    const dbPath = getDatabasePathForCompany(company);
-    return getClientForDbPath(dbPath);
-  } catch (err) {
-    console.error(`Failed to get client for company ${companyId}, falling back to default:`, err);
-    const defaultUrl = ensureDatabaseExists();
-    return getClientForDbPath(defaultUrl);
-  }
+  const company = getCompanyById(companyId);
+  return getClientForDbPath(getDatabasePathForCompany(company));
 }
 
 // Global Proxy that routes all model calls and transactions to the active company client
@@ -83,25 +77,14 @@ export const prisma = new Proxy({} as PrismaClient, {
 
     if (prop === "$transaction") {
       return async (...args: any[]) => {
+        const pinned = transactionContext.getStore();
+        if (pinned) {
+          if (typeof args[0] !== 'function') throw new Error('Gunakan transaksi callback.');
+          return args[0](pinned);
+        }
+        if (typeof args[0] !== 'function') throw new Error('Gunakan transaksi callback agar operasi tetap atomik.');
         const client = await getActivePrismaClient();
-        if (typeof args[0] === "function") {
-          return client.$transaction(args[0], args[1]);
-        }
-        if (Array.isArray(args[0])) {
-          try {
-            return await (client as any).$transaction(...args);
-          } catch (err: any) {
-            if (err?.message?.includes("Prisma Client promises")) {
-              const results = [];
-              for (const op of args[0]) {
-                results.push(await op);
-              }
-              return results;
-            }
-            throw err;
-          }
-        }
-        return (client as any).$transaction(...args);
+        return client.$transaction((tx: any) => transactionContext.run(tx, () => args[0](tx)), args[1]);
       };
     }
 
@@ -116,7 +99,7 @@ export const prisma = new Proxy({} as PrismaClient, {
       get(modelTarget, methodProp) {
         if (methodProp === "then" || typeof methodProp === "symbol") return undefined;
         return async (...args: any[]) => {
-          const client = await getActivePrismaClient();
+          const client = transactionContext.getStore() || await getActivePrismaClient();
           const model = (client as any)[prop];
           if (!model) {
             throw new Error(`Prisma model '${String(prop)}' not found on client.`);

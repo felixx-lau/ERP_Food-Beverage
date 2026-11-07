@@ -28,12 +28,14 @@ export async function calculateCustomerCreditStatus(customerId: string): Promise
   const postedInvoices = await prisma.customerInvoice.findMany({
     where: {
       customerId: customerId,
-      status: "POSTED",
+      status: { in: ["POSTED","PAID"] },
+      isPosted: true,
     },
   });
 
   for (const inv of postedInvoices) {
-    openReceivable += inv.outstandingAmount;
+    const credits = await prisma.creditNote.aggregate({where:{returnRequest:{invoiceId:inv.id}},_sum:{totalGross:true}});
+    openReceivable += inv.totalGross - inv.paidAmount - (credits._sum.totalGross || 0);
   }
 
   // 2. Calculate Gross Confirmed-Uninvoiced Orders (SR-09)
@@ -53,7 +55,7 @@ export async function calculateCustomerCreditStatus(customerId: string): Promise
   for (const order of confirmedOrders) {
     // Check how much of this order has already been invoiced
     const invoicedGross = order.invoices
-      .filter((inv) => inv.status !== "CANCELLED")
+      .filter((inv) => inv.status === "POSTED" || inv.status === "PAID")
       .reduce((sum, inv) => sum + inv.totalGross, 0);
 
     const uninvoicedAmount = Math.max(0, order.totalGross - invoicedGross);

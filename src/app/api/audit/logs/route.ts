@@ -1,8 +1,12 @@
+import { authorizeApi } from "@/lib/apiAuthorization";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
+  const accessDenied = await authorizeApi(request);
+  if (accessDenied) return accessDenied;
+
   try {
     const user = await getCurrentUser(request);
     if (!user) {
@@ -12,10 +16,12 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const documentType = searchParams.get("documentType");
     const documentId = searchParams.get("documentId");
-    const limit = parseInt(searchParams.get("limit") || "50", 10);
+    const limit = Math.max(1, Math.min(200, parseInt(searchParams.get("limit") || "50", 10) || 50));
 
     const where: Record<string, unknown> = {};
-    if (documentType) where.documentType = documentType;
+    if (!["OWNER","FINANCE"].includes(user.role)) where.actorId = user.id;
+    where.documentType = { not: "REQUEST" };
+    if (documentType && documentType !== "REQUEST") where.documentType = documentType;
     if (documentId) where.documentId = documentId;
 
     const logs = await prisma.auditLog.findMany({

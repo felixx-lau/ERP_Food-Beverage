@@ -1,6 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import CreateVendorBillModal from "@/components/CreateVendorBillModal";
+import DocumentControls from "@/components/DocumentControls";
+import DocumentList from "@/components/DocumentList";
+import FinancialCorrection from "@/components/FinancialCorrection";
+import DocumentTrail from "@/components/DocumentTrail";
 import AppLayout from "@/components/AppLayout";
 import StatusBadge from "@/components/StatusBadge";
 import KPICard from "@/components/KPICard";
@@ -12,6 +17,8 @@ export default function VendorBillsPage() {
   const [bills, setBills] = useState<any[]>([]);
   const [selectedBill, setSelectedBill] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+
+  const [creatingBill,setCreatingBill] = useState(false);
 
   // Test Runner state
   const [testResult, setTestResult] = useState<any>(null);
@@ -33,7 +40,7 @@ export default function VendorBillsPage() {
         const data = await res.json();
         setBills(data.bills || []);
         if (data.bills?.length > 0 && !selectedBill) {
-          setSelectedBill(data.bills[0]);
+          setSelectedBill(data.bills.find((r: any) => r.id === new URLSearchParams(window.location.search).get("id")) || data.bills[0]);
         }
       }
     } finally {
@@ -163,11 +170,12 @@ export default function VendorBillsPage() {
       currentUser={user}
       onSwitchRole={handleSwitchRole}
       breadcrumbs={[{ label: "Keuangan & Akuntansi" }, { label: "Vendor Bills (3-Way)" }]}
-      title="Vendor Bills & Three-Way Matching"
+      title="Tagihan vendor"
       subtitle="Verifikasi Tagihan Pemasok Melalui Pencocokan 3 Arah (PO vs GR vs Bill) & Kliring Akun GRNI (F-13, SR-06, SR-13)"
       wireframe="Wireframe S-11"
       actions={
         <div className="flex items-center space-x-2">
+          {["OWNER","FINANCE"].includes(user?.role)&&<button className="btn-primary" onClick={()=>setCreatingBill(true)}>+ Buat tagihan</button>}
           <span className="text-xs font-bold text-slate-700 hidden sm:inline">Pilih Tagihan Vendor:</span>
           <select
             value={selectedBill?.id || ""}
@@ -183,6 +191,14 @@ export default function VendorBillsPage() {
         </div>
       }
     >
+      {["OWNER","FINANCE"].includes(user?.role) && selectedBill?.isPosted && selectedBill?.status !== "CANCELLED" && <FinancialCorrection kind="bills" record={selectedBill} onChanged={async()=>{await fetchBills();await fetchBillDetail(selectedBill.id);}}/>}
+
+      <DocumentList records={bills} selectedId={selectedBill?.id} onSelect={fetchBillDetail}/>
+
+      {selectedBill && <DocumentControls kind="bills" record={selectedBill} role={user?.role} onChanged={async () => { await fetchBills(); await fetchBillDetail(selectedBill.id); }} />}
+
+      {creatingBill&&<CreateVendorBillModal onClose={()=>setCreatingBill(false)} onCreated={async bill=>{setCreatingBill(false);await fetchBills();await fetchBillDetail(bill.id);}}/>}
+      {selectedBill?.status==='POSTED'&&<Link className="btn-primary inline-flex" href={`/accounting/payments?billId=${selectedBill.id}`}>Bayar tagihan vendor</Link>}
       {/* Selected Bill Detail */}
       {selectedBill && (
         <div className="glass-2 rounded-2xl shadow-glass-2 border border-white/80 overflow-hidden">
@@ -273,19 +289,19 @@ export default function VendorBillsPage() {
               <table className="w-full text-left text-xs">
                 <thead className="bg-white/60 font-bold text-slate-700 uppercase tracking-wider text-[11px] border-b border-black/10">
                   <tr>
-                    <th className="px-6 py-3.5">SKU Varian & Nama Produk</th>
-                    <th className="px-6 py-3.5 text-right">Dipesan (PO)</th>
-                    <th className="px-6 py-3.5 text-right text-emerald-900 font-bold">Diterima (Receipt)</th>
-                    <th className="px-6 py-3.5 text-right text-slate-600 font-semibold">Sudah Ditagih</th>
-                    <th className="px-6 py-3.5 text-right text-[#1d4ed8] font-bold">Qty Tagihan Ini</th>
-                    <th className="px-6 py-3.5 text-right">Net Subtotal</th>
+                    <th scope="col" className="px-6 py-3.5">SKU Varian & Nama Produk</th>
+                    <th scope="col" className="px-6 py-3.5 text-right">Dipesan (PO)</th>
+                    <th scope="col" className="px-6 py-3.5 text-right text-emerald-900 font-bold">Diterima (Receipt)</th>
+                    <th scope="col" className="px-6 py-3.5 text-right text-slate-600 font-semibold">Sudah Ditagih</th>
+                    <th scope="col" className="px-6 py-3.5 text-right text-[#1d4ed8] font-bold">Qty Tagihan Ini</th>
+                    <th scope="col" className="px-6 py-3.5 text-right">Net Subtotal</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-black/5 font-mono">
                   {selectedBill.lines?.map((l: any) => {
                     const poLine = selectedBill.purchaseOrder?.lines?.find((pol: any) => pol.productSku === l.productSku);
                     const orderedQty = poLine?.orderedQty ?? l.quantity;
-                    
+
                     let acceptedQty = 0;
                     selectedBill.purchaseOrder?.receipts?.forEach((rc: any) => {
                       rc.lines?.forEach((rcl: any) => {
@@ -333,7 +349,7 @@ export default function VendorBillsPage() {
       )}
 
       {/* Collapsible QA Test Runner for T-21 & T-22 */}
-      <details className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
+      <details hidden className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
         <summary className="cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white select-none">
           <div className="flex items-center space-x-2">
             <span className="px-2 py-0.5 rounded-md bg-[#7c3aed] text-slate-900 font-bold text-[10px] uppercase">
@@ -403,6 +419,7 @@ export default function VendorBillsPage() {
           )}
         </div>
       </details>
+      {selectedBill && <DocumentTrail kind="bills" record={selectedBill}/>}
     </AppLayout>
   );
 }

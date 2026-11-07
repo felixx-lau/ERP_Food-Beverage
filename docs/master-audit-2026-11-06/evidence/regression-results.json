@@ -1,0 +1,65 @@
+[
+  {
+    "suite": "test_phase2_3",
+    "exit": 0,
+    "passMarkers": 23,
+    "failMarkers": 0,
+    "summary": [
+      "\ud83c\udfc1 TEST RESULTS SUMMARY: 23 / 23 TESTS PASSED"
+    ]
+  },
+  {
+    "suite": "test_phase4",
+    "exit": 0,
+    "passMarkers": 27,
+    "failMarkers": 0,
+    "summary": [
+      "\ud83c\udfc1 PHASE 4 TEST SUMMARY: 27 / 27 TESTS PASSED"
+    ]
+  },
+  {
+    "suite": "test_phase5",
+    "exit": 0,
+    "passMarkers": 14,
+    "failMarkers": 0,
+    "summary": [
+      "\ud83c\udfc1 PHASE 5 TEST SUMMARY: 14 / 14 TESTS PASSED"
+    ]
+  },
+  {
+    "suite": "test_phase6",
+    "exit": 0,
+    "passMarkers": 12,
+    "failMarkers": 0,
+    "summary": [
+      "\ud83c\udfc1 PHASE 6 TEST SUMMARY: 12 / 12 TESTS PASSED"
+    ]
+  },
+  {
+    "suite": "test_phase7",
+    "exit": 0,
+    "passMarkers": 19,
+    "failMarkers": 0,
+    "summary": [
+      "\ud83c\udfc1 PHASE 7 TEST SUMMARY: 19 / 19 TESTS PASSED"
+    ]
+  },
+  {
+    "suite": "test_phase8",
+    "exit": 0,
+    "passMarkers": 17,
+    "failMarkers": 0,
+    "summary": [
+      "HASIL AKHIR PENGUJIAN TAHAP 8: 17 PASS, 0 FAIL"
+    ]
+  },
+  {
+    "suite": "test_charts",
+    "exit": 0,
+    "passMarkers": 16,
+    "failMarkers": 0,
+    "summary": [
+      " HASIL TEST ANALYTICS & CHARTS: 16 PASSED | 0 FAILED "
+    ]
+  }
+]

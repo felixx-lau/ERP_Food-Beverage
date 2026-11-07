@@ -1,0 +1,15 @@
+export type MasterField={key:string;label:string;type?:'number'|'email'|'textarea'|'select';required?:boolean;options?:string[];source?:string;identity?:boolean;ownerOnly?:boolean};
+const name:MasterField={key:'name',label:'Nama',required:true};
+const code:MasterField={key:'code',label:'Kode unik',required:true,identity:true};
+const contact:MasterField[]=[name,{key:'email',label:'Email',type:'email'},{key:'phone',label:'Telepon'},{key:'address',label:'Alamat',type:'textarea'},{key:'city',label:'Kota',required:true},{key:'paymentTerms',label:'Termin pembayaran',type:'select',options:['IMMEDIATE','NET7','NET14','NET30'],required:true}];
+export const masterFields:Record<string,{title:string;fields:MasterField[];roles:string[];wireframe?:string}>={
+  customers:{title:'Pelanggan',roles:['OWNER','SALES'],wireframe:'S-02',fields:[...contact,{key:'customerType',label:'Tipe pelanggan',type:'select',options:['COMPANY','INDIVIDUAL'],required:true},{key:'creditLimit',label:'Limit kredit (Rp)',type:'number',ownerOnly:true}]},
+  vendors:{title:'Vendor',roles:['OWNER','PROCUREMENT'],wireframe:'S-02',fields:contact},
+  products:{title:'Produk & varian SKU',roles:['OWNER','WAREHOUSE'],wireframe:'S-03',fields:[{key:'sku',label:'SKU unik',required:true,identity:true},name,{key:'description',label:'Deskripsi',type:'textarea'},{key:'size',label:'Ukuran',required:true},{key:'color',label:'Varian / suhu',required:true},{key:'unit',label:'Satuan',type:'select',source:'units',required:true},{key:'categoryCode',label:'Kategori',type:'select',source:'categories'},{key:'salesPrice',label:'Harga jual (Rp)',type:'number',required:true},{key:'standardCost',label:'Biaya standar (Rp)',type:'number',required:true},{key:'defaultVendorId',label:'Vendor utama',type:'select',source:'vendors'}]},
+  categories:{title:'Kategori produk',roles:['OWNER','WAREHOUSE'],fields:[code,name]},
+  units:{title:'Satuan produk',roles:['OWNER','WAREHOUSE'],fields:[code,name]},
+  locations:{title:'Gudang & lokasi',roles:['OWNER','WAREHOUSE'],fields:[code,name,{key:'usage',label:'Penggunaan',required:true}]},
+  accounts:{title:'Chart of Accounts',roles:['OWNER','FINANCE'],wireframe:'S-13',fields:[code,name,{key:'type',label:'Tipe akun',type:'select',required:true,options:['ASSET','LIABILITY','EQUITY','INCOME','CONTRA_INCOME','EXPENSE']}]},
+  'vendor-prices':{title:'Daftar harga vendor',roles:['OWNER','PROCUREMENT'],fields:[{key:'vendorId',label:'Vendor',type:'select',source:'vendors',required:true},{key:'productSku',label:'SKU',type:'select',source:'products',required:true},{key:'minimumQty',label:'Minimum pembelian',type:'number',required:true},{key:'price',label:'Harga vendor (Rp)',type:'number',required:true}]},
+  leads:{title:'Peluang CRM',roles:['OWNER','SALES'],wireframe:'S-04',fields:[name,{key:'contactId',label:'Pelanggan',type:'select',source:'customers',required:true},{key:'expectedRevenue',label:'Nilai peluang (Rp)',type:'number',required:true},{key:'stage',label:'Tahap',type:'select',required:true,options:['NEW','QUALIFIED','PROPOSITION','WON']}]},
+};

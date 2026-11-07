@@ -1,6 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import FinancialCorrection from "@/components/FinancialCorrection";
+import ManualJournalForm from "@/components/ManualJournalForm";
+import DocumentList from "@/components/DocumentList";
 import AppLayout from "@/components/AppLayout";
 import StatusBadge from "@/components/StatusBadge";
 import KPICard from "@/components/KPICard";
@@ -67,7 +70,7 @@ export default function JournalEntriesPage() {
         const list = data.entries || [];
         setEntries(list);
         if (list.length > 0 && !selectedEntry) {
-          setSelectedEntry(list[0]);
+          setSelectedEntry(list.find((r:any)=>r.id===new URLSearchParams(window.location.search).get("id"))||list[0]);
         }
       }
     } finally {
@@ -216,18 +219,19 @@ export default function JournalEntriesPage() {
         { label: "General Ledger & Jurnal (S-13)" },
       ]}
     >
+      {['OWNER','FINANCE'].includes(currentUser?.role)&&<div className="flex gap-3 flex-wrap"><ManualJournalForm onPosted={fetchJournalEntries}/>{selectedEntry&&<FinancialCorrection kind="journals" record={selectedEntry} onChanged={fetchJournalEntries}/>}<Link className="btn-secondary" href="/accounting/reports">Laporan keuangan</Link></div>}
+      <DocumentList records={entries} selectedId={selectedEntry?.id} onSelect={id=>setSelectedEntry(entries.find(e=>e.id===id))}/>
+
       <div className="space-y-6">
         {/* Module Header & Sub-Nav */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-[#e2e8f0] shadow-xs">
           <div>
             <div className="flex items-center space-x-2">
               <span className="w-2.5 h-2.5 rounded-full bg-[#1d4ed8]" />
-              <h1 className="text-xl font-bold text-[#0f172a] tracking-tight">
+              <h1 className="text-2xl font-semibold text-[#0f172a] tracking-tight">
                 Journal Entries & General Ledger
               </h1>
-              <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-[#1d4ed8]/10 text-[#1d4ed8]">
-                Wireframe S-13
-              </span>
+
             </div>
             <p className="text-xs text-[#64748b] mt-1">
               Buku besar berpasangan otomatis (Double-Entry Bookkeeping), COGS tracking & pencegahan jurnal duplikat (SR-13 / F-14).
@@ -349,7 +353,7 @@ export default function JournalEntriesPage() {
               <div className="flex items-center space-x-3">
                 <div className="relative">
                   <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                  <input
+                  <input aria-label="Cari ref / nomor jurnal..."
                     type="text"
                     placeholder="Cari ref / nomor jurnal..."
                     value={searchQuery}
@@ -443,11 +447,11 @@ export default function JournalEntriesPage() {
                     <table className="w-full text-left text-xs text-slate-900">
                       <thead className="bg-white/60 border-b border-black/10 text-slate-700 font-bold uppercase tracking-wider text-[11px]">
                         <tr>
-                          <th className="py-3.5 px-4">Kode Akun</th>
-                          <th className="py-3.5 px-4">Nama Akun (Chart of Accounts)</th>
-                          <th className="py-3.5 px-4">Keterangan / Deskripsi</th>
-                          <th className="py-3.5 px-4 text-right">Debit (Rp)</th>
-                          <th className="py-3.5 px-4 text-right">Credit (Rp)</th>
+                          <th scope="col" className="py-3.5 px-4">Kode Akun</th>
+                          <th scope="col" className="py-3.5 px-4">Nama Akun (Chart of Accounts)</th>
+                          <th scope="col" className="py-3.5 px-4">Keterangan / Deskripsi</th>
+                          <th scope="col" className="py-3.5 px-4 text-right">Debit (Rp)</th>
+                          <th scope="col" className="py-3.5 px-4 text-right">Credit (Rp)</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-black/5 font-mono">
@@ -514,7 +518,7 @@ export default function JournalEntriesPage() {
         )}
 
         {/* Collapsible QA Automated Test Runner: T-25 & T-26 */}
-        <details className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
+        <details hidden className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
           <summary className="cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white select-none">
             <div className="flex items-center space-x-2">
               <span className="px-2 py-0.5 rounded-md bg-[#7c3aed] text-slate-900 font-bold text-[10px] uppercase">

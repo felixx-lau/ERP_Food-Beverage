@@ -1,6 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import DocumentControls from "@/components/DocumentControls";
+import DocumentList from "@/components/DocumentList";
+import DocumentTrail from "@/components/DocumentTrail";
 import AppLayout from "@/components/AppLayout";
 import StatusBadge from "@/components/StatusBadge";
 import KPICard from "@/components/KPICard";
@@ -35,7 +38,7 @@ export default function PurchaseOrdersPage() {
         const data = await res.json();
         setOrders(data.orders || []);
         if (data.orders?.length > 0 && !selectedOrder) {
-          setSelectedOrder(data.orders[0]);
+          setSelectedOrder(data.orders.find((r: any) => r.id === new URLSearchParams(window.location.search).get("id")) || data.orders[0]);
         }
       }
     } finally {
@@ -151,7 +154,7 @@ export default function PurchaseOrdersPage() {
       currentUser={user}
       onSwitchRole={handleSwitchRole}
       breadcrumbs={[{ label: "Pengadaan" }, { label: "Purchase Orders" }]}
-      title="Purchase Orders & RFQ"
+      title="Pesanan pembelian"
       subtitle="Pengelolaan Permintaan Penawaran (RFQ), Konfirmasi Pesanan Pengadaan & Komitmen Vendor (F-11, SR-13)"
       wireframe="Wireframe S-08"
       actions={
@@ -178,6 +181,10 @@ export default function PurchaseOrdersPage() {
         </div>
       }
     >
+      <DocumentList records={orders} selectedId={selectedOrder?.id} onSelect={fetchOrderDetail}/>
+
+      {selectedOrder && <DocumentControls kind="purchase" record={selectedOrder} role={user?.role} onChanged={async () => { await fetchOrders(); await fetchOrderDetail(selectedOrder.id); }} />}
+
       {/* Selected PO Detail */}
       {selectedOrder && (
         <div className="glass-2 rounded-2xl shadow-glass-2 border border-white/80 overflow-hidden">
@@ -260,10 +267,10 @@ export default function PurchaseOrdersPage() {
               <table className="w-full text-left text-xs">
                 <thead className="bg-white/60 font-bold text-slate-900 uppercase tracking-wider text-[11px] border-b border-black/10">
                   <tr>
-                    <th className="px-6 py-3.5">SKU Varian & Nama Produk</th>
-                    <th className="px-6 py-3.5 text-right">Kuantitas Dipesan</th>
-                    <th className="px-6 py-3.5 text-right">Harga Satuan (Cost)</th>
-                    <th className="px-6 py-3.5 text-right">Net Subtotal</th>
+                    <th scope="col" className="px-6 py-3.5">SKU Varian & Nama Produk</th>
+                    <th scope="col" className="px-6 py-3.5 text-right">Kuantitas Dipesan</th>
+                    <th scope="col" className="px-6 py-3.5 text-right">Harga Satuan (Cost)</th>
+                    <th scope="col" className="px-6 py-3.5 text-right">Net Subtotal</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-black/5 font-mono">
@@ -298,7 +305,7 @@ export default function PurchaseOrdersPage() {
       )}
 
       {/* Collapsible QA Test Runner for T-15 & T-16 */}
-      <details className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
+      <details hidden className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
         <summary className="cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white select-none">
           <div className="flex items-center space-x-2">
             <span className="px-2 py-0.5 rounded-md bg-[#7c3aed] text-[#ffffff] font-bold text-[10px] uppercase">
@@ -378,6 +385,7 @@ export default function PurchaseOrdersPage() {
           if (newOrder) setSelectedOrder(newOrder);
         }}
       />
+      {selectedOrder && <DocumentTrail kind="purchase" record={selectedOrder}/>}
     </AppLayout>
   );
 }

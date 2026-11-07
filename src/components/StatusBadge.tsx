@@ -70,8 +70,7 @@ export default function StatusBadge({
       "WAITING",
       "PARTIAL",
       "IN_PROGRESS",
-      "DRAFT",
-      "QUOTATION",
+
       "TO_APPROVE",
       "READY",
       "PENDING",
@@ -87,7 +86,7 @@ export default function StatusBadge({
       "OVERDUE",
       "SCRAP",
       "DEFECTIVE",
-      "CLOSED",
+
       "LOST",
     ].includes(norm)
   ) {
@@ -111,7 +110,7 @@ export default function StatusBadge({
 
   return (
     <span
-      className={`inline-flex items-center font-bold rounded-full shadow-xs ${glassClass} ${sizeClasses} gap-1.5 transition-transform duration-150 hover:scale-105 select-none`}
+      className={`inline-flex items-center font-medium rounded-full ${glassClass} ${sizeClasses} gap-1.5  select-none`}
     >
       {dot && (
         <span

@@ -83,6 +83,8 @@ enum InspectionStatus {
 // 1. Users & RBAC
 // -------------------------------------------------------------
 model User {
+  active Boolean @default(true)
+  sessionVersion Int @default(0)
   id           String        @id @default(cuid())
   email        String        @unique
   name         String
@@ -98,6 +100,12 @@ model User {
 // 2. Contacts (Customers & Vendors)
 // -------------------------------------------------------------
 model Contact {
+  email String @default("")
+  phone String @default("")
+  address String @default("")
+  vendorPrices VendorPrice[]
+  archivedAt DateTime?
+  version Int @default(0)
   id             String         @id // e.g. C01, C02, V01
   name           String
   type           ContactType
@@ -126,6 +134,12 @@ model Contact {
 // 3. Products & Variant SKUs
 // -------------------------------------------------------------
 model ProductVariant {
+  description String @default("")
+  categoryCode String?
+  category Category? @relation(fields: [categoryCode], references: [code])
+  vendorPrices VendorPrice[]
+  archivedAt DateTime?
+  version Int @default(0)
   sku             String       @id // e.g. RICE-CHICK-S
   name            String       // e.g. Nasi Ayam Panggang
   size            String       // Small, Large, Regular, Single, Triple, 350 ml
@@ -156,6 +170,8 @@ model ProductVariant {
 // 4. Warehouse & Stock Management
 // -------------------------------------------------------------
 model WarehouseLocation {
+  archivedAt DateTime?
+  version Int @default(0)
   code      String       @id // WH-JKT, CAFE-JKT
   name      String
   type      String       @default("Internal")
@@ -182,6 +198,9 @@ model StockLevel {
 }
 
 model StockMove {
+  actorId String?
+  reason String?
+  journalEntryId String?
   id             String         @id @default(cuid())
   moveNumber     String         @unique // SM/2026/0001
   date           DateTime       @default(now())
@@ -203,6 +222,8 @@ model StockMove {
 // 5. Accounting, CoA & General Ledger
 // -------------------------------------------------------------
 model Account {
+  archivedAt DateTime?
+  version Int @default(0)
   code           String        @id // 1010, 1020, 1030, etc.
   name           String
   type           AccountType
@@ -215,6 +236,7 @@ model Account {
 }
 
 model JournalEntry {
+  reversalOfId String? @unique
   id             String        @id @default(cuid())
   entryNumber    String        @unique // JE/2026/0001
   date           DateTime      @default(now())
@@ -248,6 +270,8 @@ model JournalItem {
 // 6. CRM & Pipeline
 // -------------------------------------------------------------
 model CrmLead {
+  archivedAt DateTime?
+  version Int @default(0)
   id              String        @id // LD0003
   name            String
   contactId       String
@@ -264,6 +288,7 @@ model CrmLead {
 // 7. Sales, Quotation & Order
 // -------------------------------------------------------------
 model SalesOrder {
+  version Int @default(0)
   id                 String        @id @default(cuid())
   orderNumber        String        @unique // S00006, S00007
   contactId          String
@@ -291,6 +316,7 @@ model SalesOrder {
 }
 
 model SalesOrderLine {
+  reservations StockReservation[]
   id              String         @id @default(cuid())
   salesOrderId    String
   productSku      String
@@ -345,6 +371,7 @@ model DeliveryOrderLine {
 // 9. Purchasing & Vendor Receipts
 // -------------------------------------------------------------
 model PurchaseOrder {
+  version Int @default(0)
   id             String          @id @default(cuid())
   poNumber       String          @unique // P00006, P00007
   vendorId       String
@@ -410,6 +437,7 @@ model GoodsReceiptLine {
 // 10. Customer Invoicing & Vendor Bills
 // -------------------------------------------------------------
 model CustomerInvoice {
+  version Int @default(0)
   id                String         @id @default(cuid())
   invoiceNumber     String         @unique // INV/2026/0007
   salesOrderId      String
@@ -452,6 +480,7 @@ model CustomerInvoiceLine {
 }
 
 model VendorBill {
+  version Int @default(0)
   id                String         @id @default(cuid())
   billNumber        String         @unique // BILL/2026/0007
   purchaseOrderId   String
@@ -495,6 +524,8 @@ model VendorBillLine {
 // 11. Payments
 // -------------------------------------------------------------
 model Payment {
+  reversedAt DateTime?
+  reversalJournalId String?
   id            String           @id @default(cuid())
   paymentNumber String           @unique // PAY/2026/0001
   paymentType   String           // CUSTOMER_INBOUND, VENDOR_OUTBOUND
@@ -538,6 +569,7 @@ model PosSession {
 }
 
 model PosOrder {
+  refund PosRefund?
   id            String         @id @default(cuid())
   orderNumber   String         @unique // POS/2026/0001
   sessionId     String
@@ -689,4 +721,66 @@ model AuditLog {
 
   @@index([documentType, documentId])
   @@index([timestamp])
+}
+
+model Category {
+  code String @id
+  name String
+  archivedAt DateTime?
+  version Int @default(0)
+  products ProductVariant[]
+}
+model UnitOfMeasure {
+  code String @id
+  name String
+  archivedAt DateTime?
+  version Int @default(0)
+}
+model VendorPrice {
+  id String @id @default(cuid())
+  vendorId String
+  productSku String
+  currency String @default("IDR")
+  minimumQty Int @default(1)
+  price Float
+  version Int @default(0)
+  archivedAt DateTime?
+  vendor Contact @relation(fields: [vendorId], references: [id])
+  product ProductVariant @relation(fields: [productSku], references: [sku])
+  @@unique([vendorId, productSku, minimumQty])
+}
+model StockReservation {
+  id String @id @default(cuid())
+  salesOrderLineId String
+  locationCode String
+  quantity Int
+  line SalesOrderLine @relation(fields: [salesOrderLineId], references: [id])
+  @@unique([salesOrderLineId, locationCode])
+}
+model DocumentSequence {
+  type String @id
+  value Int
+}
+model RequestIdentity {
+  id String @id
+  fingerprint String
+  result String
+  createdAt DateTime @default(now())
+}
+model PosRefund {
+  id String @id @default(cuid())
+  refundNumber String @unique
+  orderId String @unique
+  order PosOrder @relation(fields: [orderId], references: [id])
+  amount Float
+  cost Float
+  reason String
+  actorId String
+  createdAt DateTime @default(now())
+}
+
+model SchemaMigration {
+  name String @id
+  checksum String
+  appliedAt DateTime @default(now())
 }

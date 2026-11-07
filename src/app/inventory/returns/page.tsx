@@ -1,6 +1,9 @@
 "use client";
+import DialogFrame from "@/components/ui/DialogFrame";
 
 import React, { useState, useEffect, useMemo } from "react";
+import ReturnForms from "@/components/ReturnForms";
+import DocumentTrail from "@/components/DocumentTrail";
 import AppLayout from "@/components/AppLayout";
 import StatusBadge from "@/components/StatusBadge";
 import KPICard from "@/components/KPICard";
@@ -340,12 +343,10 @@ export default function ReturnsPage() {
           <div>
             <div className="flex items-center space-x-2">
               <span className="w-2.5 h-2.5 rounded-full bg-[#1d4ed8]" />
-              <h1 className="text-xl font-bold text-[#0f172a] tracking-tight">
+              <h1 className="text-2xl font-semibold text-[#0f172a] tracking-tight">
                 Return Inspection & Credit Note
               </h1>
-              <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-[#1d4ed8]/10 text-[#1d4ed8] border border-[#1d4ed8]/20">
-                Wireframe S-15
-              </span>
+
             </div>
             <p className="text-xs text-[#64748b] mt-1">
               Alur retur penjualan berjenjang: QC fisik gudang (SR-11), pengembalian stok & penerbitan Credit Note (F-18).
@@ -366,6 +367,7 @@ export default function ReturnsPage() {
               Customer Invoices
             </Link>
             <button
+              hidden={!["OWNER","WAREHOUSE"].includes(currentUser?.role)}
               onClick={() => setShowCreateModal(true)}
               className="px-3.5 py-1.5 bg-[#1d4ed8] hover:bg-[#1e3a8a] text-white rounded-lg text-xs font-bold flex items-center space-x-1.5 shadow-xs transition-colors focus-brand-ring"
             >
@@ -438,7 +440,7 @@ export default function ReturnsPage() {
           <div className="flex items-center space-x-3">
             <div className="relative">
               <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b]" />
-              <input
+              <input aria-label="Cari no. retur / customer / invoice..."
                 type="text"
                 placeholder="Cari no. retur / customer / invoice..."
                 value={searchQuery}
@@ -499,7 +501,7 @@ export default function ReturnsPage() {
 
               {/* Action Buttons */}
               <div className="flex items-center space-x-2">
-                {selectedReturn.inspectionStatus === "PENDING" && (
+                {["OWNER","WAREHOUSE"].includes(currentUser?.role) && selectedReturn.inspectionStatus === "PENDING" && (
                   <button
                     onClick={() => {
                       setAcceptedQtyInput(selectedReturn.lines[0]?.returnedQty || 1);
@@ -513,7 +515,7 @@ export default function ReturnsPage() {
                   </button>
                 )}
 
-                {selectedReturn.inspectionStatus === "ACCEPTED" && selectedReturn.status !== "DONE" && (
+                {["OWNER","FINANCE"].includes(currentUser?.role) && selectedReturn.inspectionStatus === "ACCEPTED" && selectedReturn.status !== "DONE" && (
                   <button
                     onClick={() => handleProcessCreditNote(selectedReturn.id)}
                     className="px-3.5 py-1.5 bg-[#1d4ed8] hover:bg-[#1e3a8a] text-white rounded-lg text-xs font-bold flex items-center space-x-1.5 shadow-2xs transition-colors focus-brand-ring"
@@ -583,13 +585,13 @@ export default function ReturnsPage() {
                 <table className="w-full text-left text-xs">
                   <thead className="bg-[#f1f5f9] border-b border-[#e2e8f0] text-[#64748b] font-semibold uppercase tracking-wider">
                     <tr>
-                      <th className="py-3 px-4">SKU</th>
-                      <th className="py-3 px-4">Deskripsi Produk</th>
-                      <th className="py-3 px-4 text-center">Dikembalikan</th>
-                      <th className="py-3 px-4 text-center">Accepted</th>
-                      <th className="py-3 px-4 text-center">Rejected</th>
-                      <th className="py-3 px-4 text-right">Cost Reverse</th>
-                      <th className="py-3 px-4 text-right">Credit Gross</th>
+                      <th scope="col" className="py-3 px-4">SKU</th>
+                      <th scope="col" className="py-3 px-4">Deskripsi Produk</th>
+                      <th scope="col" className="py-3 px-4 text-center">Dikembalikan</th>
+                      <th scope="col" className="py-3 px-4 text-center">Accepted</th>
+                      <th scope="col" className="py-3 px-4 text-center">Rejected</th>
+                      <th scope="col" className="py-3 px-4 text-right">Cost Reverse</th>
+                      <th scope="col" className="py-3 px-4 text-right">Credit Gross</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#e2e8f0] font-mono">
@@ -643,146 +645,10 @@ export default function ReturnsPage() {
           </div>
         )}
 
-        {/* Modal Buat Permintaan Retur */}
-        {showCreateModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-in fade-in">
-            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-[#e2e8f0]">
-              <div className="flex items-center justify-between border-b border-[#e2e8f0] pb-3">
-                <h2 className="text-base font-bold text-[#0f172a] flex items-center space-x-2">
-                  <RotateCcw className="w-4 h-4 text-[#1d4ed8]" />
-                  <span>Buat Permintaan Retur Pelanggan</span>
-                </h2>
-                <button
-                  onClick={() => setShowCreateModal(false)}
-                  className="text-[#64748b] hover:text-[#0f172a] focus-brand-ring rounded"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="space-y-3 text-xs">
-                <div>
-                  <label className="font-bold text-[#0f172a] block mb-1">Pilih Faktur Penjualan (Customer Invoice):</label>
-                  <select
-                    value={selectedInvoiceId}
-                    onChange={(e) => setSelectedInvoiceId(e.target.value)}
-                    className="w-full border border-[#e2e8f0] rounded-lg p-2 font-mono text-xs text-[#0f172a] focus:outline-none focus:ring-1 focus:ring-[#1d4ed8] focus-brand-ring"
-                  >
-                    <option value="">-- Pilih Customer Invoice --</option>
-                    {invoices.map((inv) => (
-                      <option key={inv.id} value={inv.id}>
-                        {inv.invoiceNumber} — {inv.customer?.name} ({inv.status})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="font-bold text-[#0f172a] block mb-1">Kuantitas Barang Retur:</label>
-                  <input
-                    type="number"
-                    value={returnQty}
-                    onChange={(e) => setReturnQty(Number(e.target.value))}
-                    min={1}
-                    className="w-full border border-[#e2e8f0] rounded-lg p-2 font-mono font-bold text-xs text-[#0f172a] focus:outline-none focus:ring-1 focus:ring-[#1d4ed8] focus-brand-ring"
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end space-x-2 pt-4 border-t border-[#e2e8f0]">
-                <button
-                  onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 border border-[#e2e8f0] rounded-lg text-xs font-semibold text-[#64748b] hover:bg-[#f1f5f9] focus-brand-ring"
-                >
-                  Batal
-                </button>
-                <button
-                  onClick={handleCreateReturn}
-                  className="px-4 py-2 bg-[#1d4ed8] hover:bg-[#1e3a8a] text-white rounded-lg text-xs font-bold shadow-xs focus-brand-ring"
-                >
-                  Simpan Permintaan Retur
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Modal Inspeksi Kualitas Gudang */}
-        {showInspectModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-in fade-in">
-            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-[#e2e8f0]">
-              <div className="flex items-center justify-between border-b border-[#e2e8f0] pb-3">
-                <h2 className="text-base font-bold text-[#0f172a] flex items-center space-x-2">
-                  <ClipboardCheck className="w-4 h-4 text-[#6d28d9]" />
-                  <span>Pemeriksaan Kualitas Barang Retur (SR-11)</span>
-                </h2>
-                <button
-                  onClick={() => setShowInspectModal(false)}
-                  className="text-[#64748b] hover:text-[#0f172a] focus-brand-ring rounded"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <p className="text-xs text-[#64748b]">
-                Inspeksi mutu fisik barang sebelum dimasukkan kembali ke persediaan gudang atau dihapusbukukan sebagai limbah.
-              </p>
-
-              <div className="space-y-3 text-xs">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="font-bold text-[#0f172a] block mb-1">Diterima (Accepted Qty):</label>
-                    <input
-                      type="number"
-                      value={acceptedQtyInput}
-                      onChange={(e) => setAcceptedQtyInput(Number(e.target.value))}
-                      min={0}
-                      className="w-full border border-[#e2e8f0] rounded-lg p-2 font-mono font-bold text-xs text-[#0f172a] focus:outline-none focus:ring-1 focus:ring-[#1d4ed8] focus-brand-ring"
-                    />
-                  </div>
-                  <div>
-                    <label className="font-bold text-[#0f172a] block mb-1">Ditolak (Rejected Qty):</label>
-                    <input
-                      type="number"
-                      value={rejectedQtyInput}
-                      onChange={(e) => setRejectedQtyInput(Number(e.target.value))}
-                      min={0}
-                      className="w-full border border-[#e2e8f0] rounded-lg p-2 font-mono font-bold text-xs text-[#0f172a] focus:outline-none focus:ring-1 focus:ring-[#1d4ed8] focus-brand-ring"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="font-bold text-[#0f172a] block mb-1">Catatan Hasil Pemeriksaan Mutu:</label>
-                  <textarea
-                    value={inspectNotes}
-                    onChange={(e) => setInspectNotes(e.target.value)}
-                    rows={2}
-                    className="w-full border border-[#e2e8f0] rounded-lg p-2 text-xs text-[#0f172a] focus:outline-none focus:ring-1 focus:ring-[#1d4ed8] focus-brand-ring"
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end space-x-2 pt-4 border-t border-[#e2e8f0]">
-                <button
-                  onClick={() => setShowInspectModal(false)}
-                  className="px-4 py-2 border border-[#e2e8f0] rounded-lg text-xs font-semibold text-[#64748b] hover:bg-[#f1f5f9] focus-brand-ring"
-                >
-                  Batal
-                </button>
-                <button
-                  onClick={handleInspectReturn}
-                  className="px-4 py-2 bg-[#7c3aed] hover:bg-[#6d28d9] text-[#ffffff] rounded-lg text-xs font-bold shadow-xs focus-brand-ring"
-                >
-                  Simpan Hasil Inspeksi
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
+        {showCreateModal&&<ReturnForms invoices={invoices} onClose={()=>setShowCreateModal(false)} onSaved={async record=>{setShowCreateModal(false);await fetchReturnsAndInvoices();setSelectedReturn(record);}}/>}
+        {showInspectModal&&selectedReturn&&<ReturnForms record={selectedReturn} onClose={()=>setShowInspectModal(false)} onSaved={async record=>{setShowInspectModal(false);await fetchReturnsAndInvoices();setSelectedReturn(record);}}/>}
         {/* Collapsible QA Automated Test Runner: T-29 & T-30 */}
-        <details className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
+        <details hidden className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
           <summary className="cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white select-none">
             <div className="flex items-center space-x-2">
               <span className="px-2 py-0.5 rounded-md bg-[#7c3aed] text-[#ffffff] font-bold text-[10px] uppercase">
@@ -859,6 +725,7 @@ export default function ReturnsPage() {
           </div>
         </details>
       </div>
+      {selectedReturn && <DocumentTrail kind="returns" record={selectedReturn}/>}
     </AppLayout>
   );
 }

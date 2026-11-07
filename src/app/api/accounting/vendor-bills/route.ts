@@ -1,9 +1,14 @@
+import { idempotent } from "@/lib/atomic";
+import { authorizeApi } from "@/lib/apiAuthorization";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { createVendorBill } from "@/lib/purchaseEngine";
 
 export async function GET(request: NextRequest) {
+  const accessDenied = await authorizeApi(request);
+  if (accessDenied) return accessDenied;
+
   try {
     const user = await getCurrentUser(request);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -25,6 +30,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const accessDenied = await authorizeApi(request);
+  if (accessDenied) return accessDenied;
+
   try {
     const user = await getCurrentUser(request);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -36,12 +44,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Purchase Order ID dan minimal satu baris tagihan wajib disertakan." }, { status: 400 });
     }
 
-    const bill = await createVendorBill({
+    const bill = await idempotent(user, "CREATE_ACCOUNTING_VENDOR-BILLS", request.headers.get("idempotency-key") || undefined, body, () => createVendorBill({
       purchaseOrderId,
       receiptId,
       lines,
       actor: user,
-    });
+    }));
 
     return NextResponse.json({ success: true, bill });
   } catch (error: unknown) {

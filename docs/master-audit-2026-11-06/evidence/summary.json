@@ -1,0 +1,18 @@
+{
+  "date": "2026-11-06",
+  "timezone": "Asia/Jakarta",
+  "pdfPages": 34,
+  "pdfSha256": "6d6c0f9b8a2b301518a37e7a469031ace8722ca258647599a37d19db0607a242",
+  "sourceFiles": 111,
+  "apiRouteFiles": 49,
+  "pageFiles": 17,
+  "legacyAssertionsPassed": 128,
+  "legacyAssertionsFailed": 0,
+  "targetedProbes": 31,
+  "targetedPasses": 1,
+  "targetedFailures": 30,
+  "probeErrors": 0,
+  "typecheckExit": 0,
+  "originalFilesChanged": [],
+  "executionScope": "Copied source and disposable database; handler/engine calls, not HTTP/browser or concurrent requests."
+}

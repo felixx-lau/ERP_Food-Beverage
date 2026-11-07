@@ -1,0 +1,1584 @@
+[
+  {
+    "file": "src/app/accounting/invoices/page.tsx",
+    "lines": 637,
+    "controls": [
+      {
+        "line": 27,
+        "code": "const fetchSession = async () => {"
+      },
+      {
+        "line": 28,
+        "code": "const res = await fetch(\"/api/auth/me\");"
+      },
+      {
+        "line": 35,
+        "code": "const fetchInvoices = async () => {"
+      },
+      {
+        "line": 38,
+        "code": "const res = await fetch(\"/api/accounting/invoices\");"
+      },
+      {
+        "line": 51,
+        "code": "const fetchInvoiceDetail = async (id: string) => {"
+      },
+      {
+        "line": 53,
+        "code": "const res = await fetch(`/api/accounting/invoices/${id}`);"
+      },
+      {
+        "line": 63,
+        "code": "const fetchSalesOrders = async () => {"
+      },
+      {
+        "line": 65,
+        "code": "const res = await fetch(\"/api/sales/orders\");"
+      },
+      {
+        "line": 81,
+        "code": "const handleSwitchRole = async (targetRole: string) => {"
+      },
+      {
+        "line": 82,
+        "code": "const res = await fetch(\"/api/auth/switch-role\", {"
+      },
+      {
+        "line": 94,
+        "code": "const handlePostInvoice = async (invoiceId: string) => {"
+      },
+      {
+        "line": 96,
+        "code": "const res = await fetch(`/api/accounting/invoices/${invoiceId}/post`, {"
+      },
+      {
+        "line": 113,
+        "code": "const handleCreateInvoice = async () => {"
+      },
+      {
+        "line": 125,
+        "code": "const res = await fetch(\"/api/accounting/invoices\", {"
+      },
+      {
+        "line": 155,
+        "code": "const runTestT19 = async () => {"
+      },
+      {
+        "line": 160,
+        "code": "const resDeliveries = await fetch(\"/api/inventory/delivery\");"
+      },
+      {
+        "line": 169,
+        "code": "const resInv = await fetch(\"/api/accounting/invoices\", {"
+      },
+      {
+        "line": 191,
+        "code": "const resPost = await fetch(`/api/accounting/invoices/${dataInv.invoice.id}/post`, {"
+      },
+      {
+        "line": 219,
+        "code": "const runTestT20 = async () => {"
+      },
+      {
+        "line": 224,
+        "code": "const resDeliveries = await fetch(\"/api/inventory/delivery\");"
+      },
+      {
+        "line": 233,
+        "code": "const resExcess = await fetch(\"/api/accounting/invoices\", {"
+      },
+      {
+        "line": 266,
+        "code": "wireframe=\"Wireframe S-10\""
+      },
+      {
+        "line": 270,
+        "code": "onClick={() => setShowCreateModal(true)}"
+      },
+      {
+        "line": 349,
+        "code": "onClick={() => handlePostInvoice(selectedInvoice.id)}"
+      },
+      {
+        "line": 548,
+        "code": "onClick={() => setShowCreateModal(false)}"
+      },
+      {
+        "line": 554,
+        "code": "onClick={handleCreateInvoice}"
+      },
+      {
+        "line": 587,
+        "code": "onClick={runTestT19}"
+      },
+      {
+        "line": 595,
+        "code": "onClick={runTestT20}"
+      }
+    ]
+  },
+  {
+    "file": "src/app/accounting/journal-entries/page.tsx",
+    "lines": 594,
+    "controls": [
+      {
+        "line": 40,
+        "code": "const fetchSession = async () => {"
+      },
+      {
+        "line": 42,
+        "code": "const res = await fetch(\"/api/auth/me\");"
+      },
+      {
+        "line": 52,
+        "code": "const fetchJournalEntries = async () => {"
+      },
+      {
+        "line": 56,
+        "code": "const res = await fetch(\"/api/accounting/journal-entries\");"
+      },
+      {
+        "line": 83,
+        "code": "const handleSwitchRole = async (targetRole: string) => {"
+      },
+      {
+        "line": 84,
+        "code": "const res = await fetch(\"/api/auth/switch-role\", {"
+      },
+      {
+        "line": 121,
+        "code": "const runTestT25 = async () => {"
+      },
+      {
+        "line": 126,
+        "code": "const resDeliveries = await fetch(\"/api/accounting/journal-entries?journalType=STOCK_DELIVERY\");"
+      },
+      {
+        "line": 129,
+        "code": "const resInvoices = await fetch(\"/api/accounting/journal-entries?journalType=CUSTOMER_INVOICE\");"
+      },
+      {
+        "line": 173,
+        "code": "const runTestT26 = async () => {"
+      },
+      {
+        "line": 178,
+        "code": "const resInvoices = await fetch(\"/api/accounting/invoices\");"
+      },
+      {
+        "line": 187,
+        "code": "const resRetry = await fetch(`/api/accounting/invoices/${targetInvoice.id}/post`, {"
+      },
+      {
+        "line": 192,
+        "code": "const resEntries = await fetch(`/api/accounting/journal-entries?sourceDocument=${targetInvoice.invoiceNumber}`);"
+      },
+      {
+        "line": 255,
+        "code": "onClick={fetchJournalEntries}"
+      },
+      {
+        "line": 274,
+        "code": "onClick={() => handleSwitchRole(\"FINANCE\")}"
+      },
+      {
+        "line": 280,
+        "code": "onClick={() => handleSwitchRole(\"OWNER\")}"
+      },
+      {
+        "line": 335,
+        "code": "onClick={() => setJournalFilter(tab.key)}"
+      },
+      {
+        "line": 537,
+        "code": "onClick={runTestT25}"
+      },
+      {
+        "line": 545,
+        "code": "onClick={runTestT26}"
+      }
+    ]
+  },
+  {
+    "file": "src/app/accounting/payments/page.tsx",
+    "lines": 637,
+    "controls": [
+      {
+        "line": 43,
+        "code": "const fetchSession = async () => {"
+      },
+      {
+        "line": 45,
+        "code": "const res = await fetch(\"/api/auth/me\");"
+      },
+      {
+        "line": 55,
+        "code": "const fetchPaymentsAndInvoices = async () => {"
+      },
+      {
+        "line": 59,
+        "code": "fetch(\"/api/accounting/payments\"),"
+      },
+      {
+        "line": 60,
+        "code": "fetch(\"/api/accounting/invoices\"),"
+      },
+      {
+        "line": 86,
+        "code": "const handleSwitchRole = async (targetRole: string) => {"
+      },
+      {
+        "line": 87,
+        "code": "const res = await fetch(\"/api/auth/switch-role\", {"
+      },
+      {
+        "line": 101,
+        "code": "const handleRegisterPayment = async () => {"
+      },
+      {
+        "line": 108,
+        "code": "const res = await fetch(\"/api/accounting/payments\", {"
+      },
+      {
+        "line": 133,
+        "code": "const runTestT23 = async () => {"
+      },
+      {
+        "line": 141,
+        "code": "const resInv = await fetch(\"/api/accounting/invoices\");"
+      },
+      {
+        "line": 151,
+        "code": "const resPay = await fetch(\"/api/accounting/payments\", {"
+      },
+      {
+        "line": 182,
+        "code": "const runTestT24 = async () => {"
+      },
+      {
+        "line": 187,
+        "code": "const resInv = await fetch(\"/api/accounting/invoices\");"
+      },
+      {
+        "line": 196,
+        "code": "const resExcess = await fetch(\"/api/accounting/payments\", {"
+      },
+      {
+        "line": 285,
+        "code": "onClick={fetchPaymentsAndInvoices}"
+      },
+      {
+        "line": 388,
+        "code": "onClick={handleRegisterPayment}"
+      },
+      {
+        "line": 507,
+        "code": "<th scope=\"col\" className=\"py-3.5 px-4\" aria-sort={table.sort.key === \"paymentDate\" ? table.sort.direction === \"asc\" ? \"ascending\" : \"descending\" : \"none\"}><SortLabel active={table.sort.key === \"paymentDate\"} direction={table.sort.direction} onClick={() => table.toggleSort(\"paymentDate\")}>Tanggal</SortLabel></th>"
+      },
+      {
+        "line": 511,
+        "code": "<th scope=\"col\" className=\"py-3.5 px-4 text-right\" aria-sort={table.sort.key === \"amount\" ? table.sort.direction === \"asc\" ? \"ascending\" : \"descending\" : \"none\"}><SortLabel active={table.sort.key === \"amount\"} direction={table.sort.direction} onClick={() => table.toggleSort(\"amount\")}>Nominal Bayar</SortLabel></th>"
+      },
+      {
+        "line": 580,
+        "code": "onClick={runTestT23}"
+      },
+      {
+        "line": 588,
+        "code": "onClick={runTestT24}"
+      }
+    ]
+  },
+  {
+    "file": "src/app/accounting/vendor-bills/page.tsx",
+    "lines": 408,
+    "controls": [
+      {
+        "line": 20,
+        "code": "const fetchSession = async () => {"
+      },
+      {
+        "line": 21,
+        "code": "const res = await fetch(\"/api/auth/me\");"
+      },
+      {
+        "line": 28,
+        "code": "const fetchBills = async () => {"
+      },
+      {
+        "line": 31,
+        "code": "const res = await fetch(\"/api/accounting/vendor-bills\");"
+      },
+      {
+        "line": 44,
+        "code": "const fetchBillDetail = async (id: string) => {"
+      },
+      {
+        "line": 46,
+        "code": "const res = await fetch(`/api/accounting/vendor-bills/${id}`);"
+      },
+      {
+        "line": 61,
+        "code": "const handleSwitchRole = async (targetRole: string) => {"
+      },
+      {
+        "line": 62,
+        "code": "const res = await fetch(\"/api/auth/switch-role\", {"
+      },
+      {
+        "line": 74,
+        "code": "const runTestT21 = async () => {"
+      },
+      {
+        "line": 79,
+        "code": "const resReceipts = await fetch(\"/api/inventory/receipts\");"
+      },
+      {
+        "line": 88,
+        "code": "const resBill = await fetch(\"/api/accounting/vendor-bills\", {"
+      },
+      {
+        "line": 99,
+        "code": "const resPost = await fetch(`/api/accounting/vendor-bills/${dataBill.bill.id}/post`, { method: \"POST\" });"
+      },
+      {
+        "line": 124,
+        "code": "const runTestT22 = async () => {"
+      },
+      {
+        "line": 134,
+        "code": "const resRetry = await fetch(`/api/accounting/vendor-bills/${selectedBill.id}/post`, { method: \"POST\" });"
+      },
+      {
+        "line": 137,
+        "code": "const resDup = await fetch(\"/api/accounting/vendor-bills\", {"
+      },
+      {
+        "line": 168,
+        "code": "wireframe=\"Wireframe S-11\""
+      },
+      {
+        "line": 358,
+        "code": "onClick={runTestT21}"
+      },
+      {
+        "line": 366,
+        "code": "onClick={runTestT22}"
+      }
+    ]
+  },
+  {
+    "file": "src/app/crm/leads/page.tsx",
+    "lines": 311,
+    "controls": [
+      {
+        "line": 28,
+        "code": "const fetchSession = async () => {"
+      },
+      {
+        "line": 29,
+        "code": "const res = await fetch(\"/api/auth/me\");"
+      },
+      {
+        "line": 36,
+        "code": "const fetchLeads = async () => {"
+      },
+      {
+        "line": 39,
+        "code": "const res = await fetch(\"/api/crm/leads\");"
+      },
+      {
+        "line": 54,
+        "code": "const handleSwitchRole = async (targetRole: string) => {"
+      },
+      {
+        "line": 55,
+        "code": "const res = await fetch(\"/api/auth/switch-role\", {"
+      },
+      {
+        "line": 67,
+        "code": "const runTestT07 = async () => {"
+      },
+      {
+        "line": 70,
+        "code": "const res = await fetch(\"/api/crm/leads/LD0003\");"
+      },
+      {
+        "line": 93,
+        "code": "const runTestT08 = async () => {"
+      },
+      {
+        "line": 97,
+        "code": "const createRes = await fetch(\"/api/crm/leads\", {"
+      },
+      {
+        "line": 111,
+        "code": "const patchRes = await fetch(`/api/crm/leads/${testLeadId}`, {"
+      },
+      {
+        "line": 144,
+        "code": "wireframe=\"Wireframe S-02\""
+      },
+      {
+        "line": 152,
+        "code": "onClick={() => setCreateModalOpen(true)}"
+      },
+      {
+        "line": 252,
+        "code": "onClick={runTestT07}"
+      },
+      {
+        "line": 260,
+        "code": "onClick={runTestT08}"
+      }
+    ]
+  },
+  {
+    "file": "src/app/dashboard/page.tsx",
+    "lines": 641,
+    "controls": [
+      {
+        "line": 55,
+        "code": "const fetchSession = async () => {"
+      },
+      {
+        "line": 57,
+        "code": "const res = await fetch(\"/api/auth/me\");"
+      },
+      {
+        "line": 67,
+        "code": "const fetchDashboardData = async (diff: number = simulatedDiff) => {"
+      },
+      {
+        "line": 72,
+        "code": "const mRes = await fetch(\"/api/dashboard/metrics\");"
+      },
+      {
+        "line": 80,
+        "code": "const rRes = await fetch(`/api/dashboard/reconciliation?simulatedDiff=${diff}`);"
+      },
+      {
+        "line": 99,
+        "code": "const handleSwitchRole = async (targetRole: string) => {"
+      },
+      {
+        "line": 100,
+        "code": "const res = await fetch(\"/api/auth/switch-role\", {"
+      },
+      {
+        "line": 121,
+        "code": "const handleToggleSimulation = (diff: number) => {"
+      },
+      {
+        "line": 127,
+        "code": "const runTestT31 = async () => {"
+      },
+      {
+        "line": 130,
+        "code": "const res = await fetch(\"/api/dashboard/metrics\");"
+      },
+      {
+        "line": 181,
+        "code": "const runTestT32 = async () => {"
+      },
+      {
+        "line": 184,
+        "code": "const resBalanced = await fetch(\"/api/dashboard/reconciliation?simulatedDiff=0\");"
+      },
+      {
+        "line": 187,
+        "code": "const resMismatch = await fetch(\"/api/dashboard/reconciliation?simulatedDiff=1\");"
+      },
+      {
+        "line": 237,
+        "code": "wireframe=\"Wireframe S-16\""
+      },
+      {
+        "line": 241,
+        "code": "onClick={() => fetchDashboardData(simulatedDiff)}"
+      },
+      {
+        "line": 250,
+        "code": "onClick={() => handleToggleSimulation(1)}"
+      },
+      {
+        "line": 258,
+        "code": "onClick={() => handleToggleSimulation(0)}"
+      },
+      {
+        "line": 576,
+        "code": "onClick={runTestT31}"
+      },
+      {
+        "line": 585,
+        "code": "onClick={runTestT32}"
+      }
+    ]
+  },
+  {
+    "file": "src/app/inventory/delivery/page.tsx",
+    "lines": 374,
+    "controls": [
+      {
+        "line": 20,
+        "code": "const fetchSession = async () => {"
+      },
+      {
+        "line": 21,
+        "code": "const res = await fetch(\"/api/auth/me\");"
+      },
+      {
+        "line": 28,
+        "code": "const fetchDeliveries = async () => {"
+      },
+      {
+        "line": 31,
+        "code": "const res = await fetch(\"/api/inventory/deliveries\");"
+      },
+      {
+        "line": 44,
+        "code": "const fetchDeliveryDetail = async (id: string) => {"
+      },
+      {
+        "line": 46,
+        "code": "const res = await fetch(`/api/inventory/deliveries/${id}`);"
+      },
+      {
+        "line": 61,
+        "code": "const handleSwitchRole = async (targetRole: string) => {"
+      },
+      {
+        "line": 62,
+        "code": "const res = await fetch(\"/api/auth/switch-role\", {"
+      },
+      {
+        "line": 74,
+        "code": "const runTestT11 = async () => {"
+      },
+      {
+        "line": 77,
+        "code": "const resCreate = await fetch(\"/api/sales/orders\", {"
+      },
+      {
+        "line": 88,
+        "code": "const resConfirm = await fetch(`/api/sales/orders/${orderId}/confirm`, { method: \"POST\" });"
+      },
+      {
+        "line": 93,
+        "code": "const resValidate = await fetch(`/api/inventory/deliveries/${doId}/validate`, {"
+      },
+      {
+        "line": 102,
+        "code": "const resStock = await fetch(\"/api/products/RICE-CHICK-S\");"
+      },
+      {
+        "line": 129,
+        "code": "const runTestT12 = async () => {"
+      },
+      {
+        "line": 132,
+        "code": "const resVal = await fetch(\"/api/inventory/deliveries\", { method: \"GET\" });"
+      },
+      {
+        "line": 136,
+        "code": "const resBlocked = await fetch(`/api/inventory/deliveries/${existingDO.id}/validate`, {"
+      },
+      {
+        "line": 166,
+        "code": "wireframe=\"Wireframe S-06\""
+      },
+      {
+        "line": 322,
+        "code": "onClick={runTestT11}"
+      },
+      {
+        "line": 331,
+        "code": "onClick={runTestT12}"
+      }
+    ]
+  },
+  {
+    "file": "src/app/inventory/products/page.tsx",
+    "lines": 548,
+    "controls": [
+      {
+        "line": 26,
+        "code": "const fetchSession = async () => {"
+      },
+      {
+        "line": 27,
+        "code": "const res = await fetch(\"/api/auth/me\");"
+      },
+      {
+        "line": 34,
+        "code": "const fetchProducts = async () => {"
+      },
+      {
+        "line": 37,
+        "code": "const res = await fetch(\"/api/products\");"
+      },
+      {
+        "line": 56,
+        "code": "const fetchProductDetail = async (sku: string) => {"
+      },
+      {
+        "line": 58,
+        "code": "const res = await fetch(`/api/products/${sku}`);"
+      },
+      {
+        "line": 79,
+        "code": "const handleSwitchRole = async (targetRole: string) => {"
+      },
+      {
+        "line": 80,
+        "code": "const res = await fetch(\"/api/auth/switch-role\", {"
+      },
+      {
+        "line": 92,
+        "code": "const runTestT05 = async () => {"
+      },
+      {
+        "line": 95,
+        "code": "const res = await fetch(\"/api/products/RICE-CHICK-S\");"
+      },
+      {
+        "line": 125,
+        "code": "const runTestT06 = async () => {"
+      },
+      {
+        "line": 128,
+        "code": "const resHotInit = await fetch(\"/api/products/COF-LATT-HOT\");"
+      },
+      {
+        "line": 130,
+        "code": "const resIceInit = await fetch(\"/api/products/COF-LATT-ICE\");"
+      },
+      {
+        "line": 136,
+        "code": "await fetch(\"/api/products/COF-LATT-HOT/stock\", {"
+      },
+      {
+        "line": 142,
+        "code": "const resHotAfter = await fetch(\"/api/products/COF-LATT-HOT\");"
+      },
+      {
+        "line": 144,
+        "code": "const resIceAfter = await fetch(\"/api/products/COF-LATT-ICE\");"
+      },
+      {
+        "line": 152,
+        "code": "await fetch(\"/api/products/COF-LATT-HOT/stock\", {"
+      },
+      {
+        "line": 180,
+        "code": "wireframe=\"Wireframe S-05\""
+      },
+      {
+        "line": 186,
+        "code": "onClick={() => setViewMode(\"table\")}"
+      },
+      {
+        "line": 197,
+        "code": "onClick={() => setViewMode(\"detail\")}"
+      },
+      {
+        "line": 210,
+        "code": "onClick={() => setCreateModalOpen(true)}"
+      },
+      {
+        "line": 248,
+        "code": "onClick={() => setCreateModalOpen(true)}"
+      },
+      {
+        "line": 288,
+        "code": "<th scope=\"col\" className=\"px-5 py-3.5\" aria-sort={table.sort.key === \"name\" ? table.sort.direction === \"asc\" ? \"ascending\" : \"descending\" : \"none\"}><SortLabel active={table.sort.key === \"name\"} direction={table.sort.direction} onClick={() => table.toggleSort(\"name\")}>SKU &amp; Nama Produk</SortLabel></th>"
+      },
+      {
+        "line": 292,
+        "code": "<th scope=\"col\" className=\"px-4 py-3.5 text-right\" aria-sort={table.sort.key === \"totalOnHand\" ? table.sort.direction === \"asc\" ? \"ascending\" : \"descending\" : \"none\"}><SortLabel active={table.sort.key === \"totalOnHand\"} direction={table.sort.direction} onClick={() => table.toggleSort(\"totalOnHand\")}>Total On-Hand</SortLabel></th>"
+      },
+      {
+        "line": 294,
+        "code": "<th scope=\"col\" className=\"px-4 py-3.5 text-right\" aria-sort={table.sort.key === \"salesPrice\" ? table.sort.direction === \"asc\" ? \"ascending\" : \"descending\" : \"none\"}><SortLabel active={table.sort.key === \"salesPrice\"} direction={table.sort.direction} onClick={() => table.toggleSort(\"salesPrice\")}>Harga Jual</SortLabel></th>"
+      },
+      {
+        "line": 349,
+        "code": "onClick={() => {"
+      },
+      {
+        "line": 489,
+        "code": "onClick={runTestT05}"
+      },
+      {
+        "line": 497,
+        "code": "onClick={runTestT06}"
+      }
+    ]
+  },
+  {
+    "file": "src/app/inventory/receipts/page.tsx",
+    "lines": 390,
+    "controls": [
+      {
+        "line": 20,
+        "code": "const fetchSession = async () => {"
+      },
+      {
+        "line": 21,
+        "code": "const res = await fetch(\"/api/auth/me\");"
+      },
+      {
+        "line": 28,
+        "code": "const fetchReceipts = async () => {"
+      },
+      {
+        "line": 31,
+        "code": "const res = await fetch(\"/api/inventory/receipts\");"
+      },
+      {
+        "line": 44,
+        "code": "const fetchReceiptDetail = async (id: string) => {"
+      },
+      {
+        "line": 46,
+        "code": "const res = await fetch(`/api/inventory/receipts/${id}`);"
+      },
+      {
+        "line": 61,
+        "code": "const handleSwitchRole = async (targetRole: string) => {"
+      },
+      {
+        "line": 62,
+        "code": "const res = await fetch(\"/api/auth/switch-role\", {"
+      },
+      {
+        "line": 74,
+        "code": "const runTestT17 = async () => {"
+      },
+      {
+        "line": 78,
+        "code": "const resPO = await fetch(\"/api/purchase/orders\", {"
+      },
+      {
+        "line": 87,
+        "code": "const resConf = await fetch(`/api/purchase/orders/${dataPO.order.id}/confirm`, { method: \"POST\" });"
+      },
+      {
+        "line": 92,
+        "code": "const resVal = await fetch(`/api/inventory/receipts/${receiptId}/validate`, {"
+      },
+      {
+        "line": 109,
+        "code": "const resStock = await fetch(\"/api/products/COF-LATT-HOT\");"
+      },
+      {
+        "line": 136,
+        "code": "const runTestT18 = async () => {"
+      },
+      {
+        "line": 146,
+        "code": "const resBill = await fetch(\"/api/accounting/vendor-bills\", {"
+      },
+      {
+        "line": 178,
+        "code": "wireframe=\"Wireframe S-09\""
+      },
+      {
+        "line": 338,
+        "code": "onClick={runTestT17}"
+      },
+      {
+        "line": 347,
+        "code": "onClick={runTestT18}"
+      }
+    ]
+  },
+  {
+    "file": "src/app/inventory/returns/page.tsx",
+    "lines": 863,
+    "controls": [
+      {
+        "line": 52,
+        "code": "const fetchSession = async () => {"
+      },
+      {
+        "line": 54,
+        "code": "const res = await fetch(\"/api/auth/me\");"
+      },
+      {
+        "line": 64,
+        "code": "const fetchReturnsAndInvoices = async () => {"
+      },
+      {
+        "line": 68,
+        "code": "fetch(\"/api/returns\"),"
+      },
+      {
+        "line": 69,
+        "code": "fetch(\"/api/accounting/invoices\"),"
+      },
+      {
+        "line": 95,
+        "code": "const handleSwitchRole = async (targetRole: string) => {"
+      },
+      {
+        "line": 96,
+        "code": "const res = await fetch(\"/api/auth/switch-role\", {"
+      },
+      {
+        "line": 108,
+        "code": "const handleCreateReturn = async () => {"
+      },
+      {
+        "line": 120,
+        "code": "const res = await fetch(\"/api/returns\", {"
+      },
+      {
+        "line": 147,
+        "code": "const handleInspectReturn = async () => {"
+      },
+      {
+        "line": 153,
+        "code": "const res = await fetch(`/api/returns/${selectedReturn.id}/inspect`, {"
+      },
+      {
+        "line": 181,
+        "code": "const handleProcessCreditNote = async (returnId: string) => {"
+      },
+      {
+        "line": 183,
+        "code": "const res = await fetch(`/api/returns/${returnId}/process`, {"
+      },
+      {
+        "line": 200,
+        "code": "const runTestT29 = async () => {"
+      },
+      {
+        "line": 205,
+        "code": "const resInv = await fetch(\"/api/accounting/invoices\");"
+      },
+      {
+        "line": 214,
+        "code": "const resRet = await fetch(\"/api/returns\", {"
+      },
+      {
+        "line": 224,
+        "code": "await fetch(`/api/returns/${dataRet.returnRequest.id}/inspect`, {"
+      },
+      {
+        "line": 233,
+        "code": "const resProc = await fetch(`/api/returns/${dataRet.returnRequest.id}/process`, {"
+      },
+      {
+        "line": 238,
+        "code": "const resProd = await fetch(\"/api/products/RICE-CHICK-S\");"
+      },
+      {
+        "line": 264,
+        "code": "const runTestT30 = async () => {"
+      },
+      {
+        "line": 269,
+        "code": "const resInv = await fetch(\"/api/accounting/invoices\");"
+      },
+      {
+        "line": 278,
+        "code": "const resRet = await fetch(\"/api/returns\", {"
+      },
+      {
+        "line": 289,
+        "code": "const resProc = await fetch(`/api/returns/${dataRet.returnRequest.id}/process`, {"
+      },
+      {
+        "line": 368,
+        "code": "onClick={() => setShowCreateModal(true)}"
+      },
+      {
+        "line": 375,
+        "code": "onClick={fetchReturnsAndInvoices}"
+      },
+      {
+        "line": 425,
+        "code": "onClick={() => setStatusFilter(tab.key)}"
+      },
+      {
+        "line": 503,
+        "code": "onClick={() => {"
+      },
+      {
+        "line": 517,
+        "code": "onClick={() => handleProcessCreditNote(selectedReturn.id)}"
+      },
+      {
+        "line": 655,
+        "code": "onClick={() => setShowCreateModal(false)}"
+      },
+      {
+        "line": 693,
+        "code": "onClick={() => setShowCreateModal(false)}"
+      },
+      {
+        "line": 699,
+        "code": "onClick={handleCreateReturn}"
+      },
+      {
+        "line": 719,
+        "code": "onClick={() => setShowInspectModal(false)}"
+      },
+      {
+        "line": 767,
+        "code": "onClick={() => setShowInspectModal(false)}"
+      },
+      {
+        "line": 773,
+        "code": "onClick={handleInspectReturn}"
+      },
+      {
+        "line": 806,
+        "code": "onClick={runTestT29}"
+      },
+      {
+        "line": 814,
+        "code": "onClick={runTestT30}"
+      }
+    ]
+  },
+  {
+    "file": "src/app/inventory/transfers/page.tsx",
+    "lines": 568,
+    "controls": [
+      {
+        "line": 29,
+        "code": "const fetchSession = async () => {"
+      },
+      {
+        "line": 30,
+        "code": "const res = await fetch(\"/api/auth/me\");"
+      },
+      {
+        "line": 37,
+        "code": "const fetchTransfers = async () => {"
+      },
+      {
+        "line": 40,
+        "code": "const res = await fetch(\"/api/inventory/transfers\");"
+      },
+      {
+        "line": 53,
+        "code": "const fetchProducts = async () => {"
+      },
+      {
+        "line": 55,
+        "code": "const res = await fetch(\"/api/products\");"
+      },
+      {
+        "line": 71,
+        "code": "const handleSwitchRole = async (targetRole: string) => {"
+      },
+      {
+        "line": 72,
+        "code": "const res = await fetch(\"/api/auth/switch-role\", {"
+      },
+      {
+        "line": 83,
+        "code": "const handleValidateTransfer = async (transferId: string) => {"
+      },
+      {
+        "line": 85,
+        "code": "const res = await fetch(`/api/inventory/transfers/${transferId}/validate`, {"
+      },
+      {
+        "line": 101,
+        "code": "const handleCreateTransfer = async () => {"
+      },
+      {
+        "line": 103,
+        "code": "const res = await fetch(\"/api/inventory/transfers\", {"
+      },
+      {
+        "line": 126,
+        "code": "const runTestT13 = async () => {"
+      },
+      {
+        "line": 131,
+        "code": "const resCreate = await fetch(\"/api/inventory/transfers\", {"
+      },
+      {
+        "line": 153,
+        "code": "const resVal = await fetch(`/api/inventory/transfers/${dataCreate.transfer.id}/validate`, {"
+      },
+      {
+        "line": 158,
+        "code": "const resProd = await fetch(\"/api/products/COF-LATT-ICE\");"
+      },
+      {
+        "line": 183,
+        "code": "const runTestT14 = async () => {"
+      },
+      {
+        "line": 188,
+        "code": "const resCreate = await fetch(\"/api/inventory/transfers\", {"
+      },
+      {
+        "line": 203,
+        "code": "const resVal = await fetch(`/api/inventory/transfers/${dataCreate.transfer.id}/validate`, {"
+      },
+      {
+        "line": 233,
+        "code": "wireframe=\"Wireframe S-07\""
+      },
+      {
+        "line": 237,
+        "code": "onClick={() => setShowModal(true)}"
+      },
+      {
+        "line": 307,
+        "code": "onClick={() => handleValidateTransfer(selectedTransfer.id)}"
+      },
+      {
+        "line": 476,
+        "code": "onClick={() => setShowModal(false)}"
+      },
+      {
+        "line": 482,
+        "code": "onClick={handleCreateTransfer}"
+      },
+      {
+        "line": 516,
+        "code": "onClick={runTestT13}"
+      },
+      {
+        "line": 525,
+        "code": "onClick={runTestT14}"
+      }
+    ]
+  },
+  {
+    "file": "src/app/login/page.tsx",
+    "lines": 255,
+    "controls": [
+      {
+        "line": 71,
+        "code": "const handleLogin = async (e?: React.FormEvent) => {"
+      },
+      {
+        "line": 77,
+        "code": "const res = await fetch(\"/api/auth/login\", {"
+      },
+      {
+        "line": 188,
+        "code": "onClick={() => setShowPassword(!showPassword)}"
+      },
+      {
+        "line": 229,
+        "code": "onClick={() => selectDemoAccount(acc.email)}"
+      }
+    ]
+  },
+  {
+    "file": "src/app/page.tsx",
+    "lines": 495,
+    "controls": [
+      {
+        "line": 67,
+        "code": "const fetchSession = async () => {"
+      },
+      {
+        "line": 69,
+        "code": "const res = await fetch(\"/api/auth/me\");"
+      },
+      {
+        "line": 87,
+        "code": "const handleSwitchRole = async (targetRole: string) => {"
+      },
+      {
+        "line": 89,
+        "code": "const res = await fetch(\"/api/auth/switch-role\", {"
+      },
+      {
+        "line": 104,
+        "code": "const runTestT01 = async () => {"
+      },
+      {
+        "line": 123,
+        "code": "const runTestT02 = async () => {"
+      },
+      {
+        "line": 128,
+        "code": "const res = await fetch(\"/api/accounting/general-ledger\");"
+      },
+      {
+        "line": 175,
+        "code": "onClick={() => setActiveTab(\"kanban\")}"
+      },
+      {
+        "line": 188,
+        "code": "onClick={() => setActiveTab(\"list\")}"
+      },
+      {
+        "line": 204,
+        "code": "<button onClick={() => router.push(\"/pos\")} className=\"btn-primary welcome-cta self-start shrink-0\"><Store className=\"w-4 h-4\" />Buka kasir POS<ChevronRight className=\"w-4 h-4\" /></button>"
+      },
+      {
+        "line": 212,
+        "code": "].map(action => <button key={action.label} onClick={action.action} className=\"flex items-center gap-3 text-left bg-white border border-slate-200/80 rounded-xl p-4 hover:border-indigo-300 hover:shadow-sm transition-all group\"><span className=\"w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0\"><action.icon className=\"w-5 h-5\" /></span><span><span className=\"block text-[13px] font-semibold text-slate-800\">{action.label}</span><span className=\"block text-xs text-slate-500 mt-1\">{action.hint}</span></span><Plus className=\"w-4 h-4 text-slate-400 ml-auto shrink-0 group-hover:text-indigo-600\" /></button>)}"
+      },
+      {
+        "line": 239,
+        "code": "const handleNavigate = () => {"
+      },
+      {
+        "line": 261,
+        "code": "onClick={handleNavigate}"
+      },
+      {
+        "line": 355,
+        "code": "onClick={() => {"
+      },
+      {
+        "line": 408,
+        "code": "onClick={runTestT01}"
+      },
+      {
+        "line": 417,
+        "code": "onClick={runTestT02}"
+      }
+    ]
+  },
+  {
+    "file": "src/app/pos/page.tsx",
+    "lines": 1096,
+    "controls": [
+      {
+        "line": 61,
+        "code": "const fetchSession = async () => {"
+      },
+      {
+        "line": 63,
+        "code": "const res = await fetch(\"/api/auth/me\");"
+      },
+      {
+        "line": 73,
+        "code": "const fetchSessionsAndOrders = async () => {"
+      },
+      {
+        "line": 77,
+        "code": "fetch(\"/api/pos/sessions\"),"
+      },
+      {
+        "line": 78,
+        "code": "fetch(\"/api/pos/orders\"),"
+      },
+      {
+        "line": 79,
+        "code": "fetch(\"/api/products\"),"
+      },
+      {
+        "line": 109,
+        "code": "const handleSwitchRole = async (targetRole: string) => {"
+      },
+      {
+        "line": 110,
+        "code": "const res = await fetch(\"/api/auth/switch-role\", {"
+      },
+      {
+        "line": 149,
+        "code": "const handleAddManualItem = (e: React.FormEvent) => {"
+      },
+      {
+        "line": 187,
+        "code": "const handleCheckout = async () => {"
+      },
+      {
+        "line": 199,
+        "code": "const res = await fetch(\"/api/pos/orders\", {"
+      },
+      {
+        "line": 231,
+        "code": "const handleOpenSession = async () => {"
+      },
+      {
+        "line": 235,
+        "code": "const res = await fetch(\"/api/pos/sessions\", {"
+      },
+      {
+        "line": 257,
+        "code": "const handleCloseSession = async () => {"
+      },
+      {
+        "line": 260,
+        "code": "const res = await fetch(`/api/pos/sessions/${activeSession.id}/close`, {"
+      },
+      {
+        "line": 299,
+        "code": "const runTestT27 = async () => {"
+      },
+      {
+        "line": 306,
+        "code": "const resOpen = await fetch(\"/api/pos/sessions\", {"
+      },
+      {
+        "line": 319,
+        "code": "const resOrder = await fetch(\"/api/pos/orders\", {"
+      },
+      {
+        "line": 346,
+        "code": "const resHot = await fetch(\"/api/products/COF-LATT-HOT\");"
+      },
+      {
+        "line": 350,
+        "code": "const resCookie = await fetch(\"/api/products/COOKIE-CHO-1\");"
+      },
+      {
+        "line": 377,
+        "code": "const runTestT28 = async () => {"
+      },
+      {
+        "line": 384,
+        "code": "const resOpen = await fetch(\"/api/pos/sessions\", {"
+      },
+      {
+        "line": 397,
+        "code": "const resExcess = await fetch(\"/api/pos/orders\", {"
+      },
+      {
+        "line": 409,
+        "code": "const resClose1 = await fetch(`/api/pos/sessions/${session.id}/close`, {"
+      },
+      {
+        "line": 416,
+        "code": "const resClose2 = await fetch(`/api/pos/sessions/${session.id}/close`, {"
+      },
+      {
+        "line": 468,
+        "code": "onClick={() => setCloseModalOpen(true)}"
+      },
+      {
+        "line": 476,
+        "code": "onClick={handleOpenSession}"
+      },
+      {
+        "line": 485,
+        "code": "onClick={fetchSessionsAndOrders}"
+      },
+      {
+        "line": 553,
+        "code": "onClick={() => setManualModalOpen(true)}"
+      },
+      {
+        "line": 573,
+        "code": "onClick={() => setCategoryFilter(cat.key)}"
+      },
+      {
+        "line": 590,
+        "code": "onClick={() => addToCart(product)}"
+      },
+      {
+        "line": 705,
+        "code": "onClick={() => setManualModalOpen(true)}"
+      },
+      {
+        "line": 713,
+        "code": "onClick={clearCart}"
+      },
+      {
+        "line": 744,
+        "code": "onClick={() => updateCartQty(item.sku, -1)}"
+      },
+      {
+        "line": 753,
+        "code": "onClick={() => updateCartQty(item.sku, 1)}"
+      },
+      {
+        "line": 764,
+        "code": "onClick={() => removeCartItem(item.sku)}"
+      },
+      {
+        "line": 815,
+        "code": "onClick={handleCheckout}"
+      },
+      {
+        "line": 846,
+        "code": "onClick={() => setManualModalOpen(false)}"
+      },
+      {
+        "line": 927,
+        "code": "onClick={() => setManualModalOpen(false)}"
+      },
+      {
+        "line": 955,
+        "code": "onClick={() => setCloseModalOpen(false)}"
+      },
+      {
+        "line": 997,
+        "code": "onClick={() => setCloseModalOpen(false)}"
+      },
+      {
+        "line": 1003,
+        "code": "onClick={async () => {"
+      },
+      {
+        "line": 1039,
+        "code": "onClick={runTestT27}"
+      },
+      {
+        "line": 1047,
+        "code": "onClick={runTestT28}"
+      }
+    ]
+  },
+  {
+    "file": "src/app/purchase/orders/page.tsx",
+    "lines": 383,
+    "controls": [
+      {
+        "line": 22,
+        "code": "const fetchSession = async () => {"
+      },
+      {
+        "line": 23,
+        "code": "const res = await fetch(\"/api/auth/me\");"
+      },
+      {
+        "line": 30,
+        "code": "const fetchOrders = async () => {"
+      },
+      {
+        "line": 33,
+        "code": "const res = await fetch(\"/api/purchase/orders\");"
+      },
+      {
+        "line": 46,
+        "code": "const fetchOrderDetail = async (id: string) => {"
+      },
+      {
+        "line": 48,
+        "code": "const res = await fetch(`/api/purchase/orders/${id}`);"
+      },
+      {
+        "line": 63,
+        "code": "const handleSwitchRole = async (targetRole: string) => {"
+      },
+      {
+        "line": 64,
+        "code": "const res = await fetch(\"/api/auth/switch-role\", {"
+      },
+      {
+        "line": 76,
+        "code": "const runTestT15 = async () => {"
+      },
+      {
+        "line": 81,
+        "code": "const resCreate = await fetch(\"/api/purchase/orders\", {"
+      },
+      {
+        "line": 92,
+        "code": "const resStockBefore = await fetch(\"/api/products/COF-LATT-HOT\");"
+      },
+      {
+        "line": 96,
+        "code": "const resConfirm = await fetch(`/api/purchase/orders/${poId}/confirm`, { method: \"POST\" });"
+      },
+      {
+        "line": 99,
+        "code": "const resStockAfter = await fetch(\"/api/products/COF-LATT-HOT\");"
+      },
+      {
+        "line": 126,
+        "code": "const runTestT16 = async () => {"
+      },
+      {
+        "line": 134,
+        "code": "const resRetry = await fetch(`/api/purchase/orders/${selectedOrder.id}/confirm`, { method: \"POST\" });"
+      },
+      {
+        "line": 156,
+        "code": "wireframe=\"Wireframe S-08\""
+      },
+      {
+        "line": 160,
+        "code": "onClick={() => setCreateModalOpen(true)}"
+      },
+      {
+        "line": 323,
+        "code": "onClick={runTestT15}"
+      },
+      {
+        "line": 331,
+        "code": "onClick={runTestT16}"
+      }
+    ]
+  },
+  {
+    "file": "src/app/sales/contacts/page.tsx",
+    "lines": 396,
+    "controls": [
+      {
+        "line": 49,
+        "code": "const fetchSession = async () => {"
+      },
+      {
+        "line": 51,
+        "code": "const res = await fetch(\"/api/auth/me\");"
+      },
+      {
+        "line": 61,
+        "code": "const fetchContacts = async () => {"
+      },
+      {
+        "line": 64,
+        "code": "const res = await fetch(\"/api/contacts?type=CUSTOMER\");"
+      },
+      {
+        "line": 87,
+        "code": "const handleSwitchRole = async (targetRole: string) => {"
+      },
+      {
+        "line": 88,
+        "code": "const res = await fetch(\"/api/auth/switch-role\", {"
+      },
+      {
+        "line": 100,
+        "code": "const runTestT03 = async () => {"
+      },
+      {
+        "line": 103,
+        "code": "const resC01 = await fetch(\"/api/contacts/C01\");"
+      },
+      {
+        "line": 105,
+        "code": "const resC02 = await fetch(\"/api/contacts/C02\");"
+      },
+      {
+        "line": 131,
+        "code": "const runTestT04 = async () => {"
+      },
+      {
+        "line": 134,
+        "code": "const resCreate = await fetch(\"/api/sales/orders\", {"
+      },
+      {
+        "line": 144,
+        "code": "const resConfirm = await fetch(`/api/sales/orders/${orderData.order.id}/confirm`, {"
+      },
+      {
+        "line": 171,
+        "code": "wireframe=\"Wireframe S-03\""
+      },
+      {
+        "line": 175,
+        "code": "onClick={() => setCreateModalOpen(true)}"
+      },
+      {
+        "line": 185,
+        "code": "onClick={() => setSelectedContact(c)}"
+      },
+      {
+        "line": 213,
+        "code": "onClick={() => setCreateModalOpen(true)}"
+      },
+      {
+        "line": 336,
+        "code": "onClick={runTestT03}"
+      },
+      {
+        "line": 344,
+        "code": "onClick={runTestT04}"
+      }
+    ]
+  },
+  {
+    "file": "src/app/sales/orders/page.tsx",
+    "lines": 443,
+    "controls": [
+      {
+        "line": 33,
+        "code": "const fetchSession = async () => {"
+      },
+      {
+        "line": 34,
+        "code": "const res = await fetch(\"/api/auth/me\");"
+      },
+      {
+        "line": 41,
+        "code": "const fetchOrders = async () => {"
+      },
+      {
+        "line": 44,
+        "code": "const res = await fetch(\"/api/sales/orders\");"
+      },
+      {
+        "line": 57,
+        "code": "const fetchOrderDetail = async (id: string) => {"
+      },
+      {
+        "line": 59,
+        "code": "const res = await fetch(`/api/sales/orders/${id}`);"
+      },
+      {
+        "line": 74,
+        "code": "const handleSwitchRole = async (targetRole: string) => {"
+      },
+      {
+        "line": 75,
+        "code": "const res = await fetch(\"/api/auth/switch-role\", {"
+      },
+      {
+        "line": 87,
+        "code": "const runTestT09 = async () => {"
+      },
+      {
+        "line": 90,
+        "code": "const resCreate = await fetch(\"/api/sales/orders\", {"
+      },
+      {
+        "line": 104,
+        "code": "const resConfirm = await fetch(`/api/sales/orders/${orderId}/confirm`, {"
+      },
+      {
+        "line": 108,
+        "code": "const resC01 = await fetch(\"/api/contacts/C01\");"
+      },
+      {
+        "line": 137,
+        "code": "const runTestT10 = async () => {"
+      },
+      {
+        "line": 142,
+        "code": "const resCreate = await fetch(\"/api/sales/orders\", {"
+      },
+      {
+        "line": 153,
+        "code": "const resConfirmBlocked = await fetch(`/api/sales/orders/${orderId}/confirm`, {"
+      },
+      {
+        "line": 160,
+        "code": "await fetch(`/api/sales/orders/${orderId}/approve-discount`, { method: \"POST\" });"
+      },
+      {
+        "line": 162,
+        "code": "const resConfirmOk = await fetch(`/api/sales/orders/${orderId}/confirm`, { method: \"POST\" });"
+      },
+      {
+        "line": 165,
+        "code": "const resEditBlocked = await fetch(`/api/sales/orders/${orderId}`, {"
+      },
+      {
+        "line": 198,
+        "code": "wireframe=\"Wireframe S-04\""
+      },
+      {
+        "line": 202,
+        "code": "onClick={() => setCreateModalOpen(true)}"
+      },
+      {
+        "line": 383,
+        "code": "onClick={runTestT09}"
+      },
+      {
+        "line": 391,
+        "code": "onClick={runTestT10}"
+      }
+    ]
+  }
+]

@@ -1,3 +1,4 @@
+import { authorizeApi } from "@/lib/apiAuthorization";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
@@ -5,6 +6,9 @@ import { recordAuditLog } from "@/lib/audit";
 import { Role } from "@prisma/client";
 
 export async function GET(request: NextRequest) {
+  const accessDenied = await authorizeApi(request);
+  if (accessDenied) return accessDenied;
+
   try {
     const user = await getCurrentUser(request);
 

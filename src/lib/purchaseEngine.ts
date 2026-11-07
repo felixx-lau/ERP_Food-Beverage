@@ -1,3 +1,5 @@
+import { atomic } from "./atomic";
+import { permit, quantity, money, discount, uniqueLines, editable } from "./validation";
 import { prisma } from "./prisma";
 import { OrderStatus, Role } from "@prisma/client";
 import { recordAuditLog } from "./audit";
@@ -9,13 +11,15 @@ export interface PurchaseLineInput {
   unitPrice?: number;
 }
 
-export async function createPurchaseQuotation(params: {
+async function createPurchaseQuotationImpl(params: {
   vendorId: string;
   lines: PurchaseLineInput[];
   scheduledDate?: Date;
   actor: { id: string; name: string; role: Role };
 }) {
   const { vendorId, lines: lineInputs, actor } = params;
+  uniqueLines(lineInputs, l => l.productSku);
+  lineInputs.forEach(l => { quantity(l.orderedQty); if (l.unitPrice !== undefined) money(l.unitPrice); });
 
   // Role check: PROCUREMENT or OWNER
   if (actor.role !== Role.PROCUREMENT && actor.role !== Role.OWNER) {
@@ -25,7 +29,7 @@ export async function createPurchaseQuotation(params: {
   const vendor = await prisma.contact.findUnique({
     where: { id: vendorId },
   });
-  if (!vendor || vendor.type !== "VENDOR") {
+  if (!vendor || vendor.archivedAt || vendor.type !== "VENDOR") {
     throw new Error(`Vendor ${vendorId} tidak ditemukan.`);
   }
 
@@ -36,12 +40,14 @@ export async function createPurchaseQuotation(params: {
   const productMap = new Map(products.map((p) => [p.sku, p]));
 
   let subtotal = 0;
+  const priceList = await prisma.vendorPrice.findMany({where:{vendorId,archivedAt:null},orderBy:{minimumQty:"desc"}});
   const processedLines = lineInputs.map((item) => {
     const prod = productMap.get(item.productSku);
-    if (!prod) throw new Error(`Produk ${item.productSku} tidak ditemukan.`);
+    if (!prod || prod.archivedAt) throw new Error(`Produk ${item.productSku} tidak ditemukan.`);
 
     // Use vendor price or standard cost as default
-    const price = item.unitPrice !== undefined ? item.unitPrice : prod.standardCost;
+    const listed = priceList.find(p => p.productSku === item.productSku && p.minimumQty <= item.orderedQty);
+    const price = item.unitPrice !== undefined ? item.unitPrice : listed?.price ?? prod.standardCost;
     const lineSubtotal = item.orderedQty * price;
     subtotal += lineSubtotal;
 
@@ -89,6 +95,7 @@ export async function createPurchaseQuotation(params: {
     actorName: actor.name,
     actorRole: actor.role,
     action: "CREATE_RFQ",
+    afterData: purchaseOrder,
     documentType: "PO",
     documentId: purchaseOrder.poNumber,
     notes: `RFQ ${purchaseOrder.poNumber} dibuat untuk vendor ${vendor.name}. Total: Rp ${total.toLocaleString("id-ID")}`,
@@ -97,7 +104,7 @@ export async function createPurchaseQuotation(params: {
   return purchaseOrder;
 }
 
-export async function confirmPurchaseOrder(poId: string, actor: { id: string; name: string; role: Role }) {
+async function confirmPurchaseOrderImpl(poId: string, actor: { id: string; name: string; role: Role }) {
   // Role check: PROCUREMENT or OWNER
   if (actor.role !== Role.PROCUREMENT && actor.role !== Role.OWNER) {
     throw new Error("Akses ditolak (SR-15): Hanya Procurement atau Owner yang dapat mengonfirmasi Purchase Order.");
@@ -121,11 +128,12 @@ export async function confirmPurchaseOrder(poId: string, actor: { id: string; na
     };
   }
 
+  editable(po.status);
   const result = await prisma.$transaction(async (tx) => {
     // 1. Update PO status to CONFIRMED
     const updatedPo = await tx.purchaseOrder.update({
       where: { id: po.id },
-      data: { status: OrderStatus.CONFIRMED },
+      data: { status: OrderStatus.CONFIRMED, version: { increment: 1 } },
       include: { lines: true, vendor: true },
     });
 
@@ -157,6 +165,7 @@ export async function confirmPurchaseOrder(poId: string, actor: { id: string; na
     actorName: actor.name,
     actorRole: actor.role,
     action: "CONFIRM_PO",
+    beforeData: po,
     documentType: "PO",
     documentId: po.poNumber,
     afterState: {
@@ -183,12 +192,14 @@ export interface ReceiptValidationItem {
   rejectionReason?: string;
 }
 
-export async function validateGoodsReceipt(params: {
+async function validateGoodsReceiptImpl(params: {
   receiptId: string;
   items: ReceiptValidationItem[];
   actor: { id: string; name: string; role: Role };
 }) {
   const { receiptId, items, actor } = params;
+  uniqueLines(items, l => l.lineId); uniqueLines(items, l => l.productSku);
+  items.forEach(i => { quantity(i.acceptedQty, true); quantity(i.rejectedQty, true); });
 
   // Role check: WAREHOUSE or OWNER
   if (actor.role !== Role.WAREHOUSE && actor.role !== Role.OWNER) {
@@ -210,15 +221,22 @@ export async function validateGoodsReceipt(params: {
     return { receipt, message: "Goods Receipt sudah berstatus Done (idempotent)." };
   }
 
+  if (receipt.purchaseOrder.status !== "CONFIRMED" || !["DRAFT","CONFIRMED"].includes(receipt.status)) throw new Error("PO atau receipt tidak aktif.");
+  for (const item of items) if (!receipt.lines.some(l=>l.id===item.lineId&&l.productSku===item.productSku)) throw new Error('Baris receipt tidak sesuai SKU.');
+  if (!items.some(i=>i.acceptedQty+i.rejectedQty>0)) throw new Error('Isi minimal satu hasil penerimaan.');
+  const completeItems = receipt.lines.map(l=>items.find(i=>i.lineId===l.id)||{lineId:l.id,productSku:l.productSku,acceptedQty:0,rejectedQty:0,rejectionReason:undefined});
   const destLocation = receipt.destLocation || "WH-JKT";
 
   const result = await prisma.$transaction(async (tx) => {
     let totalValuationAdded = 0;
+    const remainingLines: {productSku:string;demandQty:number}[] = [];
 
-    for (const item of items) {
-      const line = receipt.lines.find((l) => l.id === item.lineId || l.productSku === item.productSku);
+    for (const item of completeItems) {
+      const line = receipt.lines.find((l) => l.id === item.lineId && l.productSku === item.productSku);
       if (!line) throw new Error(`Baris produk ${item.productSku} tidak ditemukan di penerimaan.`);
 
+      const poSource = receipt.purchaseOrder.lines.find(l => l.productSku === item.productSku);
+      if (!poSource || poSource.receivedQty + item.acceptedQty > poSource.orderedQty) throw new Error("Kuantitas penerimaan melebihi sisa PO.");
       const accepted = item.acceptedQty || 0;
       const rejected = item.rejectedQty || 0;
 
@@ -232,6 +250,7 @@ export async function validateGoodsReceipt(params: {
         );
       }
 
+      if (line.demandQty - accepted > 0) remainingLines.push({productSku:item.productSku,demandQty:line.demandQty-accepted});
       // 1. Update stock level at destination location: ONLY acceptedQty increases on-hand stock! (SR-06 / F-12 / T-17)
       if (accepted > 0) {
         await tx.stockLevel.upsert({
@@ -266,7 +285,7 @@ export async function validateGoodsReceipt(params: {
             quantity: accepted,
             unitCost,
             totalValue: lineValuation,
-            documentType: "PO_RECEIPT",
+            documentType: "PO_RECEIPT", actorId: actor.id, reason: "PO_RECEIPT",
             documentRef: receipt.receiptNumber,
             state: "DONE",
           },
@@ -347,7 +366,9 @@ export async function validateGoodsReceipt(params: {
       data: { currentBalance: { increment: totalValuationAdded } },
     });
 
-    return { updatedReceipt, journalEntry, totalValuationAdded };
+    await tx.stockMove.updateMany({where:{documentRef:receipt.receiptNumber},data:{journalEntryId:journalEntry.id}});
+    const backorderReceipt = remainingLines.length ? await tx.goodsReceipt.create({data:{receiptNumber:await getNextSequence("RECEIPT",tx),purchaseOrderId:receipt.purchaseOrderId,destLocation,status:"DRAFT",lines:{create:remainingLines}},include:{lines:true}}) : null;
+    return { updatedReceipt, journalEntry, totalValuationAdded, backorderReceipt };
   });
 
   await recordAuditLog({
@@ -355,6 +376,7 @@ export async function validateGoodsReceipt(params: {
     actorName: actor.name,
     actorRole: actor.role,
     action: "VALIDATE_RECEIPT",
+    beforeData: receipt,
     documentType: "GOODS_RECEIPT",
     documentId: receipt.receiptNumber,
     afterState: {
@@ -374,13 +396,15 @@ export interface VendorBillItemInput {
   unitPrice?: number;
 }
 
-export async function createVendorBill(params: {
+async function createVendorBillImpl(params: {
   purchaseOrderId: string;
   receiptId?: string;
   lines: VendorBillItemInput[];
   actor: { id: string; name: string; role: Role };
 }) {
   const { purchaseOrderId, receiptId, lines: lineInputs, actor } = params;
+  uniqueLines(lineInputs, l => l.productSku);
+  lineInputs.forEach(l => { quantity(l.quantity); if (l.unitPrice !== undefined) money(l.unitPrice); });
 
   // Role check: FINANCE or OWNER
   if (actor.role !== Role.FINANCE && actor.role !== Role.OWNER) {
@@ -398,6 +422,7 @@ export async function createVendorBill(params: {
   });
 
   if (!po) throw new Error("Purchase Order tidak ditemukan.");
+  if (po.status !== "CONFIRMED") throw new Error("PO harus Confirmed.");
 
   // THREE-WAY MATCHING VALIDATION (SR-06 / F-13 / T-18):
   // Check against accepted quantities from DONE receipts
@@ -427,7 +452,7 @@ export async function createVendorBill(params: {
     // Sum already billed quantity across all posted bills
     let alreadyBilled = 0;
     for (const b of po.bills) {
-      if (b.status === "POSTED") {
+      if (b.status === "POSTED" || b.status === "PAID") {
         const bl = b.lines.find((l) => l.productSku === item.productSku);
         if (bl) alreadyBilled += bl.quantity;
       }
@@ -441,7 +466,8 @@ export async function createVendorBill(params: {
       );
     }
 
-    const price = item.unitPrice !== undefined ? item.unitPrice : poLine.unitPrice;
+    if (item.unitPrice !== undefined && item.unitPrice !== poLine.unitPrice) throw new Error("Harga Vendor Bill harus sesuai Purchase Order (SR-06).");
+    const price = poLine.unitPrice;
     const net = item.quantity * price;
     const tax = 0; // fixture tax 0%
     subtotalNet += net;
@@ -492,6 +518,7 @@ export async function createVendorBill(params: {
     actorName: actor.name,
     actorRole: actor.role,
     action: "CREATE_VENDOR_BILL",
+    afterData: vendorBill,
     documentType: "VENDOR_BILL",
     documentId: vendorBill.billNumber,
     notes: `Draft Vendor Bill ${vendorBill.billNumber} dibuat sebesar Rp ${subtotalNet.toLocaleString("id-ID")} (3-Way Match OK).`,
@@ -500,7 +527,7 @@ export async function createVendorBill(params: {
   return vendorBill;
 }
 
-export async function postVendorBill(billId: string, actor: { id: string; name: string; role: Role }) {
+async function postVendorBillImpl(billId: string, actor: { id: string; name: string; role: Role }) {
   // Role check: FINANCE or OWNER
   if (actor.role !== Role.FINANCE && actor.role !== Role.OWNER) {
     throw new Error("Akses ditolak (SR-15): Hanya Finance atau Owner yang berwenang memposting Vendor Bill.");
@@ -532,9 +559,14 @@ export async function postVendorBill(billId: string, actor: { id: string; name: 
     };
   }
 
+  editable(bill.status);
+  uniqueLines(bill.lines, l => l.productSku);
   // Duplicate Check against accepted quantities (SR-06 / SR-13 / T-22):
   // Check if posting this bill would exceed accepted quantity
   for (const bl of bill.lines) {
+    const poLine = bill.purchaseOrder.lines.find(l => l.productSku === bl.productSku);
+    quantity(bl.quantity); money(bl.unitPrice);
+    if (!poLine || poLine.unitPrice !== bl.unitPrice) throw new Error("Harga Bill tidak sesuai PO (SR-06).");
     let totalAccepted = 0;
     for (const r of bill.purchaseOrder.receipts) {
       if (r.status === "DONE") {
@@ -545,7 +577,7 @@ export async function postVendorBill(billId: string, actor: { id: string; name: 
 
     let otherPostedBilled = 0;
     for (const b of bill.purchaseOrder.bills) {
-      if (b.status === "POSTED" && b.id !== bill.id) {
+      if ((b.status === "POSTED" || b.status === "PAID") && b.id !== bill.id) {
         const otherBl = b.lines.find((l) => l.productSku === bl.productSku);
         if (otherBl) otherPostedBilled += otherBl.quantity;
       }
@@ -558,12 +590,20 @@ export async function postVendorBill(billId: string, actor: { id: string; name: 
     }
   }
 
+  let grniValue = 0;
+  for (const line of bill.lines) {
+    const product = await prisma.productVariant.findUnique({where:{sku:line.productSku}});
+    if (!product) throw new Error('SKU tidak ditemukan.');
+    grniValue += line.quantity * product.standardCost;
+  }
+  const variance = bill.totalGross - grniValue;
   const result = await prisma.$transaction(async (tx) => {
     // 1. Update bill status to POSTED
     const postedBill = await tx.vendorBill.update({
       where: { id: bill.id },
       data: {
         status: "POSTED",
+        version: { increment: 1 },
         isPosted: true,
         postedAt: new Date(),
       },
@@ -599,7 +639,7 @@ export async function postVendorBill(billId: string, actor: { id: string; name: 
             {
               accountCode: "1040",
               label: `Vendor Bill GRNI Clearance: ${bill.billNumber}`,
-              debit: bill.totalGross,
+              debit: grniValue,
               credit: 0,
             },
             {
@@ -609,6 +649,7 @@ export async function postVendorBill(billId: string, actor: { id: string; name: 
               credit: bill.totalGross,
               partnerId: bill.vendorId,
             },
+            ...(variance ? [{accountCode:"5020",label:`Purchase variance ${bill.billNumber}`,debit:Math.max(0,variance),credit:Math.max(0,-variance)}] : []),
           ],
         },
       },
@@ -618,18 +659,15 @@ export async function postVendorBill(billId: string, actor: { id: string; name: 
     // 4. Update CoA balances: GRNI drops by bill.totalGross, AP increases by bill.totalGross
     await tx.account.update({
       where: { code: "1040" },
-      data: { currentBalance: { decrement: bill.totalGross } },
+      data: { currentBalance: { decrement: grniValue } },
     });
     await tx.account.update({
       where: { code: "2010" },
       data: { currentBalance: { increment: bill.totalGross } },
     });
 
-    // 5. Update vendor openPayable
-    await tx.contact.update({
-      where: { id: bill.vendorId },
-      data: { openPayable: { increment: bill.totalGross } },
-    });
+
+    if (variance) await tx.account.update({where:{code:"5020"},data:{currentBalance:{increment:variance}}});
 
     return { postedBill, journalEntry };
   });
@@ -639,6 +677,7 @@ export async function postVendorBill(billId: string, actor: { id: string; name: 
     actorName: actor.name,
     actorRole: actor.role,
     action: "POST_VENDOR_BILL",
+    beforeData: bill,
     documentType: "VENDOR_BILL",
     documentId: bill.billNumber,
     afterState: {
@@ -656,3 +695,13 @@ export async function postVendorBill(billId: string, actor: { id: string; name: 
     alreadyPosted: false,
   };
 }
+
+export const createPurchaseQuotation = (...args: Parameters<typeof createPurchaseQuotationImpl>) => atomic(() => createPurchaseQuotationImpl(...args));
+
+export const confirmPurchaseOrder = (...args: Parameters<typeof confirmPurchaseOrderImpl>) => atomic(() => confirmPurchaseOrderImpl(...args));
+
+export const validateGoodsReceipt = (...args: Parameters<typeof validateGoodsReceiptImpl>) => atomic(() => validateGoodsReceiptImpl(...args));
+
+export const createVendorBill = (...args: Parameters<typeof createVendorBillImpl>) => atomic(() => createVendorBillImpl(...args));
+
+export const postVendorBill = (...args: Parameters<typeof postVendorBillImpl>) => atomic(() => postVendorBillImpl(...args));

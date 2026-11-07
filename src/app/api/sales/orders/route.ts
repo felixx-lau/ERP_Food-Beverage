@@ -1,9 +1,14 @@
+import { idempotent } from "@/lib/atomic";
+import { authorizeApi } from "@/lib/apiAuthorization";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { createSalesQuotation } from "@/lib/salesEngine";
 
 export async function GET(request: NextRequest) {
+  const accessDenied = await authorizeApi(request);
+  if (accessDenied) return accessDenied;
+
   try {
     const user = await getCurrentUser(request);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -13,7 +18,7 @@ export async function GET(request: NextRequest) {
         contact: true,
         lines: { include: { product: true } },
         deliveryOrders: true,
-        invoices: true,
+        invoices: { include: { lines: true } },
       },
       orderBy: { orderDate: "desc" },
     });
@@ -26,6 +31,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const accessDenied = await authorizeApi(request);
+  if (accessDenied) return accessDenied;
+
   try {
     const user = await getCurrentUser(request);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -37,75 +45,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Pelanggan dan minimal satu baris item wajib diisi." }, { status: 400 });
     }
 
-    // Process each line item; if user typed a custom product name, auto-provision it
-    const processedLines = [];
+    const processedLines: Array<{productSku:string;quantity:number;unitPrice:number;discountPercent:number}> = [];
     for (const line of lines) {
-      const inputSku = line.productSku ? String(line.productSku).trim() : "";
-      const rawName = line.productName ? String(line.productName).trim() : inputSku;
-
-      // 1. Try finding by SKU
-      let variant = inputSku
-        ? await prisma.productVariant.findUnique({ where: { sku: inputSku } })
-        : null;
-
-      // 2. If not found by SKU, try finding by Name
-      if (!variant && rawName) {
-        variant = await prisma.productVariant.findFirst({
-          where: {
-            name: { equals: rawName },
-          },
-        });
-      }
-
-      // 3. If still not found, auto-create product variant with default stock
-      if (!variant) {
-        const cleanSlug = (rawName || inputSku || "PROD")
-          .toUpperCase()
-          .replace(/[^A-Z0-9]/g, "-")
-          .replace(/-+/g, "-")
-          .slice(0, 15);
-        const autoSku = `${cleanSlug}-${Math.floor(100 + Math.random() * 900)}`;
-
-        const price = Math.max(1000, Number(line.unitPrice) || 25000);
-        const cost = Math.round(price * 0.6);
-
-        const firstVendor = await prisma.contact.findFirst({ where: { type: "VENDOR" } });
-
-        variant = await prisma.productVariant.create({
-          data: {
-            sku: autoSku,
-            name: rawName || autoSku,
-            size: "Regular",
-            color: "Original",
-            unit: "porsi",
-            salesPrice: price,
-            standardCost: cost,
-            defaultVendorId: firstVendor?.id || null,
-            stockLevels: {
-              create: [
-                { locationCode: "WH-JKT", onHand: 100, reserved: 0 },
-                { locationCode: "CAFE-JKT", onHand: 50, reserved: 0 },
-              ],
-            },
-          },
-        });
-      }
-
-      processedLines.push({
-        productSku: variant.sku,
-        quantity: Math.max(1, Number(line.quantity) || 1),
-        unitPrice: line.unitPrice !== undefined ? Number(line.unitPrice) : variant.salesPrice,
-        discountPercent: Number(line.discountPercent) || 0,
-      });
+      const variant = typeof line.productSku === 'string' ? await prisma.productVariant.findUnique({ where: { sku: line.productSku.trim() } }) : null;
+      if (!variant) return NextResponse.json({ error: 'Pilih SKU yang terdaftar. Buat produk melalui master produk terlebih dahulu.' }, { status: 400 });
+      processedLines.push({ productSku: variant.sku, quantity: line.quantity, unitPrice: line.unitPrice ?? variant.salesPrice, discountPercent: line.discountPercent ?? 0 });
     }
 
-    const order = await createSalesQuotation({
+    const order = await idempotent(user, "CREATE_SALES_ORDERS", request.headers.get("idempotency-key") || undefined, body, () => createSalesQuotation({
       contactId,
       leadId,
       lines: processedLines,
       paymentTerms,
       actor: user,
-    });
+    }));
 
     return NextResponse.json({ success: true, order });
   } catch (error: unknown) {

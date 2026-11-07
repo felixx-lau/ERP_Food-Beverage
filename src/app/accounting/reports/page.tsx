@@ -1,0 +1,18 @@
+'use client';
+import React,{useEffect,useState} from 'react';
+import Link from 'next/link';
+import AppLayout from '@/components/AppLayout';
+export default function ReportsPage(){
+  const [user,setUser]=useState<any>(null),[data,setData]=useState<any>(null),[error,setError]=useState('');
+  const load=async()=>{try{const r=await fetch('/api/accounting/reports');const d=await r.json();if(!r.ok)throw new Error(d.error);setData(d);}catch(e){setError(e instanceof Error?e.message:'Laporan gagal dimuat.');}};
+  useEffect(()=>{fetch('/api/auth/me').then(r=>r.json()).then(d=>setUser(d.user));load();},[]);
+  const rupiah=(n:number)=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(n);
+  return <AppLayout currentUser={user} title="Laporan keuangan" subtitle="Saldo dan laba/rugi berasal dari jurnal posted serta dokumen sumber." actions={<button className="btn-secondary" onClick={load}>Segarkan</button>}>
+    {error&&<p role="alert" className="bg-rose-50 text-rose-800 p-4 rounded-xl">{error}</p>}{!data&&!error&&<p role="status">Memuat laporan…</p>}{data&&<>
+      <div className="grid sm:grid-cols-4 gap-4">{[['Pendapatan',data.profitAndLoss.revenue],['Retur penjualan',data.profitAndLoss.returns],['Beban & HPP',data.profitAndLoss.expenses],['Laba / rugi',data.profitAndLoss.profit]].map(([label,value])=><div className="surface-card p-5" key={String(label)}><p className="text-sm text-slate-500">{label}</p><strong className="text-lg">{rupiah(Number(value))}</strong></div>)}</div>
+      {(!data.reconciliation.generalLedger.isBalanced||!data.reconciliation.subledgerMatching.arIsMatched||!data.reconciliation.subledgerMatching.apIsMatched||data.reconciliation.inventoryReconciliation.status!=='BALANCED'||data.trialBalance.some((a:any)=>!a.matched))&&<p role="alert" className="bg-amber-50 text-amber-900 p-4 rounded-xl">Terdapat perbedaan rekonsiliasi sumber. Periksa dokumen dan jurnal; sistem tidak membuat jurnal penyeimbang otomatis.</p>}
+      <section className="surface-card overflow-x-auto"><h2 className="font-semibold text-lg p-5">Neraca saldo · semua jurnal posted</h2><table className="w-full text-sm text-left"><thead><tr>{['Akun','Debit kumulatif','Kredit kumulatif','Saldo normal','Kesesuaian saldo'].map(h=><th scope="col" key={h} className="p-3">{h}</th>)}</tr></thead><tbody>{data.trialBalance.map((a:any)=><tr key={a.code} className="border-t"><td className="p-3">{a.code} · {a.name}</td><td className="p-3">{rupiah(a.debit)}</td><td className="p-3">{rupiah(a.credit)}</td><td className="p-3">{rupiah(a.balance)}</td><td className="p-3">{a.matched?'Sesuai':'Perlu diperiksa'}</td></tr>)}</tbody><tfoot><tr className="border-t font-semibold"><td className="p-3">Total</td><td className="p-3">{rupiah(data.trialBalance.reduce((n:number,a:any)=>n+a.debit,0))}</td><td className="p-3">{rupiah(data.trialBalance.reduce((n:number,a:any)=>n+a.credit,0))}</td><td colSpan={2}/></tr></tfoot></table></section>
+      <div className="grid lg:grid-cols-2 gap-5">{[['Piutang pelanggan',data.receivables,'/sales/contacts'],['Utang vendor',data.payables,'/sales/contacts']].map(([title,rows,url])=><section key={String(title)} className="surface-card p-5"><h2 className="font-semibold text-lg mb-3">{String(title)}</h2><table className="w-full text-sm text-left"><thead><tr><th scope="col" className="p-2">Mitra</th><th scope="col" className="p-2">Saldo</th></tr></thead><tbody>{(rows as any[]).map(r=><tr className="border-t" key={r.id}><td className="p-2"><Link className="text-blue-700 underline" href={String(url)}>{r.name}</Link></td><td className="p-2">{rupiah(r.openReceivable??r.outstanding)}</td></tr>)}</tbody></table></section>)}</div>
+    </>}
+  </AppLayout>;
+}
