@@ -1,0 +1,105 @@
+   ▲ Next.js 15.5.28
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 4.8s
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/56) ...
+   Generating static pages (14/56) 
+   Generating static pages (28/56) 
+   Generating static pages (42/56) 
+ ✓ Generating static pages (56/56)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                     Size  First Load JS
+┌ ○ /                                        4.88 kB         143 kB
+├ ○ /_not-found                                994 B         103 kB
+├ ○ /accounting/invoices                     6.51 kB         141 kB
+├ ○ /accounting/journal-entries              9.99 kB         138 kB
+├ ○ /accounting/payments                     8.89 kB         137 kB
+├ ○ /accounting/reports                      1.65 kB         130 kB
+├ ○ /accounting/vendor-bills                 5.61 kB         140 kB
+├ ƒ /api/accounting/corrections                278 B         102 kB
+├ ƒ /api/accounting/general-ledger             278 B         102 kB
+├ ƒ /api/accounting/invoices                   278 B         102 kB
+├ ƒ /api/accounting/invoices/[id]              278 B         102 kB
+├ ƒ /api/accounting/invoices/[id]/post         278 B         102 kB
+├ ƒ /api/accounting/journal-entries            278 B         102 kB
+├ ƒ /api/accounting/payments                   278 B         102 kB
+├ ƒ /api/accounting/reports                    278 B         102 kB
+├ ƒ /api/accounting/vendor-bills               278 B         102 kB
+├ ƒ /api/accounting/vendor-bills/[id]          278 B         102 kB
+├ ƒ /api/accounting/vendor-bills/[id]/post     278 B         102 kB
+├ ƒ /api/audit/logs                            278 B         102 kB
+├ ƒ /api/auth/login                            278 B         102 kB
+├ ƒ /api/auth/logout                           278 B         102 kB
+├ ƒ /api/auth/me                               278 B         102 kB
+├ ƒ /api/auth/switch-role                      278 B         102 kB
+├ ƒ /api/companies                             278 B         102 kB
+├ ƒ /api/companies/switch                      278 B         102 kB
+├ ƒ /api/contacts                              278 B         102 kB
+├ ƒ /api/contacts/[id]                         278 B         102 kB
+├ ƒ /api/crm/leads                             278 B         102 kB
+├ ƒ /api/crm/leads/[id]                        278 B         102 kB
+├ ƒ /api/dashboard/charts                      278 B         102 kB
+├ ƒ /api/dashboard/metrics                     278 B         102 kB
+├ ƒ /api/dashboard/reconciliation              278 B         102 kB
+├ ƒ /api/documents/[kind]/[id]                 278 B         102 kB
+├ ƒ /api/inventory/adjustments                 278 B         102 kB
+├ ƒ /api/inventory/deliveries                  278 B         102 kB
+├ ƒ /api/inventory/deliveries/[id]             278 B         102 kB
+├ ƒ /api/inventory/deliveries/[id]/validate    278 B         102 kB
+├ ƒ /api/inventory/movements                   278 B         102 kB
+├ ƒ /api/inventory/receipts                    278 B         102 kB
+├ ƒ /api/inventory/receipts/[id]               278 B         102 kB
+├ ƒ /api/inventory/receipts/[id]/validate      278 B         102 kB
+├ ƒ /api/inventory/transfers                   278 B         102 kB
+├ ƒ /api/inventory/transfers/[id]/validate     278 B         102 kB
+├ ƒ /api/master/[resource]                     278 B         102 kB
+├ ƒ /api/master/[resource]/[id]                278 B         102 kB
+├ ƒ /api/master/options                        278 B         102 kB
+├ ƒ /api/pos/orders                            278 B         102 kB
+├ ƒ /api/pos/orders/[id]/refund                278 B         102 kB
+├ ƒ /api/pos/sessions                          278 B         102 kB
+├ ƒ /api/pos/sessions/[id]/close               278 B         102 kB
+├ ƒ /api/products                              278 B         102 kB
+├ ƒ /api/products/[sku]                        278 B         102 kB
+├ ƒ /api/purchase/orders                       278 B         102 kB
+├ ƒ /api/purchase/orders/[id]                  278 B         102 kB
+├ ƒ /api/purchase/orders/[id]/confirm          278 B         102 kB
+├ ƒ /api/returns                               278 B         102 kB
+├ ƒ /api/returns/[id]/inspect                  278 B         102 kB
+├ ƒ /api/returns/[id]/process                  278 B         102 kB
+├ ƒ /api/sales/orders                          278 B         102 kB
+├ ƒ /api/sales/orders/[id]                     278 B         102 kB
+├ ƒ /api/sales/orders/[id]/approve-discount    278 B         102 kB
+├ ƒ /api/sales/orders/[id]/confirm             278 B         102 kB
+├ ƒ /api/seed/demo-charts                      278 B         102 kB
+├ ƒ /api/seed/reset                            278 B         102 kB
+├ ƒ /api/users                                 278 B         102 kB
+├ ƒ /api/users/[id]                            278 B         102 kB
+├ ƒ /api/workflow/[kind]/[id]                  278 B         102 kB
+├ ○ /crm/leads                               6.17 kB         138 kB
+├ ○ /dashboard                               82.5 kB         211 kB
+├ ○ /inventory/delivery                      3.92 kB         138 kB
+├ ○ /inventory/movements                     2.35 kB         130 kB
+├ ○ /inventory/products                      6.63 kB         138 kB
+├ ○ /inventory/receipts                      4.08 kB         138 kB
+├ ○ /inventory/returns                       8.79 kB         137 kB
+├ ○ /inventory/transfers                     4.98 kB         139 kB
+├ ○ /login                                   5.46 kB         107 kB
+├ ƒ /master/[resource]                         170 B         134 kB
+├ ○ /pos                                      9.7 kB         138 kB
+├ ○ /purchase/orders                         3.92 kB         141 kB
+├ ○ /sales/contacts                            266 B         134 kB
+└ ○ /sales/orders                            4.11 kB         142 kB
++ First Load JS shared by all                 102 kB
+  ├ chunks/9637-3e9878d34679f4d7.js          45.8 kB
+  ├ chunks/eb08db52-a9fd35f7b8a4eee6.js      54.2 kB
+  └ other shared chunks (total)              1.93 kB
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

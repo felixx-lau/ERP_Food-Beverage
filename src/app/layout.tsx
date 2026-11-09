@@ -13,7 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id">
+    <html lang="id" data-scroll-behavior="smooth">
       <body className="min-h-screen bg-[#F8FAFC] text-[#0F172A] flex flex-col antialiased relative selection:bg-indigo-100 selection:text-indigo-900 font-sans">
         <Providers>{children}</Providers>
       </body>

@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import ActionButton from "@/components/ui/ActionButton";
 import AppLayout from "@/components/AppLayout";
 import StatusBadge from "@/components/StatusBadge";
 import KPICard from "@/components/KPICard";
 import MasterRecordEditor from "@/components/MasterRecordEditor";
 import CreateSalesOrderModal from "@/components/CreateSalesOrderModal";
 import CreateLeadModal from "@/components/CreateLeadModal";
-import { Users2, Play, Plus, Building, DollarSign, Check, ChevronRight } from "lucide-react";
+import { Users2, Play, Plus, Building, DollarSign, Check, ChevronRight, FileText, ListFilter } from "lucide-react";
 import Link from "next/link";
 
 const STAGES = [
@@ -231,7 +232,25 @@ export default function CrmLeadsPage() {
         })}
       </div>
 
-      <div className="surface-card p-4 space-y-3"><h2 className="font-semibold">Kelola peluang & penawaran</h2><div className="flex flex-wrap gap-2">{leads.map(lead=><div className="border rounded-xl p-3" key={lead.id}><span className="text-sm mr-3">{lead.name}</span><button className="text-blue-700 underline text-sm mr-3" onClick={()=>setEditingLead(lead)}>Edit / ubah tahap</button><button className="text-blue-700 underline text-sm" onClick={()=>setQuotingLead(lead)}>Buat penawaran</button></div>)}</div><Link href="/master/leads" className="text-sm text-blue-700 underline">Daftar, pencarian, dan arsip peluang</Link></div>
+      <section className="surface-card p-4 space-y-4">
+        <h2 className="font-semibold">Kelola peluang & penawaran</h2>
+        <div className="flex flex-wrap gap-3">
+          {leads.map(lead => (
+            <div className="border rounded-xl p-3 flex flex-wrap items-center gap-2" key={lead.id}>
+              <span className="text-sm font-medium mr-3">{lead.name}</span>
+              <ActionButton action="edit" onClick={() => setEditingLead(lead)}>Edit / ubah tahap</ActionButton>
+              <button type="button" className="action-button action-button--brand" onClick={() => setQuotingLead(lead)}>
+                <FileText aria-hidden="true" />
+                <span>Buat penawaran</span>
+              </button>
+            </div>
+          ))}
+        </div>
+        <Link href="/master/leads" className="action-button action-button--secondary">
+          <ListFilter aria-hidden="true" />
+          <span>Daftar, pencarian, dan arsip peluang</span>
+        </Link>
+      </section>
       {editingLead&&<MasterRecordEditor resource="leads" record={editingLead} onClose={()=>setEditingLead(null)} onSaved={()=>{setEditingLead(null);fetchLeads();}}/>}
       {quotingLead&&<CreateSalesOrderModal isOpen leadId={quotingLead.id} initialCustomerId={quotingLead.contactId} onClose={()=>setQuotingLead(null)} onOrderCreated={()=>setQuotingLead(null)}/>}
       {/* Collapsible QA Test Runner for T-07 & T-08 */}

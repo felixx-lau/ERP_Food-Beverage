@@ -1,4 +1,5 @@
 "use client";
+import ActionButton from "./ui/ActionButton";
 import DialogFrame from "./ui/DialogFrame";
 
 import React, { useState, useEffect } from "react";
@@ -216,7 +217,7 @@ export default function ManageTeamModal({
                         </div>
                       </div>
                       <div className="flex items-center space-x-2 shrink-0">
-                        <button type="button" className="btn-secondary" onClick={()=>{setEditing(u);setName(u.name);setEmail(u.email);setRole(u.role);setPassword("");setActive(u.active);setActiveTab("create");}}>Edit{!u.active ? " (nonaktif)" : ""}</button>
+                        <ActionButton action="edit" onClick={()=>{setEditing(u);setName(u.name);setEmail(u.email);setRole(u.role);setPassword("");setActive(u.active);setActiveTab("create");}}>Edit{!u.active ? " (nonaktif)" : ""}</ActionButton>
                         <span
                           className={`px-2.5 py-1 rounded-md text-xs font-bold tracking-wide uppercase ${
                             roleObj?.color || "bg-gray-100 text-gray-800"

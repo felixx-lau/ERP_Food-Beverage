@@ -36,7 +36,7 @@ export default function GoodsReceiptsPage() {
         const data = await res.json();
         setReceipts(data.receipts || []);
         if (data.receipts?.length > 0 && !selectedReceipt) {
-          setSelectedReceipt(data.receipts.find((r: any) => r.id === new URLSearchParams(window.location.search).get("id")) || data.receipts[0]);
+          await fetchReceiptDetail((data.receipts.find((r: any) => r.id === new URLSearchParams(window.location.search).get("id")) || data.receipts[0]).id);
         }
       }
     } finally {
@@ -196,9 +196,11 @@ export default function GoodsReceiptsPage() {
         </div>
       }
     >
-      <DocumentList records={receipts} selectedId={selectedReceipt?.id} onSelect={fetchReceiptDetail}/>
 
       {selectedReceipt && <DocumentControls kind="receipts" record={selectedReceipt} role={user?.role} onChanged={async () => { await fetchReceipts(); await fetchReceiptDetail(selectedReceipt.id); }} />}
+
+      <DocumentList records={receipts} selectedId={selectedReceipt?.id} onSelect={fetchReceiptDetail}/>
+
 
       {/* Selected Receipt Detail */}
       {selectedReceipt && (

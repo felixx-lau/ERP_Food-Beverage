@@ -1,8 +1,8 @@
 'use client';
 import React,{useEffect,useRef,useState} from 'react';
 import DialogFrame from './ui/DialogFrame';
-export default function CreateVendorBillModal({onClose,onCreated}:{onClose:()=>void;onCreated:(bill:any)=>void}) {
-  const [orders,setOrders]=useState<any[]>([]),[selected,setSelected]=useState(''),[quantities,setQuantities]=useState<Record<string,number>>({}),[busy,setBusy]=useState(false),[error,setError]=useState('');const pending=useRef(false),requestKey=useRef(crypto.randomUUID());
+export default function CreateVendorBillModal({onClose,onCreated,initialOrderId=""}:{initialOrderId?:string;onClose:()=>void;onCreated:(bill:any)=>void}) {
+  const [orders,setOrders]=useState<any[]>([]),[selected,setSelected]=useState(initialOrderId),[quantities,setQuantities]=useState<Record<string,number>>({}),[busy,setBusy]=useState(false),[error,setError]=useState('');const pending=useRef(false),requestKey=useRef(crypto.randomUUID());
   useEffect(()=>{fetch('/api/purchase/orders').then(async r=>{const d=await r.json();if(!r.ok)throw new Error(d.error);setOrders((d.orders||[]).filter((p:any)=>p.status==='CONFIRMED'));}).catch(e=>setError(String(e)));},[]);
   const po=orders.find(p=>p.id===selected);
   const lines=(po?.lines||[]).map((line:any)=>({...line,billable:Math.max(0,(po.receipts||[]).filter((r:any)=>r.status==='DONE').reduce((sum:number,r:any)=>sum+r.lines.filter((l:any)=>l.productSku===line.productSku).reduce((n:number,l:any)=>n+l.acceptedQty,0),0)-(po.bills||[]).filter((b:any)=>['POSTED','PAID'].includes(b.status)).reduce((sum:number,b:any)=>sum+b.lines.filter((l:any)=>l.productSku===line.productSku).reduce((n:number,l:any)=>n+l.quantity,0),0))}));

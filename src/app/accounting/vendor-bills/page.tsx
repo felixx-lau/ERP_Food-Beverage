@@ -61,6 +61,10 @@ export default function VendorBillsPage() {
   };
 
   useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("purchaseOrderId")) setCreatingBill(true);
+  }, []);
+
+  useEffect(() => {
     fetchSession();
     fetchBills();
   }, []);
@@ -197,7 +201,7 @@ export default function VendorBillsPage() {
 
       {selectedBill && <DocumentControls kind="bills" record={selectedBill} role={user?.role} onChanged={async () => { await fetchBills(); await fetchBillDetail(selectedBill.id); }} />}
 
-      {creatingBill&&<CreateVendorBillModal onClose={()=>setCreatingBill(false)} onCreated={async bill=>{setCreatingBill(false);await fetchBills();await fetchBillDetail(bill.id);}}/>}
+      {creatingBill&&<CreateVendorBillModal initialOrderId={new URLSearchParams(window.location.search).get("purchaseOrderId") || ""} onClose={()=>setCreatingBill(false)} onCreated={async bill=>{setCreatingBill(false);await fetchBills();await fetchBillDetail(bill.id);}}/>}
       {selectedBill?.status==='POSTED'&&<Link className="btn-primary inline-flex" href={`/accounting/payments?billId=${selectedBill.id}`}>Bayar tagihan vendor</Link>}
       {/* Selected Bill Detail */}
       {selectedBill && (
@@ -207,8 +211,8 @@ export default function VendorBillsPage() {
             <div className="flex items-center space-x-3">
               <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Status Tagihan:</span>
               <div className="inline-flex rounded-xl shadow-xs overflow-hidden border border-white/60">
-                {["DRAFT", "CONFIRMED", "DONE"].map((st) => {
-                  const active = (selectedBill.status === "POSTED" && st === "DONE") || selectedBill.status === st;
+                {["DRAFT", "POSTED", "PAID"].map((st) => {
+                  const active = selectedBill.status === st;
                   return (
                     <span
                       key={st}

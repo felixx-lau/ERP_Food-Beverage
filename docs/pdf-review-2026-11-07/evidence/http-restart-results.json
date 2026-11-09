@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Anonymous master API denied",
+    "status": "PASS"
+  },
+  {
+    "name": "Real HTTP login and authenticated session",
+    "status": "PASS"
+  },
+  {
+    "name": "Record persists across server stop/start and new login",
+    "status": "PASS"
+  }
+]

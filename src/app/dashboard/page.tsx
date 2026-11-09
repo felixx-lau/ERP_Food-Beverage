@@ -312,7 +312,7 @@ export default function DashboardPage() {
       {dataError && <div role="alert" className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">{dataError}</div>}
       <section className="space-y-4" aria-label="Ringkasan operasional">
         <div><h2 className="text-lg font-semibold text-slate-900">Operasional hari ini</h2><p className="text-sm text-slate-500 mt-1">{metrics ? `${metrics.metadata.companyName} · ${metrics.metadata.reportingDate} · ${metrics.metadata.dataset}` : "Persediaan, arus kas, dan aktivitas perusahaan."}</p></div>
-        {loading ? <LoadingState cards={8} /> : metrics ? <div className="motion-stagger grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        {loading && !metrics ? <LoadingState cards={8} /> : metrics ? <div className="motion-stagger grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           {[
             {title: "Stok fisik", value: metrics.inventory.totalUnits.toLocaleString("id-ID"), subtitle: `WH ${metrics.inventory.whUnits} · Kafe ${metrics.inventory.cafeUnits} unit`, icon: Package, href: "/inventory/products"},
             {title: "Valuasi persediaan", value: formatRupiah(metrics.inventory.totalValuation), subtitle: "Biaya standar seluruh lokasi", icon: Layers, href: "/inventory/products"},

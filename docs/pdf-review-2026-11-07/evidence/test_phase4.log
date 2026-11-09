@@ -1,0 +1,57 @@
+=================================================================
+🧪 RUNNING COMPREHENSIVE TEST SUITE: PHASE 4 (T-03 s.d. T-12)
+=================================================================
+
+--- 0. Restoring Fresh Baseline Seed ---
+
+--- T-03: Contact Form & Credit Exposure Normal (F-02 / F-10) ---
+✅ [PASS] T-03-C01: C01 Credit Status: Limit Rp3.000.000, Piutang Rp1.200.000, Headroom Rp1.800.000 (Actual: Limit=3000000, AR=1200000, Headroom=1800000)
+✅ [PASS] T-03-C02: C02 Credit Status: Limit Rp350.000, Piutang Rp300.000, Headroom Rp50.000 (Actual: Limit=350000, AR=300000, Headroom=50000)
+
+--- T-04: Credit Control Edge Case (SR-09 / F-02 / F-10) ---
+✅ [PASS] T-04-A: Gross order C02 is Rp105.600 (Actual: 105600)
+✅ [PASS] T-04: System correctly blocked confirmation exceeding headroom: "Batas Kredit Terlampaui (SR-09 / T-04): Pesanan baru senilai Rp 105.600 melebihi sisa credit headroom Rp 50.000 (Defisit Rp 55.600)."
+✅ [PASS] T-04-VERIFY: Confirmation blocked: Gross Rp105.600 > Headroom Rp50.000
+✅ [PASS] T-04-HEADROOM: C02 headroom protected at Rp50.000 (Actual: 50000)
+
+--- T-05: Product and Variant SKU Normal (F-03) ---
+✅ [PASS] T-05: RICE-CHICK-S: Price=48k, Cost=26k, WH=40, CAFE=12, Total=52, Reserved WH=6, Available WH=34
+
+--- T-06: Independent Variant SKU Edge Case (SR-17 / F-03) ---
+✅ [PASS] T-06-BEFORE: Initial: Hot WH=20, Ice WH=25
+✅ [PASS] T-06: SR-17 verified: Hot changed to 25, Ice variant remained completely unaffected at 25
+
+--- T-07: CRM Lead Normal (F-04) ---
+✅ [PASS] T-07: LD0003: Stage=Qualified, Expected Revenue=Rp1.200.000, Contact=C03 (Klinik Harmoni)
+
+--- T-08: CRM Lead Minimum Data Validation Edge Case (SR-16) ---
+✅ [PASS] T-08: Moving lead without expected revenue to Proposition is blocked by SR-16 minimum data validation.
+
+--- T-09: Quotation to Sales Order Normal (F-05 / F-06 / F-10) ---
+✅ [PASS] T-09-CALC: Quotation Totals: Net=316.000, PBJT=31.600, Gross=347.600, Cost=172.000
+✅ [PASS] T-09-CONFIRM: Sales Order successfully confirmed
+✅ [PASS] T-09: C01 Exposure=Rp1.547.600, Headroom=Rp1.452.400 (Expected: 1.547.600 & 1.452.400)
+
+--- T-10: Discount Approval & Price Lock Edge Case (SR-07 / SR-08) ---
+✅ [PASS] T-10-CALC: 20% Discount Quotation: Net=76.800, PBJT=7.680, DiscountApproved=false
+✅ [PASS] T-10-APPROVAL-REQUIRED: Confirmation blocked without Owner approval: "Persetujuan Diperlukan (SR-08 / T-10): Diskon 20% melebihi batas 10%. Memerlukan persetujuan Owner sebelum order dapat dikonfirmasi."
+✅ [PASS] T-10-BLOCKED: 20% discount confirmation blocked successfully
+✅ [PASS] T-10-APPROVED: Owner approved discount successfully
+✅ [PASS] T-10-LOCKED: SO confirmed and price locked
+✅ [PASS] T-10: SR-08 Price lock verified: Post-confirmation price edit rejected: "Perubahan Tak Sah (SR-08 / F-06): Harga dan diskon telah dikunci setelah Sales Order dikonfirmasi. Perubahan ditolak."
+✅ [PASS] T-10-PRICE-LOCK-VERIFY: Price lock strictly enforced
+
+--- T-11: Partial Delivery & Backorder Normal (SR-04 / SR-10 / F-07 / F-08) ---
+✅ [PASS] T-11-DO: Delivery validated: Delivered=5, Backorder=3
+✅ [PASS] T-11-BACKORDER: Backorder created: DO=WH/OUT/0010, Qty=3
+✅ [PASS] T-11-FINANCIAL: Financial impact: COGS=Rp130.000, Eligible Invoice Net=Rp240.000, PBJT=Rp24.000, Gross=Rp264.000
+✅ [PASS] T-11-STOCK: WH On-Hand: 40 - 5 = 35 (Actual: 35)
+
+--- T-12: Zero Negative Stock & Other Orders' Reserved Protection (SR-04) ---
+✅ [PASS] T-12: SR-04 / SR-10 verified: Over-delivery of 38 units blocked: "Pengiriman memerlukan Sales Order Confirmed dan delivery aktif (SR-04 / SR-10)."
+✅ [PASS] T-12-VERIFY: Over-delivery blocked and zero negative stock preserved
+
+=================================================================
+🏁 PHASE 4 TEST SUMMARY: 27 / 27 TESTS PASSED
+=================================================================
+🎉 ALL TESTS T-03 s.d. T-12 COMPLETED WITH 100% SUCCESS AND ZERO DEFECTS!

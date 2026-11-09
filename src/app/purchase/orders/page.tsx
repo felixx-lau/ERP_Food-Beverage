@@ -38,7 +38,7 @@ export default function PurchaseOrdersPage() {
         const data = await res.json();
         setOrders(data.orders || []);
         if (data.orders?.length > 0 && !selectedOrder) {
-          setSelectedOrder(data.orders.find((r: any) => r.id === new URLSearchParams(window.location.search).get("id")) || data.orders[0]);
+          await fetchOrderDetail((data.orders.find((r: any) => r.id === new URLSearchParams(window.location.search).get("id")) || data.orders[0]).id);
         }
       }
     } finally {
@@ -181,9 +181,11 @@ export default function PurchaseOrdersPage() {
         </div>
       }
     >
-      <DocumentList records={orders} selectedId={selectedOrder?.id} onSelect={fetchOrderDetail}/>
 
       {selectedOrder && <DocumentControls kind="purchase" record={selectedOrder} role={user?.role} onChanged={async () => { await fetchOrders(); await fetchOrderDetail(selectedOrder.id); }} />}
+
+      <DocumentList records={orders} selectedId={selectedOrder?.id} onSelect={fetchOrderDetail}/>
+
 
       {/* Selected PO Detail */}
       {selectedOrder && (

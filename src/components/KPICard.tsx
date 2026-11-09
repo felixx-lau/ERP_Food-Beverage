@@ -32,16 +32,6 @@ export default function KPICard({
   onClick,
   className = "",
 }: KPICardProps) {
-  const iconVariants = {
-    primary: "text-blue-700 bg-blue-600/10 border-blue-600/20",
-    gold: "text-violet-700 bg-violet-600/15 border-violet-600/30",
-    sage: "text-indigo-700 bg-indigo-600/10 border-indigo-600/20",
-    success: "text-emerald-800 bg-emerald-500/15 border-emerald-500/30",
-    warning: "text-amber-800 bg-amber-500/15 border-amber-500/30",
-    danger: "text-rose-800 bg-rose-500/15 border-rose-500/30",
-    default: "text-slate-800 bg-slate-100 border-slate-200",
-  }[variant];
-
   const badgeVariants = {
     success: "glass-badge-success font-semibold",
     warning: "glass-badge-warning font-semibold",
@@ -58,21 +48,21 @@ export default function KPICard({
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
       onKeyDown={onClick ? e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } } : undefined}
-      className={`surface-card kpi-card group rounded-2xl p-5  relative overflow-hidden ${
+      className={`brand-card kpi-card group rounded-2xl p-5  relative overflow-hidden ${
         onClick ? "cursor-pointer" : ""
       } ${className}`}
     >
       <div className="flex items-center justify-between gap-3">
-        <p className="text-[13px] font-medium text-slate-500">{title}</p>
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${iconVariants}`}><Icon className="w-5 h-5" aria-hidden="true" /></div>
+        <p className="kpi-label text-[13px] font-medium">{title}</p>
+        <div className={`kpi-icon kpi-icon--${variant}`}><Icon className="w-5 h-5" aria-hidden="true" /></div>
       </div>
-      <p className="mt-3 text-[clamp(20px,1.7vw,28px)] font-semibold tracking-tight text-slate-900 break-words tabular-nums">{value}</p>
+      <p className="kpi-value mt-3 font-semibold tracking-tight break-words tabular-nums">{value}</p>
       {badgeText && <span className={`inline-flex mt-2 px-2 py-0.5 rounded-full text-[11px] border ${badgeVariants}`}>{badgeText}</span>}
 
       {(subtitle || trend) && (
-        <div className="mt-4 pt-3 border-t border-slate-100 flex flex-wrap gap-2 items-center justify-between text-xs">
+        <div className="kpi-footer mt-4 pt-3 border-t flex flex-wrap gap-2 items-center justify-between text-xs">
           {subtitle && (
-            <span className="text-slate-500 leading-relaxed">
+            <span className="kpi-subtitle leading-relaxed">
               {subtitle}
             </span>
           )}

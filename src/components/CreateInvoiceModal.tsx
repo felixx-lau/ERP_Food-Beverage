@@ -1,8 +1,8 @@
 'use client';
 import React,{useEffect,useRef,useState} from 'react';
 import DialogFrame from './ui/DialogFrame';
-export default function CreateInvoiceModal({onClose,onCreated}:{onClose:()=>void;onCreated:(invoice:any)=>void}) {
-  const [orders,setOrders]=useState<any[]>([]),[selected,setSelected]=useState(''),[quantities,setQuantities]=useState<Record<string,number>>({}),[busy,setBusy]=useState(false),[error,setError]=useState('');const pending=useRef(false),requestKey=useRef(crypto.randomUUID());
+export default function CreateInvoiceModal({onClose,onCreated,initialOrderId=""}:{initialOrderId?:string;onClose:()=>void;onCreated:(invoice:any)=>void}) {
+  const [orders,setOrders]=useState<any[]>([]),[selected,setSelected]=useState(initialOrderId),[quantities,setQuantities]=useState<Record<string,number>>({}),[busy,setBusy]=useState(false),[error,setError]=useState('');const pending=useRef(false),requestKey=useRef(crypto.randomUUID());
   useEffect(()=>{fetch('/api/sales/orders').then(async r=>{const d=await r.json();if(!r.ok)throw new Error(d.error);setOrders((d.orders||[]).filter((o:any)=>o.status==='CONFIRMED'));}).catch(e=>setError(String(e)));},[]);
   const order=orders.find(o=>o.id===selected);
   const lines=(order?.lines||[]).map((line:any)=>({...line,billable:Math.max(0,line.deliveredQty-(order.invoices||[]).filter((i:any)=>i.status!=='CANCELLED').reduce((sum:number,i:any)=>sum+(i.lines||[]).filter((l:any)=>l.productSku===line.productSku).reduce((n:number,l:any)=>n+l.quantity,0),0))}));

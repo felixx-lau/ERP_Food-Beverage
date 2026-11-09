@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import useTableView from "@/components/ui/useTableView";
 import { TableSearch, SortLabel, TablePagination } from "@/components/ui/TableControls";
+import ActionButton from "@/components/ui/ActionButton";
 import AppLayout from "@/components/AppLayout";
 import StatusBadge from "@/components/StatusBadge";
 import KPICard from "@/components/KPICard";
@@ -345,16 +346,10 @@ export default function ProductsPage() {
                         {marginPct}%
                       </td>
                       <td className="px-4 py-3.5 text-center font-sans">
-                        <button
-                          onClick={() => {
-                            setSelectedSku(p.sku);
-                            setViewMode("detail");
-                          }}
-                          className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl text-[11px] font-bold btn-glass-secondary hover:-translate-y-0.5 hover:shadow-xs transition-all duration-150 focus-brand-ring"
-                        >
-                          <span>Detail</span>
-                          <ArrowRight className="w-3 h-3" />
-                        </button>
+                        <ActionButton action="detail" onClick={() => {
+                          setSelectedSku(p.sku);
+                          setViewMode("detail");
+                        }} />
                       </td>
                     </tr>
                   );

@@ -1,0 +1,87 @@
+{
+  "sales": [
+    {
+      "orderNumber": "S00009",
+      "status": "CONFIRMED",
+      "productSku": "RICE-CHICK-S",
+      "quantity": 8,
+      "deliveredQty": 5
+    }
+  ],
+  "deliveries": [
+    {
+      "deliveryNumber": "WH/OUT/0008",
+      "status": "DONE",
+      "isBackorder": 0,
+      "orderedQty": 8,
+      "deliveredQty": 5,
+      "backorderQty": 3
+    },
+    {
+      "deliveryNumber": "WH/OUT/0009",
+      "status": "CONFIRMED",
+      "isBackorder": 1,
+      "orderedQty": 3,
+      "deliveredQty": 0,
+      "backorderQty": 0
+    }
+  ],
+  "invoice": [
+    {
+      "invoiceNumber": "INV/2026/0007",
+      "status": "POSTED",
+      "subtotalNet": 240000.0,
+      "pbjtTax": 24000.0,
+      "totalGross": 264000.0,
+      "paidAmount": 100000.0,
+      "outstandingAmount": 164000.0
+    }
+  ],
+  "receipt": [
+    {
+      "receiptNumber": "WH/IN/0007",
+      "status": "DONE",
+      "productSku": "COF-LATT-HOT",
+      "acceptedQty": 8,
+      "rejectedQty": 2
+    }
+  ],
+  "vendorBill": [
+    {
+      "billNumber": "BILL/2026/0007",
+      "status": "PAID",
+      "totalGross": 96000.0,
+      "paidAmount": 96000.0,
+      "outstandingAmount": 0.0
+    }
+  ],
+  "pos": [
+    {
+      "orderNumber": "POS/2026/0001",
+      "status": "PAID",
+      "paymentMethod": "QRIS",
+      "subtotalNet": 86000.0,
+      "pbjtTax": 8600.0,
+      "totalAmount": 94600.0
+    }
+  ],
+  "sessions": [
+    {
+      "sessionCode": "POS01",
+      "status": "CLOSED",
+      "totalSales": 94600.0,
+      "totalOrders": 1,
+      "openingCash": 500000.0,
+      "closingCash": 500000.0
+    },
+    {
+      "sessionCode": "POS02",
+      "status": "CLOSED",
+      "totalSales": 0.0,
+      "totalOrders": 0,
+      "openingCash": 500000.0,
+      "closingCash": 500000.0
+    }
+  ],
+  "unbalancedJournals": []
+}

@@ -3,6 +3,7 @@ import DialogFrame from "@/components/ui/DialogFrame";
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import PosReceipt from "@/components/PosReceipt";
+import ActionButton from "@/components/ui/ActionButton";
 import AppLayout from "@/components/AppLayout";
 import StatusBadge from "@/components/StatusBadge";
 import KPICard from "@/components/KPICard";
@@ -21,7 +22,6 @@ import {
   Coffee,
   Search,
   RefreshCw,
-  Trash2,
   Sparkles,
 } from "lucide-react";
 import Link from "next/link";
@@ -55,6 +55,9 @@ export default function PointOfSalePage() {
   const [closingCashInput, setClosingCashInput] = useState<number>(0);
   const [closeSessionResult, setCloseSessionResult] = useState<any>(null);
 
+  const sessionPending = useRef(false);
+  const [savingSession, setSavingSession] = useState(false);
+
   // Test Runner state
   const [testResult, setTestResult] = useState<any>(null);
   const [testing, setTesting] = useState(false);
@@ -85,7 +88,7 @@ export default function PointOfSalePage() {
         const sessList = dataSess.sessions || [];
         setSessions(sessList);
         const openSess = sessList.find((s: any) => s.status === "OPEN") || sessList[0];
-        setActiveSession(openSess || null);
+        setActiveSession((current: any) => sessList.find((s: any) => s.id === current?.id) || openSess || null);
       }
 
       if (resOrd.ok) {
@@ -235,6 +238,8 @@ export default function PointOfSalePage() {
 
   // Open New Session
   const handleOpenSession = async () => {
+    if (sessionPending.current) return;
+    sessionPending.current = true; setSavingSession(true);
     try {
       const nextSessionNum = sessions.length + 1;
       const proposedCode = `POS${String(nextSessionNum).padStart(2, "0")}`;
@@ -249,19 +254,21 @@ export default function PointOfSalePage() {
       });
       const data = await res.json();
       if (res.ok) {
+        setCloseSessionResult(null);
         setActiveSession(data.session);
         await fetchSessionsAndOrders();
       } else {
         alert(data.error || "Gagal membuka sesi baru");
       }
     } catch (e) {
-      console.error(e);
-    }
+      alert("Gagal membuka sesi kasir. Coba kembali.");
+    } finally { sessionPending.current = false; setSavingSession(false); }
   };
 
   // Close Session Action
   const handleCloseSession = async () => {
-    if (!activeSession) return;
+    if (!activeSession || sessionPending.current) return;
+    sessionPending.current = true; setSavingSession(true);
     try {
       const res = await fetch(`/api/pos/sessions/${activeSession.id}/close`, {
         method: "POST",
@@ -274,10 +281,11 @@ export default function PointOfSalePage() {
         return;
       }
       setCloseSessionResult(data);
+      setCloseModalOpen(false);
       await fetchSessionsAndOrders();
     } catch (e) {
-      console.error(e);
-    }
+      alert("Penutupan sesi belum terkonfirmasi. Coba kembali.");
+    } finally { sessionPending.current = false; setSavingSession(false); }
   };
 
   // Filtered products
@@ -455,6 +463,18 @@ export default function PointOfSalePage() {
       <div className="space-y-6">
         {receipt&&<PosReceipt order={receipt} onClose={()=>setReceipt(null)} onRefunded={fetchSessionsAndOrders} canRefund={currentUser?.role==='OWNER'||(receipt.session?.cashierId===currentUser?.id&&receipt.session?.status==='OPEN')||(!receipt.session&&activeSession?.id===receipt.sessionId&&activeSession?.status==='OPEN')}/>}
       <section className="surface-card p-5 space-y-3"><h2 className="text-lg font-semibold">Riwayat transaksi & struk</h2>{orders.length?<div className="overflow-x-auto"><table className="w-full text-sm text-left"><thead><tr><th scope="col" className="p-3">Nomor</th><th scope="col" className="p-3">Tanggal</th><th scope="col" className="p-3">Status</th><th scope="col" className="p-3">Total</th><th scope="col" className="p-3">Tindakan</th></tr></thead><tbody>{orders.map(order=><tr className="border-t" key={order.id}><td className="p-3">{order.orderNumber}</td><td className="p-3">{new Date(order.orderDate).toLocaleString('id-ID')}</td><td className="p-3">{order.status}</td><td className="p-3">Rp{order.totalAmount.toLocaleString('id-ID')}</td><td className="p-3"><button className="text-blue-700 underline" onClick={()=>setReceipt(order)}>Lihat struk / refund</button></td></tr>)}</tbody></table></div>:<p className="text-sm text-slate-500">Belum ada transaksi.</p>}</section>
+      {(closeSessionResult || activeSession?.status === "CLOSED") && <section className="surface-card p-5 space-y-3" aria-label="Ringkasan penutupan sesi">
+        <h2 className="text-lg font-semibold">Ringkasan sesi kasir {(closeSessionResult?.session || activeSession)?.sessionCode}</h2>
+        <p role="status" className="text-sm text-emerald-800">Sesi CLOSED. Transaksi dan pencatatan stok serta jurnal sudah tersimpan.</p>
+        <dl className="grid sm:grid-cols-3 gap-4 text-sm">
+          <div><dt>Jumlah transaksi</dt><dd className="font-semibold">{(closeSessionResult?.session || activeSession)?.totalOrders ?? 0}</dd></div>
+          <div><dt>Total penjualan</dt><dd className="font-semibold">Rp{((closeSessionResult?.session || activeSession)?.totalSales ?? 0).toLocaleString('id-ID')}</dd></div>
+          <div><dt>Kas fisik penutupan</dt><dd className="font-semibold">Rp{((closeSessionResult?.session || activeSession)?.closingCash ?? 0).toLocaleString('id-ID')}</dd></div>
+          {closeSessionResult?.expectedCash !== undefined && <><div><dt>Kas yang diharapkan</dt><dd className="font-semibold">Rp{closeSessionResult.expectedCash.toLocaleString('id-ID')}</dd></div><div><dt>Selisih kas</dt><dd className="font-semibold">Rp{closeSessionResult.difference.toLocaleString('id-ID')}</dd></div></>}
+        </dl>
+        <p className="text-sm text-slate-500">Pembayaran QRIS dan transfer bank tercatat sebagai non tunai dan tidak menambah kas fisik di laci.</p>
+        <div className="flex flex-wrap gap-3"><Link className="btn-secondary" href="/inventory/products">Lihat persediaan gerai</Link><Link className="btn-secondary" href="/accounting/journal-entries">Lihat jurnal keuangan</Link><Link className="btn-primary" href="/dashboard">Buka dashboard</Link></div>
+      </section>}
       {/* Module Header & Session Bar */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-2 p-5 rounded-2xl border border-white/80 shadow-glass-2">
           <div>
@@ -471,9 +491,16 @@ export default function PointOfSalePage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            <label className="text-xs font-semibold">Sesi kasir
+              <select aria-label="Pilih sesi kasir" disabled={savingSession || !!cart.length} className="input-glass p-2 ml-2" value={activeSession?.id || ""} onChange={e => { setActiveSession(sessions.find(session => session.id === e.target.value)); setCloseSessionResult(null); }}>
+                {!sessions.length && <option value="">Belum ada sesi</option>}
+                {sessions.map(session => <option key={session.id} value={session.id}>{session.sessionCode} · {session.cashier?.name} · {session.status}</option>)}
+              </select>
+            </label>
             {activeSession?.status === "OPEN" ? (
               <button
-                onClick={() => setCloseModalOpen(true)}
+                disabled={savingSession || !!cart.length}
+                onClick={() => { setClosingCashInput(0); setCloseModalOpen(true); }}
                 className="px-4 py-2 bg-rose-500/15 hover:bg-rose-500/25 active:bg-rose-500/35 text-rose-900 border border-rose-500/30 rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md backdrop-blur-xs focus-brand-ring"
               >
                 <Lock className="w-3.5 h-3.5 text-rose-800" />
@@ -482,6 +509,7 @@ export default function PointOfSalePage() {
             ) : (
               <button
                 onClick={handleOpenSession}
+                disabled={savingSession}
                 className="px-4 py-2 btn-glass-primary rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus-brand-ring"
               >
                 <Plus className="w-3.5 h-3.5 text-[#7c3aed]" />
@@ -740,7 +768,7 @@ export default function PointOfSalePage() {
                   cart.map((item) => (
                     <div
                       key={item.sku}
-                      className="flex items-center justify-between p-2.5 rounded-xl glass-3 border border-white/80 text-xs shadow-xs"
+                      className="flex flex-wrap gap-3 items-center justify-between p-2.5 rounded-xl glass-3 border border-white/80 text-xs shadow-xs"
                     >
                       <div className="min-w-0 pr-2">
                         <span className="font-bold text-slate-900 block truncate">{item.name}</span>
@@ -748,7 +776,7 @@ export default function PointOfSalePage() {
                           {item.sku} • Rp{item.price.toLocaleString("id-ID")}
                         </span>
                       </div>
-                      <div className="flex items-center space-x-2 shrink-0">
+                      <div className="flex flex-wrap items-center gap-2">
                         <div className="flex items-center border border-white/80 rounded-xl bg-white/90 font-mono shadow-xs overflow-hidden">
                           <button
                             onClick={() => updateCartQty(item.sku, -1)}
@@ -769,14 +797,7 @@ export default function PointOfSalePage() {
                         <span className="font-mono font-bold text-slate-900 w-16 text-right">
                           Rp{(item.qty * item.price).toLocaleString("id-ID")}
                         </span>
-                        <button
-                          type="button"
-                          onClick={() => removeCartItem(item.sku)}
-                          className="p-1 text-slate-400 hover:text-rose-600 transition-colors focus-brand-ring rounded"
-                          title="Hapus baris"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        <ActionButton action="delete" onClick={() => removeCartItem(item.sku)}>Hapus</ActionButton>
                       </div>
                     </div>
                   ))
@@ -954,7 +975,7 @@ export default function PointOfSalePage() {
 
         {/* Modal Tutup Sesi */}
         {closeModalOpen && (
-          <DialogFrame onClose={() => setCloseModalOpen(false)}>
+          <DialogFrame onClose={() => { if (!sessionPending.current) setCloseModalOpen(false); }}>
             <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-[#e2e8f0]">
               <div className="flex items-center justify-between border-b border-[#e2e8f0] pb-3">
                 <h2 className="text-base font-bold text-[#0f172a] flex items-center space-x-2">
@@ -1010,13 +1031,11 @@ export default function PointOfSalePage() {
                   Batal
                 </button>
                 <button
-                  onClick={async () => {
-                    await handleCloseSession();
-                    setCloseModalOpen(false);
-                  }}
+                  disabled={savingSession}
+                  onClick={handleCloseSession}
                   className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold focus-brand-ring"
                 >
-                  Konfirmasi Tutup Sesi
+                  {savingSession ? "Memproses…" : "Konfirmasi Tutup Sesi"}
                 </button>
               </div>
             </div>

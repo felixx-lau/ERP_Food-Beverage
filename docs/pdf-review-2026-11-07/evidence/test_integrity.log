@@ -1,0 +1,10 @@
+[PASS] Origin validation accepts actual loopback Host and rejects cross-site writes
+[PASS] Draft edits, stale versions and cancellation release exact reservations
+[PASS] Vendor payments, price variance and controlled bill reversal reconcile
+[PASS] Customer payment reversal retains original source and releases invoice quantities
+[PASS] Full POS refund restores stock and journal exactly once; closed-session summary stays fixed
+[PASS] Atomic rollback and idempotency payload binding
+[PASS] Competing confirmations and payments cannot oversell or overpay
+[PASS] Source trails and manual journal corrections retain history
+[PASS] Team changes invalidate old sessions and protect last active owner
+[PASS] New company snapshot preserves default and isolates active owner

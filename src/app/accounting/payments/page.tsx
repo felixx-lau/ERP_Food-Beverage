@@ -111,7 +111,7 @@ export default function RegisterPaymentPage() {
       const res=await fetch('/api/accounting/payments',{method:'POST',headers:{'Content-Type':'application/json','Idempotency-Key':paymentKey.current},body:JSON.stringify({invoiceId:selectedInvoiceId,amount:paymentAmount,paymentMethod})});
       const data=await res.json();if(!res.ok){alert(data.error||'Pembayaran gagal.');return;}
       alert(`Pembayaran tersimpan. Sisa tagihan Rp${data.remainingBalance.toLocaleString('id-ID')}.`);
-      paymentKey.current=crypto.randomUUID();setPaymentAmount(0);setSelectedInvoiceId('');await fetchPaymentsAndInvoices();
+      paymentKey.current=crypto.randomUUID();setPaymentAmount(0);await fetchPaymentsAndInvoices();
     } catch(e){alert('Koneksi gagal. Coba kembali; request yang sama tidak diposting dua kali.');}
     finally{paymentPending.current=false;setSubmitting(false);}
   };
@@ -329,14 +329,15 @@ export default function RegisterPaymentPage() {
                 onChange={(e) => setSelectedInvoiceId(e.target.value)}
                 className="w-full text-xs font-mono font-bold bg-white border border-[#e2e8f0] rounded-lg p-2.5 text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-[#1d4ed8]"
               >
+                <option value="">Pilih invoice yang sudah diposting…</option>
                 {invoices.map((inv) => (
-                  <option key={inv.id} value={inv.id}>
-                    {inv.invoiceNumber} — {inv.customer?.name} (Rp{inv.totalAmount?.toLocaleString("id-ID")})
+                  <option key={inv.id} value={inv.id} disabled={inv.status !== "POSTED" || inv.outstandingAmount <= 0}>
+                    {inv.invoiceNumber} — {inv.customer?.name} (Rp{inv.totalGross?.toLocaleString("id-ID")})
                   </option>
                 ))}
               </select>
               <span className="text-[11px] text-slate-700 font-semibold block mt-1.5">
-                Customer: <strong className="text-slate-900 font-bold">{selectedInvoice?.customer?.name || "-"}</strong> ({selectedInvoice?.customer?.code || "-"})
+                Customer: <strong className="text-slate-900 font-bold">{selectedInvoice?.customer?.name || "-"}</strong> ({selectedInvoice?.customer?.id || "-"})
               </span>
             </div>
 
@@ -351,7 +352,7 @@ export default function RegisterPaymentPage() {
               >
                 <option value="BANK">Bank BCA / Transfer (1010 Bank)</option>
                 <option value="CASH">Kas Tunai / Cash (1010 Cash)</option>
-                <option value="QRIS">QRIS Dinamis (1010 Bank)</option>
+                <option value="QRIS">QRIS (1010 Bank)</option>
               </select>
               <span className="text-[11px] text-slate-700 font-semibold block mt-1.5">
                 Target GL: <span className="font-mono text-[#1d4ed8] font-bold">1010 Kas & Setara Kas</span>
@@ -367,6 +368,8 @@ export default function RegisterPaymentPage() {
                 value={paymentAmount}
                 onChange={(e) => setPaymentAmount(Number(e.target.value))}
                 min={1}
+                max={selectedInvoice?.outstandingAmount}
+                aria-label="Nominal pembayaran pelanggan"
                 className="w-full text-xs font-mono font-bold input-glass rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-[#1d4ed8]"
               />
               <span className="text-[11px] text-slate-700 font-semibold block mt-1.5">
@@ -376,7 +379,7 @@ export default function RegisterPaymentPage() {
 
             <div className="flex flex-col justify-end">
               <button
-                disabled={submitting}
+                disabled={submitting || selectedInvoice?.status !== "POSTED" || !(selectedInvoice?.outstandingAmount > 0)}
                 onClick={handleRegisterPayment}
                 className="w-full py-2.5 btn-glass-primary text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-2 shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
               >
@@ -399,7 +402,7 @@ export default function RegisterPaymentPage() {
                   Nilai Tagihan (Gross + PBJT)
                 </span>
                 <span className="text-xl font-bold text-slate-900 font-mono block mt-1">
-                  Rp{selectedInvoice?.totalAmount?.toLocaleString("id-ID") || "0"}
+                  Rp{selectedInvoice?.totalGross?.toLocaleString("id-ID") || "0"}
                 </span>
                 <span className="text-xs text-slate-600 font-medium block mt-1">
                   Net + PBJT 10%
@@ -441,7 +444,7 @@ export default function RegisterPaymentPage() {
               </span>
               <span>•</span>
               <span className="font-mono text-[#0f172a]">
-                Customer: {selectedInvoice?.customer?.code || "-"}
+                Customer: {selectedInvoice?.customer?.id || "-"}
               </span>
               <span>•</span>
               <span className="font-mono text-[#6d28d9] font-semibold">

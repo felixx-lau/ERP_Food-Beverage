@@ -72,6 +72,7 @@ export default function JournalEntriesPage() {
         if (list.length > 0 && !selectedEntry) {
           setSelectedEntry(list.find((r:any)=>r.id===new URLSearchParams(window.location.search).get("id"))||list[0]);
         }
+        return list;
       }
     } finally {
       setLoading(false);
@@ -219,7 +220,7 @@ export default function JournalEntriesPage() {
         { label: "General Ledger & Jurnal (S-13)" },
       ]}
     >
-      {['OWNER','FINANCE'].includes(currentUser?.role)&&<div className="flex gap-3 flex-wrap"><ManualJournalForm onPosted={fetchJournalEntries}/>{selectedEntry&&<FinancialCorrection kind="journals" record={selectedEntry} onChanged={fetchJournalEntries}/>}<Link className="btn-secondary" href="/accounting/reports">Laporan keuangan</Link></div>}
+      {['OWNER','FINANCE'].includes(currentUser?.role)&&<div className="flex gap-3 flex-wrap"><ManualJournalForm onPosted={async record => { const updated = await fetchJournalEntries(); setSelectedEntry(updated?.find((entry:any) => entry.id === record.id) || record); }}/><Link className="btn-secondary" href="/master/accounts">Chart of Accounts</Link>{selectedEntry&&<FinancialCorrection kind="journals" record={selectedEntry} onChanged={fetchJournalEntries}/>}<Link className="btn-secondary" href="/accounting/reports">Laporan keuangan</Link></div>}
       <DocumentList records={entries} selectedId={selectedEntry?.id} onSelect={id=>setSelectedEntry(entries.find(e=>e.id===id))}/>
 
       <div className="space-y-6">

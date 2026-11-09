@@ -1,8 +1,9 @@
 "use client";
+import ActionButton from "./ui/ActionButton";
 import DialogFrame from "./ui/DialogFrame";
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { ShoppingBag, Plus, Trash2, X, Check, Building } from "lucide-react";
+import { ShoppingBag, Plus, X, Check, Building } from "lucide-react";
 
 interface POLineItem {
   productSku: string;
@@ -295,7 +296,7 @@ export default function CreatePurchaseOrderModal({
                   key={idx}
                   className="p-3.5 rounded-xl bg-[#f1f5f9] border border-slate-200 grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center"
                 >
-                  <div className="sm:col-span-6">
+                  <div className="sm:col-span-5">
                     <label htmlFor="createpurchaseordermodal-field-1" className="block text-[10px] font-semibold text-slate-500 mb-0.5">
                       Nama Barang / Bahan <span className="text-rose-500">*</span>
                     </label>
@@ -333,16 +334,8 @@ export default function CreatePurchaseOrderModal({
                     />
                   </div>
 
-                  <div className="sm:col-span-1 flex justify-end">
-                    <button
-                      type="button"
-                      disabled={lines.length <= 1}
-                      onClick={() => handleRemoveLine(idx)}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 disabled:opacity-30 transition-colors"
-                      title="Hapus baris"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                  <div className="sm:col-span-2 flex justify-end">
+                    <ActionButton action="delete" disabled={lines.length <= 1} onClick={() => handleRemoveLine(idx)}>Hapus</ActionButton>
                   </div>
                 </div>
               ))}

@@ -265,19 +265,19 @@ export default function HomePage() {
                       handleNavigate();
                     }
                   }}
-                  className={`module-card rounded-xl border p-5 flex flex-col justify-between cursor-pointer group focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none min-h-[184px] transition-all duration-200 ${
+                  className={`brand-card module-card rounded-xl border p-5 flex flex-col justify-between cursor-pointer group focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none min-h-[184px] transition-all duration-200 ${
                     hasAccess
-                      ? "bg-white border-slate-200/80 hover:border-indigo-300/70 hover:shadow-md hover:-translate-y-px"
-                      : "bg-slate-50/60 border-dashed border-slate-200"
+                      ? "hover:border-indigo-200"
+                      : "border-dashed"
                   }`}
                 >
                   <div>
                     <div className="flex items-start justify-between mb-4">
                       {/* Icon container — fixed size, proper padding so icon never touches border */}
                       <div
-                        className="module-icon w-10 h-10 rounded-lg flex items-center justify-center bg-blue-50 border border-blue-100 flex-shrink-0 group-hover:bg-blue-100 transition-colors duration-200"
+                        className="module-icon w-10 h-10 rounded-lg flex items-center justify-center bg-white/10 border border-white/25 flex-shrink-0 group-hover:bg-white/20 transition-colors duration-200"
                       >
-                        <IconComponent className="w-5 h-5 text-blue-600 group-hover:text-indigo-700 transition-colors duration-200" aria-hidden="true" />
+                        <IconComponent className="w-5 h-5 text-white transition-colors duration-200" aria-hidden="true" />
                       </div>
 
                       {/* Badge: only show when restricted/locked */}
@@ -289,18 +289,18 @@ export default function HomePage() {
                       )}
                     </div>
 
-                    <h3 className="font-semibold text-[15px] text-[#0f172a] group-hover:text-blue-700 transition-colors">
+                    <h3 className="font-semibold text-[15px] text-white transition-colors">
                       {app.name}
                     </h3>
-                    <p className="text-xs text-slate-600 font-medium mt-1.5 leading-relaxed line-clamp-2">
+                    <p className="text-xs text-white font-medium mt-1.5 leading-relaxed line-clamp-2">
                       {app.desc}
                     </p>
                   </div>
 
                   {/* Footer */}
-                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                  <div className="module-footer mt-4 pt-3 border-t border-white/20 flex items-center justify-between text-xs">
                     <span
-                      className="font-bold text-blue-700 group-hover:text-indigo-700 flex items-center gap-1.5 truncate group-hover:translate-x-0.5 transition-transform duration-200 max-w-full"
+                      className="module-destination font-bold text-white flex items-center gap-1.5 truncate group-hover:translate-x-0.5 transition-transform duration-200 max-w-full"
                       title={app.destination}
                     >
                       <span className="truncate">{app.destination}</span>

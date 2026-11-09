@@ -14,7 +14,7 @@ import {
   Legend,
   Filler,
 } from "chart.js";
-import { Line, Bar, Doughnut } from "react-chartjs-2";
+import AnimatedChart from "./ui/AnimatedChart";
 import {
   TrendingUp,
   TrendingDown,
@@ -207,7 +207,6 @@ export default function DashboardCharts() {
   };
 
   const lineChartOptions: any = {
-    animation: reducedMotion ? false : { duration: 240 },
     responsive: true,
     maintainAspectRatio: false,
     interaction: {
@@ -270,7 +269,7 @@ export default function DashboardCharts() {
         grid: { drawOnChartArea: false },
         ticks: {
           font: { size: 11, weight: "normal" },
-          color: "#8B6920",
+          color: "#7c3aed",
           stepSize: 1,
           callback: function (val: any) {
             return `${val} tx`;
@@ -305,7 +304,6 @@ export default function DashboardCharts() {
 
   const topProductsOptions: any = {
     indexAxis: "y",
-    animation: reducedMotion ? false : { duration: 240 },
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -361,7 +359,6 @@ export default function DashboardCharts() {
   };
 
   const categoryOptions: any = {
-    animation: reducedMotion ? false : { duration: 240 },
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -429,7 +426,6 @@ export default function DashboardCharts() {
   };
 
   const monthlyOptions: any = {
-    animation: reducedMotion ? false : { duration: 240 },
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -477,9 +473,10 @@ export default function DashboardCharts() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" aria-busy={loading}>
+      {loading && data && <p role="status" className="sr-only">Memperbarui data grafik…</p>}
       {error && <div role="alert" className="bg-amber-50 text-amber-900 border border-amber-200 p-4 rounded-xl text-sm">{error}</div>}
-      {loading ? <LoadingState cards={4} /> : <div className="motion-stagger grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      {loading && !data ? <LoadingState cards={4} /> : <div className="motion-stagger grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <KPICard title="Total penjualan" value={data ? formatRupiah(data.kpis.totalSales) : "—"} subtitle="Pesanan penjualan & kasir" icon={DollarSign} />
         <KPICard title="Total pembelian" value={data ? formatRupiah(data.kpis.totalPurchases) : "—"} subtitle="Komitmen pengadaan vendor" icon={ShoppingBag} variant="gold" />
         <KPICard title="Estimasi margin pesanan" value={data ? formatRupiah(data.kpis.estimatedGrossProfit) : "—"} subtitle={data ? `Margin ${data.kpis.grossProfitMarginPercent}% · Nilai bersih tanpa PBJT − biaya standar` : "Data belum tersedia"} icon={TrendingUp} variant="sage" />
@@ -636,12 +633,17 @@ export default function DashboardCharts() {
 
         {/* Chart Canvas */}
         <div className="h-72 w-full relative">
-          {loading ? (
+          {loading && !data ? (
             <div className="h-full flex items-center justify-center text-xs text-[var(--glass-text-muted)] space-x-2">
               <RefreshCw className="w-4 h-4 animate-spin text-blue-700" />
               <span>Memperbarui grafik penjualan...</span>
             </div>
-          ) : lineChartData.labels.length === 0 ? (
+          ) : (
+            <>
+              <div className={lineChartData.labels.length ? "h-full" : "h-full invisible"} aria-hidden={!lineChartData.labels.length}>
+                <AnimatedChart revision={data} type="line" label="Tren pendapatan dan jumlah transaksi" reducedMotion={reducedMotion} data={lineChartData} options={lineChartOptions} />
+              </div>
+              {lineChartData.labels.length === 0 && (<div className="absolute inset-0">
             <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-3 glass-3 rounded-2xl border border-dashed border-black/15">
               <div className="w-10 h-10 rounded-2xl glass-3 text-violet-700 flex items-center justify-center border border-violet-500/20">
                 <Info className="w-5 h-5" />
@@ -656,8 +658,8 @@ export default function DashboardCharts() {
               </div>
 
             </div>
-          ) : (
-            <Line aria-label="Tren pendapatan dan jumlah transaksi" role="img" data={lineChartData} options={lineChartOptions} />
+          </div>)}
+            </>
           )}
         </div>
       </div>
@@ -679,17 +681,22 @@ export default function DashboardCharts() {
           </div>
 
           <div className="h-64 w-full relative">
-            {loading ? (
+            {loading && !data ? (
               <div className="h-full flex items-center justify-center text-xs text-[var(--glass-text-muted)]">
                 Memuat produk terlaris...
               </div>
-            ) : topProductsData.labels.length === 0 ? (
+            ) : (
+            <>
+              <div className={topProductsData.labels.length ? "h-full" : "h-full invisible"} aria-hidden={!topProductsData.labels.length}>
+                <AnimatedChart revision={data} type="bar" label="Produk terlaris menurut jumlah terjual" reducedMotion={reducedMotion} data={topProductsData} options={topProductsOptions} />
+              </div>
+              {topProductsData.labels.length === 0 && (<div className="absolute inset-0">
               <div className="h-full flex items-center justify-center text-center p-4 text-xs text-[var(--glass-text-muted)]">
                 Belum ada data produk terjual.
               </div>
-            ) : (
-              <Bar aria-label="Produk terlaris menurut jumlah terjual" role="img" data={topProductsData} options={topProductsOptions} />
-            )}
+            </div>)}
+            </>
+          )}
           </div>
         </div>
 
@@ -708,17 +715,22 @@ export default function DashboardCharts() {
           </div>
 
           <div className="h-64 w-full relative">
-            {loading ? (
+            {loading && !data ? (
               <div className="h-full flex items-center justify-center text-xs text-[var(--glass-text-muted)]">
                 Memuat data kategori...
               </div>
-            ) : categoryData.labels.length === 0 ? (
+            ) : (
+            <>
+              <div className={categoryData.labels.length ? "h-full" : "h-full invisible"} aria-hidden={!categoryData.labels.length}>
+                <AnimatedChart revision={data} type="doughnut" reducedMotion={reducedMotion} data={categoryData} options={{ responsive: true, maintainAspectRatio: false, cutout: "72%", plugins: { legend: { position: "bottom", labels: { usePointStyle: true, boxWidth: 8, padding: 16, color: "#475569" } }, tooltip: { callbacks: { label: ctx => `${ctx.label}: ${formatRupiah(Number(ctx.raw))}` } } } }} label="Komposisi penjualan per kategori" />
+              </div>
+              {categoryData.labels.length === 0 && (<div className="absolute inset-0">
               <div className="h-full flex items-center justify-center text-center p-4 text-xs text-[var(--glass-text-muted)]">
                 Belum ada data kategori.
               </div>
-            ) : (
-              <Doughnut data={categoryData} options={{ animation: reducedMotion ? false : { duration: 240 }, responsive: true, maintainAspectRatio: false, cutout: "72%", plugins: { legend: { position: "bottom", labels: { usePointStyle: true, boxWidth: 8, padding: 16, color: "#475569" } }, tooltip: { callbacks: { label: ctx => `${ctx.label}: ${formatRupiah(Number(ctx.raw))}` } } } }} aria-label="Komposisi penjualan per kategori" role="img" />
-            )}
+            </div>)}
+            </>
+          )}
           </div>
         </div>
 
@@ -737,17 +749,22 @@ export default function DashboardCharts() {
           </div>
 
           <div className="h-64 w-full relative">
-            {loading ? (
+            {loading && !data ? (
               <div className="h-full flex items-center justify-center text-xs text-[var(--glass-text-muted)]">
                 Memuat data bulanan...
               </div>
-            ) : monthlyData.labels.length === 0 ? (
+            ) : (
+            <>
+              <div className={monthlyData.labels.length ? "h-full" : "h-full invisible"} aria-hidden={!monthlyData.labels.length}>
+                <AnimatedChart revision={data} type="bar" label="Perbandingan penjualan dan pembelian bulanan" reducedMotion={reducedMotion} data={monthlyData} options={monthlyOptions} />
+              </div>
+              {monthlyData.labels.length === 0 && (<div className="absolute inset-0">
               <div className="h-full flex items-center justify-center text-center p-4 text-xs text-[var(--glass-text-muted)]">
                 Belum ada perbandingan bulanan.
               </div>
-            ) : (
-              <Bar aria-label="Perbandingan penjualan dan pembelian bulanan" role="img" data={monthlyData} options={monthlyOptions} />
-            )}
+            </div>)}
+            </>
+          )}
           </div>
         </div>
       </div>

@@ -1,0 +1,41 @@
+=================================================================
+🧪 RUNNING VERIFICATION FOR PHASE 2 & PHASE 3 (T-01 & T-02)
+=================================================================
+
+--- 1. Testing Baseline Seed Execution ---
+✅ [PASS] SEED-01: Baseline Seed executed successfully
+✅ [PASS] SEED-02: 15 SKU Variants seeded (Found: 15)
+✅ [PASS] SEED-03: WH-JKT On-Hand: 410 units (Actual: 410)
+✅ [PASS] SEED-04: CAFE-JKT On-Hand: 206 units (Actual: 206)
+✅ [PASS] SEED-05: Total Company Stock: 616 units (Actual: 616)
+✅ [PASS] SEED-06: Stock Valuation: Rp 12.214.000 (Actual: Rp 12.214.000)
+✅ [PASS] SEED-07: S00006 Reservation: On-Hand 40, Reserved 6, Available 34 at WH-JKT (Actual: onHand=40, reserved=6)
+✅ [PASS] SEED-08: Opening Ledger Entry Balanced: Dr Rp 33.714.000 = Cr Rp 33.714.000 (Actual Dr=33714000, Cr=33714000)
+✅ [PASS] SEED-09: Existing Lead LD0003 exists (Klinik Harmoni, Rp1.2M)
+✅ [PASS] SEED-10: Existing Sales Order S00006 confirmed with 6 units
+✅ [PASS] SEED-11: Existing Purchase Order P00006 confirmed with 10 units
+
+--- 2. Testing 6 User Accounts & Roles ---
+✅ [PASS] AUTH-01: All 6 required role accounts exist (Found: 6)
+✅ [PASS] AUTH-ROLE-OWNER: User for role OWNER (Maya Prasetyo) authenticates with bcrypt password
+✅ [PASS] AUTH-ROLE-SALES: User for role SALES (Dini Anggraini) authenticates with bcrypt password
+✅ [PASS] AUTH-ROLE-WAREHOUSE: User for role WAREHOUSE (Sinta Maharani) authenticates with bcrypt password
+✅ [PASS] AUTH-ROLE-PROCUREMENT: User for role PROCUREMENT (Arief Wicaksono) authenticates with bcrypt password
+✅ [PASS] AUTH-ROLE-FINANCE: User for role FINANCE (Reza Firdaus) authenticates with bcrypt password
+✅ [PASS] AUTH-ROLE-CASHIER: User for role CASHIER (Bagas Putra) authenticates with bcrypt password
+
+--- 3. Testing T-01: Alur Normal Owner (Fitur F-01) ---
+✅ [PASS] T-01-A: Owner session token verified
+✅ [PASS] T-01: Owner has access to all 8 core apps: sales, crm, purchase, inventory, accounting, invoicing, pos, dashboard and company PT Rasa Aruna Bersama
+
+--- 4. Testing T-02: Edge Case Cashier General Ledger Restriction (SR-15) ---
+✅ [PASS] T-02-A: Backend RBAC check denies CASHIER from accounting/GL module
+✅ [PASS] T-02: Access denied event successfully recorded in Audit Trail (Actor: Bagas Putra, Role: CASHIER, Action: ACCESS_DENIED)
+
+--- 5. Testing Reset Seed RBAC Protection ---
+✅ [PASS] SEED-RESET-RBAC: Cashier is strictly blocked from executing Reset Seed
+
+=================================================================
+🏁 TEST RESULTS SUMMARY: 23 / 23 TESTS PASSED
+=================================================================
+🎉 ALL PHASE 2 & PHASE 3 TESTS (T-01 & T-02) PASSED WITH ZERO DEFECTS!

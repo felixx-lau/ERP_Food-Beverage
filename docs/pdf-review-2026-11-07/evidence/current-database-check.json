@@ -1,0 +1,42 @@
+[
+  {
+    "database": "prisma/companies/comp_pt-kuliner-nusantara_yqes.db",
+    "integrity": "ok",
+    "foreignKeyErrors": 0,
+    "products": 1,
+    "stockUnits": 15,
+    "invalidStock": 0,
+    "valuation": 225000.0,
+    "inventoryLedger": 12214000.0
+  },
+  {
+    "database": "prisma/companies/comp_pt-morie-matcha_qkc6.db",
+    "integrity": "ok",
+    "foreignKeyErrors": 0,
+    "products": 15,
+    "stockUnits": 616,
+    "invalidStock": 0,
+    "valuation": 12214000.0,
+    "inventoryLedger": 12214000.0
+  },
+  {
+    "database": "prisma/companies/comp_pt-resto-nusantara-b_lfr7.db",
+    "integrity": "ok",
+    "foreignKeyErrors": 0,
+    "products": 1,
+    "stockUnits": 15,
+    "invalidStock": 0,
+    "valuation": 225000.0,
+    "inventoryLedger": 12214000.0
+  },
+  {
+    "database": "prisma/erp.db",
+    "integrity": "ok",
+    "foreignKeyErrors": 0,
+    "products": 15,
+    "stockUnits": 616,
+    "invalidStock": 0,
+    "valuation": 12214000.0,
+    "inventoryLedger": 12214000.0
+  }
+]

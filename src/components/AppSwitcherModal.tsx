@@ -1,7 +1,8 @@
 "use client";
 import DialogFrame from "./ui/DialogFrame";
 
-import React from "react";
+import React, { useRef } from "react";
+import useEntranceMotion from "./ui/useEntranceMotion";
 import {
   X,
   ShoppingCart,
@@ -108,6 +109,8 @@ export default function AppSwitcherModal({
   onSelectApp,
 }: AppSwitcherModalProps) {
   const router = useRouter();
+  const root = useRef<HTMLDivElement>(null);
+  useEntranceMotion(root, isOpen);
   if (!isOpen) return null;
 
   const handleAppClick = (appKey: string) => {
@@ -125,7 +128,7 @@ export default function AppSwitcherModal({
 
   return (
     <DialogFrame onClose={onClose}>
-      <div className="glass-modal border border-white/80 w-full max-w-4xl rounded-3xl p-8 shadow-glass-modal relative animate-in zoom-in-95 duration-200">
+      <div ref={root} className="glass-modal border border-white/80 w-full max-w-4xl rounded-3xl p-8 shadow-glass-modal relative animate-in zoom-in-95 duration-200">
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -161,27 +164,29 @@ export default function AppSwitcherModal({
             return (
               <button
                 key={app.key}
+                disabled={!hasAccess}
+                data-available={hasAccess}
                 onClick={() => handleAppClick(app.key)}
-                className={`group flex flex-col items-center text-center p-4 rounded-2xl border transition-all relative focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none ${
+                className={`brand-card module-card group flex flex-col items-center text-center p-4 rounded-2xl border transition-all relative focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none ${
                   hasAccess
-                    ? "glass-2 glass-2-interactive border-white/80 hover:border-indigo-400/50 hover:shadow-indigo-500/10"
-                    : "glass-3 opacity-50 cursor-not-allowed border-dashed border-black/15"
+                    ? "border-indigo-400/50"
+                    : "cursor-not-allowed border-dashed"
                 }`}
               >
                 <div
-                  className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-xs mb-3 ${app.color} transition-transform group-hover:scale-110`}
+                  className={`w-14 h-14 rounded-2xl flex items-center justify-center module-icon mb-3 bg-white/10 border border-white/25`}
                 >
-                  <IconComponent className="w-7 h-7 text-blue-600 group-hover:text-indigo-600" aria-hidden="true" />
+                  <IconComponent className="w-7 h-7 text-white" aria-hidden="true" />
                 </div>
 
                 <div className="flex items-center space-x-1.5">
-                  <span className="font-black text-sm tracking-wide text-slate-900 group-hover:text-blue-700 transition-colors">
+                  <span className="module-name font-black text-sm tracking-wide transition-colors">
                     {app.name}
                   </span>
-                  {!hasAccess && <Lock className="w-3.5 h-3.5 text-amber-700" aria-hidden="true" />}
+                  {!hasAccess && <Lock className="w-3.5 h-3.5 text-indigo-700" aria-hidden="true" />}
                 </div>
 
-                <span className="text-[11px] text-slate-700 font-semibold mt-1 line-clamp-2 leading-relaxed">
+                <span className="module-destination text-[11px] text-white font-semibold mt-1 line-clamp-2 leading-relaxed">
                   {app.destination}
                 </span>
 

@@ -1,0 +1,94 @@
+{
+  "results": [
+    {
+      "suite": "test_phase2_3",
+      "exit": 0,
+      "passes": 23,
+      "failures": 0
+    },
+    {
+      "suite": "test_phase4",
+      "exit": 0,
+      "passes": 27,
+      "failures": 0
+    },
+    {
+      "suite": "test_phase5",
+      "exit": 0,
+      "passes": 14,
+      "failures": 0
+    },
+    {
+      "suite": "test_phase6",
+      "exit": 0,
+      "passes": 12,
+      "failures": 0
+    },
+    {
+      "suite": "test_phase7",
+      "exit": 0,
+      "passes": 19,
+      "failures": 0
+    },
+    {
+      "suite": "test_phase8",
+      "exit": 0,
+      "passes": 17,
+      "failures": 0
+    },
+    {
+      "suite": "test_charts",
+      "exit": 0,
+      "passes": 16,
+      "failures": 0
+    },
+    {
+      "suite": "test_crud",
+      "exit": 0,
+      "passes": 8,
+      "failures": 0
+    },
+    {
+      "suite": "test_pdf_cases",
+      "exit": 0,
+      "passes": 32,
+      "failures": 0
+    },
+    {
+      "suite": "test_integrity",
+      "exit": 0,
+      "passes": 10,
+      "failures": 0
+    },
+    {
+      "suite": "audit-probes",
+      "exit": 0,
+      "passes": 0,
+      "failures": 0
+    },
+    {
+      "suite": "audit-expectations",
+      "passes": 14,
+      "failures": 0
+    },
+    {
+      "suite": "typecheck",
+      "exit": 0,
+      "passes": 0,
+      "failures": 0
+    },
+    {
+      "suite": "build",
+      "exit": 0,
+      "passes": 0,
+      "failures": 0
+    }
+  ],
+  "originalDatabaseHashes": {
+    "/Users/felix/Desktop/Semester 4/Semester 5/ERP PROJECT/ERP_Food-Beverage/prisma/erp.db": "6eb8fb8921c806775fc43ffc42f609adf3ade3634f349a06842e42d0fbd3ea6f",
+    "/Users/felix/Desktop/Semester 4/Semester 5/ERP PROJECT/ERP_Food-Beverage/prisma/companies/comp_pt-morie-matcha_qkc6.db": "c6aa42e10d7b21ef73b3eed486c7b4ad9945dace8faca178b4a41c5abb3b48fd",
+    "/Users/felix/Desktop/Semester 4/Semester 5/ERP PROJECT/ERP_Food-Beverage/prisma/companies/comp_pt-kuliner-nusantara_yqes.db": "c68084f51484b50a97075ae41e96a1a98b2b5926bd014414bdabd1ffd5b59d1c",
+    "/Users/felix/Desktop/Semester 4/Semester 5/ERP PROJECT/ERP_Food-Beverage/prisma/companies/comp_pt-resto-nusantara-b_lfr7.db": "78f6f6f85e4131c18f4c1f0ba62bd14428d864128dcc16e48f07b107ee8ca970",
+    "/Users/felix/Desktop/Semester 4/Semester 5/ERP PROJECT/ERP_Food-Beverage/prisma/companies.json": "2cfa7723f06ba06a5f888cf434be7c78fba0746db876f37f6fbe949254dba2c8"
+  }
+}

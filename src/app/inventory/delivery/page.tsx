@@ -36,7 +36,7 @@ export default function DeliveryPage() {
         const data = await res.json();
         setDeliveries(data.deliveries || []);
         if (data.deliveries?.length > 0 && !selectedDelivery) {
-          setSelectedDelivery(data.deliveries.find((r: any) => r.id === new URLSearchParams(window.location.search).get("id")) || data.deliveries[0]);
+          await fetchDeliveryDetail((data.deliveries.find((r: any) => r.id === new URLSearchParams(window.location.search).get("id")) || data.deliveries[0]).id);
         }
       }
     } finally {
@@ -184,9 +184,11 @@ export default function DeliveryPage() {
         </div>
       }
     >
-      <DocumentList records={deliveries} selectedId={selectedDelivery?.id} onSelect={fetchDeliveryDetail}/>
 
       {selectedDelivery && <DocumentControls kind="deliveries" record={selectedDelivery} role={user?.role} onChanged={async () => { await fetchDeliveries(); await fetchDeliveryDetail(selectedDelivery.id); }} />}
+
+      <DocumentList records={deliveries} selectedId={selectedDelivery?.id} onSelect={fetchDeliveryDetail}/>
+
 
       {/* Selected Delivery Order Detail */}
       {selectedDelivery && (

@@ -45,7 +45,7 @@ export default function CustomerInvoicesPage() {
         const data = await res.json();
         setInvoices(data.invoices || []);
         if (data.invoices?.length > 0 && !selectedInvoice) {
-          fetchInvoiceDetail(data.invoices[0].id);
+          await fetchInvoiceDetail((data.invoices.find((r: any) => r.id === new URLSearchParams(window.location.search).get("id")) || data.invoices[0]).id);
         }
       }
     } finally {
@@ -76,6 +76,10 @@ export default function CustomerInvoicesPage() {
       console.error(e);
     }
   };
+
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("salesOrderId")) setShowCreateModal(true);
+  }, []);
 
   useEffect(() => {
     fetchSession();
@@ -323,9 +327,9 @@ export default function CustomerInvoicesPage() {
             <div className="flex items-center space-x-3">
               <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Status Faktur:</span>
               <div className="inline-flex rounded-xl shadow-xs overflow-hidden border border-white/60">
-                {["DRAFT", "CONFIRMED", "PAID"].map((st) => {
+                {["DRAFT", "POSTED", "PAID"].map((st) => {
                   const isDraft = selectedInvoice.status === "DRAFT" && st === "DRAFT";
-                  const isConfirmed = selectedInvoice.status === "CONFIRMED" && st === "CONFIRMED";
+                  const isConfirmed = selectedInvoice.status === "POSTED" && selectedInvoice.paymentStatus !== "PAID" && st === "POSTED";
                   const isPaid = selectedInvoice.paymentStatus === "PAID" && st === "PAID";
                   const active = isDraft || isConfirmed || isPaid;
 
@@ -366,7 +370,7 @@ export default function CustomerInvoicesPage() {
                 </button>
               )}
 
-              {selectedInvoice.status === "CONFIRMED" && selectedInvoice.paymentStatus !== "PAID" && (
+              {["OWNER", "FINANCE"].includes(user?.role) && selectedInvoice.status === "POSTED" && selectedInvoice.outstandingAmount > 0 && (
                 <Link
                   href={`/accounting/payments?invoiceId=${selectedInvoice.id}`}
                   className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
@@ -511,7 +515,7 @@ export default function CustomerInvoicesPage() {
         </div>
       )}
 
-      {showCreateModal&&<CreateInvoiceModal onClose={()=>setShowCreateModal(false)} onCreated={async invoice=>{setShowCreateModal(false);await fetchInvoices();await fetchInvoiceDetail(invoice.id);}}/>}
+      {showCreateModal&&<CreateInvoiceModal initialOrderId={new URLSearchParams(window.location.search).get("salesOrderId") || ""} onClose={()=>setShowCreateModal(false)} onCreated={async invoice=>{setShowCreateModal(false);await fetchInvoices();await fetchInvoiceDetail(invoice.id);}}/>}
       {/* Collapsible QA Test Runner for T-19 & T-20 */}
       <details hidden className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
         <summary className="cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white select-none">
