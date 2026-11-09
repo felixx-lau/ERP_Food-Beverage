@@ -383,7 +383,7 @@ export default function RegisterPaymentPage() {
                 onClick={handleRegisterPayment}
                 className="w-full py-2.5 btn-glass-primary text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-2 shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
               >
-                <Receipt className="w-4 h-4 text-[#7c3aed]" />
+                <Receipt className="w-4 h-4 text-white" />
                 <span>Konfirmasi Pembayaran</span>
               </button>
             </div>

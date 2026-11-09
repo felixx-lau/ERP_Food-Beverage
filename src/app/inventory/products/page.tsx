@@ -212,7 +212,7 @@ export default function ProductsPage() {
             className="flex items-center space-x-1.5 px-3.5 py-2 text-xs font-bold btn-glass-primary rounded-xl shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus-brand-ring"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>+ Produk Baru</span>
+            <span>Produk Baru</span>
           </button>
 
           {viewMode === "detail" && (

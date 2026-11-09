@@ -43,6 +43,14 @@ export default function PointOfSalePage() {
 
   const [paymentMethod, setPaymentMethod] = useState("QRIS");
   const [tableInfo, setTableInfo] = useState("Takeaway");
+  const [promotions, setPromotions] = useState<any>({accounts:[], coupons:[], contacts:[]});
+  const [loyaltyAccountId, setLoyaltyAccountId] = useState("");
+  const [couponCode, setCouponCode] = useState("");
+  const [newContact, setNewContact] = useState("");
+  const [newCode, setNewCode] = useState("");
+  const [newDiscount, setNewDiscount] = useState("");
+  const loadPromotions = async () => { const r = await fetch('/api/pos/promotions'); if (r.ok) setPromotions(await r.json()); };
+  const createPromotion = async (body: object) => { const r = await fetch('/api/pos/promotions', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)}); const data = await r.json(); if (!r.ok) { alert(data.error || 'Gagal menyimpan promosi.'); return; } setNewCode(''); setNewDiscount(''); await loadPromotions(); };
 
   // Manual / Custom Item Input State
   const [manualModalOpen, setManualModalOpen] = useState(false);
@@ -108,6 +116,7 @@ export default function PointOfSalePage() {
   useEffect(() => {
     fetchSession();
     fetchSessionsAndOrders();
+    loadPromotions();
   }, []);
 
   const handleSwitchRole = async (targetRole: string) => {
@@ -184,8 +193,11 @@ export default function PointOfSalePage() {
 
   // Calculations
   const subtotalNet = cart.reduce((sum, item) => sum + item.qty * item.price, 0);
-  const pbjtTax = Math.round(subtotalNet * 0.1); // PBJT 10%
-  const totalGross = subtotalNet + pbjtTax;
+  const selectedCoupon = promotions.coupons.find((c:any) => c.code === couponCode);
+  const discountAmount = selectedCoupon?.discountAmount ?? 0;
+  let discountLeft = discountAmount;
+  const pbjtTax = cart.reduce((sum, item) => { const net = item.qty * item.price; const applied = Math.min(net, discountLeft); discountLeft -= applied; return sum + Math.round((net - applied) * 0.1); }, 0);
+  const totalGross = subtotalNet - discountAmount + pbjtTax;
 
   // Checkout order action
   const handleCheckout = async () => {
@@ -201,7 +213,7 @@ export default function PointOfSalePage() {
     }
 
     checkoutPending.current=true;setCheckingOut(true);
-    const fingerprint=JSON.stringify({sessionId:activeSession.id,cart,tableInfo,paymentMethod});
+    const fingerprint=JSON.stringify({sessionId:activeSession.id,cart,tableInfo,paymentMethod,loyaltyAccountId,couponCode});
     if(!checkoutKeys.current.has(fingerprint))checkoutKeys.current.set(fingerprint,crypto.randomUUID());
     try {
       const res = await fetch("/api/pos/orders", {
@@ -212,6 +224,7 @@ export default function PointOfSalePage() {
           locationCode: activeSession.locationCode,
           tableInfo,
           paymentMethod,
+          loyaltyAccountId: loyaltyAccountId || undefined, couponCode: couponCode || undefined,
           lines: cart.map((item) => ({
             productSku: item.sku,
             productName: item.name,
@@ -229,8 +242,8 @@ export default function PointOfSalePage() {
 
       setReceipt(data.order);
       checkoutKeys.current.delete(fingerprint);
-      setCart([]);
-      await fetchSessionsAndOrders();
+      setCart([]); setCouponCode(""); setLoyaltyAccountId("");
+      await Promise.all([fetchSessionsAndOrders(), loadPromotions()]);
     } catch (e) {
       alert("Pembayaran belum terkonfirmasi. Coba kembali dengan keranjang yang sama.");
     } finally { checkoutPending.current=false;setCheckingOut(false); }
@@ -805,6 +818,27 @@ export default function PointOfSalePage() {
               </div>
             </div>
 
+            <section className="space-y-2 border-t border-slate-200 pt-3 text-xs" aria-label="Promosi loyalitas digital">
+              <h3 className="font-bold text-slate-900">Promosi & loyalitas (opsional)</h3>
+              <label className="block">Akun pelanggan
+                <select value={loyaltyAccountId} onChange={e=>setLoyaltyAccountId(e.target.value)} className="input-glass w-full rounded-lg p-2 mt-1">
+                  <option value="">Tanpa poin</option>{promotions.accounts.map((a:any)=><option key={a.id} value={a.id}>{promotions.contacts.find((c:any)=>c.id===a.contactId)?.name || a.contactId} — {a.points} poin</option>)}
+                </select>
+              </label>
+              <label className="block">Kupon sekali pakai
+                <select value={couponCode} onChange={e=>setCouponCode(e.target.value)} className="input-glass w-full rounded-lg p-2 mt-1">
+                  <option value="">Tanpa kupon</option>{promotions.coupons.map((c:any)=><option key={c.id} value={c.code}>{c.code} — Rp{c.discountAmount.toLocaleString('id-ID')}</option>)}
+                </select>
+              </label>
+              <p className="text-slate-600">1 poin per Rp10.000 setelah diskon. Kupon tetap terpakai setelah refund.</p>
+              {currentUser?.role === 'OWNER' && <details className="rounded-lg border border-slate-200 p-2"><summary className="cursor-pointer font-semibold">Kelola promosi</summary>
+                <div className="space-y-2 pt-2"><label className="block">Pelanggan <select value={newContact} onChange={e=>setNewContact(e.target.value)} className="input-glass w-full p-2"><option value="">Pilih pelanggan</option>{promotions.contacts.filter((c:any)=>!promotions.accounts.some((a:any)=>a.contactId===c.id)).map((c:any)=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
+                <button className="btn-secondary" disabled={!newContact} onClick={()=>createPromotion({type:'account',contactId:newContact})}>Buat akun loyalitas</button>
+                <label className="block">Kode kupon <input value={newCode} onChange={e=>setNewCode(e.target.value)} className="input-glass w-full p-2" placeholder="PROMO-01" /></label>
+                <label className="block">Diskon (Rp) <input type="number" min="1" step="1" value={newDiscount} onChange={e=>setNewDiscount(e.target.value)} className="input-glass w-full p-2" /></label>
+                <button className="btn-secondary" disabled={!newCode || !newDiscount} onClick={()=>createPromotion({type:'coupon',code:newCode,discountAmount:Number(newDiscount)})}>Buat kupon</button></div>
+              </details>}
+            </section>
             {/* Financial Summary & Payment */}
             <div className="space-y-3 pt-3 border-t border-black/5 text-xs">
               <div className="space-y-1.5 glass-3 p-3.5 rounded-xl border border-white/80 shadow-xs">
@@ -814,6 +848,8 @@ export default function PointOfSalePage() {
                     Rp{subtotalNet.toLocaleString("id-ID")}
                   </span>
                 </div>
+                {discountAmount > 0 && <div className="flex justify-between text-slate-700"><span>Diskon kupon:</span><span>−Rp{discountAmount.toLocaleString('id-ID')}</span></div>}
+                {discountAmount > subtotalNet && <p role="alert" className="text-rose-700">Nilai kupon melebihi subtotal.</p>}
                 <div className="flex justify-between text-[#1d4ed8] font-semibold">
                   <span>PBJT 10% Restoran:</span>
                   <span className="font-mono font-bold">
@@ -843,11 +879,11 @@ export default function PointOfSalePage() {
               </div>
 
               <button
-                disabled={checkingOut || !cart.length || activeSession?.status !== "OPEN"}
+                disabled={checkingOut || !cart.length || discountAmount > subtotalNet || activeSession?.status !== "OPEN"}
                 onClick={handleCheckout}
                 className="w-full py-3 btn-glass-primary font-bold rounded-xl text-xs flex items-center justify-center space-x-2 shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50 focus-brand-ring"
               >
-                <Receipt className="w-4 h-4 text-[#7c3aed]" />
+                <Receipt className="w-4 h-4 text-white" />
                 <span>Bayar Sekarang (Rp{totalGross.toLocaleString("id-ID")})</span>
               </button>
             </div>

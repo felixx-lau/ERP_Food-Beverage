@@ -22,7 +22,9 @@ export async function GET(request: NextRequest) {
       orderBy: { orderDate: "desc" },
     });
 
-    return NextResponse.json({ success: true, orders });
+    const promotions = await prisma.posPromotion.findMany({where:{orderId:{in:orders.map(order=>order.id)}}});
+    const coupons = await prisma.promotionCoupon.findMany({where:{id:{in:promotions.flatMap(p=>p.couponId ? [p.couponId] : [])}}});
+    return NextResponse.json({ success: true, orders: orders.map(order=>{ const p=promotions.find(p=>p.orderId===order.id); return {...order,promotion:p ? {...p,couponCode:coupons.find(c=>c.id===p.couponId)?.code} : null}; }) });
   } catch (error) {
     console.error("Fetch POS orders error:", error);
     return NextResponse.json({ error: "Failed to fetch POS orders" }, { status: 500 });
@@ -38,7 +40,7 @@ export async function POST(request: NextRequest) {
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await request.json();
-    const { sessionId, locationCode = "CAFE-JKT", tableInfo, paymentMethod, lines } = body;
+    const { sessionId, locationCode = "CAFE-JKT", tableInfo, paymentMethod, lines, loyaltyAccountId, couponCode } = body;
 
     if (!lines || !Array.isArray(lines) || lines.length === 0) {
       return NextResponse.json({ error: "Keranjang belanja tidak boleh kosong." }, { status: 400 });
@@ -56,6 +58,7 @@ export async function POST(request: NextRequest) {
       locationCode,
       tableInfo,
       paymentMethod,
+      loyaltyAccountId, couponCode,
       lines: processedLines,
       actor: user,
     }));

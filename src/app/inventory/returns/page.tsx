@@ -371,7 +371,7 @@ export default function ReturnsPage() {
               onClick={() => setShowCreateModal(true)}
               className="px-3.5 py-1.5 bg-[#1d4ed8] hover:bg-[#1e3a8a] text-white rounded-lg text-xs font-bold flex items-center space-x-1.5 shadow-xs transition-colors focus-brand-ring"
             >
-              <Plus className="w-3.5 h-3.5 text-[#7c3aed]" />
+              <Plus className="w-3.5 h-3.5 text-white" />
               <span>Buat Permintaan Retur</span>
             </button>
             <button

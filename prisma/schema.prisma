@@ -784,3 +784,28 @@ model SchemaMigration {
   checksum String
   appliedAt DateTime @default(now())
 }
+
+// SR-20: optional POS loyalty and single-use promotions
+model LoyaltyAccount {
+  id String @id @default(cuid())
+  contactId String @unique
+  points Int @default(0)
+  createdAt DateTime @default(now())
+}
+
+model PromotionCoupon {
+  id String @id @default(cuid())
+  code String @unique
+  discountAmount Int
+  usedOrderId String? @unique
+  createdAt DateTime @default(now())
+}
+
+model PosPromotion {
+  id String @id @default(cuid())
+  orderId String @unique
+  loyaltyAccountId String?
+  couponId String?
+  discountAmount Int @default(0)
+  pointsEarned Int @default(0)
+}

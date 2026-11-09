@@ -22,6 +22,7 @@ for name in ['package.json', 'tsconfig.json', 'next-env.d.ts', 'next.config.mjs'
 source = sqlite3.connect((root/'prisma/erp.db').as_uri()+'?mode=ro', uri=True)
 target = sqlite3.connect(scratch/'prisma/erp.db')
 source.backup(target); target.close(); source.close()
+subprocess.run(['python3', str(scratch/'scripts/migrate_loyalty.py'), '--apply', '--database', str(scratch/'prisma/erp.db')], check=True, cwd=scratch)
 env = os.environ.copy()
 env.update(DATABASE_URL='file:'+str(scratch/'prisma/erp.db'), JWT_SECRET='isolated-verification-secret-not-for-production-2026')
 for name in ['VERCEL', 'AWS_LAMBDA_FUNCTION_NAME']:

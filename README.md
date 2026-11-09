@@ -82,7 +82,7 @@ Sistem menyediakan 6 akun pengguna pengujian bawaan sesuai tabel peran tugas:
    npm run db:migrate:check
    npm run db:migrate
    ```
-   Migrasi diuji pada salinan dahulu, lalu membuat backup sebelum penerapan. Jangan menjalankan `db push` atau seed pada database bisnis yang sudah dipakai. Database baru dapat diinisialisasi dengan schema Prisma, tetapi baseline seed mengganti seluruh isi target dan membutuhkan flag `ALLOW_BASELINE_REPLACE=I_UNDERSTAND_THIS_REPLACES_DATA` yang disengaja.
+   Migrasi loyalitas SR-20 juga dijalankan untuk database utama dan database perusahaan pada folder `prisma/companies`. Migrasi diuji pada salinan dahulu, lalu membuat backup sebelum penerapan. Jangan menjalankan `db push` atau seed pada database bisnis yang sudah dipakai. Database baru dapat diinisialisasi dengan schema Prisma, tetapi baseline seed mengganti seluruh isi target dan membutuhkan flag `ALLOW_BASELINE_REPLACE=I_UNDERSTAND_THIS_REPLACES_DATA` yang disengaja.
 
 5. **Jalankan Server Pengembang:**
    ```bash
@@ -215,3 +215,7 @@ Sesuai ketentuan Bagian 13 Dokumen Tugas (*Integritas Akademik & Penggunaan AI*)
 * **M2 (Lead AI Developer):** Modul Purchase & Inventory (`F-03`, `F-07`, `F-08`, `F-11`, `F-12`, `F-19`; `T-05`, `T-06`, `T-11`–`T-18`).
 * **M3 (UI/UX & Frontend Lead):** Modul Point of Sale & Dashboard (`F-01`, `F-16`, `F-17`, `F-20`; `T-01`, `T-02`, `T-27`, `T-28`, `T-31`, `T-32`).
 * **M4 (QA & Deployment Lead):** Modul Accounting, Invoicing, & General Ledger (`F-09`, `F-13`–`F-15`, `F-18`, `F-21`, `F-22`; `T-19`–`T-26`, `T-29`, `T-30`).
+
+### Promosi loyalitas POS (SR-20)
+
+Owner dapat membuat akun loyalitas untuk pelanggan yang terdaftar dan kupon nominal sekali pakai melalui bagian **Promosi & loyalitas** di POS. Kasir dapat memilih akun dan/atau kupon saat pembayaran. Setiap Rp10.000 subtotal setelah diskon menghasilkan satu poin; pajak PBJT dihitung ulang per baris setelah diskon. Diskon dialokasikan ke baris sesuai urutan keranjang dan tidak boleh melebihi subtotal. Refund penuh membatalkan poin yang diperoleh; kupon tetap terpakai. Pembayaran tanpa promosi tetap menggunakan alur POS dasar. Tes tambahan tersedia di `scripts/test_loyalty.ts`.

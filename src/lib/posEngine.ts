@@ -19,6 +19,8 @@ export interface OpenSessionInput {
 
 export interface CreatePosOrderInput {
   sessionId: string;
+  loyaltyAccountId?: string;
+  couponCode?: string;
   locationCode?: string;
   tableInfo?: string;
   paymentMethod?: string;
@@ -97,6 +99,7 @@ async function createPosOrderImpl(input: CreatePosOrderInput) {
     tableInfo = "Takeaway",
     paymentMethod = "QRIS / Bank",
     lines,
+    loyaltyAccountId, couponCode,
     actor,
   } = input;
 
@@ -119,6 +122,11 @@ async function createPosOrderImpl(input: CreatePosOrderInput) {
     }
 
     if (session.locationCode !== locationCode || (actor.role !== "OWNER" && session.cashierId !== actor.id)) throw new Error("Lokasi atau pemilik sesi POS tidak sesuai.");
+    const loyalty = loyaltyAccountId ? await tx.loyaltyAccount.findUnique({ where: { id: loyaltyAccountId } }) : null;
+    if (loyaltyAccountId && !loyalty) throw new Error("Akun loyalitas tidak ditemukan.");
+    const coupon = couponCode?.trim() ? await tx.promotionCoupon.findUnique({ where: { code: couponCode.trim().toUpperCase() } }) : null;
+    if (couponCode?.trim() && (!coupon || coupon.usedOrderId)) throw new Error("Kupon tidak ditemukan atau sudah digunakan.");
+    let remainingDiscount = coupon?.discountAmount ?? 0;
     // 2. Evaluasi Stok & Hitung Keuangan (SR-03 vs SR-04 / T-28)
     let totalSubtotalNet = 0;
     let totalPbjt = 0;
@@ -159,7 +167,10 @@ async function createPosOrderImpl(input: CreatePosOrderInput) {
 
       if (item.unitPrice !== undefined && item.unitPrice !== product.salesPrice) throw new Error("Harga POS harus sesuai harga SKU.");
       const unitPrice = product.salesPrice;
-      const netLine = item.quantity * unitPrice;
+      const originalLine = item.quantity * unitPrice;
+      const lineDiscount = Math.min(originalLine, remainingDiscount);
+      remainingDiscount -= lineDiscount;
+      const netLine = originalLine - lineDiscount;
       // PBJT 10% round half-up per baris (SR-18)
       const pbjtLine = Math.round(netLine * 0.1);
       const totalLine = netLine + pbjtLine;
@@ -188,6 +199,7 @@ async function createPosOrderImpl(input: CreatePosOrderInput) {
       });
     }
 
+    if (coupon && remainingDiscount > 0) throw new Error("Nilai kupon melebihi subtotal belanja.");
     const orderNumber = await getNextSequence("POS", tx);
 
     // 3. Simpan Pesanan POS
@@ -212,6 +224,14 @@ async function createPosOrderImpl(input: CreatePosOrderInput) {
         lines: { include: { product: true } },
       },
     });
+
+    if (coupon) {
+      const claimed = await tx.promotionCoupon.updateMany({ where: { id: coupon.id, usedOrderId: null }, data: { usedOrderId: posOrder.id } });
+      if (claimed.count !== 1) throw new Error("Kupon sudah digunakan.");
+    }
+    const pointsEarned = loyalty ? Math.floor(totalSubtotalNet / 10000) : 0;
+    if (loyalty) await tx.loyaltyAccount.update({ where: { id: loyalty.id }, data: { points: { increment: pointsEarned } } });
+    if (coupon || loyalty) await tx.posPromotion.create({ data: { orderId: posOrder.id, couponId: coupon?.id, loyaltyAccountId: loyalty?.id, discountAmount: coupon?.discountAmount ?? 0, pointsEarned } });
 
     // 4. Potong Stok Fisik di Lokasi CAFE-JKT
     for (const mov of stockMovements) {
@@ -317,7 +337,7 @@ async function createPosOrderImpl(input: CreatePosOrderInput) {
     });
 
     return {
-      order: posOrder,
+      order: { ...posOrder, promotion: coupon || loyalty ? { discountAmount: coupon?.discountAmount ?? 0, couponCode: coupon?.code, pointsEarned } : null },
       stockMovements,
       journalEntry,
     };

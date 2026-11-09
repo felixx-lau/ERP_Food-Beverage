@@ -201,6 +201,9 @@ export async function executeSeed(prisma: PrismaClient, actorName = "System", ac
     await tx.documentSequence.deleteMany();
     await tx.stockReservation.deleteMany();
     await tx.vendorPrice.deleteMany();
+    await tx.posPromotion.deleteMany();
+    await tx.promotionCoupon.deleteMany();
+    await tx.loyaltyAccount.deleteMany();
     await tx.posRefund.deleteMany();
     await tx.auditLog.deleteMany();
     await tx.internalTransferLine.deleteMany();

@@ -9,9 +9,9 @@
     "lint": "next lint",
     "db:push": "prisma db push",
     "db:seed": "tsx scripts/seed.ts",
-    "db:migrate": "python3 scripts/migrate_preserving_data.py --apply",
-    "db:migrate:check": "python3 scripts/migrate_preserving_data.py",
-    "test": "python3 scripts/verify_isolated.py --suites test_phase2_3 test_phase4 test_phase5 test_phase6 test_phase7 test_phase8 test_charts test_crud test_pdf_cases test_integrity --audit-probes"
+    "db:migrate": "python3 scripts/migrate_preserving_data.py --apply && python3 scripts/migrate_loyalty.py --apply",
+    "db:migrate:check": "python3 scripts/migrate_preserving_data.py && python3 scripts/migrate_loyalty.py",
+    "test": "python3 scripts/verify_isolated.py --suites test_phase2_3 test_phase4 test_phase5 test_phase6 test_phase7 test_phase8 test_loyalty test_charts test_crud test_pdf_cases test_integrity --audit-probes"
   },
   "dependencies": {
     "@prisma/client": "^6.4.1",
