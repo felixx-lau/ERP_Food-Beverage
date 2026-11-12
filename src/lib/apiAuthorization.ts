@@ -9,7 +9,7 @@ export async function authorizeApi(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const read = request.method === 'GET';
   let roles: string[] = [];
-  if (path.startsWith('/api/auth/')) roles = ['OWNER','SALES','WAREHOUSE','PROCUREMENT','FINANCE','CASHIER'];
+  if (path.startsWith('/api/auth/') || path === '/api/chatbot') roles = ['OWNER','SALES','WAREHOUSE','PROCUREMENT','FINANCE','CASHIER'];
   else if (path.startsWith('/api/companies') || path.startsWith('/api/users') || path.startsWith('/api/seed')) roles = ['OWNER'];
   else if (path.startsWith('/api/products')) roles = read ? ['OWNER','SALES','WAREHOUSE','PROCUREMENT','FINANCE','CASHIER'] : ['OWNER','WAREHOUSE'];
   else if (path.startsWith('/api/contacts')) roles = read ? ['OWNER','SALES','WAREHOUSE','PROCUREMENT','FINANCE'] : ['OWNER','SALES','PROCUREMENT'];

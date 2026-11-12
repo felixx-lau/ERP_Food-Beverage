@@ -7,6 +7,7 @@ import AppSwitcherModal from "@/components/AppSwitcherModal";
 import ResetSeedModal from "@/components/ResetSeedModal";
 import AuditHistoryDrawer from "@/components/AuditHistoryDrawer";
 import PageTransition from "@/components/PageTransition";
+import ChatbotWidget from "@/components/ChatbotWidget";
 import { CompanyProvider } from "@/context/CompanyContext";
 
 interface AppLayoutProps {
@@ -159,6 +160,7 @@ export default function AppLayout({
       </div>
 
       {/* Modals & Drawers */}
+      {user && <ChatbotWidget key={`${user.id}:${user.role}`} />}
       <AppSwitcherModal
         isOpen={appSwitcherOpen}
         onClose={() => setAppSwitcherOpen(false)}
