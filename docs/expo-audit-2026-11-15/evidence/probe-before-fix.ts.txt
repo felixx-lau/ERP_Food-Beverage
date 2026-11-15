@@ -1,0 +1,75 @@
+// Audit probes: run exclusively through verify_isolated.py, using a fresh copied fixture.
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { prisma, getActivePrismaClient } from "../src/lib/prisma";
+import { executeSeed } from "../src/lib/seedData";
+import { createInternalTransfer, validateInternalTransfer } from "../src/lib/transferEngine";
+import { openPosSession, createPosOrder } from "../src/lib/posEngine";
+import { createSalesQuotation, confirmSalesOrder } from "../src/lib/salesEngine";
+import { createPurchaseQuotation, confirmPurchaseOrder } from "../src/lib/purchaseEngine";
+import { dispatchAgentTool } from "../src/lib/agent/tools";
+
+if (!path.basename(process.cwd()).startsWith("rasa-aruna-verification-") || path.dirname(fs.realpathSync(process.cwd())) !== fs.realpathSync(os.tmpdir())) throw new Error("Use verify_isolated.py; never run this against a business database.");
+const observations: unknown[] = [];
+function observed(name: string, verdict: "PASS" | "GAP" | "LIMITATION", expected: unknown, actual: unknown) {
+  observations.push({ name, verdict, expected, actual });
+  console.log(verdict === "PASS" ? "[PASS]" : `[OBSERVED ${verdict}]`, name, JSON.stringify(actual));
+}
+async function main() {
+  await executeSeed(prisma);
+  const db = await getActivePrismaClient();
+  const owner = { ...await db.user.findFirstOrThrow({ where: { role: "OWNER" } }), companyId: "default" };
+  const cashier = { ...await db.user.findFirstOrThrow({ where: { role: "CASHIER" } }), companyId: "default" };
+  const customer = await db.contact.findFirstOrThrow({ where: { type: "CUSTOMER", archivedAt: null } });
+  const vendor = await db.contact.findFirstOrThrow({ where: { type: "VENDOR", archivedAt: null } });
+  await db.warehouseLocation.create({ data: { code: "WH-BDG", name: "Audit third location", type: "Internal", usage: "Warehouse" } });
+  for (const sku of ["AUDIT-MOVE", "AUDIT-RESTOCK", "AUDIT-ALLOCATION"]) await db.productVariant.create({ data: { sku, name: sku, size: "Regular", color: "Original", unit: "unit", salesPrice: 10000, standardCost: 5000 } });
+  await db.stockLevel.createMany({ data: [
+    { productSku: "AUDIT-MOVE", locationCode: "WH-JKT", onHand: 20, reserved: 3 },
+    { productSku: "AUDIT-MOVE", locationCode: "WH-BDG", onHand: 0 },
+    { productSku: "AUDIT-MOVE", locationCode: "CAFE-JKT", onHand: 0 },
+    { productSku: "AUDIT-RESTOCK", locationCode: "WH-JKT", onHand: 50 },
+    { productSku: "AUDIT-RESTOCK", locationCode: "WH-BDG", onHand: 2 },
+    { productSku: "AUDIT-ALLOCATION", locationCode: "WH-JKT", onHand: 0 },
+    { productSku: "AUDIT-ALLOCATION", locationCode: "WH-BDG", onHand: 100 },
+  ] });
+  const balance = async () => Object.fromEntries((await db.stockLevel.findMany({ where: { productSku: "AUDIT-MOVE" } })).map(s => [s.locationCode, s.onHand]));
+  for (const [from, to, quantity] of [["WH-JKT", "WH-BDG", 4], ["WH-BDG", "CAFE-JKT", 2]] as const) {
+    const draft = await createInternalTransfer({ sourceLocation: from, destLocation: to, lines: [{ productSku: "AUDIT-MOVE", quantity }], actor: owner });
+    await validateInternalTransfer(draft.id, owner);
+    const moves = await db.stockMove.count({ where: { documentRef: draft.transferNumber } });
+    await validateInternalTransfer(draft.id, owner);
+    assert.equal(await db.stockMove.count({ where: { documentRef: draft.transferNumber } }), moves);
+  }
+  const moved = await balance();
+  assert.deepEqual(moved, { "WH-JKT": 16, "WH-BDG": 2, "CAFE-JKT": 2 });
+  observed("Transfers involving a third registered location and repeat validation", "PASS", { "WH-JKT": 16, "WH-BDG": 2, "CAFE-JKT": 2, total: 20 }, { ...moved, total: Object.values(moved).reduce((a, b) => a + b, 0) });
+  const oversized = await createInternalTransfer({ sourceLocation: "WH-JKT", destLocation: "WH-BDG", lines: [{ productSku: "AUDIT-MOVE", quantity: 14 }], actor: owner });
+  await assert.rejects(() => validateInternalTransfer(oversized.id, owner));
+  assert.deepEqual(await balance(), moved);
+  observed("Transfer cannot consume stock reserved for other orders", "PASS", "Reject 14 when available = 16 - 3 = 13", "Rejected; all location balances unchanged");
+  const quote = await createSalesQuotation({ contactId: customer.id, lines: [{ productSku: "AUDIT-ALLOCATION", quantity: 1, unitPrice: 10000 }], actor: owner });
+  let saleError = "";
+  try { await confirmSalesOrder(quote.id, owner); } catch (error) { saleError = (error as Error).message; }
+  assert(saleError.includes("Stok available"));
+  observed("Sales order cannot automatically allocate from a third warehouse", "LIMITATION", "For future multi-warehouse fulfillment: allocate 1 from WH-BDG's 100 available units", { WH_JKT: 0, WH_BDG: 100, result: saleError });
+  const po = await createPurchaseQuotation({ vendorId: vendor.id, lines: [{ productSku: "AUDIT-RESTOCK", orderedQty: 20, unitPrice: 5000 }], actor: owner });
+  const confirmed = await confirmPurchaseOrder(po.id, owner);
+  assert.equal(confirmed.receipt!.destLocation, "WH-JKT");
+  const plan: any = await dispatchAgentTool({ user: owner, db, companyId: "default", runId: "audit" }, "restock_plan", { location: "WH-BDG", query: "AUDIT-RESTOCK", threshold: 10, target: 30 });
+  const item = plan.items[0];
+  assert.equal(item.openPurchaseQty, 20); assert.equal(item.suggestedQty, 8);
+  observed("Restock proposal subtracts PO inbound to a different warehouse", "GAP", { location: "WH-BDG", available: 2, inboundToThisLocation: 0, suggestedQty: 28 }, { location: "WH-BDG", available: item.available, inboundCountedAcrossLocations: item.openPurchaseQty, suggestedQty: item.suggestedQty, actualReceiptDestination: confirmed.receipt!.destLocation });
+  const before = moved["WH-JKT"];
+  const session = await openPosSession({ cashierId: cashier.id, locationCode: "WH-JKT", openingCash: 0, actor: cashier });
+  const order = await createPosOrder({ sessionId: session.id, locationCode: "WH-JKT", lines: [{ productSku: "AUDIT-MOVE", quantity: 1 }], paymentMethod: "CASH", actor: cashier });
+  const after = (await balance())["WH-JKT"];
+  assert.equal(after, before - 1);
+  observed("Cashier location restriction SR-03 can be bypassed at engine/API input level", "GAP", "Cashier is restricted to CAFE-JKT and cannot sell directly from WH-JKT", { sessionLocation: session.locationCode, orderStatus: order.status, WH_JKT_before: before, WH_JKT_after: after });
+  fs.writeFileSync("expo-operational-audit.json", JSON.stringify({ generatedAt: new Date().toISOString(), isolated: true, observations }, null, 2));
+  console.log("Audit completed: observed gaps are findings, not product passes.");
+  await db.$disconnect();
+}
+main().catch(error => { console.error("[FAIL] Audit execution", error); process.exitCode = 1; });

@@ -19,7 +19,7 @@ export async function documentAction(kind:string,id:string,input:any,actor:Actor
     if(!before)throw new BusinessError('Dokumen tidak ditemukan.',404);
     if(before.version!==undefined){numberValue(input.version,'Versi',0,true);if(before.version!==input.version)throw new BusinessError('Dokumen berubah. Muat ulang terlebih dahulu.',409);}
     const actorWithId=actor as {id:string;name:string;role:any};
-    if(input.action==='confirm')return kind==='sales'?confirmSalesOrder(id,actorWithId):kind==='purchase'?confirmPurchaseOrder(id,actorWithId):Promise.reject(new BusinessError('Dokumen tidak dapat dikonfirmasi.'));
+    if(input.action==='confirm')return kind==='sales'?confirmSalesOrder(id,actorWithId,input.sourceLocation===undefined?undefined:textValue(input.sourceLocation,'Gudang pemenuhan')):kind==='purchase'?confirmPurchaseOrder(id,actorWithId,input.destLocation===undefined?undefined:textValue(input.destLocation,'Gudang penerimaan')):Promise.reject(new BusinessError('Dokumen tidak dapat dikonfirmasi.'));
     if(input.action==='approve'&&kind==='sales')return approveOrderDiscount(id,actorWithId);
     if(input.action==='post')return kind==='invoices'?postCustomerInvoice(id,actorWithId):kind==='bills'?postVendorBill(id,actorWithId):Promise.reject(new BusinessError('Dokumen tidak dapat diposting.'));
     if(input.action==='validate') {

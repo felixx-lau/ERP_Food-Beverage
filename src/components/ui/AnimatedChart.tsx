@@ -1,16 +1,26 @@
 "use client";
 
-import React, { memo, useEffect, useMemo, useRef, useState } from "react";
+import React, { Component, memo, useEffect, useMemo, useRef, useState } from "react";
 import { Chart } from "react-chartjs-2";
 import type { Chart as ChartInstance, ChartData, ChartOptions, Plugin } from "chart.js";
 
 type Kind = "line" | "bar" | "doughnut";
 type Props = { type: Kind; data: ChartData<Kind>; options: ChartOptions<Kind>; reducedMotion: boolean; label: string; revision: unknown };
 
+class ChartBoundary extends Component<{ children: React.ReactNode; revision: unknown }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  componentDidCatch() { console.error("Panel grafik gagal dirender."); }
+  componentDidUpdate(previous: { revision: unknown }) {
+    if (this.state.failed && previous.revision !== this.props.revision) this.setState({ failed: false });
+  }
+  render() { return this.state.failed ? <div role="alert" className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">Grafik belum dapat ditampilkan. Gunakan tabel data di bawah atau segarkan dashboard.</div> : this.props.children; }
+}
+
 function AnimatedChart({ type, data, options, reducedMotion, label }: Props) {
   const root = useRef<HTMLDivElement>(null);
   const chartRef = useRef<ChartInstance<Kind> | null>(null);
-  const timing = useRef({ enter: 1600, update: 420 });
+  const timing = useRef({ enter: 600, update: 240 });
   const initialized = useRef(false);
   const progress = useRef(0);
   const [visible, setVisible] = useState(false);
@@ -18,8 +28,8 @@ function AnimatedChart({ type, data, options, reducedMotion, label }: Props) {
     if (root.current) {
       const tokens = getComputedStyle(root.current);
       timing.current = {
-        enter: parseFloat(tokens.getPropertyValue("--motion-chart-enter")) || 1600,
-        update: parseFloat(tokens.getPropertyValue("--motion-chart-update")) || 420,
+        enter: parseFloat(tokens.getPropertyValue("--motion-chart-enter")) || 600,
+        update: parseFloat(tokens.getPropertyValue("--motion-chart-update")) || 240,
       };
     }
     if (!root.current || !window.IntersectionObserver) { setVisible(true); return; }
@@ -72,6 +82,7 @@ function AnimatedChart({ type, data, options, reducedMotion, label }: Props) {
 }
 
 // A parent input/loading update must not restart a chart animation. Data and callbacks travel together.
-export default memo(AnimatedChart, (previous, next) => previous.revision === next.revision && previous.type === next.type && previous.label === next.label
+function ProtectedChart(props: Props) { return <ChartBoundary revision={props.revision}><AnimatedChart {...props} /></ChartBoundary>; }
+export default memo(ProtectedChart, (previous, next) => previous.revision === next.revision && previous.type === next.type && previous.label === next.label
   && previous.reducedMotion === next.reducedMotion && JSON.stringify(previous.data) === JSON.stringify(next.data)
   && JSON.stringify(previous.options) === JSON.stringify(next.options));

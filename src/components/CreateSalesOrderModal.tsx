@@ -1,8 +1,10 @@
 "use client";
 import ActionButton from "./ui/ActionButton";
 import DialogFrame from "./ui/DialogFrame";
+import {publishDataRefresh} from "./ui/useDataRefresh";
+import { productChoiceLabel, resolveProductChoice } from "@/lib/productChoice";
 
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useId } from "react";
 import { ShoppingCart, Plus, X, Check, AlertCircle, Sparkles } from "lucide-react";
 
 interface OrderLineItem {
@@ -33,6 +35,8 @@ export default function CreateSalesOrderModal({
   const [selectedContactId, setSelectedContactId] = useState("");
   const [lines, setLines] = useState<OrderLineItem[]>([]);
 
+  const formId = useId();
+  const [catalogLoading, setCatalogLoading] = useState(false);
   const pending = useRef(false);
   const requestKey = useRef("");
   const [dirty, setDirty] = useState(false);
@@ -43,38 +47,21 @@ export default function CreateSalesOrderModal({
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isOpen) {
-      Promise.all([
-        fetch("/api/contacts?type=CUSTOMER").then((r) => r.json()),
-        fetch("/api/products").then((r) => r.json()),
-      ])
-        .then(([cData, pData]) => {
-          const cList = cData.contacts || [];
-          const pList = pData.products || [];
-          setContacts(cList);
-          setProducts(pList);
-
-          if (cList.length > 0 && (initialCustomerId || !selectedContactId)) {
-            setSelectedContactId(initialCustomerId || cList[0].id);
-          }
-
-          // Initial 1 line item if empty
-          if (lines.length === 0) {
-            const firstP = pList[0];
-            setLines([
-              {
-                productSku: firstP ? firstP.sku : "RICE-CHICK-S",
-                productName: firstP ? firstP.name : "Nasi Ayam Bakar Sambal Matah",
-                quantity: 2,
-                unitPrice: firstP ? firstP.salesPrice : 48000,
-                discountPercent: 0,
-              },
-            ]);
-          }
-        })
-        .catch(console.error);
-    }
-  }, [isOpen]);
+    if (!isOpen) return;
+    let active = true;
+    setCatalogLoading(true); setErrorMsg(null); setSuccessMsg(null); setDirty(false); requestKey.current = "";
+    setSelectedContactId(initialCustomerId || ""); setLines([{ productSku: "", productName: "", quantity: 1, unitPrice: 0, discountPercent: 0 }]);
+    Promise.all(["/api/contacts?type=CUSTOMER", "/api/products"].map(async url => {
+      const response = await fetch(url); const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Pilihan belum dapat dimuat.");
+      return data;
+    })).then(results => {
+      if (!active) return;
+      setContacts(results[0].contacts || []); setProducts(results[1].products || []);
+    }).catch(error => { if (active) setErrorMsg(error instanceof Error ? error.message : "Pilihan belum dapat dimuat."); })
+      .finally(() => { if (active) setCatalogLoading(false); });
+    return () => { active = false; };
+  }, [isOpen, initialCustomerId]);
 
   // Realtime calculation
   const calculations = useMemo(() => {
@@ -101,19 +88,21 @@ export default function CreateSalesOrderModal({
   if (!isOpen) return null;
 
   const handleAddLine = () => {
+    setDirty(true); requestKey.current = "";
     setLines((prev) => [
       ...prev,
       {
         productSku: "",
         productName: "",
         quantity: 1,
-        unitPrice: 25000,
+        unitPrice: 0,
         discountPercent: 0,
       },
     ]);
   };
 
   const handleRemoveLine = (idx: number) => {
+    setDirty(true); requestKey.current = "";
     if (lines.length <= 1) return;
     setLines((prev) => prev.filter((_, i) => i !== idx));
   };
@@ -125,17 +114,14 @@ export default function CreateSalesOrderModal({
       cur.productName = typedText;
 
       // Check if typed text matches an existing SKU or product Name
-      const match = products.find(
-        (p) =>
-          p.sku.toLowerCase() === typedText.toLowerCase().trim()
-      );
-
+      const match = resolveProductChoice(products, typedText);
       if (match) {
         cur.productSku = match.sku;
-        cur.productName = match.name;
+        cur.productName = productChoiceLabel(match);
         cur.unitPrice = match.salesPrice;
       } else {
-        cur.productSku = typedText;
+        cur.productSku = "";
+        cur.unitPrice = 0;
       }
 
       updated[index] = cur;
@@ -178,8 +164,8 @@ export default function CreateSalesOrderModal({
     }
 
     for (const l of lines) {
-      if (!l.productName && !l.productSku) {
-        setErrorMsg("Nama produk wajib diisi pada setiap baris.");
+      if (!l.productSku) {
+        setErrorMsg("Pilih produk dan varian dari saran pada setiap baris.");
         return;
       }
     }
@@ -217,6 +203,7 @@ export default function CreateSalesOrderModal({
       );
 
       setDirty(false); requestKey.current = "";
+      publishDataRefresh();
       onOrderCreated(data.order);
       onClose();
       setLines([]);
@@ -257,6 +244,8 @@ export default function CreateSalesOrderModal({
 
         {/* Form Body */}
         <form onChange={()=>{setDirty(true);requestKey.current="";}} onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4 flex-1">
+          <fieldset disabled={loading} className="contents">
+          {catalogLoading && <p role="status" className="text-sm text-slate-600">Memuat pelanggan/vendor dan produk…</p>}
           {errorMsg && (
             <div role="alert" className="p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-xs text-rose-900 font-bold">
               {errorMsg}
@@ -271,14 +260,16 @@ export default function CreateSalesOrderModal({
 
           {/* Customer Selection */}
           <div>
-            <label htmlFor="createsalesordermodal-field-0" className="block text-xs font-bold text-slate-800 mb-1">
+            <label htmlFor={`${formId}-party`} className="block text-xs font-bold text-slate-800 mb-1">
               Pelanggan / Pemesan <span className="text-rose-500">*</span>
             </label>
-            <select id="createsalesordermodal-field-0"
+            <select id={`${formId}-party`}
+              required disabled={catalogLoading}
               value={selectedContactId}
               onChange={(e) => setSelectedContactId(e.target.value)}
               className="w-full text-xs px-3.5 py-2.5 input-glass rounded-xl font-semibold text-slate-900"
             >
+              <option value="">Pilih pelanggan…</option>
               {contacts.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.id} — {c.name} ({c.city})
@@ -289,17 +280,17 @@ export default function CreateSalesOrderModal({
 
           {/* Line Items */}
           <div className="space-y-2 pt-1">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <label className="text-xs font-semibold text-[#0f172a]">Item Menu & Pesanan</label>
-                <p className="text-[10px] text-slate-400">
-                  Pilih SKU produk sendiri (atau pilih dari saran), atur kuantitas, dan harga satuan
+                <p className="text-xs text-slate-600">
+                  Cari nama atau SKU, lalu pilih varian yang sesuai dari saran.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={handleAddLine}
-                className="text-xs font-bold text-[#1d4ed8] hover:text-[#1e3a8a] flex items-center space-x-1"
+                className="text-sm font-semibold text-blue-700 flex items-center gap-1 shrink-0"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>+ Tambah Baris</span>
@@ -307,9 +298,9 @@ export default function CreateSalesOrderModal({
             </div>
 
             {/* Datalist for Product Autocomplete Suggestions */}
-            <datalist id="sales-product-suggestions">
+            <datalist id={`${formId}-products`}>
               {products.map((p) => (
-                <option key={p.sku} value={p.sku}>
+                <option key={p.sku} value={productChoiceLabel(p)}>
                   {p.sku} — Rp {p.salesPrice?.toLocaleString("id-ID")}
                 </option>
               ))}
@@ -322,14 +313,14 @@ export default function CreateSalesOrderModal({
                   className="p-3.5 rounded-xl bg-[#f1f5f9] border border-slate-200 grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center"
                 >
                   <div className="sm:col-span-4">
-                    <label htmlFor="createsalesordermodal-field-1" className="block text-[10px] font-semibold text-slate-500 mb-0.5">
+                    <label htmlFor={`${formId}-product-${idx}`} className="block text-xs font-semibold text-slate-600 mb-0.5">
                       Nama Produk / Menu <span className="text-rose-500">*</span>
                     </label>
-                    <input id="createsalesordermodal-field-1"
+                    <input id={`${formId}-product-${idx}`}
                       type="text"
                       required
-                      list="sales-product-suggestions"
-                      placeholder="Ketik produk (misal: Nasi Padang, Es Kopi)"
+                      list={`${formId}-products`}
+                      placeholder="Cari nama, SKU, atau pilih varian…"
                       value={line.productName}
                       onChange={(e) => handleProductInput(idx, e.target.value)}
                       className="w-full text-xs px-2.5 py-1.5 border border-slate-200 rounded-lg bg-white focus:ring-1 focus:ring-[#1d4ed8]"
@@ -337,10 +328,10 @@ export default function CreateSalesOrderModal({
                   </div>
 
                   <div className="sm:col-span-2">
-                    <label htmlFor="createsalesordermodal-field-2" className="block text-[10px] font-semibold text-slate-500 mb-0.5">
+                    <label htmlFor={`${formId}-quantity-${idx}`} className="block text-xs font-semibold text-slate-600 mb-0.5">
                       Kuantitas
                     </label>
-                    <input id="createsalesordermodal-field-2"
+                    <input id={`${formId}-quantity-${idx}`}
                       type="number"
                       min={1}
                       value={line.quantity}
@@ -350,13 +341,13 @@ export default function CreateSalesOrderModal({
                   </div>
 
                   <div className="sm:col-span-3">
-                    <label htmlFor="createsalesordermodal-field-3" className="block text-[10px] font-semibold text-slate-500 mb-0.5">
+                    <label htmlFor={`${formId}-price-${idx}`} className="block text-xs font-semibold text-slate-600 mb-0.5">
                       Harga Satuan (Rp)
                     </label>
-                    <input id="createsalesordermodal-field-3"
+                    <input id={`${formId}-price-${idx}`}
                       type="number"
                       min={0}
-                      step={500}
+                      step={1}
                       value={line.unitPrice}
                       onChange={(e) => handleLineChange(idx, "unitPrice", e.target.value)}
                       className="w-full text-xs px-2.5 py-1.5 border border-slate-200 rounded-lg bg-white font-mono focus:ring-1 focus:ring-[#1d4ed8]"
@@ -364,10 +355,10 @@ export default function CreateSalesOrderModal({
                   </div>
 
                   <div className="sm:col-span-1">
-                    <label htmlFor="createsalesordermodal-field-4" className="block text-[10px] font-semibold text-slate-500 mb-0.5">
+                    <label htmlFor={`${formId}-discount-${idx}`} className="block text-xs font-semibold text-slate-600 mb-0.5">
                       Diskon %
                     </label>
-                    <input id="createsalesordermodal-field-4"
+                    <input id={`${formId}-discount-${idx}`}
                       type="number"
                       min={0}
                       max={20}
@@ -424,7 +415,7 @@ export default function CreateSalesOrderModal({
             </button>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || catalogLoading || !selectedContactId || lines.some(line => !line.productSku)}
               className="px-5 py-2.5 text-xs font-bold btn-glass-primary rounded-xl shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg flex items-center space-x-1.5"
             >
               {loading ? (
@@ -437,6 +428,7 @@ export default function CreateSalesOrderModal({
               )}
             </button>
           </div>
+          </fieldset>
         </form>
       </div>
     </DialogFrame>

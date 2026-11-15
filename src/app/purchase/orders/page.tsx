@@ -184,7 +184,7 @@ export default function PurchaseOrdersPage() {
 
       {selectedOrder && <DocumentControls kind="purchase" record={selectedOrder} role={user?.role} onChanged={async () => { await fetchOrders(); await fetchOrderDetail(selectedOrder.id); }} />}
 
-      <DocumentList records={orders} selectedId={selectedOrder?.id} onSelect={fetchOrderDetail}/>
+      <DocumentList loading={loading} records={orders} selectedId={selectedOrder?.id} onSelect={fetchOrderDetail}/>
 
 
       {/* Selected PO Detail */}

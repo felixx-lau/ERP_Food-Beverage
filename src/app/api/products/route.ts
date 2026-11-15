@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { recordAuditLog } from "@/lib/audit";
+import { STOCK_POLICY, availableStock, stockAttention } from "@/lib/stockPolicy";
 
 export async function GET(request: NextRequest) {
   const accessDenied = await authorizeApi(request);
@@ -61,7 +62,11 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    return NextResponse.json({ success: true, products: user.role === "CASHIER" ? enriched.map(p => ({sku:p.sku,name:p.name,size:p.size,color:p.color,unit:p.unit,salesPrice:p.salesPrice,cafeStock:p.cafeStock})) : enriched });
+    const categories = await prisma.category.findMany({ where: { archivedAt: null }, select: { code: true, name: true } });
+    const locations = await prisma.warehouseLocation.findMany({ where: { archivedAt: null, ...(user.role === "CASHIER" ? { code: "CAFE-JKT" } : {}) }, select: { code: true, name: true }, orderBy: { code: "asc" } });
+    const scoped = enriched.map(p => ({ ...p, lowStockLocations: locations.filter(location => stockAttention(p.stockLevels.find(s => s.locationCode === location.code) || { onHand: 0, reserved: 0 })).map(location => location.code), totalAvailable: p.stockLevels.reduce((n, s) => n + availableStock(s), 0) }));
+
+    return NextResponse.json({ success: true, asOf: new Date().toISOString(), stockPolicy: STOCK_POLICY, locations, categories, products: user.role === "CASHIER" ? scoped.map(p => ({sku:p.sku,name:p.name,size:p.size,color:p.color,unit:p.unit,salesPrice:p.salesPrice,categoryCode:p.categoryCode,cafeStock:p.cafeStock})) : scoped });
   } catch (error) {
     console.error("Fetch products error:", error);
     return NextResponse.json({ error: "Failed to fetch products" }, { status: 500 });

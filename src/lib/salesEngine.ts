@@ -212,7 +212,7 @@ async function approveOrderDiscountImpl(orderId: string, actor: { id: string; na
   return updated;
 }
 
-async function confirmSalesOrderImpl(orderId: string, actor: { id: string; name: string; role: Role }) {
+async function confirmSalesOrderImpl(orderId: string, actor: { id: string; name: string; role: Role }, sourceLocation = "WH-JKT") {
   permit(actor, ["OWNER","SALES"]);
   const order = await prisma.salesOrder.findUnique({
     where: { id: orderId },
@@ -230,6 +230,7 @@ async function confirmSalesOrderImpl(orderId: string, actor: { id: string; name:
   }
 
   editable(order.status);
+  if (!await prisma.warehouseLocation.findFirst({ where: { code: sourceLocation, archivedAt: null } })) throw new Error("Lokasi pemenuhan tidak aktif atau tidak ditemukan.");
   uniqueLines(order.lines, l => l.productSku);
   for (const l of order.lines) { quantity(l.quantity); money(l.unitPrice); discount(l.discountPercent); }
   // 1. Discount Approval Check (SR-08 / T-10)
@@ -267,7 +268,7 @@ async function confirmSalesOrderImpl(orderId: string, actor: { id: string; name:
     );
   }
 
-  // 3. Database Transaction: Lock price, Update SO status, Create Inventory Reservation at WH-JKT, Create Draft DO
+  // Reserve and fulfill from one explicitly selected active location.
   const result = await prisma.$transaction(async (tx) => {
     // A. Update SO to CONFIRMED and lock price
     const confirmedOrder = await tx.salesOrder.update({
@@ -280,12 +281,12 @@ async function confirmSalesOrderImpl(orderId: string, actor: { id: string; name:
       include: { lines: true, contact: true },
     });
 
-    // B. Reserve Stock at WH-JKT (SR-04 / F-07)
+    // B. Reserve available stock (SR-04 / F-07).
     for (const line of order.lines) {
-      const stock = await tx.stockLevel.findUnique({ where: { productSku_locationCode: { productSku: line.productSku, locationCode: 'WH-JKT' } } });
+      const stock = await tx.stockLevel.findUnique({ where: { productSku_locationCode: { productSku: line.productSku, locationCode: sourceLocation } } });
       if (!stock || stock.onHand - stock.reserved < line.quantity) throw new Error('Stok available tidak mencukupi untuk reservasi (SR-04).');
       await tx.stockLevel.update({ where: { id: stock.id }, data: { reserved: { increment: line.quantity } } });
-      await tx.stockReservation.create({ data: { salesOrderLineId: line.id, locationCode: "WH-JKT", quantity: line.quantity } });
+      await tx.stockReservation.create({ data: { salesOrderLineId: line.id, locationCode: sourceLocation, quantity: line.quantity } });
     }
 
     // C. Create linked Delivery Order in DRAFT status
@@ -294,7 +295,7 @@ async function confirmSalesOrderImpl(orderId: string, actor: { id: string; name:
       data: {
         deliveryNumber,
         salesOrderId: confirmedOrder.id,
-        sourceLocation: "WH-JKT",
+        sourceLocation,
         status: "DRAFT",
         lines: {
           create: order.lines.map((l) => ({
@@ -324,7 +325,7 @@ async function confirmSalesOrderImpl(orderId: string, actor: { id: string; name:
       isPriceLocked: true,
       linkedDO: result.deliveryOrder.deliveryNumber,
     },
-    notes: `Sales Order ${order.orderNumber} dikonfirmasi. Reservasi dibuat di WH-JKT dan DO ${result.deliveryOrder.deliveryNumber} terbentuk.`,
+    notes: `Sales Order ${order.orderNumber} dikonfirmasi. Reservasi dibuat di ${sourceLocation} dan DO ${result.deliveryOrder.deliveryNumber} terbentuk.`,
   });
 
   return result;

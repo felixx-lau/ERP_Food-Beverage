@@ -17,6 +17,8 @@ interface AppLayoutProps {
     name: string;
     email: string;
     role: string;
+    companyId?: string;
+    sessionVersion?: number;
   } | null;
   onSwitchRole?: (role: string, userId?: string) => Promise<void>;
   breadcrumbs?: Array<{ label: string; href?: string }>;
@@ -146,7 +148,7 @@ export default function AppLayout({
                 )}
               </div>
               {actions && (
-                <div className="flex items-center flex-wrap gap-2 self-start sm:self-auto">
+                <div className="flex min-w-0 max-w-full w-full sm:w-auto items-center flex-wrap gap-2 self-start sm:self-auto [&>div]:min-w-0 [&>div]:max-w-full [&select]:min-w-0 [&select]:max-w-full [&select]:flex-1">
                   {actions}
                 </div>
               )}
@@ -160,7 +162,7 @@ export default function AppLayout({
       </div>
 
       {/* Modals & Drawers */}
-      {user && <ChatbotWidget key={`${user.id}:${user.role}`} />}
+      {user && <ChatbotWidget key={`${user.companyId}:${user.id}:${user.role}:${user.sessionVersion}`} identity={`${user.companyId || "default"}:${user.id}:${user.role}:${user.sessionVersion || 0}`} role={user.role} />}
       <AppSwitcherModal
         isOpen={appSwitcherOpen}
         onClose={() => setAppSwitcherOpen(false)}

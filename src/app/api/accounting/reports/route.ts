@@ -3,6 +3,7 @@ import { withUser } from '@/lib/apiResult';
 import { prisma } from '@/lib/prisma';
 import { permit } from '@/lib/validation';
 import { calculateCustomerCreditStatus } from '@/lib/creditControl';
+import { financialSummary } from '@/lib/financialSummary';
 import { getFinancialReconciliation } from '@/lib/dashboardEngine';
 export async function GET(request:NextRequest){return withUser(request,async user=>{
   permit(user,['OWNER','FINANCE']);
@@ -12,5 +13,6 @@ export async function GET(request:NextRequest){return withUser(request,async use
   const customers=await prisma.contact.findMany({where:{type:'CUSTOMER'}}),vendors=await prisma.contact.findMany({where:{type:'VENDOR'}});
   const receivables=await Promise.all(customers.map(async c=>({id:c.id,name:c.name,...await calculateCustomerCreditStatus(c.id)})));
   const payables=await Promise.all(vendors.map(async v=>{const bills=await prisma.vendorBill.findMany({where:{vendorId:v.id,status:{in:['POSTED','PAID']},isPosted:true}});return {id:v.id,name:v.name,outstanding:v.openPayable+bills.reduce((n,b)=>n+b.outstandingAmount,0)};}));
-  return {success:true,trialBalance,profitAndLoss:{revenue,returns,expenses,profit:revenue-returns-expenses},receivables,payables,reconciliation:await getFinancialReconciliation()};
+  const periodReport = request.nextUrl.searchParams.has('start') || request.nextUrl.searchParams.has('end') ? await financialSummary(prisma,request.nextUrl.searchParams.get('start')||undefined,request.nextUrl.searchParams.get('end')||undefined) : null;
+  return {success:true,periodReport,trialBalance,profitAndLoss:{revenue,returns,expenses,profit:revenue-returns-expenses},receivables,payables,reconciliation:await getFinancialReconciliation()};
 });}

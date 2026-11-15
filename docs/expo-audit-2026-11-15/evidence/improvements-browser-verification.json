@@ -1,0 +1,51 @@
+{
+  "date": "2026-11-15",
+  "environment": "Mutation testing on isolated copy at port 3002; final read-only business view on main app at localhost:3000; routine main-demo login audit only.",
+  "checks": [
+    {
+      "name": "All four chart types render and change period without console errors",
+      "passed": true
+    },
+    {
+      "name": "SO form starts empty; ambiguous Latte leaves save disabled; selected Iced variant prices at 33000",
+      "passed": true
+    },
+    {
+      "name": "UI draft created once; confirmation at empty WH-BDG rejected; WH-JKT succeeds with linked DO",
+      "passed": true
+    },
+    {
+      "name": "Mobile 390x844 document width <= viewport after header fix; two rows no duplicate IDs",
+      "passed": true,
+      "measuredDocumentWidth": 384,
+      "viewport": 390
+    },
+    {
+      "name": "Inventory WH-BDG AUDIT-RESTOCK shows physical7 reserved0 available7",
+      "passed": true
+    },
+    {
+      "name": "Finance period Feb1 UI shows revenue123456/profit123456 from fixture",
+      "passed": true
+    },
+    {
+      "name": "Chat restored after navigation and reload in same user/company session",
+      "passed": true
+    },
+    {
+      "name": "Final real model natural-language financial request returns server-formatted journal result with period and server timestamp",
+      "passed": true
+    },
+    {
+      "name": "Main application homepage shows role-scoped priorities; main services retained",
+      "passed": true
+    }
+  ],
+  "screenshots": [
+    "home-after.jpg",
+    "dashboard-after.jpg",
+    "sales-form-mobile-after.jpg",
+    "ai-finance-after.jpg"
+  ],
+  "limits": "No concurrent-staff load testing, full accessibility audit, offline warehouse or production deployment verification."
+}

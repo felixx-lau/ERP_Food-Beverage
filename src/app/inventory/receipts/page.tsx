@@ -199,7 +199,7 @@ export default function GoodsReceiptsPage() {
 
       {selectedReceipt && <DocumentControls kind="receipts" record={selectedReceipt} role={user?.role} onChanged={async () => { await fetchReceipts(); await fetchReceiptDetail(selectedReceipt.id); }} />}
 
-      <DocumentList records={receipts} selectedId={selectedReceipt?.id} onSelect={fetchReceiptDetail}/>
+      <DocumentList loading={loading} records={receipts} selectedId={selectedReceipt?.id} onSelect={fetchReceiptDetail}/>
 
 
       {/* Selected Receipt Detail */}

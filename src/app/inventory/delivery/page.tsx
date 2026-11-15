@@ -187,7 +187,7 @@ export default function DeliveryPage() {
 
       {selectedDelivery && <DocumentControls kind="deliveries" record={selectedDelivery} role={user?.role} onChanged={async () => { await fetchDeliveries(); await fetchDeliveryDetail(selectedDelivery.id); }} />}
 
-      <DocumentList records={deliveries} selectedId={selectedDelivery?.id} onSelect={fetchDeliveryDetail}/>
+      <DocumentList loading={loading} records={deliveries} selectedId={selectedDelivery?.id} onSelect={fetchDeliveryDetail}/>
 
 
       {/* Selected Delivery Order Detail */}

@@ -245,23 +245,7 @@ export default function DashboardPage() {
             <span>Segarkan Data</span>
           </button>
 
-          {simulatedDiff === 0 ? (
-            <button
-              onClick={() => handleToggleSimulation(1)}
-              className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-semibold shadow-xs transition-colors focus-brand-ring"
-            >
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-              <span>Simulasikan Selisih +1 Unit (T-32)</span>
-            </button>
-          ) : (
-            <button
-              onClick={() => handleToggleSimulation(0)}
-              className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg text-xs font-semibold shadow-xs transition-colors focus-brand-ring"
-            >
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Kembalikan Normal (0 Unit)</span>
-            </button>
-          )}
+
         </div>
       }
     >
@@ -552,7 +536,7 @@ export default function DashboardPage() {
       </div>}
 
       {/* Collapsible Interactive Test Runners (T-31 & T-32) */}
-      <details hidden className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
+      <details className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
         <summary className="cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white select-none">
           <div className="flex items-center space-x-2">
             <span className="px-2 py-0.5 rounded-md bg-[#7c3aed] text-[#ffffff] font-bold text-[10px] uppercase">
@@ -564,6 +548,23 @@ export default function DashboardPage() {
             ▼
           </span>
         </summary>
+<div className="flex flex-wrap gap-3 my-4">          {simulatedDiff === 0 ? (
+            <button
+              onClick={() => handleToggleSimulation(1)}
+              className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-semibold shadow-xs transition-colors focus-brand-ring"
+            >
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+              <span>Simulasikan Selisih +1 Unit (T-32)</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => handleToggleSimulation(0)}
+              className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg text-xs font-semibold shadow-xs transition-colors focus-brand-ring"
+            >
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Kembalikan Normal (0 Unit)</span>
+            </button>
+          )}</div>
 
         <div className="pt-4 mt-3 border-t border-slate-800 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">

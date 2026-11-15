@@ -5,6 +5,10 @@ import { getNextSequence } from "./sequences";
 import { logAudit } from "./audit";
 import { Role } from "@prisma/client";
 
+function checkPosLocation(actor: OpenSessionInput["actor"], locationCode: string) {
+  if (actor.role === "CASHIER" && locationCode !== "CAFE-JKT") throw new Error("Kasir hanya dapat bertransaksi dari gerai CAFE-JKT (SR-03).");
+}
+
 export interface OpenSessionInput {
   sessionCode?: string;
   cashierId: string;
@@ -42,6 +46,7 @@ export interface CreatePosOrderInput {
 async function openPosSessionImpl(input: OpenSessionInput) {
   const { cashierId, locationCode = "CAFE-JKT", openingCash = 0, actor } = input;
   permit(actor, ["OWNER", "CASHIER"]); money(openingCash);
+  checkPosLocation(actor, locationCode);
   if (actor.role !== "OWNER" && cashierId !== actor.id) throw new Error("Kasir sesi harus sesuai pengguna.");
   if (!await prisma.warehouseLocation.findFirst({ where: { code: locationCode, archivedAt: null } })) throw new Error("Lokasi tidak terdaftar.");
 
@@ -104,6 +109,7 @@ async function createPosOrderImpl(input: CreatePosOrderInput) {
   } = input;
 
   permit(actor, ["OWNER", "CASHIER"]);
+  checkPosLocation(actor, locationCode);
   uniqueLines(lines, l => l.productSku);
   lines.forEach(l => { quantity(l.quantity); if (l.unitPrice !== undefined) money(l.unitPrice); });
   if (!["QRIS / Bank","QRIS","BANK","CASH"].includes(paymentMethod)) throw new Error("Metode pembayaran tidak valid.");

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import AppLayout from "@/components/AppLayout";
+import OperationalOverview from "@/components/OperationalOverview";
 import { APPS_CATALOG } from "@/components/AppSwitcherModal";
 import CreateProductModal from "@/components/CreateProductModal";
 import CreateContactModal from "@/components/CreateContactModal";
@@ -198,18 +199,19 @@ export default function HomePage() {
         </div>
       }
     >
+      {user && <OperationalOverview key={`${user.id}:${user.role}`} identity={`${user.id}:${user.role}`} />}
       <section className="welcome-panel rounded-2xl border border-indigo-100 p-6 sm:p-8 relative overflow-hidden" aria-label="Aksi cepat">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
           <div><p className="text-[11px] font-semibold tracking-[.12em] uppercase text-indigo-100 mb-2">RASA ARUNA · BUSINESS WORKSPACE</p><h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-white">Selamat datang, {user?.name?.split(" ")[0] || "Pengguna"}.</h2><p className="text-sm text-indigo-100 mt-2">Kelola bisnis Anda, mulai dari pesanan hingga laporan keuangan.</p></div>
-          <button onClick={() => router.push("/pos")} className="btn-primary welcome-cta self-start shrink-0"><Store className="w-4 h-4" />Buka kasir POS<ChevronRight className="w-4 h-4" /></button>
+          <button onClick={() => router.push(user?.role === "CASHIER" ? "/pos" : user?.role === "OWNER" || user?.role === "FINANCE" ? "/dashboard" : user?.role === "WAREHOUSE" ? "/inventory/products" : user?.role === "PROCUREMENT" ? "/purchase/orders" : "/sales/orders")} className="btn-primary welcome-cta self-start shrink-0"><Store className="w-4 h-4" />{user?.role === "CASHIER" ? "Buka kasir POS" : "Buka ruang kerja"}<ChevronRight className="w-4 h-4" /></button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mt-7">
           {[
-            { label: "Tambah produk", hint: "Menu & stok awal", icon: Package, action: () => setProductModalOpen(true) },
-            { label: "Buat penjualan", hint: "Pesanan pelanggan", icon: ShoppingCart, action: () => setSalesOrderModalOpen(true) },
-            { label: "Tambah pelanggan", hint: "Kontak & mitra bisnis", icon: UserPlus, action: () => setContactModalOpen(true) },
-            { label: "Buat pembelian", hint: "Pengadaan dari vendor", icon: ShoppingBag, action: () => setPurchaseOrderModalOpen(true) },
-          ].map(action => <button key={action.label} onClick={action.action} className="flex items-center gap-3 text-left bg-white border border-slate-200/80 rounded-xl p-4 hover:border-indigo-300 hover:shadow-sm transition-all group"><span className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0"><action.icon className="w-5 h-5" /></span><span><span className="block text-[13px] font-semibold text-slate-800">{action.label}</span><span className="block text-xs text-slate-500 mt-1">{action.hint}</span></span><Plus className="w-4 h-4 text-slate-400 ml-auto shrink-0 group-hover:text-indigo-600" /></button>)}
+            { label: "Tambah produk", hint: "Katalog produk", roles: ["OWNER","WAREHOUSE"], icon: Package, action: () => setProductModalOpen(true) },
+            { label: "Buat penjualan", hint: "Pesanan pelanggan", roles: ["OWNER","SALES"], icon: ShoppingCart, action: () => setSalesOrderModalOpen(true) },
+            { label: "Tambah pelanggan", hint: "Kontak & mitra bisnis", roles: ["OWNER","SALES","PROCUREMENT"], icon: UserPlus, action: () => setContactModalOpen(true) },
+            { label: "Buat pembelian", hint: "Pengadaan dari vendor", roles: ["OWNER","PROCUREMENT"], icon: ShoppingBag, action: () => setPurchaseOrderModalOpen(true) },
+          ].filter(action => action.roles.includes(user?.role || "")).map(action => <button key={action.label} onClick={action.action} className="flex items-center gap-3 text-left bg-white border border-slate-200/80 rounded-xl p-4 hover:border-indigo-300 hover:shadow-sm transition-all group"><span className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0"><action.icon className="w-5 h-5" /></span><span><span className="block text-[13px] font-semibold text-slate-800">{action.label}</span><span className="block text-xs text-slate-500 mt-1">{action.hint}</span></span><Plus className="w-4 h-4 text-slate-400 ml-auto shrink-0 group-hover:text-indigo-600" /></button>)}
         </div>
       </section>
 

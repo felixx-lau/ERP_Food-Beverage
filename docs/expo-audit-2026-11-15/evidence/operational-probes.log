@@ -1,0 +1,6 @@
+[PASS] Transfers involving a third registered location and repeat validation {"CAFE-JKT":2,"WH-BDG":2,"WH-JKT":16,"total":20}
+[PASS] Transfer cannot consume stock reserved for other orders "Rejected; all location balances unchanged"
+[OBSERVED LIMITATION] Sales order cannot automatically allocate from a third warehouse {"WH_JKT":0,"WH_BDG":100,"result":"Stok available tidak mencukupi untuk reservasi (SR-04)."}
+[OBSERVED GAP] Restock proposal subtracts PO inbound to a different warehouse {"location":"WH-BDG","available":2,"inboundCountedAcrossLocations":20,"suggestedQty":8,"actualReceiptDestination":"WH-JKT"}
+[OBSERVED GAP] Cashier location restriction SR-03 can be bypassed at engine/API input level {"sessionLocation":"WH-JKT","WH_JKT_before":16,"WH_JKT_after":15}
+Audit completed: observed gaps are findings, not product passes.

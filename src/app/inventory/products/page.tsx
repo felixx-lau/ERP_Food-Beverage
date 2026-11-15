@@ -10,9 +10,16 @@ import KPICard from "@/components/KPICard";
 import CreateProductModal from "@/components/CreateProductModal";
 import { Package, Play, Layers, Building, RefreshCw, MapPin, Tag, Plus, List, LayoutGrid, AlertTriangle, CheckCircle2, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import useDataRefresh from "@/components/ui/useDataRefresh";
+import { STOCK_POLICY } from "@/lib/stockPolicy";
 
 export default function ProductsPage() {
   const [user, setUser] = useState<any>(null);
+  const [locations, setLocations] = useState<Array<{code:string;name:string}>>([]);
+  const [location, setLocation] = useState("ALL");
+  useEffect(() => { const chosen = new URLSearchParams(window.location.search).get("location"); if(chosen) setLocation(chosen); }, []);
+  const [updatedAt, setUpdatedAt] = useState("");
+  const [loadError, setLoadError] = useState("");
   const [products, setProducts] = useState<any[]>([]);
   const [selectedSku, setSelectedSku] = useState<string>("RICE-CHICK-S");
   const [productDetail, setProductDetail] = useState<any>(null);
@@ -33,11 +40,12 @@ export default function ProductsPage() {
   };
 
   const fetchProducts = async () => {
-    setLoading(true);
     try {
-      const res = await fetch("/api/products");
+      const res = await fetch("/api/products", {cache: "no-store"});
+      if (!res.ok) throw new Error("Persediaan belum dapat dimuat. Segarkan untuk mencoba lagi.");
       if (res.ok) {
         const data = await res.json();
+        setLocations(data.locations || []); setUpdatedAt(data.asOf || new Date().toISOString()); setLoadError("");
         const list = data.products || [];
         setProducts(list);
         if (list.length > 0) {
@@ -49,10 +57,12 @@ export default function ProductsPage() {
           setProductDetail(null);
         }
       }
-    } finally {
+    } catch (error) { setLoadError(error instanceof Error ? error.message : "Persediaan gagal dimuat."); } finally {
       setLoading(false);
     }
   };
+
+  useDataRefresh(async () => { await fetchProducts(); if (selectedSku) await fetchProductDetail(selectedSku); });
 
   const fetchProductDetail = async (sku: string) => {
     try {
@@ -170,12 +180,12 @@ export default function ProductsPage() {
     }
   };
 
-  const table = useTableView(products, p => `${p.sku} ${p.name} ${p.size} ${p.color}`, (p, key) => key === "name" ? p.name : p[key] ?? 0);
+  const table = useTableView(products, p => `${p.sku} ${p.name} ${p.size} ${p.color}`, (p, key) => key === "name" ? p.name : key === "totalAvailable" ? (location === "ALL" ? p.totalAvailable : (()=>{const stock=p.stockLevels?.find((s:any)=>s.locationCode===location);return stock?stock.onHand-stock.reserved:0;})()) : p[key] ?? 0);
   return (
     <AppLayout
       currentUser={user}
       onSwitchRole={handleSwitchRole}
-      breadcrumbs={[{ label: "Persediaan & Gudang" }, { label: "15 SKU Master Produk" }]}
+      breadcrumbs={[{ label: "Persediaan & Gudang" }, { label: "Produk & lokasi" }]}
       title="Produk & persediaan"
       subtitle="Kelola menu, harga, dan ketersediaan stok di setiap lokasi."
       wireframe="Wireframe S-03"
@@ -232,7 +242,8 @@ export default function ProductsPage() {
       }
     >
       {/* Empty State when clean company */}
-      {products.length === 0 ? (
+      {loadError && <p role="alert" className="rounded-xl bg-rose-50 p-4 text-rose-800">{loadError}</p>}
+      {loading && !products.length ? <p role="status" className="surface-card p-6 text-slate-600">Memuat persediaan…</p> : !loadError && products.length === 0 ? (
         <div className="glass-2 rounded-2xl border border-dashed border-slate-300 p-12 text-center space-y-4">
           <div className="w-16 h-16 rounded-2xl bg-amber-500/15 text-[#6d28d9] flex items-center justify-center mx-auto shadow-xs border border-amber-500/30">
             <Package className="w-8 h-8" />
@@ -266,7 +277,7 @@ export default function ProductsPage() {
                 </h3>
               </div>
               <p className="text-xs text-slate-600 font-medium mt-0.5">
-                Monitoring multi-lokasi stok fisik On-Hand (WH-JKT vs CAFE-JKT), margin keuntungan, dan status ambang batas minimum (&lt; 20 unit)
+                Stok tersedia = fisik dikurangi cadangan pesanan. Periksa setiap lokasi sebelum menjanjikan barang.
               </p>
             </div>
             <div className="flex items-center space-x-2 text-xs font-bold">
@@ -275,12 +286,12 @@ export default function ProductsPage() {
               </span>
               <span className="px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-950 border border-amber-500/40 flex items-center space-x-1 backdrop-blur-xs">
                 <AlertTriangle className="w-3.5 h-3.5 text-amber-700" />
-                <span>Min Stock Alert: &lt; 20 unit</span>
+                <span>Minimum tersedia: &lt; {STOCK_POLICY.minimum} unit / lokasi</span>
               </span>
             </div>
           </div>
 
-          <div className="px-5"><TableSearch value={table.query} onChange={table.setQuery} label="Cari nama produk atau SKU…" /></div>
+          <div className="px-5 flex flex-wrap items-end gap-3"><TableSearch value={table.query} onChange={table.setQuery} label="Cari nama produk atau SKU…" /><label className="text-sm text-slate-700">Lokasi<select aria-label="Lokasi persediaan" value={location} onChange={e=>setLocation(e.target.value)} className="input-glass ml-2 p-2"><option value="ALL">Semua lokasi</option>{locations.map(l=><option key={l.code} value={l.code}>{l.code} · {l.name}</option>)}</select></label><p className="text-xs text-slate-600 ml-auto">{updatedAt && `Diperiksa ${new Date(updatedAt).toLocaleTimeString('id-ID')}`} · diperbarui tiap 15 detik</p></div>
           {/* Table Container */}
           <div className="overflow-x-auto glass-3 border-t border-white/80">
             <table className="w-full text-left text-xs text-slate-900">
@@ -288,9 +299,9 @@ export default function ProductsPage() {
                 <tr>
                   <th scope="col" className="px-5 py-3.5" aria-sort={table.sort.key === "name" ? table.sort.direction === "asc" ? "ascending" : "descending" : "none"}><SortLabel active={table.sort.key === "name"} direction={table.sort.direction} onClick={() => table.toggleSort("name")}>SKU &amp; Nama Produk</SortLabel></th>
                   <th scope="col" className="px-4 py-3.5">Varian &amp; Satuan</th>
-                  <th scope="col" className="px-4 py-3.5 text-right">WH-JKT</th>
-                  <th scope="col" className="px-4 py-3.5 text-right">CAFE-JKT</th>
-                  <th scope="col" className="px-4 py-3.5 text-right" aria-sort={table.sort.key === "totalOnHand" ? table.sort.direction === "asc" ? "ascending" : "descending" : "none"}><SortLabel active={table.sort.key === "totalOnHand"} direction={table.sort.direction} onClick={() => table.toggleSort("totalOnHand")}>Total On-Hand</SortLabel></th>
+                  <th scope="col" className="px-4 py-3.5 text-right">Fisik</th>
+                  <th scope="col" className="px-4 py-3.5 text-right">Dicadangkan</th>
+                  <th scope="col" className="px-4 py-3.5 text-right" aria-sort={table.sort.key === "totalAvailable" ? table.sort.direction === "asc" ? "ascending" : "descending" : "none"}><SortLabel active={table.sort.key === "totalAvailable"} direction={table.sort.direction} onClick={() => table.toggleSort("totalAvailable")}>Tersedia</SortLabel></th>
                   <th scope="col" className="px-4 py-3.5 text-center">Status Stok</th>
                   <th scope="col" className="px-4 py-3.5 text-right" aria-sort={table.sort.key === "salesPrice" ? table.sort.direction === "asc" ? "ascending" : "descending" : "none"}><SortLabel active={table.sort.key === "salesPrice"} direction={table.sort.direction} onClick={() => table.toggleSort("salesPrice")}>Harga Jual</SortLabel></th>
                   <th scope="col" className="px-4 py-3.5 text-right">Biaya HPP</th>
@@ -301,7 +312,9 @@ export default function ProductsPage() {
               <tbody className="divide-y divide-black/5 tabular-nums">
                 {table.total === 0 && <tr><td colSpan={10} className="text-center py-12 text-slate-500">Tidak ada produk yang cocok dengan pencarian.</td></tr>}
                 {table.rows.map((p) => {
-                  const isLow = (p.totalOnHand ?? 0) < 20;
+                  const current = location === "ALL" ? { onHand: p.totalOnHand ?? 0, reserved: p.totalReserved ?? 0 } : p.stockLevels?.find((l:any)=>l.locationCode===location) || {onHand:0,reserved:0};
+                  const available = current.onHand-current.reserved;
+                  const isLow = location === "ALL" ? p.lowStockLocations?.length > 0 : available < STOCK_POLICY.minimum;
                   const marginPct = p.salesPrice > 0 ? Math.round(((p.salesPrice - p.standardCost) / p.salesPrice) * 100) : 0;
 
                   return (
@@ -315,24 +328,24 @@ export default function ProductsPage() {
                         <span className="text-slate-600 block text-[10px] font-medium">{p.color} · {p.unit}</span>
                       </td>
                       <td className="px-4 py-3.5 text-right font-bold text-slate-900">
-                        {p.whStock?.onHand ?? 0}
+                        {current.onHand}
                       </td>
                       <td className="px-4 py-3.5 text-right font-bold text-slate-900">
-                        {p.cafeStock?.onHand ?? 0}
+                        {current.reserved}
                       </td>
                       <td className="px-4 py-3.5 text-right font-bold text-slate-900 text-sm">
-                        {p.totalOnHand ?? 0}
+                        {available}
                       </td>
                       <td className="px-4 py-3.5 text-center font-sans">
                         {isLow ? (
                           <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold glass-badge-warning">
                             <AlertTriangle className="w-3 h-3 text-amber-700 shrink-0" />
-                            <span>Stok Rendah</span>
+                            <span>{location === "ALL" ? `${p.lowStockLocations?.length || 0} lokasi perlu stok` : "Di bawah minimum"}</span>
                           </span>
                         ) : (
                           <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold glass-badge-success">
                             <CheckCircle2 className="w-3 h-3 text-emerald-700 shrink-0" />
-                            <span>Aman</span>
+                            <span>Memenuhi minimum</span>
                           </span>
                         )}
                       </td>

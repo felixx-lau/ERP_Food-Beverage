@@ -104,7 +104,7 @@ async function createPurchaseQuotationImpl(params: {
   return purchaseOrder;
 }
 
-async function confirmPurchaseOrderImpl(poId: string, actor: { id: string; name: string; role: Role }) {
+async function confirmPurchaseOrderImpl(poId: string, actor: { id: string; name: string; role: Role }, destLocation = "WH-JKT") {
   // Role check: PROCUREMENT or OWNER
   if (actor.role !== Role.PROCUREMENT && actor.role !== Role.OWNER) {
     throw new Error("Akses ditolak (SR-15): Hanya Procurement atau Owner yang dapat mengonfirmasi Purchase Order.");
@@ -129,6 +129,7 @@ async function confirmPurchaseOrderImpl(poId: string, actor: { id: string; name:
   }
 
   editable(po.status);
+  if (!await prisma.warehouseLocation.findFirst({ where: { code: destLocation, archivedAt: null } })) throw new Error("Lokasi penerimaan tidak aktif atau tidak ditemukan.");
   const result = await prisma.$transaction(async (tx) => {
     // 1. Update PO status to CONFIRMED
     const updatedPo = await tx.purchaseOrder.update({
@@ -143,7 +144,8 @@ async function confirmPurchaseOrderImpl(poId: string, actor: { id: string; name:
       data: {
         receiptNumber,
         purchaseOrderId: po.id,
-        destLocation: "WH-JKT",
+        destLocation,
+        scheduledDate: po.scheduledDate,
         status: "DRAFT",
         lines: {
           create: po.lines.map((l) => ({
@@ -367,7 +369,7 @@ async function validateGoodsReceiptImpl(params: {
     });
 
     await tx.stockMove.updateMany({where:{documentRef:receipt.receiptNumber},data:{journalEntryId:journalEntry.id}});
-    const backorderReceipt = remainingLines.length ? await tx.goodsReceipt.create({data:{receiptNumber:await getNextSequence("RECEIPT",tx),purchaseOrderId:receipt.purchaseOrderId,destLocation,status:"DRAFT",lines:{create:remainingLines}},include:{lines:true}}) : null;
+    const backorderReceipt = remainingLines.length ? await tx.goodsReceipt.create({data:{receiptNumber:await getNextSequence("RECEIPT",tx),purchaseOrderId:receipt.purchaseOrderId,destLocation,scheduledDate:receipt.scheduledDate,status:"DRAFT",lines:{create:remainingLines}},include:{lines:true}}) : null;
     return { updatedReceipt, journalEntry, totalValuationAdded, backorderReceipt };
   });
 

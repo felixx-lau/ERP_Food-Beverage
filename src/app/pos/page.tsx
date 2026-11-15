@@ -25,6 +25,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import Link from "next/link";
+import useDataRefresh, { publishDataRefresh } from "@/components/ui/useDataRefresh";
 
 export default function PointOfSalePage() {
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -32,9 +33,13 @@ export default function PointOfSalePage() {
   const [activeSession, setActiveSession] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<Array<{code:string;name:string}>>([]);
+  const [refreshError, setRefreshError] = useState("");
   const [loading, setLoading] = useState(true);
   const [searchProduct, setSearchProduct] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
+
+  useDataRefresh(async () => { await fetchSessionsAndOrders(); });
 
   // Cart / Basket State
   const [cart, setCart] = useState<Array<{ sku: string; name: string; qty: number; price: number }>>([]);
@@ -83,7 +88,6 @@ export default function PointOfSalePage() {
   };
 
   const fetchSessionsAndOrders = async () => {
-    setLoading(true);
     try {
       const [resSess, resOrd, resProd] = await Promise.all([
         fetch("/api/pos/sessions"),
@@ -91,6 +95,8 @@ export default function PointOfSalePage() {
         fetch("/api/products"),
       ]);
 
+      if(!resSess.ok || !resOrd.ok || !resProd.ok) throw new Error("Data kasir belum dapat diperbarui. Periksa koneksi lalu segarkan.");
+      setRefreshError("");
       if (resSess.ok) {
         const dataSess = await resSess.json();
         const sessList = dataSess.sessions || [];
@@ -107,8 +113,9 @@ export default function PointOfSalePage() {
       if (resProd.ok) {
         const dataProd = await resProd.json();
         setProducts(dataProd.products || []);
+        setCategories(dataProd.categories || []);
       }
-    } finally {
+    } catch(e) { setRefreshError(e instanceof Error ? e.message : "Koneksi terputus."); } finally {
       setLoading(false);
     }
   };
@@ -269,7 +276,7 @@ export default function PointOfSalePage() {
       if (res.ok) {
         setCloseSessionResult(null);
         setActiveSession(data.session);
-        await fetchSessionsAndOrders();
+        publishDataRefresh(); await fetchSessionsAndOrders();
       } else {
         alert(data.error || "Gagal membuka sesi baru");
       }
@@ -295,7 +302,7 @@ export default function PointOfSalePage() {
       }
       setCloseSessionResult(data);
       setCloseModalOpen(false);
-      await fetchSessionsAndOrders();
+      publishDataRefresh(); await fetchSessionsAndOrders();
     } catch (e) {
       alert("Penutupan sesi belum terkonfirmasi. Coba kembali.");
     } finally { sessionPending.current = false; setSavingSession(false); }
@@ -307,17 +314,7 @@ export default function PointOfSalePage() {
       const matchSearch =
         p.name.toLowerCase().includes(searchProduct.toLowerCase()) ||
         p.sku.toLowerCase().includes(searchProduct.toLowerCase());
-      const isCoffee = p.sku.startsWith("COF-") || p.name.toLowerCase().includes("kopi") || p.name.toLowerCase().includes("coffee");
-      const isTea = p.sku.startsWith("TEA-") || p.name.toLowerCase().includes("tea") || p.name.toLowerCase().includes("teh");
-      const isBakery = p.sku.startsWith("COOKIE-") || p.sku.startsWith("BAKE-") || p.name.toLowerCase().includes("cookie") || p.name.toLowerCase().includes("roti") || p.name.toLowerCase().includes("croissant");
-      const isBeverage = p.sku.startsWith("JUICE-") || p.sku.startsWith("BEV-") || p.name.toLowerCase().includes("jus") || p.name.toLowerCase().includes("juice");
-
-      const matchCat =
-        categoryFilter === "ALL" ||
-        (categoryFilter === "COFFEE" && isCoffee) ||
-        (categoryFilter === "TEA" && isTea) ||
-        (categoryFilter === "BAKERY" && isBakery) ||
-        (categoryFilter === "BEVERAGE" && isBeverage);
+      const matchCat = categoryFilter === "ALL" || (p.categoryCode || "UNCATEGORIZED") === categoryFilter;
       return matchSearch && matchCat;
     });
   }, [products, searchProduct, categoryFilter]);
@@ -394,7 +391,7 @@ export default function PointOfSalePage() {
         actual: `Order ${dataOrder.order?.orderNumber}: Net Rp${dataOrder.order?.subtotalNet?.toLocaleString("id-ID")}, PBJT Rp${dataOrder.order?.pbjtTax?.toLocaleString("id-ID")}, Paid Rp${dataOrder.order?.totalAmount?.toLocaleString("id-ID")}, COGS Rp${dataOrder.order?.totalCost?.toLocaleString("id-ID")}. Stok CAFE-JKT: Hot=${cafeHot} (turun ke 22), Cookie=${cafeCookie} (turun ke 19). Jurnal double-entry terbit seimbang (Rp121.000).`,
       });
 
-      await fetchSessionsAndOrders();
+      publishDataRefresh(); await fetchSessionsAndOrders();
     } finally {
       setTesting(false);
     }
@@ -458,7 +455,7 @@ export default function PointOfSalePage() {
         actual: `Evaluasi stok: HTTP ${resExcess.status} "${dataExcess.error}". Tutup sesi ulang: "${dataClose2.message}" (idempotent OK, zero duplicate journals).`,
       });
 
-      await fetchSessionsAndOrders();
+      publishDataRefresh(); await fetchSessionsAndOrders();
     } finally {
       setTesting(false);
     }
@@ -474,6 +471,7 @@ export default function PointOfSalePage() {
       ]}
     >
       <div className="space-y-6">
+        {refreshError && <p role="alert" className="bg-rose-50 text-rose-800 p-3 rounded-xl text-sm">{refreshError}</p>}
         {receipt&&<PosReceipt order={receipt} onClose={()=>setReceipt(null)} onRefunded={fetchSessionsAndOrders} canRefund={currentUser?.role==='OWNER'||(receipt.session?.cashierId===currentUser?.id&&receipt.session?.status==='OPEN')||(!receipt.session&&activeSession?.id===receipt.sessionId&&activeSession?.status==='OPEN')}/>}
       <section className="surface-card p-5 space-y-3"><h2 className="text-lg font-semibold">Riwayat transaksi & struk</h2>{orders.length?<div className="overflow-x-auto"><table className="w-full text-sm text-left"><thead><tr><th scope="col" className="p-3">Nomor</th><th scope="col" className="p-3">Tanggal</th><th scope="col" className="p-3">Status</th><th scope="col" className="p-3">Total</th><th scope="col" className="p-3">Tindakan</th></tr></thead><tbody>{orders.map(order=><tr className="border-t" key={order.id}><td className="p-3">{order.orderNumber}</td><td className="p-3">{new Date(order.orderDate).toLocaleString('id-ID')}</td><td className="p-3">{order.status}</td><td className="p-3">Rp{order.totalAmount.toLocaleString('id-ID')}</td><td className="p-3"><button className="text-blue-700 underline" onClick={()=>setReceipt(order)}>Lihat struk / refund</button></td></tr>)}</tbody></table></div>:<p className="text-sm text-slate-500">Belum ada transaksi.</p>}</section>
       {(closeSessionResult || activeSession?.status === "CLOSED") && <section className="surface-card p-5 space-y-3" aria-label="Ringkasan penutupan sesi">
@@ -544,9 +542,9 @@ export default function PointOfSalePage() {
         <div className="glass-3 p-4 rounded-xl border border-white/80 shadow-xs flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <span className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Sesi Aktif:</span>
+              <span className="text-xs font-semibold text-slate-600 uppercase tracking-wider">{activeSession?.status === "OPEN" ? "Sesi aktif:" : activeSession ? "Sesi terpilih:" : "Sesi kasir:"}</span>
               <span className="font-mono font-bold text-sm text-[#1d4ed8]">
-                {activeSession?.sessionCode || "POS01"}
+                {activeSession?.sessionCode || "Belum ada sesi"}
               </span>
             </div>
             <span className="text-black/20">|</span>
@@ -564,9 +562,9 @@ export default function PointOfSalePage() {
           </div>
 
           <div className="flex items-center space-x-3">
-            <StatusBadge status={activeSession?.status || "CLOSED"} />
+            <StatusBadge status={activeSession?.status || "BELUM DIBUKA"} />
             <span className="text-xs text-slate-600 font-medium">
-              Kasir: <strong className="text-slate-900 font-bold">{currentUser?.name || "Citra Dewi"}</strong>
+              Kasir: <strong className="text-slate-900 font-bold">{activeSession?.cashier?.name || currentUser?.name || "Memuat…"}</strong>
             </span>
           </div>
         </div>
@@ -611,13 +609,7 @@ export default function PointOfSalePage() {
 
               {/* Category Pills */}
               <div className="flex flex-wrap items-center gap-1.5 mb-4">
-                {[
-                  { key: "ALL", label: "Semua Menu" },
-                  { key: "COFFEE", label: "Coffee" },
-                  { key: "TEA", label: "Tea" },
-                  { key: "BAKERY", label: "Bakery / Cookies" },
-                  { key: "BEVERAGE", label: "Juice / Beverages" },
-                ].map((cat) => (
+                {[{ key: "ALL", label: "Semua Menu" }, ...Array.from(new Set(products.map(p => p.categoryCode || "UNCATEGORIZED"))).sort().map(code => ({ key: code, label: code === "UNCATEGORIZED" ? "Belum dikategorikan" : categories.find(c=>c.code===code)?.name || code }))].map((cat) => (
                   <button
                     key={cat.key}
                     onClick={() => setCategoryFilter(cat.key)}
@@ -718,9 +710,9 @@ export default function PointOfSalePage() {
               <div className="border-b border-black/5 pb-3 mb-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-                    Sesi: {activeSession?.sessionCode || "POS01"}
+                    Sesi: {activeSession?.sessionCode || "Belum ada sesi"}
                   </span>
-                  <StatusBadge status={activeSession?.status || "CLOSED"} />
+                  <StatusBadge status={activeSession?.status || "BELUM DIBUKA"} />
                 </div>
                 <div className="grid grid-cols-2 gap-3 mt-3 text-xs">
                   <div>

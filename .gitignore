@@ -27,6 +27,11 @@ dist/
 # Legacy archives (keep original UTS files in repo, but zip can be ignored if desired, or keep as untracked)
 .vercel
 .env*
+!.env.example
 
 # Local database backups (may contain business data)
 backups/
+
+# Local AI runtime, models, capability/proposal storage and logs
+.local/
+.agent-data/

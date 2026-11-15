@@ -226,7 +226,7 @@ export default function SalesOrdersPage() {
 
       {selectedOrder && <DocumentControls kind="sales" record={selectedOrder} role={user?.role} onChanged={async () => { await fetchOrders(); await fetchOrderDetail(selectedOrder.id); }} />}
 
-      <DocumentList records={orders} selectedId={selectedOrder?.id} onSelect={fetchOrderDetail}/>
+      <DocumentList loading={loading} records={orders} selectedId={selectedOrder?.id} onSelect={fetchOrderDetail}/>
 
 
       {/* Selected Order Form View */}
@@ -293,8 +293,8 @@ export default function SalesOrdersPage() {
               <p className="text-sm font-bold text-slate-900 mt-0.5">
                 Maks Diskon: {selectedOrder.discountPercent}%
               </p>
-              <span className={`text-[11px] font-bold ${selectedOrder.discountApproved ? "text-emerald-800" : "text-amber-800"}`}>
-                {selectedOrder.discountApproved ? "✓ Disetujui Owner" : "⏳ Perlu Persetujuan Owner (>10%)"}
+              <span className={`text-[11px] font-bold ${selectedOrder.discountPercent <= 10 || selectedOrder.discountApproved ? "text-emerald-800" : "text-amber-800"}`}>
+                {selectedOrder.discountPercent <= 10 ? "Tidak memerlukan persetujuan tambahan" : selectedOrder.discountApproved ? "✓ Disetujui Owner" : "⏳ Menunggu persetujuan Owner"}
               </span>
             </div>
           </div>

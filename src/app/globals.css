@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -17,11 +16,11 @@
   --card-text: #24345b; --card-text-secondary: #475569; --card-border: #d6d9f3;
   --shadow-brand: 0 4px 18px #6366f112;
   --table-text-size: 15px; --table-heading-size: 13px;
-  --motion-chart-enter: 1600ms; --motion-chart-update: 420ms;
+  --motion-chart-enter: 600ms; --motion-chart-update: 240ms;
   --blue-surface: #eff6ff; --purple-surface: #f5f3ff;
   --brand-border: #ddd6fe;
   --shadow-float: 0 16px 48px -12px #0f172a30;
-  --ease: cubic-bezier(.2,.8,.2,1); --motion-fast: 200ms; --motion-standard: 320ms; --motion-enter: 1000ms; --motion-step: 100ms;
+  --ease: cubic-bezier(.2,.8,.2,1); --motion-fast: 160ms; --motion-standard: 240ms; --motion-enter: 220ms; --motion-step: 30ms;
   /* Compatibility aliases keep existing ERP components on the same token system. */
   --glass-text-primary: var(--foreground); --glass-text-secondary: #475569; --glass-text-muted: #64748b;
   --glass-1-bg: #fff; --glass-2-bg: #fff; --glass-3-bg: #fff;
@@ -33,7 +32,7 @@
 @layer base {
   html { scroll-behavior: smooth; scroll-padding-top: 24px; }
   [id] { scroll-margin-top: 24px; }
-  body { color: var(--foreground); background: var(--background); font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; line-height: 1.5; }
+  body { color: var(--foreground); background: var(--background); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; line-height: 1.5; }
   button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
   button { transition: background-color var(--motion-fast), border-color var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-fast); }
   button:disabled { cursor: not-allowed; opacity: .55; }

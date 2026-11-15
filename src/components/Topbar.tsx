@@ -110,6 +110,7 @@ export default function Topbar({
     try {
       await fetch("/api/auth/logout", { method: "POST" });
     } finally {
+      try { Object.keys(sessionStorage).filter(key=>key.startsWith("aruna-chat:")).forEach(key=>sessionStorage.removeItem(key)); } catch {}
       window.location.href = "/login";
     }
   };

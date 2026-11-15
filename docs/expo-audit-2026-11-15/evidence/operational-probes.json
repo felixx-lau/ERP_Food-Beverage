@@ -1,0 +1,65 @@
+{
+  "generatedAt": "2026-11-14T17:29:49.233Z",
+  "isolated": true,
+  "observations": [
+    {
+      "name": "Transfers involving a third registered location and repeat validation",
+      "verdict": "PASS",
+      "expected": {
+        "WH-JKT": 16,
+        "WH-BDG": 2,
+        "CAFE-JKT": 2,
+        "total": 20
+      },
+      "actual": {
+        "CAFE-JKT": 2,
+        "WH-BDG": 2,
+        "WH-JKT": 16,
+        "total": 20
+      }
+    },
+    {
+      "name": "Transfer cannot consume stock reserved for other orders",
+      "verdict": "PASS",
+      "expected": "Reject 14 when available = 16 - 3 = 13",
+      "actual": "Rejected; all location balances unchanged"
+    },
+    {
+      "name": "Sales order cannot automatically allocate from a third warehouse",
+      "verdict": "LIMITATION",
+      "expected": "For future multi-warehouse fulfillment: allocate 1 from WH-BDG's 100 available units",
+      "actual": {
+        "WH_JKT": 0,
+        "WH_BDG": 100,
+        "result": "Stok available tidak mencukupi untuk reservasi (SR-04)."
+      }
+    },
+    {
+      "name": "Restock proposal subtracts PO inbound to a different warehouse",
+      "verdict": "GAP",
+      "expected": {
+        "location": "WH-BDG",
+        "available": 2,
+        "inboundToThisLocation": 0,
+        "suggestedQty": 28
+      },
+      "actual": {
+        "location": "WH-BDG",
+        "available": 2,
+        "inboundCountedAcrossLocations": 20,
+        "suggestedQty": 8,
+        "actualReceiptDestination": "WH-JKT"
+      }
+    },
+    {
+      "name": "Cashier location restriction SR-03 can be bypassed at engine/API input level",
+      "verdict": "GAP",
+      "expected": "Cashier is restricted to CAFE-JKT and cannot sell directly from WH-JKT",
+      "actual": {
+        "sessionLocation": "WH-JKT",
+        "WH_JKT_before": 16,
+        "WH_JKT_after": 15
+      }
+    }
+  ]
+}

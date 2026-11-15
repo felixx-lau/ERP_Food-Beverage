@@ -1,8 +1,12 @@
 "use client";
+import {businessDate,businessDayStart} from "@/lib/businessDate";
 
 import React, { useState, useEffect } from "react";
 import {
   Chart as ChartJS,
+  LineController,
+  BarController,
+  DoughnutController,
   CategoryScale,
   LinearScale,
   PointElement,
@@ -37,6 +41,9 @@ import { DashboardChartData } from "@/lib/dashboardEngine";
 
 // Register Chart.js plugins
 ChartJS.register(
+  LineController,
+  BarController,
+  DoughnutController,
   CategoryScale,
   LinearScale,
   PointElement,
@@ -63,10 +70,10 @@ export default function DashboardCharts() {
   const [startDate, setStartDate] = useState<string>(() => {
     const d = new Date();
     d.setDate(d.getDate() - 30);
-    return d.toISOString().slice(0, 10);
+    return businessDate(d);
   });
   const [endDate, setEndDate] = useState<string>(() => {
-    return new Date().toISOString().slice(0, 10);
+    return businessDate();
   });
 
   const [seedingDemo, setSeedingDemo] = useState(false);
@@ -131,15 +138,15 @@ export default function DashboardCharts() {
       s.setDate(now.getDate() - 30);
       setPeriod("day");
     } else if (p === "month") {
-      s = new Date(now.getFullYear(), now.getMonth(), 1);
+      s = businessDayStart(businessDate(now).slice(0,7)+"-01");
       setPeriod("day");
     } else if (p === "year") {
-      s = new Date(now.getFullYear(), 0, 1);
+      s = businessDayStart(businessDate(now).slice(0,4)+"-01-01");
       setPeriod("month");
     }
 
-    const startStr = s.toISOString().slice(0, 10);
-    const endStr = now.toISOString().slice(0, 10);
+    const startStr = businessDate(s);
+    const endStr = businessDate(now);
     setStartDate(startStr);
     setEndDate(endStr);
   };
@@ -218,7 +225,7 @@ export default function DashboardCharts() {
         position: "top",
         labels: {
           boxWidth: 12,
-          font: { family: "Inter", size: 12, weight: "normal" },
+          font: { family: "-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif", size: 12, weight: "normal" },
           color: "#202824",
         },
       },
@@ -266,13 +273,15 @@ export default function DashboardCharts() {
         type: "linear",
         display: true,
         position: "right",
+        beginAtZero: true,
         grid: { drawOnChartArea: false },
         ticks: {
           font: { size: 11, weight: "normal" },
           color: "#7c3aed",
           stepSize: 1,
+          precision: 0,
           callback: function (val: any) {
-            return `${val} tx`;
+            return Number.isInteger(Number(val)) ? `${Number(val).toLocaleString("id-ID")} trx` : "";
           },
         },
       },
@@ -480,9 +489,9 @@ export default function DashboardCharts() {
         <KPICard title="Total penjualan" value={data ? formatRupiah(data.kpis.totalSales) : "—"} subtitle="Pesanan penjualan & kasir" icon={DollarSign} />
         <KPICard title="Total pembelian" value={data ? formatRupiah(data.kpis.totalPurchases) : "—"} subtitle="Komitmen pengadaan vendor" icon={ShoppingBag} variant="gold" />
         <KPICard title="Estimasi margin pesanan" value={data ? formatRupiah(data.kpis.estimatedGrossProfit) : "—"} subtitle={data ? `Margin ${data.kpis.grossProfitMarginPercent}% · Nilai bersih tanpa PBJT − biaya standar` : "Data belum tersedia"} icon={TrendingUp} variant="sage" />
-        <KPICard title="Stok perlu perhatian" value={data ? `${data.kpis.lowStockCount} SKU` : "—"} subtitle={showLowStockList ? "Tutup rincian stok" : "Lihat stok di bawah 20 unit"} icon={Package} variant={data && data.kpis.lowStockCount > 0 ? "warning" : "primary"} onClick={() => setShowLowStockList(!showLowStockList)} />
+        <KPICard title="Stok fisik total rendah" value={data ? `${data.kpis.lowStockCount} SKU` : "—"} subtitle={showLowStockList ? "Tutup rincian stok" : "Total perusahaan di bawah 20 unit"} icon={Package} variant={data && data.kpis.lowStockCount > 0 ? "warning" : "primary"} onClick={() => setShowLowStockList(!showLowStockList)} />
       </div>}
-      {showLowStockList && data?.kpis.lowStockProducts.length === 0 && <div role="status" className="surface-card p-5 text-sm text-emerald-700">Tidak ada produk di bawah batas minimum.</div>}
+      {showLowStockList && data?.kpis.lowStockProducts.length === 0 && <div role="status" className="surface-card p-5 text-sm text-emerald-700">Tidak ada SKU dengan total fisik perusahaan di bawah 20. Periksa persediaan untuk stok tersedia per lokasi.</div>}
 
       {/* Dropdown Panel: Daftar SKU Stok Kritis */}
       {showLowStockList && data && data.kpis.lowStockProducts.length > 0 && (
@@ -491,7 +500,7 @@ export default function DashboardCharts() {
             <div className="flex items-center space-x-2">
               <AlertTriangle className="w-4 h-4 text-amber-700" />
               <h4 className="text-xs font-bold text-amber-900 uppercase tracking-wider">
-                Daftar SKU di Bawah Ambang Batas Minimum (Perlu Reorder Pengadaan)
+                SKU dengan total fisik perusahaan di bawah 20
               </h4>
             </div>
             <span className="text-xs text-amber-800 font-bold">

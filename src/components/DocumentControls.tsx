@@ -2,6 +2,8 @@
 import React,{useEffect,useRef,useState} from 'react';
 import ActionButton from './ui/ActionButton';
 import DialogFrame from './ui/DialogFrame';
+import { publishDataRefresh } from './ui/useDataRefresh';
+import { businessDate } from '@/lib/businessDate';
 type Props={kind:string;record:any;role?:string;onChanged:()=>Promise<void>|void};
 const roles:Record<string,string[]>={sales:['OWNER','SALES'],purchase:['OWNER','PROCUREMENT'],invoices:['OWNER','FINANCE'],bills:['OWNER','FINANCE'],deliveries:['OWNER','WAREHOUSE'],receipts:['OWNER','WAREHOUSE'],transfers:['OWNER','WAREHOUSE']};
 export default function DocumentControls({kind,record,role,onChanged}:Props) {
@@ -12,15 +14,15 @@ export default function DocumentControls({kind,record,role,onChanged}:Props) {
   useEffect(()=>{const warn=(e:BeforeUnloadEvent)=>{if(dirty){e.preventDefault();e.returnValue='';}};window.addEventListener('beforeunload',warn);return()=>window.removeEventListener('beforeunload',warn);},[dirty]);
   if(!record||!roles[kind]?.includes(role||''))return null;
   const open=(action:string)=>{
-    const next={contactId:record.contactId,vendorId:record.vendorId,scheduledDate:record.scheduledDate?new Date(record.scheduledDate).toISOString().slice(0,10):'',sourceLocation:record.sourceLocation,destLocation:record.destLocation,lines:record.lines?.map((l:any)=>({productSku:l.productSku,quantity:l.quantity,orderedQty:l.orderedQty,unitPrice:l.unitPrice,discountPercent:l.discountPercent??0})),items:record.lines?.map((l:any)=>({lineId:l.id,productSku:l.productSku,deliveredQty:l.orderedQty,acceptedQty:l.demandQty,rejectedQty:0,rejectionReason:''}))};
+    const next={contactId:record.contactId,vendorId:record.vendorId,scheduledDate:record.scheduledDate?businessDate(new Date(record.scheduledDate)):'',sourceLocation:record.sourceLocation||'WH-JKT',destLocation:record.destLocation||'WH-JKT',lines:record.lines?.map((l:any)=>({productSku:l.productSku,quantity:l.quantity,orderedQty:l.orderedQty,unitPrice:l.unitPrice,discountPercent:l.discountPercent??0})),items:record.lines?.map((l:any)=>({lineId:l.id,productSku:l.productSku,deliveredQty:l.orderedQty,acceptedQty:l.demandQty,rejectedQty:0,rejectionReason:''}))};
     setForm(next);base.current=JSON.stringify(next);setError('');setDialog(action);
   };
   const close=()=>{if(!pending.current&&(!dirty||window.confirm('Perubahan belum disimpan. Tutup formulir?')))setDialog('');};
   const submit=async()=>{
     if(pending.current)return;pending.current=true;setBusy(true);setError('');
     try{
-      const payload={action:dialog,version:record.version,...(dialog==='edit'?form:dialog==='validate'?{items:form.items}:{})};const fingerprint=JSON.stringify(payload);if(!keys.current.has(fingerprint))keys.current.set(fingerprint,crypto.randomUUID());
-      const response=await fetch(`/api/workflow/${kind}/${record.id}`,{method:'POST',headers:{'Content-Type':'application/json','Idempotency-Key':keys.current.get(fingerprint)!},body:JSON.stringify(payload)});const data=await response.json();if(!response.ok)throw new Error(data.error||'Operasi gagal.');setDialog('');await onChanged();
+      const payload={action:dialog,version:record.version,...(dialog==='edit'?form:dialog==='validate'?{items:form.items}:dialog==='confirm'&&kind==='sales'?{sourceLocation:form.sourceLocation}:dialog==='confirm'&&kind==='purchase'?{destLocation:form.destLocation}:{})};const fingerprint=JSON.stringify(payload);if(!keys.current.has(fingerprint))keys.current.set(fingerprint,crypto.randomUUID());
+      const response=await fetch(`/api/workflow/${kind}/${record.id}`,{method:'POST',headers:{'Content-Type':'application/json','Idempotency-Key':keys.current.get(fingerprint)!},body:JSON.stringify(payload)});const data=await response.json();if(!response.ok)throw new Error(data.error||'Operasi gagal.');setDialog('');publishDataRefresh();await onChanged();
     }catch(e){setError(e instanceof Error?e.message:'Operasi gagal.');}finally{pending.current=false;setBusy(false);}
   };
   const field=(label:string,key:string,list:any[],idKey='id')=><label className="block text-sm space-y-1">{label}<select className="input-glass w-full px-3 py-2" value={form[key]||''} onChange={e=>setForm((f:any)=>({...f,[key]:e.target.value}))}>{list.map(o=><option key={o[idKey]} value={o[idKey]}>{o[idKey]} · {o.name}</option>)}</select></label>;
@@ -41,6 +43,7 @@ export default function DocumentControls({kind,record,role,onChanged}:Props) {
   return <><div className="surface-card p-4 flex flex-wrap items-center gap-3"><span className="text-sm font-medium mr-auto">Tindakan dokumen</span>{buttons.map(action=>action==='edit'?<ActionButton key={action} action="edit" onClick={()=>open(action)}>Edit draft</ActionButton>:<button key={action} onClick={()=>open(action)} className={['confirm','post','validate','approve'].includes(action)?'btn-primary':'btn-secondary'}>{labels[action]}</button>)}</div>
     {dialog&&<DialogFrame onClose={close} label={labels[dialog]}><div className="bg-white w-full max-w-4xl rounded-2xl p-6 max-h-[90dvh] overflow-y-auto space-y-5"><h2 className="text-xl font-bold">{labels[dialog]} · {record.orderNumber||record.poNumber||record.invoiceNumber||record.billNumber||record.deliveryNumber||record.receiptNumber||record.transferNumber}</h2>
       {error&&<p role="alert" className="p-3 bg-rose-50 text-rose-800 rounded-xl text-sm">{error}</p>}
+      {dialog==='confirm'&&['sales','purchase'].includes(kind)&&<div className="space-y-2">{field(kind==='sales'?'Gudang pemenuhan':'Gudang penerimaan',kind==='sales'?'sourceLocation':'destLocation',options.locations||[],'code')}<p className="text-sm text-slate-600">{kind==='sales'?'Seluruh baris pesanan akan direservasi dari lokasi ini. Stok tersedia diperiksa kembali saat konfirmasi.':'Penerimaan dibuat untuk lokasi ini dengan tanggal rencana pesanan.'}</p></div>}
       {dialog==='edit'&&<>
         {kind==='sales'&&field('Pelanggan','contactId',options.customers||[])}{kind==='purchase'&&<div className="grid sm:grid-cols-2 gap-4">{field('Vendor','vendorId',options.vendors||[])}<label className="text-sm">Tanggal rencana<input aria-label="Tanggal rencana" type="date" value={form.scheduledDate} className="input-glass w-full px-3 py-2" onChange={e=>setForm((f:any)=>({...f,scheduledDate:e.target.value}))}/></label></div>}
         {kind==='transfers'&&<div className="grid sm:grid-cols-2 gap-4">{field('Lokasi asal','sourceLocation',options.locations||[],'code')}{field('Lokasi tujuan','destLocation',options.locations||[],'code')}</div>}

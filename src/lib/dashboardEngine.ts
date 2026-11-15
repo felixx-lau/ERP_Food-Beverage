@@ -1,3 +1,4 @@
+import {businessDate,businessDayStart,businessDayEnd} from "./businessDate";
 import { getActiveCompanyId } from "./prisma";
 import { getCompanyById } from "./companyManager";
 import { prisma } from "./prisma";
@@ -377,24 +378,17 @@ export interface DashboardChartData {
 
 export interface ChartFilterParams {
   period?: "day" | "week" | "month";
-  startDate?: string;
-  endDate?: string;
+  startDate?: string | Date;
+  endDate?: string | Date;
 }
 
 export async function getDashboardChartMetrics(params: ChartFilterParams = {}): Promise<DashboardChartData> {
   const period = params.period || "day";
   const now = new Date();
   
-  // Rentang tanggal default jika tidak diberikan: 30 hari terakhir
-  let start = params.startDate ? new Date(params.startDate) : new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-  let end = params.endDate ? new Date(params.endDate) : new Date(now.getTime() + 24 * 60 * 60 * 1000);
-
-  if (isNaN(start.getTime())) {
-    start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-  }
-  if (isNaN(end.getTime())) {
-    end = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-  }
+  const start = businessDayStart(params.startDate instanceof Date ? businessDate(params.startDate) : params.startDate || businessDate(new Date(now.getTime()-30*86400000)));
+  const end = businessDayEnd(params.endDate instanceof Date ? businessDate(params.endDate) : params.endDate || businessDate(now));
+  if(start>end) throw new Error("Tanggal mulai tidak boleh melebihi tanggal akhir.");
 
   // 1. Ambil data penjualan dari Sales Orders & POS Orders
   const [salesOrders, posOrders, purchaseOrders, allProducts, stockLevels] = await Promise.all([
@@ -513,24 +507,25 @@ export async function getDashboardChartMetrics(params: ChartFilterParams = {}): 
 
   // Fungsi pembentuk kunci periode
   const getPeriodKey = (date: Date, p: "day" | "week" | "month"): string => {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, "0");
-    const d = String(date.getDate()).padStart(2, "0");
+    date = new Date(businessDate(date)+"T00:00:00Z");
+    const y = date.getUTCFullYear();
+    const m = String(date.getUTCMonth() + 1).padStart(2, "0");
+    const d = String(date.getUTCDate()).padStart(2, "0");
 
     if (p === "month") {
       const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
-      return `${monthNames[date.getMonth()]} ${y}`;
+      return `${monthNames[date.getUTCMonth()]} ${y}`;
     }
     if (p === "week") {
       // Hitung awal minggu (Senin)
-      const day = date.getDay();
-      const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-      const monday = new Date(date.setDate(diff));
-      return `Mg ${monday.getDate()} ${["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"][monday.getMonth()]}`;
+      const day = date.getUTCDay();
+      const diff = date.getUTCDate() - day + (day === 0 ? -6 : 1);
+      const monday = new Date(date.setUTCDate(diff));
+      return `Mg ${monday.getUTCDate()} ${["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"][monday.getUTCMonth()]}`;
     }
     // Default harian: DD MMM
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
-    return `${d} ${monthNames[date.getMonth()]}`;
+    return `${d} ${monthNames[date.getUTCMonth()]}`;
   };
 
   const trendMap = new Map<string, { revenue: number; count: number }>();
