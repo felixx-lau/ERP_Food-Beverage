@@ -3,6 +3,7 @@ import {businessDate,businessDayStart,businessDayEnd} from "./businessDate";
 import { getActiveCompanyId } from "./prisma";
 import { getCompanyById } from "./companyManager";
 import { prisma } from "./prisma";
+import { STOCK_POLICY, availableStock } from "./stockPolicy";
 
 export interface OperationalMetrics {
   inventory: {
@@ -347,7 +348,9 @@ export async function getFinancialReconciliation(simulatedStockDiff: number = 0)
 export interface LowStockItem {
   sku: string;
   name: string;
-  onHand: number;
+  locationCode: string;
+  locationName: string;
+  available: number;
   minStock: number;
   unit: string;
 }
@@ -402,11 +405,11 @@ export async function getDashboardChartMetrics(params: ChartFilterParams = {}): 
   if(start>end) throw new Error("Tanggal mulai tidak boleh melebihi tanggal akhir.");
 
   // 1. Ambil data penjualan dari Sales Orders & POS Orders
-  const [salesOrders, posOrders, purchaseOrders, allProducts, stockLevels] = await Promise.all([
+  const [salesOrders, posOrders, purchaseOrders, allProducts, stockLevels, locations] = await Promise.all([
     prisma.salesOrder.findMany({
       where: {
         status: { in: ["CONFIRMED", "DONE"] },
-        ...(params.locationCode?{sourceLocation:params.locationCode}:{}),
+        ...(params.locationCode ? { deliveryOrders: { some: { sourceLocation: params.locationCode } } } : {}),
       },
       include: {
         lines: { include: { product: true } },
@@ -424,16 +427,21 @@ export async function getDashboardChartMetrics(params: ChartFilterParams = {}): 
     prisma.purchaseOrder.findMany({
       where: {
         status: { in: ["CONFIRMED", "DONE"] },
-        ...(params.locationCode?{destLocation:params.locationCode}:{}),
+        ...(params.locationCode ? { receipts: { some: { destLocation: params.locationCode } } } : {}),
       },
       include: {
         lines: { include: { product: true } },
       },
     }),
-    prisma.productVariant.findMany(),
+    prisma.productVariant.findMany({ where: { archivedAt: null }, select: { sku: true, name: true, unit: true } }),
     prisma.stockLevel.findMany({
       where:params.locationCode?{locationCode:params.locationCode}:{},
       include: { product: true },
+    }),
+    prisma.warehouseLocation.findMany({
+      where: { archivedAt: null, ...(params.locationCode ? { code: params.locationCode } : {}) },
+      select: { code: true, name: true },
+      orderBy: { code: "asc" },
     }),
   ]);
 
@@ -463,38 +471,15 @@ export async function getDashboardChartMetrics(params: ChartFilterParams = {}): 
     totalPurchases += po.total || 0;
   });
 
-  // Nilai stok terkini
-  let stockValuation = 0;
-  const productStockMap = new Map<string, { onHand: number; name: string; unit: string }>();
-
-  stockLevels.forEach((sl) => {
-    stockValuation += sl.onHand * (sl.product?.standardCost || 0);
-    const existing = productStockMap.get(sl.productSku) || {
-      onHand: 0,
-      name: sl.product?.name || sl.productSku,
-      unit: sl.product?.unit || "unit",
-    };
-    existing.onHand += sl.onHand;
-    productStockMap.set(sl.productSku, existing);
-  });
-
-  // Ambang batas stok minimum F&B (standar: 20 unit per SKU)
-  const MIN_STOCK_THRESHOLD = 20;
-  const lowStockProducts: LowStockItem[] = [];
-
-  allProducts.forEach((p) => {
-    const info = productStockMap.get(p.sku);
-    const onHand = info ? info.onHand : 0;
-    if (onHand < MIN_STOCK_THRESHOLD) {
-      lowStockProducts.push({
-        sku: p.sku,
-        name: p.name,
-        onHand,
-        minStock: MIN_STOCK_THRESHOLD,
-        unit: p.unit,
-      });
-    }
-  });
+  const stockValuation = stockLevels.reduce((total, stock) => total + stock.onHand * stock.product.standardCost, 0);
+  const stockByProductLocation = new Map(stockLevels.map(stock => [JSON.stringify([stock.productSku, stock.locationCode]), stock]));
+  const lowStockProducts: LowStockItem[] = allProducts.flatMap(product => locations.map(location => ({
+    ...product,
+    locationCode: location.code,
+    locationName: location.name,
+    available: availableStock(stockByProductLocation.get(JSON.stringify([product.sku, location.code])) ?? { onHand: 0, reserved: 0 }),
+    minStock: STOCK_POLICY.minimum,
+  })).filter(item => item.available < item.minStock));
 
   const lowStockCount = lowStockProducts.length;
   const estimatedGrossProfit = totalSalesNet - totalSalesCost;

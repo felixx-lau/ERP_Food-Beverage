@@ -290,6 +290,9 @@ export default function GoodsReceiptsPage() {
                       <td className="px-6 py-3.5 font-bold text-[#0f172a] font-sans">
                         <span className="font-mono text-[#1d4ed8] mr-2 font-bold">{l.productSku}</span>
                         <span>{l.product?.name}</span>
+                        {selectedReceipt.status === "DONE" && ["HEAD_ADMIN", "WAREHOUSE"].includes(user?.role) && (
+                          <Link className="mt-1 block text-indigo-700 underline" href={`/inventory/movements?${new URLSearchParams({ sku: l.productSku, location: selectedReceipt.destLocation, receipt: selectedReceipt.receiptNumber })}`}>Koreksi stok fisik</Link>
+                        )}
                       </td>
                       <td className="px-6 py-3.5 text-right font-bold text-[#0f172a]">{l.demandQty}</td>
                       <td className="px-6 py-3.5 text-right font-bold text-emerald-700 bg-emerald-50/40">

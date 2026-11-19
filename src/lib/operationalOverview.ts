@@ -43,11 +43,11 @@ export async function operationalOverview(db: PrismaClient, user: Pick<SessionUs
   }
   if (['HEAD_ADMIN','WAREHOUSE','PROCUREMENT','CASHIER'].includes(user.role)) {
     const assignments=user.role==='CASHIER'?await db.outletAccess.findMany({where:{userId:user.id}}):[];
-    const locations=await db.warehouseLocation.findMany({where:{archivedAt:null,...(user.role==='CASHIER'?{code:{in:assignments.length?assignments.map(a=>a.locationCode):['CAFE-JKT']}}:{})},select:{code:true}});
-    const products=await db.productVariant.findMany({where:{archivedAt:null},select:{sku:true,name:true,stockLevels:{select:{locationCode:true,onHand:true,reserved:true}}}});
-    const low=products.flatMap(p=>locations.map(l=>({sku:p.sku,name:p.name,location:l.code,available:availableStock(p.stockLevels.find(s=>s.locationCode===l.code)||{onHand:0,reserved:0})}))).filter(s=>s.available<STOCK_POLICY.minimum).sort((a,b)=>a.available-b.available||a.sku.localeCompare(b.sku));
+    const locations=await db.warehouseLocation.findMany({where:{archivedAt:null,...(user.role==='CASHIER'?{code:{in:assignments.length?assignments.map(a=>a.locationCode):['CAFE-JKT']}}:{})},select:{code:true,name:true}});
+    const products=await db.productVariant.findMany({where:{archivedAt:null},select:{sku:true,name:true,unit:true,stockLevels:{select:{locationCode:true,onHand:true,reserved:true}}}});
+    const low=products.flatMap(p=>locations.map(l=>({sku:p.sku,name:p.name,unit:p.unit,location:l.code,locationName:l.name,available:availableStock(p.stockLevels.find(s=>s.locationCode===l.code)||{onHand:0,reserved:0})}))).filter(s=>s.available<STOCK_POLICY.minimum).sort((a,b)=>a.available-b.available||a.sku.localeCompare(b.sku));
     counts.lowStockLocations=low.length;
-    for(const r of low.slice(0,6)) tasks.push({id:`stock:${r.location}:${r.sku}`,department:user.role==='CASHIER'?'Kasir → Gudang':'Gudang → Procurement',title:`Periksa ${r.sku}`,reason:`${r.name} · ${r.location}: tersedia ${r.available}, di bawah batas ${STOCK_POLICY.minimum}.`,href:user.role==='CASHIER'?'/pos':`/inventory/products?location=${encodeURIComponent(r.location)}`,priority:r.available<=0?'HIGH':'NORMAL'});
+    for(const r of low.slice(0,6)) tasks.push({id:`stock:${r.location}:${r.sku}`,department:user.role==='CASHIER'?'Kasir → Gudang':'Gudang → Procurement',title:`Periksa ${r.sku}`,reason:`${r.name} · ${r.locationName} (${r.location}): tersedia ${r.available} ${r.unit}. Tambah ${STOCK_POLICY.minimum-r.available} ${r.unit} agar mencapai minimum ${STOCK_POLICY.minimum}.`,href:user.role==='CASHIER'?'/pos':`/inventory/products?location=${encodeURIComponent(r.location)}&sku=${encodeURIComponent(r.sku)}`,priority:r.available<=0?'HIGH':'NORMAL'});
   }
   if(user.role==='CASHIER') {
     const session=await db.posSession.findFirst({where:{cashierId:user.id,status:'OPEN'},orderBy:{openedAt:'desc'}});

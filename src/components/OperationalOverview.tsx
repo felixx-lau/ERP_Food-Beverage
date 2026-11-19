@@ -16,7 +16,7 @@ const categories: Record<string, { label: string; department: string; icon: Luci
   receipts: { label: 'Penerimaan menunggu', department: 'Purchase · Gudang', icon: PackageCheck, href: '/inventory/receipts', action: 'Lihat penerimaan' },
   overdueInvoices: { label: 'Invoice lewat tempo', department: 'Finance · Sales', icon: FileClock, href: '/accounting/invoices', action: 'Periksa tagihan' },
   discountApprovals: { label: 'Persetujuan diskon', department: 'Sales · Head Admin', icon: ShieldCheck, href: '/sales/orders', action: 'Tinjau penjualan' },
-  lowStockLocations: { label: 'Stok rendah per lokasi', department: 'Inventory', icon: PackageSearch, href: '/inventory/products', action: 'Periksa persediaan' },
+  lowStockLocations: { label: 'Stok rendah per lokasi', department: 'Inventory', icon: PackageSearch, href: '/inventory/products?lowStock=1', action: 'Periksa persediaan' },
   openSessions: { label: 'Sesi kasir aktif', department: 'Point of Sale', icon: ScanLine, href: '/pos', action: 'Buka kasir' },
   uninvoicedLines: { label: 'Barang terkirim belum ditagih', department: 'Sales · Finance', icon: ReceiptText, href: '/sales/orders', action: 'Tinjau penjualan' },
   draftInvoices: { label: 'Invoice draft menunggu', department: 'Invoicing', icon: FilePenLine, href: '/accounting/invoices', action: 'Periksa draft invoice' },

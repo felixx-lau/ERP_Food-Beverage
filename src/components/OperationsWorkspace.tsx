@@ -1,4 +1,5 @@
 'use client';
+import { STOCK_POLICY } from '@/lib/stockPolicy';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import AppLayout from './AppLayout';
@@ -51,7 +52,7 @@ export default function OperationsWorkspace({area}:{area:string}){
    <h2 className="font-semibold">Riwayat waste</h2>{data.waste.map((w:any)=><article className={card} key={w.id}><p className="text-sm">{name(w.productSku)} · {w.locationCode} · {w.quantity} unit · {money(w.cost)}</p><p className="text-xs text-slate-600">{w.reason}</p>{linkJournal(w.journalId)}</article>)}
   </>}
   {data&&area==='purchase'&&<>
-   <div className="flex gap-2 flex-wrap">{canPurchase&&<button className="btn-primary" onClick={()=>open('rule',{minimum:20,target:30})}>Atur minimum stok</button>}{btn('Periksa aturan sekarang','evaluateRules',{})}</div>
+   <div className="flex gap-2 flex-wrap">{canPurchase&&<button className="btn-primary" onClick={()=>open('rule',{minimum:STOCK_POLICY.minimum,target:STOCK_POLICY.target})}>Atur minimum stok</button>}{btn('Periksa aturan sekarang','evaluateRules',{})}</div>
    <div className="grid md:grid-cols-2 gap-3">{data.rules.map((r:any)=><div className={card} key={r.id}><p className="font-semibold text-sm">{name(r.productSku)} · {r.locationCode}</p><p className="text-sm">Minimum {r.minimum} · Target {r.target} · {r.active?'Aktif':'Dijeda'}</p>{canPurchase&&<button className="btn-secondary" onClick={()=>open('rule',r)}>Ubah aturan</button>}{canPurchase&&btn(r.active?'Jeda aturan':'Aktifkan aturan','toggleRule',{id:r.id,active:!r.active})}</div>)}</div>
    {!data.requests.length&&<p className={card}>Belum ada pengajuan. Atur minimum dan target stok; sistem mengecek aturan setelah perubahan persediaan.</p>}
    {data.requests.map((r:any)=><article className={card} key={r.id}><h2 className="font-semibold">{name(r.productSku)} · {r.quantity} unit</h2><p className="text-xs break-all">{r.number} · {r.locationCode} · {status[r.status]}</p><p className="text-sm text-slate-600">{r.reason}</p><div className="flex gap-2 flex-wrap">{owner&&r.status==='PENDING'&&<>{btn('Setujui','approveRequest',{id:r.id},true)}<button disabled={busy} className="btn-secondary" onClick={()=>open('rejectRequest',{id:r.id})}>Tolak & jeda aturan</button></>}{canPurchase&&r.status==='APPROVED'&&<button className="btn-primary" onClick={()=>open('requestToPO',{id:r.id})}>Buat draft pembelian</button>}{r.purchaseOrderId&&<Link className="text-indigo-700 text-sm" href={`/purchase/orders?id=${r.purchaseOrderId}`}>Buka draft pembelian →</Link>}</div></article>)}

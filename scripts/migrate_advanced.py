@@ -1,15 +1,17 @@
-"""Validate SR-20 additive migration on copies; --apply saves SQLite backups first."""
+"""Validate F&B migrations on copies; --apply saves SQLite backups first."""
 from pathlib import Path
 import argparse, hashlib, json, sqlite3, tempfile
 from datetime import datetime, timezone
 
 root = Path(__file__).resolve().parents[1]
-path = root/'prisma/migrations/20261117_advanced_fnb/migration.sql'
-sql = path.read_text()
-checksum = hashlib.sha256(sql.encode()).hexdigest()
-name = path.parent.name
+migration_names = ('20261117_advanced_fnb', '20261119_stock_minimum')
+migrations = [
+    (name, (root/'prisma/migrations'/name/'migration.sql').read_text())
+    for name in migration_names
+]
 
-def migrate(db):
+def apply_migration(db, name, sql):
+    checksum = hashlib.sha256(sql.encode()).hexdigest()
     db.execute('PRAGMA foreign_keys=ON')
     row = db.execute('SELECT checksum FROM SchemaMigration WHERE name=?', (name,)).fetchone()
     if row:
@@ -25,6 +27,9 @@ def migrate(db):
         return 'applied'
     except Exception:
         db.rollback(); raise
+
+def migrate(db):
+    return {name: apply_migration(db, name, sql) for name, sql in migrations}
 
 parser=argparse.ArgumentParser()
 parser.add_argument('--apply', action='store_true')

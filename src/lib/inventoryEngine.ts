@@ -1,19 +1,22 @@
-import { consumeLots } from './lotEngine';
 import { prisma } from './prisma';
 import { atomic } from './atomic';
-import { Actor, permit, quantity, textValue } from './validation';
+import { Actor, BusinessError, permit, quantity, textValue } from './validation';
 import { recordAuditLog } from './audit';
 import { getNextSequence } from './sequences';
 
-export async function adjustStock(input: { sku: string; locationCode: string; newOnHand: number; reason: string; actor: Actor }) {
+export async function adjustStock(input: { sku: string; locationCode: string; newOnHand: number; expectedOnHand?: number; reason: string; actor: Actor }) {
   permit(input.actor, ['HEAD_ADMIN','WAREHOUSE']); quantity(input.newOnHand, true);
+  if (input.expectedOnHand !== undefined) quantity(input.expectedOnHand, true);
   const reason = textValue(input.reason, 'Alasan penyesuaian', true, 1000);
   return atomic(async () => {
     const location = await prisma.warehouseLocation.findUnique({ where: { code: input.locationCode } });
     const product = await prisma.productVariant.findUnique({ where: { sku: input.sku } });
-    if (!location || !product) throw new Error('SKU atau lokasi tidak ditemukan.');
+    if (!location || !product || location.archivedAt || product.archivedAt) throw new BusinessError('Pilih SKU dan lokasi yang aktif.');
     const existing = await prisma.stockLevel.findUnique({ where: { productSku_locationCode: { productSku: input.sku, locationCode: input.locationCode } } });
     const before = existing?.onHand ?? 0, reserved = existing?.reserved ?? 0;
+    if (input.expectedOnHand !== undefined && input.expectedOnHand !== before) {
+      throw new BusinessError('Stok fisik berubah sejak ditampilkan. Muat ulang stok dan periksa kembali hasil hitung.', 409);
+    }
     if (input.newOnHand < reserved) throw new Error('Penyesuaian tidak boleh mengonsumsi stok reserved (SR-04).');
     const delta = input.newOnHand - before;
     if (!delta) return { stock: existing, message: 'Tidak ada perubahan stok.' };

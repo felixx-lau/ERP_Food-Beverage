@@ -11,13 +11,21 @@ import CreateProductModal from "@/components/CreateProductModal";
 import { Package, Play, Layers, Building, RefreshCw, MapPin, Tag, Plus, List, LayoutGrid, AlertTriangle, CheckCircle2, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import useDataRefresh from "@/components/ui/useDataRefresh";
-import { STOCK_POLICY } from "@/lib/stockPolicy";
+import { STOCK_POLICY, availableStock } from "@/lib/stockPolicy";
+
+function StockStatus({ available, unit }: { available: number; unit: string }) {
+  const shortage = STOCK_POLICY.minimum - available;
+  return shortage > 0
+    ? <span className="font-semibold text-amber-900">Tambah {shortage} {unit} agar mencapai minimum</span>
+    : <span className="inline-flex items-center gap-1 font-semibold text-emerald-800"><CheckCircle2 className="w-3 h-3" />Memenuhi minimum ({STOCK_POLICY.minimum} {unit})</span>;
+}
 
 export default function ProductsPage() {
   const [user, setUser] = useState<any>(null);
   const [locations, setLocations] = useState<Array<{code:string;name:string}>>([]);
   const [location, setLocation] = useState("ALL");
   useEffect(() => { const chosen = new URLSearchParams(window.location.search).get("location"); if(chosen) setLocation(chosen); }, []);
+  const [onlyLow, setOnlyLow] = useState(false);
   const [updatedAt, setUpdatedAt] = useState("");
   const [loadError, setLoadError] = useState("");
   const [products, setProducts] = useState<any[]>([]);
@@ -180,7 +188,22 @@ export default function ProductsPage() {
     }
   };
 
-  const table = useTableView(products, p => `${p.sku} ${p.name} ${p.size} ${p.color}`, (p, key) => key === "name" ? p.name : key === "totalAvailable" ? (location === "ALL" ? p.totalAvailable : (()=>{const stock=p.stockLevels?.find((s:any)=>s.locationCode===location);return stock?stock.onHand-stock.reserved:0;})()) : p[key] ?? 0);
+  const visibleLocations = locations.filter(item => location === "ALL" || item.code === location);
+  const stockAt = (product: any, code: string): { onHand: number; reserved: number } =>
+    product.stockLevels?.find((stock: { locationCode: string }) => stock.locationCode === code) ?? { onHand: 0, reserved: 0 };
+  const shortages = (product: any) => visibleLocations.map(item => ({
+    ...item,
+    available: availableStock(stockAt(product, item.code)),
+  })).filter(item => item.available < STOCK_POLICY.minimum);
+  const table = useTableView(onlyLow ? products.filter(p => shortages(p).length) : products,
+    p => `${p.sku} ${p.name} ${p.size} ${p.color}`,
+    (p, key) => key === "totalAvailable" ? (location === "ALL" ? p.totalAvailable : availableStock(stockAt(p, location))) : p[key] ?? 0);
+  useEffect(() => {
+    const query = new URLSearchParams(window.location.search);
+    if (query.get("sku")) table.setQuery(query.get("sku")!);
+    if (query.get("lowStock") === "1") setOnlyLow(true);
+  }, []);
+  const canAdjust = ["HEAD_ADMIN", "WAREHOUSE"].includes(user?.role);
   return (
     <AppLayout
       currentUser={user}
@@ -191,6 +214,7 @@ export default function ProductsPage() {
       wireframe="Wireframe S-03"
       actions={
         <div className="flex items-center flex-wrap gap-2">
+          {canAdjust && <Link className="btn-secondary" href="/inventory/movements">Koreksi stok</Link>}
           {/* View mode toggle */}
           <div className="flex items-center space-x-1 glass-3 p-1 rounded-xl border border-white/60">
             <button
@@ -244,7 +268,7 @@ export default function ProductsPage() {
     >
       {/* Empty State when clean company */}
       {loadError && <p role="alert" className="rounded-xl bg-rose-50 p-4 text-rose-800">{loadError}</p>}
-      <div className="surface-card p-4 text-sm text-slate-600"><strong className="text-slate-900">Stok tersedia = stok fisik − stok dipesan.</strong><p className="text-xs mt-1">Stok dipesan sudah dialokasikan ke pesanan pelanggan. Gunakan stok tersedia di lokasi yang dipilih untuk merencanakan penjualan dan pengiriman.</p><Link href="/master/products" className="inline-flex mt-2 text-xs font-semibold text-indigo-700">Kelola data produk & harga →</Link></div>
+      <div className="surface-card p-4 text-sm text-slate-600"><strong className="text-slate-900">Stok tersedia = stok fisik − stok dipesan.</strong><p className="text-xs mt-1">Stok dipesan sudah dialokasikan ke pesanan pelanggan. Minimum {STOCK_POLICY.minimum} berlaku untuk setiap SKU di setiap lokasi. Stok tersedia tepat {STOCK_POLICY.minimum} sudah memenuhi minimum.</p><Link href="/master/products" className="inline-flex mt-2 text-xs font-semibold text-indigo-700">Kelola data produk & harga →</Link></div>
       {loading && !products.length ? <p role="status" className="surface-card p-6 text-slate-600">Memuat persediaan…</p> : !loadError && products.length === 0 ? (
         <div className="glass-2 rounded-2xl border border-dashed border-slate-300 p-12 text-center space-y-4">
           <div className="w-16 h-16 rounded-2xl bg-amber-500/15 text-[#6d28d9] flex items-center justify-center mx-auto shadow-xs border border-amber-500/30">
@@ -289,12 +313,12 @@ export default function ProductsPage() {
               </span>
               <span className="px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-950 border border-amber-500/40 flex items-center space-x-1 backdrop-blur-xs">
                 <AlertTriangle className="w-3.5 h-3.5 text-amber-700" />
-                <span>Minimum tersedia: &lt; {STOCK_POLICY.minimum} unit / lokasi</span>
+                <span>Minimum {STOCK_POLICY.minimum} per SKU / lokasi</span>
               </span>
             </div>
           </div>
 
-          <div className="px-5 flex flex-wrap items-end gap-3"><TableSearch value={table.query} onChange={table.setQuery} label="Cari nama produk atau SKU…" /><label className="text-sm text-slate-700">Lokasi<select aria-label="Lokasi persediaan" value={location} onChange={e=>setLocation(e.target.value)} className="input-glass ml-2 p-2"><option value="ALL">Semua lokasi</option>{locations.map(l=><option key={l.code} value={l.code}>{l.code} · {l.name}</option>)}</select></label><p className="text-xs text-slate-600 ml-auto">{updatedAt && `Diperiksa ${new Date(updatedAt).toLocaleTimeString('id-ID')}`} · diperbarui tiap 15 detik</p></div>
+          <div className="px-5 flex flex-wrap items-end gap-3"><TableSearch value={table.query} onChange={table.setQuery} label="Cari nama produk atau SKU…" /><label className="text-sm text-slate-700">Lokasi<select aria-label="Lokasi persediaan" value={location} onChange={e=> { setLocation(e.target.value); table.setPage(1); }} className="input-glass ml-2 p-2"><option value="ALL">Semua lokasi</option>{locations.map(l=><option key={l.code} value={l.code}>{l.code} · {l.name}</option>)}</select></label><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={onlyLow} onChange={e => { setOnlyLow(e.target.checked); table.setPage(1); }} /> Perlu tambah stok</label><p className="text-xs text-slate-600 ml-auto">{updatedAt && `Diperiksa ${new Date(updatedAt).toLocaleTimeString('id-ID')}`} · diperbarui tiap 15 detik</p></div>
           {/* Table Container */}
           <div className="overflow-x-auto glass-3 border-t border-white/80">
             <table className="w-full text-left text-xs text-slate-900">
@@ -313,11 +337,12 @@ export default function ProductsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-black/5 tabular-nums">
-                {table.total === 0 && <tr><td colSpan={10} className="text-center py-12 text-slate-500">Tidak ada produk yang cocok dengan pencarian.</td></tr>}
+                {table.total === 0 && <tr><td colSpan={10} className="text-center py-12 text-slate-500">{onlyLow ? "Tidak ada stok di bawah minimum pada filter ini." : "Tidak ada produk yang cocok dengan pencarian."}</td></tr>}
                 {table.rows.map((p) => {
                   const current = location === "ALL" ? { onHand: p.totalOnHand ?? 0, reserved: p.totalReserved ?? 0 } : p.stockLevels?.find((l:any)=>l.locationCode===location) || {onHand:0,reserved:0};
                   const available = current.onHand-current.reserved;
-                  const isLow = location === "ALL" ? p.lowStockLocations?.length > 0 : available < STOCK_POLICY.minimum;
+                  const low = shortages(p);
+                  const isLow = low.length > 0;
                   const marginPct = p.salesPrice > 0 ? Math.round(((p.salesPrice - p.standardCost) / p.salesPrice) * 100) : 0;
 
                   return (
@@ -339,18 +364,20 @@ export default function ProductsPage() {
                       <td className="px-4 py-3.5 text-right font-bold text-slate-900 text-sm">
                         {available}
                       </td>
-                      <td className="px-4 py-3.5 text-center font-sans">
+                      <td className="px-4 py-3.5 min-w-56 font-sans">
                         {isLow ? (
-                          <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold glass-badge-warning">
-                            <AlertTriangle className="w-3 h-3 text-amber-700 shrink-0" />
-                            <span>{location === "ALL" ? `${p.lowStockLocations?.length || 0} lokasi perlu stok` : "Di bawah minimum"}</span>
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold glass-badge-success">
-                            <CheckCircle2 className="w-3 h-3 text-emerald-700 shrink-0" />
-                            <span>Memenuhi minimum</span>
-                          </span>
-                        )}
+                          <ul className="space-y-2">
+                            {low.map(item => (
+                              <li key={item.code}>
+                                <strong className="block">{item.name} ({item.code})</strong>
+                                <span className="block">Tersedia {item.available} {p.unit} · Minimum {STOCK_POLICY.minimum}</span>
+                                <StockStatus available={item.available} unit={p.unit} />
+                              </li>
+                            ))}
+                          </ul>
+                        ) : visibleLocations.length > 0 ? (
+                          <StockStatus available={STOCK_POLICY.minimum} unit={p.unit} />
+                        ) : "—"}
                       </td>
                       <td className="px-4 py-3.5 text-right font-bold text-slate-900">
                         Rp {p.salesPrice?.toLocaleString("id-ID")}
@@ -432,7 +459,7 @@ export default function ProductsPage() {
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide flex items-center space-x-2">
                 <Building className="w-4 h-4 text-[#1d4ed8]" />
-                <span>Distribusi Stok Antar Lokasi (WH-JKT vs CAFE-JKT)</span>
+                <span>Distribusi stok per lokasi</span>
               </h3>
               <span className="text-xs text-slate-700 font-semibold font-mono">
                 Total Perusahaan: <strong className="text-[#1d4ed8] font-bold">{productDetail.companyOnHand} unit</strong> (Rp {productDetail.totalValuation.toLocaleString("id-ID")})
@@ -448,10 +475,14 @@ export default function ProductsPage() {
                     <th scope="col" className="px-6 py-3.5 text-right">Stok Direservasi (SR-04)</th>
                     <th scope="col" className="px-6 py-3.5 text-right text-emerald-950 font-bold">Tersedia (Available)</th>
                     <th scope="col" className="px-6 py-3.5 text-right">Valuasi Stok</th>
+                    <th scope="col" className="px-6 py-3.5">Status stok</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-black/5 font-mono">
-                  {productDetail.locations.map((loc: any) => (
+                  {locations.map(item => {
+                    const loc = productDetail.locations.find((entry: any) => entry.locationCode === item.code)
+                      ?? { locationCode: item.code, locationName: item.name, onHand: 0, reserved: 0, available: 0, valuation: 0 };
+                    return (
                     <tr key={loc.locationCode} className="hover:bg-[#1d4ed8]/5 transition-colors duration-150">
                       <td className="px-6 py-3.5 font-bold text-slate-900 font-sans flex items-center space-x-2.5">
                         <MapPin className="w-4 h-4 text-[#1d4ed8]" />
@@ -465,8 +496,13 @@ export default function ProductsPage() {
                       <td className="px-6 py-3.5 text-right text-slate-800 font-medium">
                         Rp {loc.valuation.toLocaleString("id-ID")}
                       </td>
+                      <td className="px-6 py-3.5 font-sans">
+                        <StockStatus available={loc.available} unit={productDetail.unit} />
+                        {canAdjust && <Link className="mt-1 block text-indigo-700 underline" href={`/inventory/movements?${new URLSearchParams({ sku: productDetail.sku, location: loc.locationCode })}`}>Koreksi stok</Link>}
+                      </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

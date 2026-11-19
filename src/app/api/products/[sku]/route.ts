@@ -74,7 +74,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const { sku } = await params;
     const body = await request.json();
     if (body.newOnHand === undefined) return withUser(request, async actor => ({ success: true, product: await changeMaster("products",sku,body,actor) }));
-    const result = await adjustStock({ sku, locationCode: body.locationCode, newOnHand: body.newOnHand, reason: body.reason, actor: user });
+    const result = await adjustStock({ sku, locationCode: body.locationCode, newOnHand: body.newOnHand, expectedOnHand: body.expectedOnHand, reason: body.reason, actor: user });
     return NextResponse.json({ success: true, ...result });
   } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : 'Penyesuaian gagal.' }, { status: 400 }); }
 }

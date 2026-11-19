@@ -1,4 +1,5 @@
 "use client";
+import { STOCK_POLICY } from "@/lib/stockPolicy";
 import {businessDate,businessDayStart} from "@/lib/businessDate";
 
 import React, { useState, useEffect } from "react";
@@ -493,9 +494,9 @@ export default function DashboardCharts() {
         <KPICard title="Total penjualan" value={data ? formatRupiah(data.kpis.totalSales) : "—"} subtitle="Pesanan penjualan & kasir" icon={DollarSign} />
         <KPICard title="Total pembelian" value={data ? formatRupiah(data.kpis.totalPurchases) : "—"} subtitle="Komitmen pengadaan vendor" icon={ShoppingBag} variant="gold" />
         <KPICard title="Estimasi margin pesanan" value={data ? formatRupiah(data.kpis.estimatedGrossProfit) : "—"} subtitle={data ? `Margin ${data.kpis.grossProfitMarginPercent}% · Nilai bersih tanpa PBJT − biaya standar` : "Data belum tersedia"} icon={TrendingUp} variant="sage" />
-        <KPICard title="Stok fisik total rendah" value={data ? `${data.kpis.lowStockCount} SKU` : "—"} subtitle={showLowStockList ? "Tutup rincian stok" : "Total perusahaan di bawah 20 unit"} icon={Package} variant={data && data.kpis.lowStockCount > 0 ? "warning" : "primary"} onClick={() => setShowLowStockList(!showLowStockList)} />
+        <KPICard title="Stok di bawah minimum" value={data ? `${data.kpis.lowStockCount} temuan` : "—"} subtitle={showLowStockList ? "Tutup rincian stok" : `Minimum ${STOCK_POLICY.minimum} per SKU / lokasi`} icon={Package} variant={data && data.kpis.lowStockCount > 0 ? "warning" : "primary"} onClick={() => setShowLowStockList(!showLowStockList)} />
       </div>}
-      {showLowStockList && data?.kpis.lowStockProducts.length === 0 && <div role="status" className="surface-card p-5 text-sm text-emerald-700">Tidak ada SKU dengan total fisik perusahaan di bawah 20. Periksa persediaan untuk stok tersedia per lokasi.</div>}
+      {showLowStockList && data?.kpis.lowStockProducts.length === 0 && <div role="status" className="surface-card p-5 text-sm text-emerald-700">Semua SKU memenuhi minimum {STOCK_POLICY.minimum} di lokasi yang ditampilkan.</div>}
 
       {/* Dropdown Panel: Daftar SKU Stok Kritis */}
       {showLowStockList && data && data.kpis.lowStockProducts.length > 0 && (
@@ -504,18 +505,18 @@ export default function DashboardCharts() {
             <div className="flex items-center space-x-2">
               <AlertTriangle className="w-4 h-4 text-amber-700" />
               <h4 className="text-xs font-bold text-amber-900 uppercase tracking-wider">
-                SKU dengan total fisik perusahaan di bawah 20
+                Produk dan lokasi yang perlu tambah stok
               </h4>
             </div>
             <span className="text-xs text-amber-800 font-bold">
-              Total {data.kpis.lowStockProducts.length} Produk
+              {data.kpis.lowStockProducts.length} temuan
             </span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
             {data.kpis.lowStockProducts.map((p) => (
               <div
-                key={p.sku}
+                key={JSON.stringify([p.sku, p.locationCode])}
                 className="glass-3 rounded-xl p-3 border border-white/80 shadow-xs flex items-center justify-between"
               >
                 <div className="min-w-0 pr-2">
@@ -525,12 +526,13 @@ export default function DashboardCharts() {
                   <p className="text-xs font-bold text-[var(--glass-text-primary)] truncate">
                     {p.name}
                   </p>
+                  <p className="text-xs">{p.locationName} ({p.locationCode})</p>
                 </div>
                 <div className="text-right shrink-0">
                   <span className="text-xs font-black text-rose-600 block">
-                    {p.onHand} {p.unit}
+                    Tersedia {p.available} {p.unit}
                   </span>
-                  <span className="text-[10px] text-[var(--glass-text-muted)]">Min: {p.minStock}</span>
+                  <span className="text-[10px] text-[var(--glass-text-muted)]">Tambah {p.minStock - p.available} {p.unit} · Min. {p.minStock}</span>
                 </div>
               </div>
             ))}

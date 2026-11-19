@@ -9,6 +9,8 @@ import { createInternalTransfer, validateInternalTransfer } from "../src/lib/tra
 import { openPosSession, createPosOrder } from "../src/lib/posEngine";
 import { createSalesQuotation, confirmSalesOrder } from "../src/lib/salesEngine";
 import { createPurchaseQuotation, confirmPurchaseOrder } from "../src/lib/purchaseEngine";
+import { adjustStock } from "../src/lib/inventoryEngine";
+import { getDashboardChartMetrics } from "../src/lib/dashboardEngine";
 import { operationalOverview } from "../src/lib/operationalOverview";
 import { financialReply } from "../src/lib/agent/financialReply";
 import { financialSummary } from "../src/lib/financialSummary";
@@ -97,6 +99,30 @@ async function main() {
   await createPosOrder({sessionId:session.id,locationCode:"CAFE-JKT",lines:[{productSku:"AUDIT-MOVE",quantity:1}],paymentMethod:"CASH",actor:cashier});
   assert.equal((await balance())["CAFE-JKT"],1);
   observed("Cashier cannot open/sell WH sessions, including a preexisting warehouse session; CAFE sale works", "PASS", "SR-03 enforced", "Verified without WH stock changes");
+  const correction = {
+    sku: "AUDIT-MOVE", locationCode: "WH-BDG", newOnHand: 5, expectedOnHand: 2,
+    reason: "Penerimaan GR-TEST: salah jumlah, sudah dihitung ulang", actor: owner,
+  };
+  await assert.rejects(() => adjustStock({ ...correction, reason: " " }), /Alasan/);
+  await assert.rejects(() => adjustStock({ ...correction, expectedOnHand: 1 }), /Stok fisik berubah/);
+  await assert.rejects(() => adjustStock({ ...correction, actor: cashier }), /Akses ditolak/);
+  assert.equal((await balance())["WH-BDG"], 2);
+  const beforeCorrection = await getDashboardChartMetrics({ locationCode: "WH-BDG" });
+  const low = beforeCorrection.kpis.lowStockProducts.find(product => product.sku === correction.sku);
+  assert.equal(low?.locationName, "Audit third location");
+  assert.equal(low?.available, 2);
+  assert.equal(low?.minStock, 5);
+  const posted = await adjustStock(correction);
+  assert.equal((await balance())["WH-BDG"], 5);
+  assert.equal(posted.movement?.reason, correction.reason);
+  const move = await db.stockMove.findUniqueOrThrow({ where: { id: posted.movement!.id } });
+  assert.equal(move.actorId, owner.id);
+  assert.equal(move.journalEntryId, posted.journal?.id);
+  assert.equal(move.quantity, 3);
+  const afterCorrection = await getDashboardChartMetrics();
+  assert(!afterCorrection.kpis.lowStockProducts.some(product => product.sku === correction.sku && product.locationCode === "WH-BDG"));
+  assert.equal(afterCorrection.kpis.lowStockProducts.find(product => product.sku === correction.sku && product.locationCode === "CAFE-JKT")?.available, 1);
+  observed("Minimum stock is evaluated per SKU and location; adjustments enforce reason, role and latest balance", "PASS", "2 + 3 = 5 with a linked movement and journal", move.quantity);
   assert.equal(businessDate(new Date("2026-11-14T17:30:00Z")),"2026-11-15");
   assert.equal(businessDayStart("2026-11-15").toISOString(),"2026-11-14T17:00:00.000Z");
   assert.equal(businessDayEnd("2026-11-15").toISOString(),"2026-11-15T16:59:59.999Z");

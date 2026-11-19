@@ -55,7 +55,7 @@ async function runChartTests() {
       typeof metrics.kpis.lowStockCount === "number" && Array.isArray(metrics.kpis.lowStockProducts),
       "C-01.4",
       "KPI Stok di Bawah Minimum valid list",
-      `lowStockCount = ${metrics.kpis.lowStockCount} items (threshold < 20)`
+      `lowStockCount = ${metrics.kpis.lowStockCount} items (stok tersedia < 5 per SKU / lokasi)`
     );
 
     assert(
