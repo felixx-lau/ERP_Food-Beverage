@@ -1,3 +1,5 @@
+import { AuditedRejection, recordAuditLog } from './audit';
+import { evaluateReorderRules } from './reorderRules';
 import { prisma, getActivePrismaClient } from './prisma';
 import { transactionContext } from './transactionContext';
 import { createHash } from 'node:crypto';
@@ -8,10 +10,19 @@ import { BusinessError, Actor } from './validation';
 export async function atomic<T>(operation: () => Promise<T>): Promise<T> {
   if (transactionContext.getStore()) return operation();
   const client = await getActivePrismaClient();
-  return client.$transaction(async tx => {
-    await tx.$executeRawUnsafe('UPDATE "Account" SET "currentBalance" = "currentBalance" WHERE "code" = \'1010\'');
-    return transactionContext.run(tx, operation);
-  }, { maxWait: 10000, timeout: 20000 });
+  try {
+    return await client.$transaction(async tx => {
+      await tx.$executeRawUnsafe('UPDATE "Account" SET "currentBalance" = "currentBalance" WHERE "code" = \'1010\'');
+      return transactionContext.run(tx, async () => {
+        const result = await operation();
+        await evaluateReorderRules(tx);
+        return result;
+      });
+    }, { maxWait: 10000, timeout: 20000 });
+  } catch (error) {
+    if (error instanceof AuditedRejection) await recordAuditLog({...error.event, tx:client});
+    throw error;
+  }
 }
 
 export async function idempotent<T>(actor: Actor, operation: string, key: string | undefined, input: unknown, run: () => Promise<T>): Promise<T> {

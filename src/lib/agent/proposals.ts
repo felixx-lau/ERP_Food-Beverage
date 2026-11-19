@@ -19,7 +19,7 @@ export type AgentProposal = {
   subtotal: number; tax: number; total: number; fingerprint: string;
   result?: { id: string; number: string; href: string; status: string };
 };
-const roles = { sales_quote: ["OWNER", "SALES"], purchase_rfq: ["OWNER", "PROCUREMENT"], transfer: ["OWNER", "WAREHOUSE"] };
+const roles = { sales_quote: ["HEAD_ADMIN", "SALES"], purchase_rfq: ["HEAD_ADMIN", "PROCUREMENT"], transfer: ["HEAD_ADMIN", "WAREHOUSE"] };
 function fingerprint(data: unknown) { return createHash("sha256").update(JSON.stringify(data)).digest("hex"); }
 export function ownProposal(user: SessionUser, id: string) {
   if (!/^[0-9a-f-]{36}$/.test(id)) throw new BusinessError("Proposal tidak ditemukan.", 404);

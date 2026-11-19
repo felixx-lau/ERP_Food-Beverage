@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Role-based protection: Only OWNER is allowed to reset the seed baseline
-    if (user.role !== Role.OWNER) {
+    if (user.role !== Role.HEAD_ADMIN) {
       await recordAuditLog({
         actorId: user.id,
         actorName: user.name,

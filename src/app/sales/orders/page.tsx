@@ -27,6 +27,8 @@ export default function SalesOrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [savedNotice, setSavedNotice] = useState("");
   const [createModalOpen, setCreateModalOpen] = useState(false);
 
   // Test Runner state
@@ -45,13 +47,18 @@ export default function SalesOrdersPage() {
     setLoading(true);
     try {
       const res = await fetch("/api/sales/orders");
-      if (res.ok) {
-        const data = await res.json();
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Daftar pesanan gagal dimuat.");
+      setLoadError("");
+      {
         setOrders(data.orders || []);
         if (data.orders?.length > 0 && !selectedOrder) {
-          await fetchOrderDetail((data.orders.find((r: any) => r.id === new URLSearchParams(window.location.search).get("id")) || data.orders[0]).id);
+          const requested = data.orders.find((r: any) => r.id === new URLSearchParams(window.location.search).get("id"));
+          if (requested) await fetchOrderDetail(requested.id);
         }
       }
+    } catch (e) {
+      setLoadError(e instanceof Error ? e.message : "Koneksi terputus. Coba muat ulang daftar.");
     } finally {
       setLoading(false);
     }
@@ -60,12 +67,12 @@ export default function SalesOrdersPage() {
   const fetchOrderDetail = async (id: string) => {
     try {
       const res = await fetch(`/api/sales/orders/${id}`);
-      if (res.ok) {
-        const data = await res.json();
-        setSelectedOrder(data.order);
-      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Detail pesanan gagal dimuat.");
+      setSelectedOrder(data.order);
+      setLoadError("");
     } catch (e) {
-      console.error(e);
+      setLoadError(e instanceof Error ? e.message : "Detail gagal dimuat. Pilih dokumen kembali.");
     }
   };
 
@@ -159,7 +166,7 @@ export default function SalesOrdersPage() {
       const dataBlocked = await resConfirmBlocked.json();
       const blockedOk = resConfirmBlocked.status === 400 && dataBlocked.error.includes("Persetujuan Diperlukan");
 
-      await handleSwitchRole("OWNER");
+      await handleSwitchRole("HEAD_ADMIN");
       await fetch(`/api/sales/orders/${orderId}/approve-discount`, { method: "POST" });
 
       const resConfirmOk = await fetch(`/api/sales/orders/${orderId}/confirm`, { method: "POST" });
@@ -202,31 +209,22 @@ export default function SalesOrdersPage() {
       actions={
         <div className="flex items-center space-x-2">
           <button
-            onClick={() => setCreateModalOpen(true)}
+            hidden={user?.role === "OWNER"} onClick={() => setCreateModalOpen(true)}
             className="flex items-center space-x-1.5 px-3.5 py-2 text-xs font-bold btn-glass-primary rounded-xl shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus-brand-ring"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Pesanan Baru</span>
           </button>
-          <span className="text-xs font-semibold text-slate-700 hidden sm:inline">Pilih Dokumen:</span>
-          <select
-            value={selectedOrder?.id || ""}
-            onChange={(e) => fetchOrderDetail(e.target.value)}
-            className="text-xs font-mono font-medium input-glass rounded-xl px-3 py-1.5 shadow-xs focus:ring-2 focus:ring-[#1d4ed8] focus-brand-ring"
-          >
-            {orders.map((o) => (
-              <option key={o.id} value={o.id}>
-                {o.orderNumber} — {o.contact?.name} ({o.status})
-              </option>
-            ))}
-          </select>
+
         </div>
       }
     >
 
       {selectedOrder && <DocumentControls kind="sales" record={selectedOrder} role={user?.role} onChanged={async () => { await fetchOrders(); await fetchOrderDetail(selectedOrder.id); }} />}
 
-      <DocumentList loading={loading} records={orders} selectedId={selectedOrder?.id} onSelect={fetchOrderDetail}/>
+      {loadError && <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800"><p>{loadError}</p><button className="font-semibold mt-2" onClick={() => void fetchOrders()}>Muat ulang daftar</button></div>}
+      {savedNotice && <div role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900 flex flex-wrap items-center justify-between gap-2"><p>{savedNotice}</p><button className="font-semibold" onClick={() => setSavedNotice("")}>Tutup pesan</button></div>}
+      <DocumentList loading={loading} records={orders} selectedId={selectedOrder?.id} onClearSelection={()=>setSelectedOrder(null)} onSelect={fetchOrderDetail}/>
 
 
       {/* Selected Order Form View */}
@@ -444,10 +442,10 @@ export default function SalesOrdersPage() {
         onClose={() => setCreateModalOpen(false)}
         onOrderCreated={async (newOrder) => {
           await fetchOrders();
-          if (newOrder) setSelectedOrder(newOrder);
+          if (newOrder) { setSelectedOrder(newOrder); setSavedNotice(`Pesanan ${newOrder.orderNumber || newOrder.poNumber} tersimpan sebagai draft. Periksa rincian, lalu konfirmasi melalui Tindakan dokumen.`); }
         }}
       />
-      {selectedOrder && <DocumentTrail kind="sales" record={selectedOrder}/>}
+      {selectedOrder && <DocumentTrail kind="sales" record={selectedOrder} role={user?.role}/>}
     </AppLayout>
   );
 }

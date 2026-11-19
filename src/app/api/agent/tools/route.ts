@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     const body = JSON.parse(raw);
     if (typeof body?.action !== "string" || !body.args || typeof body.args !== "object" || Array.isArray(body.args)) throw new BusinessError("Isi action dan args dengan benar.");
     const result = await dispatchAgentTool(ctx, body.action, body.args);
-    registerToolResult(ctx.runId, body.action, (result as { proposalId?: string })?.proposalId, body.action === "financial_summary" ? result as FinancialSummary : undefined);
+    registerToolResult(ctx.runId, body.action, (result as { proposalId?: string })?.proposalId, body.action === "financial_summary" ? result as FinancialSummary : undefined, result);
     return NextResponse.json({ success: true, result }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) { return apiFailure(error); }
 }

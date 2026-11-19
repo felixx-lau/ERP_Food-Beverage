@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     const limit = Math.max(1, Math.min(200, parseInt(searchParams.get("limit") || "50", 10) || 50));
 
     const where: Record<string, unknown> = {};
-    if (!["OWNER","FINANCE"].includes(user.role)) where.actorId = user.id;
+    if (!["HEAD_ADMIN","FINANCE"].includes(user.role)) where.actorId = user.id;
     where.documentType = { not: "REQUEST" };
     if (documentType && documentType !== "REQUEST") where.documentType = documentType;
     if (documentId) where.documentId = documentId;

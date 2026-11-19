@@ -1,8 +1,0 @@
-[
-  {
-    "level": "error",
-    "message": "Error: \"line\" is not a registered controller.\n    at tM._get (http://127.0.0.1:3000/_next/static/chunks/ca377847-35bed28d5d0508c2.js:1:72614)\n    at tM.getController (http://127.0.0.1:3000/_next/static/chunks/ca377847-35bed28d5d0508c2.js:1:71671)\n    at tQ.buildOrUpdateControllers (http://127.0.0.1:3000/_next/static/chunks/ca377847-35bed28d5d0508c2.js:1:83570)\n    at tQ.update (http://127.0.0.1:3000/_next/static/chunks/ca377847-35bed28d5d0508c2.js:1:84319)\n    at new tQ (http://127.0.0.1:3000/_next/static/chunks/ca377847-35bed28d5d0508c2.js:1:80767)\n    at k (http://127.0.0.1:3000/_next/static/chunks/1028-4c7ce6e632d54c98.js:1:941)\n    at http://127.0.0.1:3000/_next/static/chunks/1028-4c7ce6e632d54c98.js:1:1684\n    at o1 (http://127.0.0.1:3000/_next/static/chunks/4bd1b696-f785427dddbba9fb.js:1:88952)\n    at uE (http://127.0.0.1:3000/_next/static/chunks/4bd1b696-f785427dddbba9fb.js:1:104844)\n    at ux (http://127.0.0.1:3000/_next/static/chunks/4bd1b696-f785427dddbba9fb.js:1:104728)",
-    "timestamp": "2026-11-14T17:38:43.019Z",
-    "url": "http://127.0.0.1:3000/_next/static/chunks/ca377847-35bed28d5d0508c2.js"
-  }
-]

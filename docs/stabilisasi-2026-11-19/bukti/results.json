@@ -1,0 +1,149 @@
+{
+  "results": [
+    {
+      "suite": "test_advanced_fnb",
+      "exit": 0,
+      "passes": 28,
+      "failures": 0
+    },
+    {
+      "suite": "test_agent",
+      "exit": 0,
+      "passes": 12,
+      "failures": 0
+    },
+    {
+      "suite": "test_expo_improvements",
+      "exit": 0,
+      "passes": 9,
+      "failures": 0
+    },
+    {
+      "suite": "test_phase2_3",
+      "exit": 0,
+      "passes": 23,
+      "failures": 0
+    },
+    {
+      "suite": "test_phase4",
+      "exit": 0,
+      "passes": 27,
+      "failures": 0
+    },
+    {
+      "suite": "test_phase5",
+      "exit": 0,
+      "passes": 14,
+      "failures": 0
+    },
+    {
+      "suite": "test_phase6",
+      "exit": 0,
+      "passes": 12,
+      "failures": 0
+    },
+    {
+      "suite": "test_phase7",
+      "exit": 0,
+      "passes": 19,
+      "failures": 0
+    },
+    {
+      "suite": "test_phase8",
+      "exit": 0,
+      "passes": 19,
+      "failures": 0
+    },
+    {
+      "suite": "test_loyalty",
+      "exit": 0,
+      "passes": 1,
+      "failures": 0
+    },
+    {
+      "suite": "test_charts",
+      "exit": 0,
+      "passes": 16,
+      "failures": 0
+    },
+    {
+      "suite": "test_crud",
+      "exit": 0,
+      "passes": 8,
+      "failures": 0
+    },
+    {
+      "suite": "test_pdf_cases",
+      "exit": 0,
+      "passes": 32,
+      "failures": 0
+    },
+    {
+      "suite": "test_integrity",
+      "exit": 0,
+      "passes": 12,
+      "failures": 0
+    },
+    {
+      "suite": "test_role_access",
+      "exit": 0,
+      "passes": 1,
+      "failures": 0
+    },
+    {
+      "suite": "test_invoice_choices",
+      "exit": 0,
+      "passes": 2,
+      "failures": 0
+    },
+    {
+      "suite": "test_invoice_pdf",
+      "exit": 0,
+      "passes": 4,
+      "failures": 0
+    },
+    {
+      "suite": "test_ux_status",
+      "exit": 0,
+      "passes": 2,
+      "failures": 0
+    },
+    {
+      "suite": "test_ux_flows",
+      "exit": 0,
+      "passes": 1,
+      "failures": 0
+    },
+    {
+      "suite": "test_chatbot",
+      "exit": 0,
+      "passes": 5,
+      "failures": 0
+    },
+    {
+      "suite": "test_chatbot_website_data",
+      "exit": 0,
+      "passes": 1,
+      "failures": 0
+    },
+    {
+      "suite": "typecheck",
+      "exit": 0,
+      "passes": 0,
+      "failures": 0
+    },
+    {
+      "suite": "build",
+      "exit": 0,
+      "passes": 0,
+      "failures": 0
+    }
+  ],
+  "originalDatabaseHashes": {
+    "/Users/felix/Desktop/Semester 4/Semester 5/ERP PROJECT/ERP_Food-Beverage/prisma/erp.db": "57511120a197af339119c472834f64fb789eba122924e4e15ee2f4f44b5d8ea2",
+    "/Users/felix/Desktop/Semester 4/Semester 5/ERP PROJECT/ERP_Food-Beverage/prisma/companies/comp_pt-morie-matcha_qkc6.db": "5ef6916e4de19cd7007b2cda86f3f2dcfbcfd9370232ad50ecfbd2246ddb1c25",
+    "/Users/felix/Desktop/Semester 4/Semester 5/ERP PROJECT/ERP_Food-Beverage/prisma/companies/comp_pt-kuliner-nusantara_yqes.db": "5ff6ddc328e2400b091d9abf0c13e848b13b96799005083d0294c15e0a5c8ab4",
+    "/Users/felix/Desktop/Semester 4/Semester 5/ERP PROJECT/ERP_Food-Beverage/prisma/companies/comp_pt-resto-nusantara-b_lfr7.db": "4d9f4e78d2ba5ad702511e8e6918efbd68a836d0355718e3d9678b44198e048e",
+    "/Users/felix/Desktop/Semester 4/Semester 5/ERP PROJECT/ERP_Food-Beverage/prisma/companies.json": "2cfa7723f06ba06a5f888cf434be7c78fba0746db876f37f6fbe949254dba2c8"
+  }
+}

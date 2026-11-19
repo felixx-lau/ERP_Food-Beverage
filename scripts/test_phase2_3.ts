@@ -25,7 +25,7 @@ async function runPhase2And3Tests() {
 
   // 1. Fresh Baseline Seed
   console.log("--- 1. Testing Baseline Seed Execution ---");
-  const seedResult = await executeSeed(prisma, "Test Runner", Role.OWNER);
+  const seedResult = await executeSeed(prisma, "Test Runner", Role.HEAD_ADMIN);
   assert(seedResult.success === true, "SEED-01", "Baseline Seed executed successfully");
 
   // Check 15 products
@@ -84,9 +84,10 @@ async function runPhase2And3Tests() {
   // 2. Authentication & 6 Roles
   console.log("\n--- 2. Testing 6 User Accounts & Roles ---");
   const users = await prisma.user.findMany();
-  assert(users.length === 6, "AUTH-01", `All 6 required role accounts exist (Found: ${users.length})`);
+
 
   const roles = [Role.OWNER, Role.SALES, Role.WAREHOUSE, Role.PROCUREMENT, Role.FINANCE, Role.CASHIER];
+  assert(roles.every(role => users.some(u => u.role === role && u.active)), 'AUTH-01', 'All six required PDF roles are active');
   for (const r of roles) {
     const u = users.find((usr) => usr.role === r);
     const pwdOk = u ? await bcrypt.compare("Password123!", u.passwordHash) : false;
@@ -150,7 +151,7 @@ async function runPhase2And3Tests() {
   // 5. Test Reset Seed Role Authorization Guard
   console.log("\n--- 5. Testing Reset Seed RBAC Protection ---");
   // Check that only OWNER can execute reset
-  const cashierAllowedReset = cashierUser.role === Role.OWNER;
+  const cashierAllowedReset = cashierUser.role === Role.HEAD_ADMIN;
   assert(cashierAllowedReset === false, "SEED-RESET-RBAC", "Cashier is strictly blocked from executing Reset Seed");
 
   console.log("\n=================================================================");

@@ -1,3 +1,4 @@
+import { consumeLots } from "./lotEngine";
 import { atomic } from "./atomic";
 import { permit, quantity, money, discount, uniqueLines, editable } from "./validation";
 import { prisma } from "./prisma";
@@ -25,7 +26,7 @@ export interface CreateTransferInput {
 async function createInternalTransferImpl(input: CreateTransferInput) {
   const { sourceLocation = "WH-JKT", destLocation = "CAFE-JKT", lines, actor } = input;
 
-  permit(actor, ["OWNER","WAREHOUSE"]);
+  permit(actor, ["HEAD_ADMIN","WAREHOUSE"]);
   uniqueLines(lines, l => l.productSku); lines.forEach(l => quantity(l.quantity));
   for (const code of [sourceLocation,destLocation]) if (!await prisma.warehouseLocation.findFirst({ where: { code, archivedAt: null } })) throw new Error("Lokasi tidak terdaftar.");
   if (sourceLocation === destLocation) {
@@ -105,7 +106,7 @@ async function createInternalTransferImpl(input: CreateTransferInput) {
  * Validasi dan eksekusi perpindahan stok internal (T-13 / T-14 / SR-04 / SR-12)
  */
 async function validateInternalTransferImpl(transferId: string, actor: { id?: string; name: string; role: Role | string }) {
-  permit(actor, ["OWNER","WAREHOUSE"]);
+  permit(actor, ["HEAD_ADMIN","WAREHOUSE"]);
   return await prisma.$transaction(async (tx) => {
     const transfer = await tx.internalTransfer.findUnique({
       where: { id: transferId },
@@ -184,6 +185,7 @@ async function validateInternalTransferImpl(transferId: string, actor: { id?: st
       const dstBefore = dstStock.onHand;
       const dstAfter = dstStock.onHand + line.quantity;
 
+      await consumeLots(tx,line.productSku,transfer.sourceLocation,line.quantity,transfer.transferNumber,transfer.destLocation);
       // Eksekusi pemindahan stok
       await tx.stockLevel.update({
         where: {

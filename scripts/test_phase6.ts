@@ -26,14 +26,14 @@ async function runPhase6Tests() {
 
   // Restore fresh baseline seed before running tests
   console.log("--- 0. Restoring Fresh Baseline Seed ---");
-  await executeSeed(prisma, "Test Runner Phase 6", Role.OWNER);
+  await executeSeed(prisma, "Test Runner Phase 6", Role.HEAD_ADMIN);
 
-  const ownerUser = (await prisma.user.findFirst({ where: { role: Role.OWNER } }))!;
+  const ownerUser = (await prisma.user.findFirst({ where: { role: Role.HEAD_ADMIN } }))!;
   const salesUser = (await prisma.user.findFirst({ where: { role: Role.SALES } }))!;
   const whUser = (await prisma.user.findFirst({ where: { role: Role.WAREHOUSE } }))!;
   const financeUser = (await prisma.user.findFirst({ where: { role: Role.FINANCE } }))!;
 
-  const actorOwner = { id: ownerUser.id, name: ownerUser.name, role: Role.OWNER };
+  const actorOwner = { id: ownerUser.id, name: ownerUser.name, role: Role.HEAD_ADMIN };
   const actorSales = { id: salesUser.id, name: salesUser.name, role: Role.SALES };
   const actorWH = { id: whUser.id, name: whUser.name, role: Role.WAREHOUSE };
   const actorFin = { id: financeUser.id, name: financeUser.name, role: Role.FINANCE };

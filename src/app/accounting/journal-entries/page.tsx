@@ -56,7 +56,8 @@ export default function JournalEntriesPage() {
     setLoading(true);
     setAccessDeniedMessage(null);
     try {
-      const res = await fetch("/api/accounting/journal-entries");
+      const account = new URLSearchParams(window.location.search).get("account");
+      const res = await fetch("/api/accounting/journal-entries" + (account ? "?account=" + encodeURIComponent(account) : ""));
       if (res.status === 403) {
         const err = await res.json();
         setAccessDeniedMessage(err.error || "Akses Ditolak: Hanya Finance dan Owner yang berwenang membuka General Ledger (SR-15).");
@@ -220,8 +221,8 @@ export default function JournalEntriesPage() {
         { label: "General Ledger & Jurnal (S-13)" },
       ]}
     >
-      {['OWNER','FINANCE'].includes(currentUser?.role)&&<div className="flex gap-3 flex-wrap"><ManualJournalForm onPosted={async record => { const updated = await fetchJournalEntries(); setSelectedEntry(updated?.find((entry:any) => entry.id === record.id) || record); }}/><Link className="btn-secondary" href="/master/accounts">Chart of Accounts</Link>{selectedEntry&&<FinancialCorrection kind="journals" record={selectedEntry} onChanged={fetchJournalEntries}/>}<Link className="btn-secondary" href="/accounting/reports">Laporan keuangan</Link></div>}
-      <DocumentList records={entries} selectedId={selectedEntry?.id} onSelect={id=>setSelectedEntry(entries.find(e=>e.id===id))}/>
+      {['HEAD_ADMIN','FINANCE'].includes(currentUser?.role)&&<div className="flex gap-3 flex-wrap"><ManualJournalForm onPosted={async record => { const updated = await fetchJournalEntries(); setSelectedEntry(updated?.find((entry:any) => entry.id === record.id) || record); }}/><Link className="btn-secondary" href="/master/accounts">Chart of Accounts</Link>{selectedEntry&&<FinancialCorrection kind="journals" record={selectedEntry} onChanged={fetchJournalEntries}/>}<Link className="btn-secondary" href="/accounting/reports">Laporan keuangan</Link></div>}
+      <DocumentList records={entries} selectedId={selectedEntry?.id} onClearSelection={()=>setSelectedEntry(null)} onSelect={id=>setSelectedEntry(entries.find(e=>e.id===id))}/>
 
       <div className="space-y-6">
         {/* Module Header & Sub-Nav */}
@@ -284,7 +285,7 @@ export default function JournalEntriesPage() {
                   Finance (Budi Utomo)
                 </button>
                 <button
-                  onClick={() => handleSwitchRole("OWNER")}
+                  onClick={() => handleSwitchRole("HEAD_ADMIN")}
                   className="px-3 py-1 bg-[#7c3aed] text-[#ffffff] rounded text-xs font-bold hover:bg-[#c9a65d] transition-colors"
                 >
                   Owner (Maya Prasetyo)

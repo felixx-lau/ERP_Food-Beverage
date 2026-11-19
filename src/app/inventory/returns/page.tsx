@@ -367,7 +367,7 @@ export default function ReturnsPage() {
               Customer Invoices
             </Link>
             <button
-              hidden={!["OWNER","WAREHOUSE"].includes(currentUser?.role)}
+              hidden={!["HEAD_ADMIN","WAREHOUSE"].includes(currentUser?.role)}
               onClick={() => setShowCreateModal(true)}
               className="px-3.5 py-1.5 bg-[#1d4ed8] hover:bg-[#1e3a8a] text-white rounded-lg text-xs font-bold flex items-center space-x-1.5 shadow-xs transition-colors focus-brand-ring"
             >
@@ -501,7 +501,7 @@ export default function ReturnsPage() {
 
               {/* Action Buttons */}
               <div className="flex items-center space-x-2">
-                {["OWNER","WAREHOUSE"].includes(currentUser?.role) && selectedReturn.inspectionStatus === "PENDING" && (
+                {["HEAD_ADMIN","WAREHOUSE"].includes(currentUser?.role) && selectedReturn.inspectionStatus === "PENDING" && (
                   <button
                     onClick={() => {
                       setAcceptedQtyInput(selectedReturn.lines[0]?.returnedQty || 1);
@@ -515,7 +515,7 @@ export default function ReturnsPage() {
                   </button>
                 )}
 
-                {["OWNER","FINANCE"].includes(currentUser?.role) && selectedReturn.inspectionStatus === "ACCEPTED" && selectedReturn.status !== "DONE" && (
+                {["HEAD_ADMIN","FINANCE"].includes(currentUser?.role) && selectedReturn.inspectionStatus === "ACCEPTED" && selectedReturn.status !== "DONE" && (
                   <button
                     onClick={() => handleProcessCreditNote(selectedReturn.id)}
                     className="px-3.5 py-1.5 bg-[#1d4ed8] hover:bg-[#1e3a8a] text-white rounded-lg text-xs font-bold flex items-center space-x-1.5 shadow-2xs transition-colors focus-brand-ring"
@@ -725,7 +725,7 @@ export default function ReturnsPage() {
           </div>
         </details>
       </div>
-      {selectedReturn && <DocumentTrail kind="returns" record={selectedReturn}/>}
+      {selectedReturn && <DocumentTrail kind="returns" record={selectedReturn} role={currentUser?.role}/>}
     </AppLayout>
   );
 }

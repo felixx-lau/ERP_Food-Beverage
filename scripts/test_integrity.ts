@@ -3,6 +3,7 @@ import { realpathSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { PrismaClient } from '@prisma/client';
+import { POST as pay } from '../src/app/api/accounting/payments/route';
 import { NextRequest } from 'next/server';
 import { prisma } from '../src/lib/prisma';
 import { executeSeed } from '../src/lib/seedData';
@@ -30,6 +31,28 @@ async function bill(price=15000){const po=await createPurchaseQuotation({vendorI
 async function check(name:string,fn:()=>Promise<void>){await reset();await fn();console.log('[PASS]',name);}
 async function main(){
  const cwd=realpathSync(process.cwd());assert(cwd.startsWith(realpathSync(os.tmpdir())+path.sep));assert(realpathSync((process.env.DATABASE_URL||'').replace(/^file:/,'')).startsWith(cwd+path.sep));
+ await check('Seed orders prepare exactly one warehouse draft across concurrent attempts', async () => {
+   const so=await prisma.salesOrder.findUniqueOrThrow({where:{orderNumber:'S00006'}});
+   const po=await prisma.purchaseOrder.findUniqueOrThrow({where:{poNumber:'P00006'}});
+   const counts=async()=>[await prisma.journalEntry.count(),await prisma.stockMove.count(),(await s()).reserved,(await s()).onHand];
+   const before=await counts();
+   const prepare=(kind:string,id:string,actor:any)=>documentAction(kind,id,{action:'prepare',version:0},actor);
+   await Promise.all([prepare('sales',so.id,a.SALES),prepare('sales',so.id,a.SALES)]);
+   await Promise.all([prepare('purchase',po.id,a.PROCUREMENT),prepare('purchase',po.id,a.PROCUREMENT)]);
+   const deliveries=await prisma.deliveryOrder.findMany({where:{salesOrderId:so.id},include:{lines:true}});
+   const receipts=await prisma.goodsReceipt.findMany({where:{purchaseOrderId:po.id},include:{lines:true}});
+   assert.deepEqual(deliveries.map(d=>[d.status,d.lines[0].orderedQty]),[['DRAFT',6]]);
+   assert.deepEqual(receipts.map(r=>[r.status,r.lines[0].demandQty]),[['DRAFT',10]]);
+   assert.deepEqual(await counts(), before);
+   const d=deliveries[0],r=receipts[0];
+   await validateDeliveryOrder({deliveryOrderId:d.id,items:[{lineId:d.lines[0].id,productSku:d.lines[0].productSku,deliveredQty:4}],actor:a.WAREHOUSE});
+   await validateGoodsReceipt({receiptId:r.id,items:[{lineId:r.lines[0].id,productSku:r.lines[0].productSku,acceptedQty:8,rejectedQty:2,rejectionReason:'Kemasan rusak'}],actor:a.WAREHOUSE});
+   const after=await counts();
+   await confirmSalesOrder(so.id,a.SALES);await confirmPurchaseOrder(po.id,a.PROCUREMENT);
+   assert.equal(await prisma.deliveryOrder.count({where:{salesOrderId:so.id}}),2);
+   assert.equal(await prisma.goodsReceipt.count({where:{purchaseOrderId:po.id}}),2);
+   assert.deepEqual(await counts(),after);
+ });
  await check('Origin validation accepts actual loopback Host and rejects cross-site writes',async()=>{
   assert(hasAllowedOrigin(new NextRequest('http://127.0.0.1:3107/api/master/units',{method:'POST',headers:{host:'127.0.0.1:3107',origin:'http://127.0.0.1:3107'}})));
   assert(!hasAllowedOrigin(new NextRequest('http://localhost:3107/api/master/units',{method:'POST',headers:{host:'localhost:3107',origin:'https://attacker.example'}})));
@@ -40,6 +63,32 @@ async function main(){
   await documentAction('sales',order.id,{action:'confirm',version:1},a.SALES);assert.equal((await s()).reserved,13);
   await documentAction('sales',order.id,{action:'cancel',version:2},a.SALES);assert.equal((await s()).reserved,6);assert.equal((await s()).onHand,40);
   assert.equal(await prisma.deliveryOrder.count({where:{salesOrderId:order.id,status:'CANCELLED'}}),1);
+ });
+ await check('Finance posts two equal vendor installments and replays a lost response only once', async () => {
+   const b = await bill(12000);
+   const token = await createSessionToken(a.FINANCE);
+   const requestPayment = (key?: string, amount=30000) => {
+     return pay(new NextRequest('http://localhost/api/accounting/payments', {
+       method: 'POST', headers: {authorization: 'Bearer '+token, ...(key ? {'Idempotency-Key':key} : {})},
+       body: JSON.stringify({billId:b.id, amount, paymentMethod:'BANK', paymentDate:'2026-11-19'}),
+     }));
+   };
+   const submit = async (key:string) => {
+     const response = await requestPayment(key);
+     assert.equal(response.status, 200);
+     return response.json();
+   };
+   const bank = await balance('1010'), ap = await balance('2010');
+   assert.equal((await requestPayment()).status,400);
+   const [first,replay] = await Promise.all([submit('installment-one'),submit('installment-one')]);
+   assert.equal((await requestPayment('installment-one',10000)).status,409);
+   const second = await submit('installment-two');
+   assert.equal(first.payment.id, replay.payment.id);
+   assert.notEqual(first.payment.id, second.payment.id);
+   assert.deepEqual([first.remainingBalance, replay.remainingBalance, second.remainingBalance], [66000,66000,36000]);
+   assert.equal(await prisma.payment.count({where:{billId:b.id}}),2);
+   assert.equal(await prisma.journalEntry.count({where:{sourceDocument:{in:[first.payment.paymentNumber,second.payment.paymentNumber]}}}),2);
+   assert.deepEqual([await balance('1010'), await balance('2010')],[bank-60000, ap-60000]);
  });
  await check('Vendor payments, price variance and controlled bill reversal reconcile',async()=>{
   const b=await bill();assert.equal(await balance('1040'),0);assert.equal(await balance('5020'),24000);assert.equal(await balance('2010'),1120000);
@@ -61,8 +110,8 @@ async function main(){
  await check('Full POS refund restores stock and journal exactly once; closed-session summary stays fixed',async()=>{
   const session=await openPosSession({cashierId:a.CASHIER.id,actor:a.CASHIER});const order=await createPosOrder({sessionId:session.id,paymentMethod:'CASH',lines:[{productSku:'COF-LATT-HOT',quantity:2}],actor:a.CASHIER});
   const closed=await closePosSession(session.id,66000,a.CASHIER);
-  await assert.rejects(refundPosOrder(order.order.id,'Refund closed session',a.CASHIER));await refundPosOrder(order.order.id,'Customer cancelled the full order',a.OWNER);
-  const before=await prisma.journalEntry.count();await refundPosOrder(order.order.id,'Retry refund',a.OWNER);assert.equal(await prisma.journalEntry.count(),before);
+  await assert.rejects(refundPosOrder(order.order.id,'Refund closed session',a.CASHIER));await refundPosOrder(order.order.id,'Customer cancelled the full order',a.HEAD_ADMIN);
+  const before=await prisma.journalEntry.count();await refundPosOrder(order.order.id,'Retry refund',a.HEAD_ADMIN);assert.equal(await prisma.journalEntry.count(),before);
   assert.equal(await balance('1010'),20000000);assert.equal(await balance('1030'),12214000);assert.equal((await closePosSession(session.id,0,a.CASHIER)).difference,closed.difference);
   assert.equal((await prisma.stockLevel.findUniqueOrThrow({where:{productSku_locationCode:{productSku:'COF-LATT-HOT',locationCode:'CAFE-JKT'}}})).onHand,24);
  });
@@ -82,11 +131,11 @@ async function main(){
  });
  await check('Team changes invalidate old sessions and protect last active owner',async()=>{
   const token=await createSessionToken(a.SALES),req=new NextRequest('http://localhost/api/auth/me',{headers:{authorization:'Bearer '+token}});assert(await getCurrentUser(req));
-  await saveTeamMember(a.SALES.id,{sessionVersion:0,active:false},a.OWNER);assert.equal(await getCurrentUser(req),null);
-  await assert.rejects(saveTeamMember(a.OWNER.id,{sessionVersion:0,active:false},a.OWNER));await assert.rejects(saveTeamMember(null,{name:'Weak',email:'weak@example.test',role:'SALES',password:'123'},a.OWNER));
+  await saveTeamMember(a.SALES.id,{sessionVersion:0,active:false},a.HEAD_ADMIN);assert.equal(await getCurrentUser(req),null);
+  await assert.rejects(saveTeamMember(a.HEAD_ADMIN.id,{sessionVersion:0,active:false},a.HEAD_ADMIN));await assert.rejects(saveTeamMember(null,{name:'Weak',email:'weak@example.test',role:'SALES',password:'123'},a.HEAD_ADMIN));
  });
  await check('New company snapshot preserves default and isolates active owner',async()=>{
-  const before=await prisma.productVariant.count(),company=await createCompany({name:'Verification Company',brand:'Verify',cloneMode:'clean',issuer:a.OWNER});
+  const before=await prisma.productVariant.count(),company=await createCompany({name:'Verification Company',brand:'Verify',cloneMode:'clean',issuer:a.HEAD_ADMIN});
   const client=new PrismaClient({datasourceUrl:'file:'+getDatabasePathForCompany(company)});try{assert.equal(await client.productVariant.count(),0);assert.equal(await client.journalEntry.count(),0);assert.equal(await client.user.count({where:{active:true}}),1);assert.equal((await client.account.findUniqueOrThrow({where:{code:'1010'}})).currentBalance,0);assert.equal(await prisma.productVariant.count(),before);}finally{await client.$disconnect();}
  });
 }

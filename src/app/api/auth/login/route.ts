@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { hasAllowedOrigin } from "@/lib/requestOrigin";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { createSessionToken } from "@/lib/auth";
@@ -6,7 +7,13 @@ import { recordAuditLog } from "@/lib/audit";
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json();
+    const { email, password: submittedPassword, demoAdmin } = await request.json();
+    // Local demo convenience uses a server-only credential and normal password verification.
+    if (demoAdmin === true && (
+      process.env.NODE_ENV !== "development" || !process.env.DEMO_ADMIN_PASSWORD ||
+      email !== "admin@rasaaruna.com" || !request.headers.get("origin") || !hasAllowedOrigin(request)
+    )) return NextResponse.json({ error: "Login cepat Admin hanya tersedia pada demo lokal. Masukkan email dan password Admin untuk login." }, { status: 403 });
+    const password = demoAdmin === true ? process.env.DEMO_ADMIN_PASSWORD : submittedPassword;
 
     if (!email || !password) {
       return NextResponse.json(
@@ -19,7 +26,7 @@ export async function POST(request: NextRequest) {
       where: { email: email.toLowerCase().trim() },
     });
 
-    if (!user || !user.active) {
+    if (!user || !user.active || (demoAdmin === true && user.role !== "HEAD_ADMIN")) {
       return NextResponse.json(
         { error: "Kredensial tidak valid." },
         { status: 401 }

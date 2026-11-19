@@ -186,7 +186,7 @@ export default function ProductsPage() {
       currentUser={user}
       onSwitchRole={handleSwitchRole}
       breadcrumbs={[{ label: "Persediaan & Gudang" }, { label: "Produk & lokasi" }]}
-      title="Produk & persediaan"
+      title="Stok & ketersediaan"
       subtitle="Kelola menu, harga, dan ketersediaan stok di setiap lokasi."
       wireframe="Wireframe S-03"
       actions={
@@ -218,6 +218,7 @@ export default function ProductsPage() {
           </div>
 
           <button
+            hidden={!["HEAD_ADMIN", "WAREHOUSE"].includes(user?.role)}
             onClick={() => setCreateModalOpen(true)}
             className="flex items-center space-x-1.5 px-3.5 py-2 text-xs font-bold btn-glass-primary rounded-xl shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus-brand-ring"
           >
@@ -243,6 +244,7 @@ export default function ProductsPage() {
     >
       {/* Empty State when clean company */}
       {loadError && <p role="alert" className="rounded-xl bg-rose-50 p-4 text-rose-800">{loadError}</p>}
+      <div className="surface-card p-4 text-sm text-slate-600"><strong className="text-slate-900">Stok tersedia = stok fisik − stok dipesan.</strong><p className="text-xs mt-1">Stok dipesan sudah dialokasikan ke pesanan pelanggan. Gunakan stok tersedia di lokasi yang dipilih untuk merencanakan penjualan dan pengiriman.</p><Link href="/master/products" className="inline-flex mt-2 text-xs font-semibold text-indigo-700">Kelola data produk & harga →</Link></div>
       {loading && !products.length ? <p role="status" className="surface-card p-6 text-slate-600">Memuat persediaan…</p> : !loadError && products.length === 0 ? (
         <div className="glass-2 rounded-2xl border border-dashed border-slate-300 p-12 text-center space-y-4">
           <div className="w-16 h-16 rounded-2xl bg-amber-500/15 text-[#6d28d9] flex items-center justify-center mx-auto shadow-xs border border-amber-500/30">
@@ -257,6 +259,7 @@ export default function ProductsPage() {
             </p>
           </div>
           <button
+            hidden={!["HEAD_ADMIN", "WAREHOUSE"].includes(user?.role)}
             onClick={() => setCreateModalOpen(true)}
             className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl btn-glass-primary text-xs font-bold shadow-md transition-all duration-200 hover:-translate-y-0.5 focus-brand-ring"
           >

@@ -1,3 +1,4 @@
+import type { WebsiteResult } from "./websiteData";
 import { randomUUID } from "node:crypto";
 import { SignJWT, jwtVerify } from "jose";
 import type { FinancialSummary } from "@/lib/financialSummary";
@@ -11,7 +12,7 @@ import { listRecords, readRecord, saveRecord } from "./storage";
 export type AgentContext = { user: SessionUser; db: PrismaClient; companyId: string; runId: string };
 export type RunRecord = {
   id: string; companyId: string; userId: string; sessionId: string; expiresAt: number;
-  active: boolean; calls: number; proposals: string[]; tools: string[]; financialReports?: FinancialSummary[];
+  active: boolean; calls: number; proposals: string[]; tools: string[]; financialReports?: FinancialSummary[]; readResults?: WebsiteResult[];
 };
 function key() {
   const secret = process.env.AGENT_GATEWAY_SECRET;
@@ -43,10 +44,11 @@ export async function authenticateTool(token: string): Promise<AgentContext> {
   saveRecord("runs", run.id, run);
   return { db, companyId: run.companyId, runId: run.id, user: { id: user.id, email: user.email, name: user.name, role: user.role, sessionVersion: user.sessionVersion, companyId: run.companyId } };
 }
-export function registerToolResult(runId: string, tool: string, proposalId?: string, financialReport?: FinancialSummary) {
+export function registerToolResult(runId: string, tool: string, proposalId?: string, financialReport?: FinancialSummary, result?: unknown) {
   const run = readRecord<RunRecord>("runs", runId);
   if (!run) return;
   if (!run.tools.includes(tool)) run.tools.push(tool);
+  if (result && !tool.startsWith('prepare_')) run.readResults = [...(run.readResults || []), {action:tool,data:result}].slice(-8);
   if (tool === "financial_summary" && financialReport) run.financialReports = [...(run.financialReports || []), financialReport].slice(-3);
   if (proposalId && !run.proposals.includes(proposalId)) run.proposals.push(proposalId);
   saveRecord("runs", runId, run);

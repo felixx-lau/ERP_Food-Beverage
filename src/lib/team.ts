@@ -6,7 +6,7 @@ import { Actor,permit,textValue,numberValue,BusinessError } from './validation';
 import { recordAuditLog } from './audit';
 export const publicUser={id:true,name:true,email:true,role:true,active:true,sessionVersion:true,createdAt:true} as const;
 export async function saveTeamMember(id:string|null,input:any,actor:Actor){
- permit(actor,['OWNER']);
+ permit(actor,['HEAD_ADMIN']);
  return atomic(async()=>{
   const before=id?await prisma.user.findUnique({where:{id},select:publicUser}):null;
   if(id&&!before)throw new BusinessError('Pengguna tidak ditemukan.',404);
@@ -17,8 +17,8 @@ export async function saveTeamMember(id:string|null,input:any,actor:Actor){
   if(!Object.values(Role).includes(role))throw new BusinessError('Role tidak valid.');
   const active=input.active??before?.active??true;
   if(typeof active!=='boolean')throw new BusinessError('Status akun tidak valid.');
-  if(before?.role==='OWNER'&&before.active&&(!active||role!=='OWNER')){
-   if(await prisma.user.count({where:{role:'OWNER',active:true}})<=1)throw new BusinessError('Minimal satu Owner aktif harus dipertahankan.',409);
+  if(before?.role==='HEAD_ADMIN'&&before.active&&(!active||role!=='HEAD_ADMIN')){
+   if(await prisma.user.count({where:{role:'HEAD_ADMIN',active:true}})<=1)throw new BusinessError('Minimal satu Head Admin aktif harus dipertahankan.',409);
   }
   const password=input.password;
   if(!before||password){if(typeof password!=='string'||password.length<10||password.length>128)throw new BusinessError('Password wajib 10–128 karakter.');}

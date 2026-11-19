@@ -1,3 +1,4 @@
+import { permittedOutlets } from "@/lib/outlets";
 import { withUser } from "@/lib/apiResult";
 import { changeMaster } from "@/lib/masterData";
 import { adjustStock } from "@/lib/inventoryEngine";
@@ -36,38 +37,24 @@ export async function GET(
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    if (user.role === "CASHIER") return NextResponse.json({ success: true, product: { sku: product.sku, name: product.name, size: product.size, color: product.color, unit: product.unit, salesPrice: product.salesPrice, stock: product.stockLevels.filter(s => s.locationCode === "CAFE-JKT").map(s=>({locationCode:s.locationCode,onHand:s.onHand,reserved:s.reserved})) } });
-    const wh = product.stockLevels.find((s) => s.locationCode === "WH-JKT") || { onHand: 0, reserved: 0 };
-    const cafe = product.stockLevels.find((s) => s.locationCode === "CAFE-JKT") || { onHand: 0, reserved: 0 };
-
-    const whAvailable = wh.onHand - wh.reserved;
-    const cafeAvailable = cafe.onHand - cafe.reserved;
-    const companyOnHand = wh.onHand + cafe.onHand;
-    const companyReserved = wh.reserved + cafe.reserved;
+    const allowed=user.role==="CASHIER"?(await permittedOutlets(user)).map(l=>l.code):[];
+    if (user.role === "CASHIER") return NextResponse.json({ success: true, product: { sku: product.sku, name: product.name, size: product.size, color: product.color, unit: product.unit, salesPrice: product.salesPrice, stock: product.stockLevels.filter(s => allowed.includes(s.locationCode)).map(s=>({locationCode:s.locationCode,onHand:s.onHand,reserved:s.reserved})) } });
+    const companyOnHand = product.stockLevels.reduce((total, stock) => total + stock.onHand, 0);
+    const companyReserved = product.stockLevels.reduce((total, stock) => total + stock.reserved, 0);
     const companyAvailable = companyOnHand - companyReserved;
 
     return NextResponse.json({
       success: true,
       product: {
         ...product,
-        locations: [
-          {
-            locationCode: "WH-JKT",
-            locationName: "Gudang Pusat Jakarta",
-            onHand: wh.onHand,
-            reserved: wh.reserved,
-            available: whAvailable,
-            valuation: wh.onHand * product.standardCost,
-          },
-          {
-            locationCode: "CAFE-JKT",
-            locationName: "Gerai Jakarta",
-            onHand: cafe.onHand,
-            reserved: cafe.reserved,
-            available: cafeAvailable,
-            valuation: cafe.onHand * product.standardCost,
-          },
-        ],
+        locations: product.stockLevels.map(stock => ({
+          locationCode: stock.locationCode,
+          locationName: stock.location.name,
+          onHand: stock.onHand,
+          reserved: stock.reserved,
+          available: stock.onHand - stock.reserved,
+          valuation: stock.onHand * product.standardCost,
+        })),
         companyOnHand,
         companyReserved,
         companyAvailable,

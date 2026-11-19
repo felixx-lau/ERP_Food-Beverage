@@ -1,3 +1,4 @@
+import type { PrismaClient } from '@prisma/client';
 import {businessDate,businessDayStart,businessDayEnd} from "./businessDate";
 import { getActiveCompanyId } from "./prisma";
 import { getCompanyById } from "./companyManager";
@@ -72,6 +73,8 @@ export interface FinancialReconciliation {
     ledgerAccountCode: string;
     ledgerAccountName: string;
     ledgerBalance: number;
+    cachedBalance: number | null;
+    postingSources: {id:string; entryNumber:string; sourceDocument:string}[];
     unitDiscrepancy: number;
     valueDiscrepancy: number;
     status: "BALANCED" | "MISMATCH";
@@ -92,9 +95,9 @@ export interface FinancialReconciliation {
 /**
  * Mengambil KPI Operasional Aktual dari Database (F-20 / Wireframe S-16 / T-31)
  */
-export async function getOperationalDashboardMetrics(): Promise<OperationalMetrics> {
+export async function getOperationalDashboardMetrics(db: PrismaClient = prisma, companyId?: string): Promise<OperationalMetrics> {
   // 1. Persediaan Fisik & Valuasi per Lokasi
-  const stockLevels = await prisma.stockLevel.findMany({
+  const stockLevels = await db.stockLevel.findMany({
     include: { product: true },
   });
 
@@ -115,43 +118,43 @@ export async function getOperationalDashboardMetrics(): Promise<OperationalMetri
   const availableUnits = totalUnits - reservedUnits;
 
   // 2. Piutang Dagang (A/R) - baseline customer receivables + posted uninvoiced
-  const customers = await prisma.contact.findMany({
+  const customers = await db.contact.findMany({
     where: { type: "CUSTOMER" },
   });
   const openReceivableSeed = customers.reduce((sum, c) => sum + c.openReceivable, 0);
 
-  const customerInvoices = await prisma.customerInvoice.findMany({
+  const customerInvoices = await db.customerInvoice.findMany({
     where: { isPosted: true, status: { in: ["POSTED","PAID"] } },
   });
-  const creditNotes = await prisma.creditNote.aggregate({where:{returnRequest:{invoice:{status:{in:["POSTED","PAID"]}}}},_sum:{totalGross:true}});
+  const creditNotes = await db.creditNote.aggregate({where:{returnRequest:{invoice:{status:{in:["POSTED","PAID"]}}}},_sum:{totalGross:true}});
   const invoicedReceivable = customerInvoices.reduce((sum, inv) => sum + inv.totalGross - inv.paidAmount, 0) - (creditNotes._sum.totalGross || 0);
   const totalAR = openReceivableSeed + invoicedReceivable;
 
   // 3. Utang Usaha (A/P) - baseline vendor payables + posted unpaid bills
-  const vendors = await prisma.contact.findMany({
+  const vendors = await db.contact.findMany({
     where: { type: "VENDOR" },
   });
   const openPayableSeed = vendors.reduce((sum, v) => sum + v.openPayable, 0);
 
-  const vendorBills = await prisma.vendorBill.findMany({
+  const vendorBills = await db.vendorBill.findMany({
     where: { isPosted: true, status: { in: ["POSTED","PAID"] } },
   });
   const billedPayable = vendorBills.reduce((sum, b) => sum + b.outstandingAmount, 0);
   const totalAP = openPayableSeed + billedPayable;
 
   // 4. Saldo Kas & Bank (Akun 1010)
-  const bankAccount = await prisma.account.findUnique({
+  const bankAccount = await db.account.findUnique({
     where: { code: "1010" },
   });
   const bankBalance = bankAccount?.currentBalance ?? 0;
 
   // 5. CRM Leads
-  const leads = await prisma.crmLead.findMany({where:{archivedAt:null}});
+  const leads = await db.crmLead.findMany({where:{archivedAt:null}});
   const leadsCount = leads.length;
   const leadsValue = leads.reduce((sum, l) => sum + l.expectedRevenue, 0);
 
   // 6. Confirmed Sales Orders
-  const confirmedSO = await prisma.salesOrder.findMany({
+  const confirmedSO = await db.salesOrder.findMany({
     where: { status: "CONFIRMED" },
     include: { lines: true },
   });
@@ -163,17 +166,17 @@ export async function getOperationalDashboardMetrics(): Promise<OperationalMetri
   );
 
   // 7. Confirmed Purchase Orders
-  const confirmedPO = await prisma.purchaseOrder.findMany({
+  const confirmedPO = await db.purchaseOrder.findMany({
     where: { status: "CONFIRMED" },
   });
   const confirmedPOCount = confirmedPO.length;
 
   // 8. POS Revenue
-  const posOrders = await prisma.posOrder.findMany({
+  const posOrders = await db.posOrder.findMany({
     where: { status: "PAID" },
   });
   const posRevenue = posOrders.reduce((sum, o) => sum + o.subtotalNet, 0);
-  const company = getCompanyById(await getActiveCompanyId());
+  const company = getCompanyById(companyId || await getActiveCompanyId());
 
   return {
     inventory: {
@@ -197,7 +200,7 @@ export async function getOperationalDashboardMetrics(): Promise<OperationalMetri
       billedPayable,
       sourceLink: "/accounting/vendor-bills",
     },
-    tax: {balance:(await prisma.account.findUnique({where:{code:"2020"}}))?.currentBalance ?? 0,sourceLink:"/accounting/journal-entries"},
+    tax: {balance:(await db.account.findUnique({where:{code:"2020"}}))?.currentBalance ?? 0,sourceLink:"/accounting/journal-entries"},
     bank: {
       balance: bankBalance,
       accountCode: "1010",
@@ -237,13 +240,13 @@ export async function getOperationalDashboardMetrics(): Promise<OperationalMetri
  */
 export async function getFinancialReconciliation(simulatedStockDiff: number = 0): Promise<FinancialReconciliation> {
   // 1. Keseimbangan Double-Entry Buku Besar (General Ledger Balance)
-  const journalItems = await prisma.journalItem.findMany();
+  const journalItems = await prisma.journalItem.findMany({where:{journalEntry:{state:'POSTED'}}});
   const totalDebit = journalItems.reduce((sum, item) => sum + item.debit, 0);
   const totalCredit = journalItems.reduce((sum, item) => sum + item.credit, 0);
   const isBalanced = totalDebit === totalCredit;
   const difference = Math.abs(totalDebit - totalCredit);
 
-  const totalEntries = await prisma.journalEntry.count();
+  const totalEntries = await prisma.journalEntry.count({where:{state:'POSTED'}});
 
   // 2. Rekonsiliasi Persediaan: Fisik vs Akun Buku Besar 1030
   const stockLevels = await prisma.stockLevel.findMany({
@@ -265,11 +268,17 @@ export async function getFinancialReconciliation(simulatedStockDiff: number = 0)
   const inventoryAccount = await prisma.account.findUnique({
     where: { code: "1030" },
   });
-  const ledgerBalance = inventoryAccount?.currentBalance ?? 0;
+  const ledgerBalance = journalItems.filter(item => item.accountCode === '1030').reduce((sum,item) => sum + item.debit - item.credit, 0);
+  const cachedBalance = inventoryAccount?.currentBalance ?? null;
+  const postingSources = await prisma.journalEntry.findMany({
+    where: {state:'POSTED', items:{some:{accountCode:'1030'}}},
+    select: {id:true, entryNumber:true, sourceDocument:true},
+    orderBy: [{date:'desc'},{entryNumber:'desc'}], take:25,
+  });
 
   const unitDiscrepancy = simulatedStockDiff;
   const valueDiscrepancy = physicalValuation - ledgerBalance;
-  const isStockReconciled = simulatedStockDiff === 0 && Math.abs(valueDiscrepancy) === 0;
+  const isStockReconciled = simulatedStockDiff === 0 && valueDiscrepancy === 0 && cachedBalance === ledgerBalance;
 
   const sourceMoves = await prisma.stockMove.findMany({ orderBy: { date: 'desc' }, take: 100 });
   const sourceTrail = [
@@ -280,8 +289,9 @@ export async function getFinancialReconciliation(simulatedStockDiff: number = 0)
 
   let warningMessage: string | undefined = undefined;
   if (!isStockReconciled) {
-    warningMessage = `PERINGATAN REKONSILIASI (SR-20 / T-32): Terdeteksi selisih ${unitDiscrepancy > 0 ? `+${unitDiscrepancy}` : unitDiscrepancy} unit (senilai Rp ${Math.abs(valueDiscrepancy).toLocaleString("id-ID")}) antara Stok Fisik dan Saldo Buku Besar. Auto-post penyesuaian dilarang keras tanpa dokumen sumber yang sah.`;
-    sourceTrail.push(`ANOMALI TERCATAT: Discrepancy ${unitDiscrepancy} unit tanpa transaksi jurnal pembeda.`);
+    const scenario = simulatedStockDiff ? `Simulasi perubahan ${simulatedStockDiff} unit. ` : '';
+    warningMessage = `SR-20 / T-32 · ${scenario}Selisih valuasi stok terhadap jurnal posted Rp ${valueDiscrepancy.toLocaleString("id-ID")}. Saldo akun tersimpan ${cachedBalance === null ? 'belum tersedia' : 'Rp ' + cachedBalance.toLocaleString("id-ID")}. Periksa dokumen sumber sebelum mengusulkan koreksi.`;
+
   }
 
   // 3. Subledger Matching
@@ -311,7 +321,7 @@ export async function getFinancialReconciliation(simulatedStockDiff: number = 0)
       physicalValuation,
       ledgerAccountCode: "1030",
       ledgerAccountName: inventoryAccount?.name || "Persediaan Barang Dagang",
-      ledgerBalance,
+      ledgerBalance, cachedBalance, postingSources,
       unitDiscrepancy,
       valueDiscrepancy,
       status: isStockReconciled ? "BALANCED" : "MISMATCH",
@@ -377,6 +387,7 @@ export interface DashboardChartData {
 }
 
 export interface ChartFilterParams {
+  locationCode?: string;
   period?: "day" | "week" | "month";
   startDate?: string | Date;
   endDate?: string | Date;
@@ -395,6 +406,7 @@ export async function getDashboardChartMetrics(params: ChartFilterParams = {}): 
     prisma.salesOrder.findMany({
       where: {
         status: { in: ["CONFIRMED", "DONE"] },
+        ...(params.locationCode?{sourceLocation:params.locationCode}:{}),
       },
       include: {
         lines: { include: { product: true } },
@@ -403,6 +415,7 @@ export async function getDashboardChartMetrics(params: ChartFilterParams = {}): 
     prisma.posOrder.findMany({
       where: {
         status: "PAID",
+        ...(params.locationCode?{locationCode:params.locationCode}:{}),
       },
       include: {
         lines: { include: { product: true } },
@@ -411,6 +424,7 @@ export async function getDashboardChartMetrics(params: ChartFilterParams = {}): 
     prisma.purchaseOrder.findMany({
       where: {
         status: { in: ["CONFIRMED", "DONE"] },
+        ...(params.locationCode?{destLocation:params.locationCode}:{}),
       },
       include: {
         lines: { include: { product: true } },
@@ -418,6 +432,7 @@ export async function getDashboardChartMetrics(params: ChartFilterParams = {}): 
     }),
     prisma.productVariant.findMany(),
     prisma.stockLevel.findMany({
+      where:params.locationCode?{locationCode:params.locationCode}:{},
       include: { product: true },
     }),
   ]);
@@ -584,9 +599,9 @@ export async function getDashboardChartMetrics(params: ChartFilterParams = {}): 
   const sortedProducts = Array.from(productSalesMap.entries())
     .map(([sku, data]) => ({ sku, ...data }))
     .sort((a, b) => b.qty - a.qty)
-    .slice(0, 10);
+    .slice(0, 15);
 
-  const topProductLabels = sortedProducts.map((p) => p.name);
+  const topProductLabels = sortedProducts.map((p) => `${p.name} · ${p.sku}`);
   const topProductQuantities = sortedProducts.map((p) => p.qty);
   const topProductRevenues = sortedProducts.map((p) => Math.round(p.revenue));
 

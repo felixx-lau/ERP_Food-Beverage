@@ -35,6 +35,12 @@ export default function PointOfSalePage() {
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<Array<{code:string;name:string}>>([]);
   const [refreshError, setRefreshError] = useState("");
+  const [actionError, setActionError] = useState("");
+  const [sessionError, setSessionError] = useState("");
+  const [openModalOpen, setOpenModalOpen] = useState(false);
+  const [openingCashInput, setOpeningCashInput] = useState(0);
+  const [outlets,setOutlets]=useState<Array<{code:string;name:string}>>([]);
+  const [openingLocation,setOpeningLocation]=useState("CAFE-JKT");
   const [loading, setLoading] = useState(true);
   const [searchProduct, setSearchProduct] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
@@ -55,7 +61,7 @@ export default function PointOfSalePage() {
   const [newCode, setNewCode] = useState("");
   const [newDiscount, setNewDiscount] = useState("");
   const loadPromotions = async () => { const r = await fetch('/api/pos/promotions'); if (r.ok) setPromotions(await r.json()); };
-  const createPromotion = async (body: object) => { const r = await fetch('/api/pos/promotions', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)}); const data = await r.json(); if (!r.ok) { alert(data.error || 'Gagal menyimpan promosi.'); return; } setNewCode(''); setNewDiscount(''); await loadPromotions(); };
+  const createPromotion = async (body: object) => { const r = await fetch('/api/pos/promotions', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)}); const data = await r.json(); if (!r.ok) { setActionError(data.error || 'Gagal menyimpan promosi.'); return; } setNewCode(''); setNewDiscount(''); await loadPromotions(); };
 
   // Manual / Custom Item Input State
   const [manualModalOpen, setManualModalOpen] = useState(false);
@@ -81,6 +87,7 @@ export default function PointOfSalePage() {
       if (res.ok) {
         const data = await res.json();
         setCurrentUser(data.user);
+        if (['CASHIER', 'HEAD_ADMIN'].includes(data.user.role)) await loadPromotions();
       }
     } catch (e) {
       console.error(e);
@@ -101,6 +108,7 @@ export default function PointOfSalePage() {
         const dataSess = await resSess.json();
         const sessList = dataSess.sessions || [];
         setSessions(sessList);
+        setOutlets(dataSess.outlets||[]);
         const openSess = sessList.find((s: any) => s.status === "OPEN") || sessList[0];
         setActiveSession((current: any) => sessList.find((s: any) => s.id === current?.id) || openSess || null);
       }
@@ -112,7 +120,7 @@ export default function PointOfSalePage() {
 
       if (resProd.ok) {
         const dataProd = await resProd.json();
-        setProducts(dataProd.products || []);
+        setProducts((dataProd.products || []).filter((p:any)=>p.salesPrice>0));
         setCategories(dataProd.categories || []);
       }
     } catch(e) { setRefreshError(e instanceof Error ? e.message : "Koneksi terputus."); } finally {
@@ -123,7 +131,6 @@ export default function PointOfSalePage() {
   useEffect(() => {
     fetchSession();
     fetchSessionsAndOrders();
-    loadPromotions();
   }, []);
 
   const handleSwitchRole = async (targetRole: string) => {
@@ -209,13 +216,14 @@ export default function PointOfSalePage() {
   // Checkout order action
   const handleCheckout = async () => {
     if(checkoutPending.current)return;
-    if (!activeSession) {
-      alert("Tidak ada sesi kasir aktif. Silakan buka sesi terlebih dahulu.");
+    setActionError("");
+    if (!activeSession || activeSession.status !== "OPEN") {
+      setActionError("Tidak ada sesi kasir aktif. Silakan buka sesi terlebih dahulu.");
       return;
     }
 
     if (cart.length === 0) {
-      alert("Keranjang belanja kosong.");
+      setActionError("Keranjang belanja kosong.");
       return;
     }
 
@@ -243,7 +251,7 @@ export default function PointOfSalePage() {
 
       const data = await res.json();
       if (!res.ok) {
-        alert(data.error || "Gagal memproses pesanan POS");
+        setActionError(data.error || "Gagal memproses pesanan POS");
         return;
       }
 
@@ -252,13 +260,14 @@ export default function PointOfSalePage() {
       setCart([]); setCouponCode(""); setLoyaltyAccountId("");
       await Promise.all([fetchSessionsAndOrders(), loadPromotions()]);
     } catch (e) {
-      alert("Pembayaran belum terkonfirmasi. Coba kembali dengan keranjang yang sama.");
+      setActionError("Pembayaran belum terkonfirmasi. Coba kembali dengan keranjang yang sama.");
     } finally { checkoutPending.current=false;setCheckingOut(false); }
   };
 
   // Open New Session
   const handleOpenSession = async () => {
     if (sessionPending.current) return;
+    setSessionError("");
     sessionPending.current = true; setSavingSession(true);
     try {
       const nextSessionNum = sessions.length + 1;
@@ -268,26 +277,28 @@ export default function PointOfSalePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sessionCode: proposedCode,
-          locationCode: "CAFE-JKT",
-          openingCash: 500000,
+          locationCode: openingLocation,
+          openingCash: openingCashInput,
         }),
       });
       const data = await res.json();
       if (res.ok) {
+        setOpenModalOpen(false);
         setCloseSessionResult(null);
         setActiveSession(data.session);
         publishDataRefresh(); await fetchSessionsAndOrders();
       } else {
-        alert(data.error || "Gagal membuka sesi baru");
+        setSessionError(data.error || "Gagal membuka sesi baru");
       }
     } catch (e) {
-      alert("Gagal membuka sesi kasir. Coba kembali.");
+      setSessionError("Gagal membuka sesi kasir. Coba kembali.");
     } finally { sessionPending.current = false; setSavingSession(false); }
   };
 
   // Close Session Action
   const handleCloseSession = async () => {
     if (!activeSession || sessionPending.current) return;
+    setSessionError("");
     sessionPending.current = true; setSavingSession(true);
     try {
       const res = await fetch(`/api/pos/sessions/${activeSession.id}/close`, {
@@ -297,14 +308,14 @@ export default function PointOfSalePage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        alert(data.error || "Gagal menutup sesi");
+        setSessionError(data.error || "Gagal menutup sesi");
         return;
       }
       setCloseSessionResult(data);
       setCloseModalOpen(false);
       publishDataRefresh(); await fetchSessionsAndOrders();
     } catch (e) {
-      alert("Penutupan sesi belum terkonfirmasi. Coba kembali.");
+      setSessionError("Penutupan sesi belum terkonfirmasi. Coba kembali.");
     } finally { sessionPending.current = false; setSavingSession(false); }
   };
 
@@ -472,8 +483,9 @@ export default function PointOfSalePage() {
     >
       <div className="space-y-6">
         {refreshError && <p role="alert" className="bg-rose-50 text-rose-800 p-3 rounded-xl text-sm">{refreshError}</p>}
-        {receipt&&<PosReceipt order={receipt} onClose={()=>setReceipt(null)} onRefunded={fetchSessionsAndOrders} canRefund={currentUser?.role==='OWNER'||(receipt.session?.cashierId===currentUser?.id&&receipt.session?.status==='OPEN')||(!receipt.session&&activeSession?.id===receipt.sessionId&&activeSession?.status==='OPEN')}/>}
-      <section className="surface-card p-5 space-y-3"><h2 className="text-lg font-semibold">Riwayat transaksi & struk</h2>{orders.length?<div className="overflow-x-auto"><table className="w-full text-sm text-left"><thead><tr><th scope="col" className="p-3">Nomor</th><th scope="col" className="p-3">Tanggal</th><th scope="col" className="p-3">Status</th><th scope="col" className="p-3">Total</th><th scope="col" className="p-3">Tindakan</th></tr></thead><tbody>{orders.map(order=><tr className="border-t" key={order.id}><td className="p-3">{order.orderNumber}</td><td className="p-3">{new Date(order.orderDate).toLocaleString('id-ID')}</td><td className="p-3">{order.status}</td><td className="p-3">Rp{order.totalAmount.toLocaleString('id-ID')}</td><td className="p-3"><button className="text-blue-700 underline" onClick={()=>setReceipt(order)}>Lihat struk / refund</button></td></tr>)}</tbody></table></div>:<p className="text-sm text-slate-500">Belum ada transaksi.</p>}</section>
+        {receipt&&<PosReceipt order={receipt} onClose={()=>setReceipt(null)} onRefunded={fetchSessionsAndOrders} canRefund={currentUser?.role==='HEAD_ADMIN'||(receipt.session?.cashierId===currentUser?.id&&receipt.session?.status==='OPEN')||(!receipt.session&&activeSession?.id===receipt.sessionId&&activeSession?.status==='OPEN')}/>}
+      <details open={currentUser?.role === "OWNER" || undefined} className="surface-card p-4 space-y-3"><summary className="cursor-pointer text-sm font-semibold">Riwayat transaksi & struk · {orders.length} transaksi</summary>{orders.length?<div className="overflow-x-auto"><table className="w-full text-sm text-left"><thead><tr><th scope="col" className="p-3">Nomor</th><th scope="col" className="p-3">Tanggal</th><th scope="col" className="p-3">Status</th><th scope="col" className="p-3">Total</th><th scope="col" className="p-3">Tindakan</th></tr></thead><tbody>{orders.map(order=><tr className="border-t" key={order.id}><td className="p-3">{order.orderNumber}</td><td className="p-3">{new Date(order.orderDate).toLocaleString('id-ID')}</td><td className="p-3"><StatusBadge status={order.status}/></td><td className="p-3">Rp{order.totalAmount.toLocaleString('id-ID')}</td><td className="p-3"><button className="text-blue-700 underline" onClick={()=>setReceipt(order)}>{currentUser?.role === 'OWNER' ? 'Lihat struk' : 'Lihat struk / refund'}</button></td></tr>)}</tbody></table></div>:<p className="text-sm text-slate-500">Belum ada transaksi.</p>}</details>
+      {currentUser?.role !== "OWNER" && <>
       {(closeSessionResult || activeSession?.status === "CLOSED") && <section className="surface-card p-5 space-y-3" aria-label="Ringkasan penutupan sesi">
         <h2 className="text-lg font-semibold">Ringkasan sesi kasir {(closeSessionResult?.session || activeSession)?.sessionCode}</h2>
         <p role="status" className="text-sm text-emerald-800">Sesi CLOSED. Transaksi dan pencatatan stok serta jurnal sudah tersimpan.</p>
@@ -492,12 +504,12 @@ export default function PointOfSalePage() {
             <div className="flex items-center space-x-2">
               <span className="w-2.5 h-2.5 rounded-full bg-[#1d4ed8]" />
               <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
-                Point of Sale Restoran (CAFE-JKT)
+                Point of Sale · {activeSession?.locationCode || openingLocation}
               </h1>
 
             </div>
             <p className="text-xs text-slate-600 font-medium mt-1">
-              Kasir gerai cepat, sinkronisasi stok fisik instan, PBJT 10% & penutupan sesi kasir (F-16, F-17, SR-03, SR-04, SR-14).
+              Pilih menu, periksa keranjang, lalu catat pembayaran. Stok gerai dan jurnal diperbarui setelah transaksi berhasil.
             </p>
           </div>
 
@@ -511,7 +523,7 @@ export default function PointOfSalePage() {
             {activeSession?.status === "OPEN" ? (
               <button
                 disabled={savingSession || !!cart.length}
-                onClick={() => { setClosingCashInput(0); setCloseModalOpen(true); }}
+                onClick={() => { setClosingCashInput(0); setSessionError(""); setCloseModalOpen(true); }}
                 className="px-4 py-2 bg-rose-500/15 hover:bg-rose-500/25 active:bg-rose-500/35 text-rose-900 border border-rose-500/30 rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md backdrop-blur-xs focus-brand-ring"
               >
                 <Lock className="w-3.5 h-3.5 text-rose-800" />
@@ -519,7 +531,7 @@ export default function PointOfSalePage() {
               </button>
             ) : (
               <button
-                onClick={handleOpenSession}
+                onClick={() => { setOpeningCashInput(0); setSessionError(""); setOpenModalOpen(true); }}
                 disabled={savingSession}
                 className="px-4 py-2 btn-glass-primary rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus-brand-ring"
               >
@@ -538,6 +550,7 @@ export default function PointOfSalePage() {
           </div>
         </div>
 
+        {actionError && <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800"><p>{actionError}</p><p className="text-xs mt-1">Periksa isian dan stok. Keranjang tetap tersedia untuk diperbaiki atau dicoba kembali.</p><button className="font-semibold mt-2" onClick={() => setActionError("")}>Tutup pesan</button></div>}
         {/* Active Session Status Bar (Wireframe S-14 Section ②) */}
         <div className="glass-3 p-4 rounded-xl border border-white/80 shadow-xs flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center space-x-4">
@@ -550,7 +563,7 @@ export default function PointOfSalePage() {
             <span className="text-black/20">|</span>
             <div className="flex items-center space-x-2">
               <span className="text-xs font-medium text-slate-600">Lokasi Gerai:</span>
-              <span className="font-mono font-bold text-xs text-slate-900">CAFE-JKT</span>
+              <span className="font-mono font-bold text-xs text-slate-900">{activeSession?.locationCode || openingLocation}</span>
             </div>
             <span className="text-black/20">|</span>
             <div className="flex items-center space-x-2">
@@ -578,9 +591,9 @@ export default function PointOfSalePage() {
                 <div>
                   <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center space-x-2">
                     <Store className="w-4 h-4 text-[#1d4ed8]" />
-                    <span>Katalog Menu Gerai CAFE-JKT</span>
+                    <span>Katalog menu · {activeSession?.locationCode || openingLocation}</span>
                   </h2>
-                  <p className="text-xs text-slate-600 font-normal mt-0.5">Pilih menu di bawah atau ketik nama menu sendiri</p>
+                  <p className="text-xs text-slate-600 font-normal mt-0.5">Cari nama atau SKU, lalu pilih varian menu yang sesuai.</p>
                 </div>
 
                 <div className="flex items-center space-x-2">
@@ -717,7 +730,7 @@ export default function PointOfSalePage() {
                 <div className="grid grid-cols-2 gap-3 mt-3 text-xs">
                   <div>
                     <label className="text-[10px] font-semibold text-slate-600 uppercase block mb-1">Lokasi Stok</label>
-                    <span className="font-mono font-bold text-[#1d4ed8] text-xs">CAFE-JKT</span>
+                    <span className="font-mono font-bold text-[#1d4ed8] text-xs">{activeSession?.locationCode || openingLocation}</span>
                   </div>
                   <div>
                     <label className="text-[10px] font-semibold text-slate-600 uppercase block mb-1">Layanan / Meja</label>
@@ -739,7 +752,7 @@ export default function PointOfSalePage() {
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center space-x-1.5">
                   <ShoppingBag className="w-3.5 h-3.5 text-[#1d4ed8]" />
-                  <span>④ Keranjang Belanja</span>
+                  <span>Keranjang belanja</span>
                 </h3>
                 <div className="flex items-center space-x-2">
                   <button
@@ -767,7 +780,7 @@ export default function PointOfSalePage() {
                   <div className="text-center py-8 text-slate-600 font-medium text-xs space-y-1">
                     <ShoppingBag className="w-6 h-6 mx-auto text-[#1d4ed8]/40" />
                     <p>Keranjang masih kosong.</p>
-                    <p className="text-[11px] text-slate-500 font-normal">Pilih menu di sebelah kiri atau klik &quot;+ Ketik Manual&quot;.</p>
+                    <p className="text-[11px] text-slate-500 font-normal">Cari nama menu, lalu pilih produk dan varian yang sesuai.</p>
                   </div>
                 ) : (
                   cart.map((item) => (
@@ -810,8 +823,8 @@ export default function PointOfSalePage() {
               </div>
             </div>
 
-            <section className="space-y-2 border-t border-slate-200 pt-3 text-xs" aria-label="Promosi loyalitas digital">
-              <h3 className="font-bold text-slate-900">Promosi & loyalitas (opsional)</h3>
+            <details className="space-y-2 border-t border-slate-200 pt-3 text-xs" aria-label="Promosi loyalitas digital">
+              <summary className="cursor-pointer font-semibold text-slate-900 py-1">Promosi & loyalitas (opsional){couponCode || loyaltyAccountId ? " · Ada pilihan aktif" : ""}</summary>
               <label className="block">Akun pelanggan
                 <select value={loyaltyAccountId} onChange={e=>setLoyaltyAccountId(e.target.value)} className="input-glass w-full rounded-lg p-2 mt-1">
                   <option value="">Tanpa poin</option>{promotions.accounts.map((a:any)=><option key={a.id} value={a.id}>{promotions.contacts.find((c:any)=>c.id===a.contactId)?.name || a.contactId} — {a.points} poin</option>)}
@@ -823,14 +836,14 @@ export default function PointOfSalePage() {
                 </select>
               </label>
               <p className="text-slate-600">1 poin per Rp10.000 setelah diskon. Kupon tetap terpakai setelah refund.</p>
-              {currentUser?.role === 'OWNER' && <details className="rounded-lg border border-slate-200 p-2"><summary className="cursor-pointer font-semibold">Kelola promosi</summary>
+              {currentUser?.role === 'HEAD_ADMIN' && <details className="rounded-lg border border-slate-200 p-2"><summary className="cursor-pointer font-semibold">Kelola promosi</summary>
                 <div className="space-y-2 pt-2"><label className="block">Pelanggan <select value={newContact} onChange={e=>setNewContact(e.target.value)} className="input-glass w-full p-2"><option value="">Pilih pelanggan</option>{promotions.contacts.filter((c:any)=>!promotions.accounts.some((a:any)=>a.contactId===c.id)).map((c:any)=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
                 <button className="btn-secondary" disabled={!newContact} onClick={()=>createPromotion({type:'account',contactId:newContact})}>Buat akun loyalitas</button>
                 <label className="block">Kode kupon <input value={newCode} onChange={e=>setNewCode(e.target.value)} className="input-glass w-full p-2" placeholder="PROMO-01" /></label>
                 <label className="block">Diskon (Rp) <input type="number" min="1" step="1" value={newDiscount} onChange={e=>setNewDiscount(e.target.value)} className="input-glass w-full p-2" /></label>
                 <button className="btn-secondary" disabled={!newCode || !newDiscount} onClick={()=>createPromotion({type:'coupon',code:newCode,discountAmount:Number(newDiscount)})}>Buat kupon</button></div>
               </details>}
-            </section>
+            </details>
             {/* Financial Summary & Payment */}
             <div className="space-y-3 pt-3 border-t border-black/5 text-xs">
               <div className="space-y-1.5 glass-3 p-3.5 rounded-xl border border-white/80 shadow-xs">
@@ -1002,6 +1015,7 @@ export default function PointOfSalePage() {
         )}
 
         {/* Modal Tutup Sesi */}
+        {openModalOpen && <DialogFrame onClose={() => { if (!sessionPending.current) setOpenModalOpen(false); }} label="Buka sesi kasir"><div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4"><h2 className="text-lg font-semibold">Buka sesi kasir</h2><p className="text-sm text-slate-600">Masukkan uang tunai di laci sebelum mulai melayani. Modal awal digunakan untuk menghitung kas yang diharapkan saat tutup sesi.</p><label className="block text-sm">Outlet<select className="input-glass w-full p-2 mt-1" disabled={savingSession} value={openingLocation} onChange={e=>setOpeningLocation(e.target.value)}><option value="">Pilih outlet…</option>{outlets.map(l=><option key={l.code} value={l.code}>{l.code} · {l.name}</option>)}</select></label><label className="block text-sm">Modal awal (Rp)<input className="input-glass block w-full p-3 mt-1" type="number" min={0} step={1} disabled={savingSession} value={openingCashInput} onChange={e => setOpeningCashInput(Number(e.target.value))}/></label>{sessionError && <p role="alert" className="text-sm text-rose-800">{sessionError}</p>}<div className="flex justify-end gap-3"><button className="btn-secondary" disabled={savingSession} onClick={() => setOpenModalOpen(false)}>Batal</button><button className="btn-primary" disabled={savingSession || !outlets.some(l=>l.code===openingLocation) || !Number.isFinite(openingCashInput) || openingCashInput < 0} onClick={handleOpenSession}>{savingSession ? 'Membuka…' : 'Buka sesi'}</button></div></div></DialogFrame>}
         {closeModalOpen && (
           <DialogFrame onClose={() => { if (!sessionPending.current) setCloseModalOpen(false); }}>
             <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-[#e2e8f0]">
@@ -1011,6 +1025,7 @@ export default function PointOfSalePage() {
                   <span>Tutup Sesi Kasir ({activeSession?.sessionCode})</span>
                 </h2>
                 <button
+                  disabled={savingSession}
                   onClick={() => setCloseModalOpen(false)}
                   className="text-[#64748b] hover:text-[#0f172a] focus-brand-ring rounded"
                 >
@@ -1039,11 +1054,14 @@ export default function PointOfSalePage() {
                 </div>
 
                 <div>
-                  <label className="font-bold text-[#0f172a] block mb-1">
+                  <label htmlFor="pos-closing-cash" className="font-bold text-[#0f172a] block mb-1">
                     Kas Fisik Aktual (Laci Kasir):
                   </label>
                   <input
                     type="number"
+                    id="pos-closing-cash"
+                    min={0}
+                    disabled={savingSession}
                     value={closingCashInput}
                     onChange={(e) => setClosingCashInput(Number(e.target.value))}
                     className="w-full border border-[#e2e8f0] rounded-lg p-2 font-mono font-bold text-[#0f172a] focus:outline-none focus:ring-1 focus:ring-[#1d4ed8] focus-brand-ring"
@@ -1051,15 +1069,18 @@ export default function PointOfSalePage() {
                 </div>
               </div>
 
+              {sessionError && <p role="alert" className="text-sm text-rose-800 rounded-xl bg-rose-50 p-3">{sessionError}</p>}
+              <p className="text-xs text-slate-600">Hitung uang tunai di laci. Pembayaran QRIS/Bank tidak termasuk kas fisik.</p>
               <div className="flex justify-end space-x-2 pt-4 border-t border-[#e2e8f0]">
                 <button
+                  disabled={savingSession}
                   onClick={() => setCloseModalOpen(false)}
                   className="px-4 py-2 border border-[#e2e8f0] rounded-lg text-xs font-semibold text-[#64748b] hover:bg-[#f1f5f9] focus-brand-ring"
                 >
                   Batal
                 </button>
                 <button
-                  disabled={savingSession}
+                  disabled={savingSession || !Number.isFinite(closingCashInput) || closingCashInput < 0}
                   onClick={handleCloseSession}
                   className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold focus-brand-ring"
                 >
@@ -1147,6 +1168,7 @@ export default function PointOfSalePage() {
             )}
           </div>
         </details>
+      </>}
       </div>
     </AppLayout>
   );

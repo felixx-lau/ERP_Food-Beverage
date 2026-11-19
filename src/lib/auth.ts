@@ -81,14 +81,14 @@ export async function getCurrentUser(request?: NextRequest): Promise<SessionUser
 }
 
 export const MODULE_PERMISSIONS: Record<string, Role[]> = {
-  sales: [Role.OWNER, Role.SALES],
-  crm: [Role.OWNER, Role.SALES],
-  purchase: [Role.OWNER, Role.PROCUREMENT],
-  inventory: [Role.OWNER, Role.WAREHOUSE, Role.PROCUREMENT],
-  accounting: [Role.OWNER, Role.FINANCE],
-  invoicing: [Role.OWNER, Role.FINANCE, Role.SALES],
-  pos: [Role.OWNER, Role.CASHIER],
-  dashboard: [Role.OWNER, Role.FINANCE],
+  sales: [Role.HEAD_ADMIN, Role.OWNER, Role.SALES],
+  crm: [Role.HEAD_ADMIN, Role.OWNER, Role.SALES],
+  purchase: [Role.HEAD_ADMIN, Role.OWNER, Role.PROCUREMENT],
+  inventory: [Role.HEAD_ADMIN, Role.OWNER, Role.WAREHOUSE, Role.PROCUREMENT],
+  accounting: [Role.HEAD_ADMIN, Role.OWNER, Role.FINANCE],
+  invoicing: [Role.HEAD_ADMIN, Role.OWNER, Role.FINANCE, Role.SALES],
+  pos: [Role.HEAD_ADMIN, Role.OWNER, Role.CASHIER],
+  dashboard: [Role.HEAD_ADMIN, Role.OWNER, Role.FINANCE],
 };
 
 export function canAccessModule(role: Role, module: string): boolean {

@@ -7,6 +7,8 @@ import DocumentControls from "@/components/DocumentControls";
 import DocumentList from "@/components/DocumentList";
 import FinancialCorrection from "@/components/FinancialCorrection";
 import DocumentTrail from "@/components/DocumentTrail";
+import { invoicePaymentStatus } from "@/lib/statusLabels";
+import InvoicePdfButton from "@/components/InvoicePdfButton";
 import AppLayout from "@/components/AppLayout";
 import StatusBadge from "@/components/StatusBadge";
 import KPICard from "@/components/KPICard";
@@ -18,6 +20,7 @@ export default function CustomerInvoicesPage() {
   const [invoices, setInvoices] = useState<any[]>([]);
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
   // New Invoice Modal
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -41,13 +44,18 @@ export default function CustomerInvoicesPage() {
     setLoading(true);
     try {
       const res = await fetch("/api/accounting/invoices");
-      if (res.ok) {
-        const data = await res.json();
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Daftar invoice gagal dimuat.");
+      setLoadError("");
+      {
         setInvoices(data.invoices || []);
         if (data.invoices?.length > 0 && !selectedInvoice) {
-          await fetchInvoiceDetail((data.invoices.find((r: any) => r.id === new URLSearchParams(window.location.search).get("id")) || data.invoices[0]).id);
+          const requested = data.invoices.find((r: any) => r.id === new URLSearchParams(window.location.search).get("id"));
+          if (requested) await fetchInvoiceDetail(requested.id);
         }
       }
+    } catch (e) {
+      setLoadError(e instanceof Error ? e.message : "Koneksi terputus. Coba muat ulang invoice.");
     } finally {
       setLoading(false);
     }
@@ -56,12 +64,12 @@ export default function CustomerInvoicesPage() {
   const fetchInvoiceDetail = async (id: string) => {
     try {
       const res = await fetch(`/api/accounting/invoices/${id}`);
-      if (res.ok) {
-        const data = await res.json();
-        setSelectedInvoice(data.invoice);
-      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Detail invoice gagal dimuat.");
+      setSelectedInvoice(data.invoice);
+      setLoadError("");
     } catch (e) {
-      console.error(e);
+      setLoadError(e instanceof Error ? e.message : "Detail invoice gagal dimuat. Coba pilih dokumen kembali.");
     }
   };
 
@@ -271,12 +279,13 @@ export default function CustomerInvoicesPage() {
       onSwitchRole={handleSwitchRole}
       breadcrumbs={[{ label: "Keuangan & Akuntansi" }, { label: "Customer Invoices" }]}
       title="Faktur pelanggan"
-      subtitle="Faktur Tagihan Pelanggan Berbasis Kuantitas Terkirim (Delivery-Based Invoicing) & Pajak PBJT Restoran (F-09, F-22, SR-02, SR-18)"
+      subtitle="Buat tagihan dari barang yang sudah dikirim, pantau pembayaran, dan unduh invoice PDF."
       wireframe="Wireframe S-10"
       actions={
         <div className="flex items-center space-x-2">
+          {selectedInvoice && <InvoicePdfButton key={selectedInvoice.id} invoiceId={selectedInvoice.id} />}
           <button
-            hidden={!["OWNER","FINANCE"].includes(user?.role)}
+            hidden={!["HEAD_ADMIN","FINANCE"].includes(user?.role)}
             onClick={() => setShowCreateModal(true)}
             className="inline-flex items-center space-x-1.5 px-3.5 py-2 btn-glass-primary text-white rounded-xl text-xs font-bold shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
           >
@@ -286,36 +295,24 @@ export default function CustomerInvoicesPage() {
         </div>
       }
     >
-      {["OWNER","FINANCE"].includes(user?.role) && selectedInvoice?.isPosted && selectedInvoice?.status !== "CANCELLED" && <FinancialCorrection kind="invoices" record={selectedInvoice} onChanged={async()=>{await fetchInvoices();await fetchInvoiceDetail(selectedInvoice.id);}}/>}
+      {["HEAD_ADMIN","FINANCE"].includes(user?.role) && selectedInvoice?.isPosted && selectedInvoice?.status !== "CANCELLED" && <FinancialCorrection kind="invoices" record={selectedInvoice} onChanged={async()=>{await fetchInvoices();await fetchInvoiceDetail(selectedInvoice.id);}}/>}
 
-      <DocumentList records={invoices} selectedId={selectedInvoice?.id} onSelect={fetchInvoiceDetail}/>
+      {loadError && <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800"><p>{loadError}</p><button className="font-semibold mt-2" onClick={() => void fetchInvoices()}>Muat ulang daftar</button></div>}
+
+      <DocumentList loading={loading} records={invoices} selectedId={selectedInvoice?.id} onClearSelection={()=>setSelectedInvoice(null)} onSelect={fetchInvoiceDetail}/>
 
       {selectedInvoice && <DocumentControls kind="invoices" record={selectedInvoice} role={user?.role} onChanged={async () => { await fetchInvoices(); await fetchInvoiceDetail(selectedInvoice.id); }} />}
 
       {/* Invoice Selector Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 glass-2 p-4 rounded-2xl border border-white/80 shadow-glass-2">
-        <div className="flex items-center space-x-2">
-          <span className="text-xs font-bold text-slate-700">Pilih Faktur Pelanggan:</span>
-          <select
-            value={selectedInvoice?.id || ""}
-            onChange={(e) => fetchInvoiceDetail(e.target.value)}
-            className="text-xs font-mono font-bold input-glass rounded-xl px-3 py-1.5 text-slate-900 focus:ring-2 focus:ring-[#1d4ed8]"
-          >
-            {invoices.length === 0 && <option value="">(Belum ada invoice)</option>}
-            {invoices.map((inv) => (
-              <option key={inv.id} value={inv.id}>
-                {inv.invoiceNumber} — {inv.customer?.name} ({inv.status}) - Rp {(inv.totalGross ?? inv.totalAmount ?? 0).toLocaleString("id-ID")}
-              </option>
-            ))}
-          </select>
-        </div>
+
 
         <div className="flex items-center space-x-2 text-xs text-slate-700 font-semibold">
-          <Link href="/accounting/vendor-bills" className="hover:text-[#1d4ed8] underline">Vendor Bills</Link>
+          <Link href="/accounting/vendor-bills" className="hover:text-[#1d4ed8] underline">Tagihan vendor</Link>
           <span className="text-black/30">•</span>
           <Link href="/accounting/payments" className="hover:text-[#1d4ed8] underline">Pembayaran</Link>
           <span className="text-black/30">•</span>
-          <Link href="/accounting/journal-entries" className="hover:text-[#1d4ed8] underline">General Ledger</Link>
+          <Link href="/accounting/journal-entries" className="hover:text-[#1d4ed8] underline">Buku besar & jurnal</Link>
         </div>
       </div>
 
@@ -324,59 +321,24 @@ export default function CustomerInvoicesPage() {
         <div className="glass-2 rounded-2xl shadow-glass-2 border border-white/80 overflow-hidden">
           {/* Status Ribbon */}
           <div className="bg-white/40 px-6 py-3.5 border-b border-black/5 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center space-x-3">
-              <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Status Faktur:</span>
-              <div className="inline-flex rounded-xl shadow-xs overflow-hidden border border-white/60">
-                {["DRAFT", "POSTED", "PAID"].map((st) => {
-                  const isDraft = selectedInvoice.status === "DRAFT" && st === "DRAFT";
-                  const isConfirmed = selectedInvoice.status === "POSTED" && selectedInvoice.paymentStatus !== "PAID" && st === "POSTED";
-                  const isPaid = selectedInvoice.paymentStatus === "PAID" && st === "PAID";
-                  const active = isDraft || isConfirmed || isPaid;
-
-                  return (
-                    <span
-                      key={st}
-                      className={`px-3 py-1 text-xs font-bold font-mono transition-colors ${
-                        active
-                          ? "bg-[#1d4ed8] text-white shadow-xs"
-                          : "bg-white/60 text-slate-700"
-                      }`}
-                    >
-                      {st}
-                    </span>
-                  );
-                })}
-              </div>
-              <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold ${
-                selectedInvoice.paymentStatus === "PAID"
-                  ? "glass-badge-success"
-                  : selectedInvoice.paymentStatus === "PARTIAL"
-                  ? "glass-badge-warning"
-                  : "glass-badge-default"
-              }`}>
-                Payment: {selectedInvoice.paymentStatus}
-              </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-semibold text-slate-600">Status dokumen</span>
+              <StatusBadge status={selectedInvoice.status} />
+              <span className="text-xs font-semibold text-slate-600">Pembayaran</span>
+              {invoicePaymentStatus(selectedInvoice) ? <StatusBadge status={invoicePaymentStatus(selectedInvoice)!} /> : <span className="text-xs text-slate-500">{selectedInvoice.status === 'CANCELLED' ? 'Tidak berlaku' : 'Belum diposting'}</span>}
             </div>
 
             {/* Action Buttons */}
             <div className="flex items-center space-x-2">
-              {selectedInvoice.status === "DRAFT" && (
-                <button
-                  onClick={() => handlePostInvoice(selectedInvoice.id)}
-                  className="px-4 py-2 btn-glass-primary text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>Confirm / Post Invoice</span>
-                </button>
-              )}
 
-              {["OWNER", "FINANCE"].includes(user?.role) && selectedInvoice.status === "POSTED" && selectedInvoice.outstandingAmount > 0 && (
+
+              {["HEAD_ADMIN", "FINANCE"].includes(user?.role) && selectedInvoice.status === "POSTED" && selectedInvoice.outstandingAmount > 0 && (
                 <Link
                   href={`/accounting/payments?invoiceId=${selectedInvoice.id}`}
                   className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
                 >
                   <Receipt className="w-3.5 h-3.5" />
-                  <span>Register Payment</span>
+                  <span>Catat pembayaran</span>
                 </Link>
               )}
             </div>
@@ -438,7 +400,7 @@ export default function CustomerInvoicesPage() {
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide flex items-center space-x-2">
                 <Receipt className="w-4 h-4 text-[#1d4ed8]" />
-                <span>Rincian Penagihan Kuantitas Terkirim (Delivered-Based)</span>
+                <span>Rincian barang yang ditagih</span>
               </h3>
               <span className="text-xs text-slate-600 font-medium">
                 Kebijakan SR-02: Tagihan hanya dibuat berdasarkan barang yang telah diterima pelanggan.
@@ -451,9 +413,9 @@ export default function CustomerInvoicesPage() {
                   <tr>
                     <th scope="col" className="py-3.5 px-4">SKU</th>
                     <th scope="col" className="py-3.5 px-4">Deskripsi Produk</th>
-                    <th scope="col" className="py-3.5 px-4 text-center">Invoiced Qty</th>
+                    <th scope="col" className="py-3.5 px-4 text-center">Jumlah ditagih</th>
                     <th scope="col" className="py-3.5 px-4 text-right">Harga Satuan</th>
-                    <th scope="col" className="py-3.5 px-4 text-right">Net Subtotal</th>
+                    <th scope="col" className="py-3.5 px-4 text-right">Subtotal net</th>
                     <th scope="col" className="py-3.5 px-4 text-right">PBJT 10%</th>
                     <th scope="col" className="py-3.5 px-4 text-right">Total Baris</th>
                   </tr>
@@ -484,7 +446,7 @@ export default function CustomerInvoicesPage() {
             <div className="mt-6 flex justify-end">
               <div className="w-full max-w-sm space-y-2 glass-3 p-4.5 rounded-xl border border-white/80 text-xs shadow-xs">
                 <div className="flex justify-between text-slate-700 font-medium">
-                  <span>Subtotal Net:</span>
+                  <span>Subtotal setelah diskon:</span>
                   <span className="font-mono font-semibold text-slate-900">
                     Rp {(selectedInvoice.subtotalNet ?? selectedInvoice.subtotal ?? 0).toLocaleString("id-ID")}
                   </span>
@@ -496,17 +458,17 @@ export default function CustomerInvoicesPage() {
                   </span>
                 </div>
                 <div className="border-t border-black/10 pt-2 flex justify-between text-slate-900 font-bold text-sm">
-                  <span>Total Tagihan (Gross):</span>
+                  <span>Total tagihan:</span>
                   <span className="font-mono text-[#1d4ed8] text-base font-bold">
                     Rp {(selectedInvoice.totalGross ?? selectedInvoice.totalAmount ?? 0).toLocaleString("id-ID")}
                   </span>
                 </div>
                 <div className="border-t border-dashed border-black/10 pt-2 flex justify-between text-emerald-800 font-semibold">
-                  <span>Sudah Dibayar (Paid):</span>
+                  <span>Sudah dibayar:</span>
                   <span className="font-mono">Rp {(selectedInvoice.paidAmount ?? 0).toLocaleString("id-ID")}</span>
                 </div>
                 <div className="flex justify-between text-amber-900 font-semibold">
-                  <span>Sisa Piutang (Outstanding):</span>
+                  <span>Sisa piutang:</span>
                   <span className="font-mono">Rp {(selectedInvoice.outstandingAmount ?? 0).toLocaleString("id-ID")}</span>
                 </div>
               </div>
@@ -587,7 +549,7 @@ export default function CustomerInvoicesPage() {
           )}
         </div>
       </details>
-      {selectedInvoice && <DocumentTrail kind="invoices" record={selectedInvoice}/>}
+      {selectedInvoice && <DocumentTrail kind="invoices" record={selectedInvoice} role={user?.role}/>}
     </AppLayout>
   );
 }

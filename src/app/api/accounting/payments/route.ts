@@ -1,3 +1,4 @@
+import { apiFailure } from '@/lib/apiResult';
 import { idempotent } from "@/lib/atomic";
 import { authorizeApi } from "@/lib/apiAuthorization";
 import { NextRequest, NextResponse } from "next/server";
@@ -41,15 +42,16 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { invoiceId, billId, paymentMethod = 'BANK', amount, paymentDate, notes } = body;
     if ((!invoiceId && !billId) || (invoiceId && billId)) return NextResponse.json({ error: 'Pilih tepat satu invoice atau vendor bill.' }, { status: 400 });
+    const key = request.headers.get('idempotency-key')?.trim() || undefined;
+    if (billId && !key) return NextResponse.json({error:'Idempotency-Key wajib untuk pembayaran vendor.'},{status:400});
     const date = paymentDate ? new Date(paymentDate) : undefined;
     if (date && !Number.isFinite(date.getTime())) return NextResponse.json({ error: 'Tanggal pembayaran tidak valid.' }, { status: 400 });
-    const result = await idempotent<Awaited<ReturnType<typeof registerCustomerPayment>> | Awaited<ReturnType<typeof registerVendorPayment>>>(user, 'REGISTER_PAYMENT', request.headers.get('idempotency-key') || undefined, body, () => billId
+    const result = await idempotent<Awaited<ReturnType<typeof registerCustomerPayment>> | Awaited<ReturnType<typeof registerVendorPayment>>>(user, 'REGISTER_PAYMENT', key, body, () => billId
       ? registerVendorPayment({ billId, paymentMethod, amount, paymentDate: date, notes, actor: user })
       : registerCustomerPayment({ invoiceId, paymentMethod, amount, paymentDate: date, notes, actor: user }));
 
     return NextResponse.json({ success: true, ...result });
   } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : String(error);
-    return NextResponse.json({ error: msg }, { status: 400 });
+    return apiFailure(error);
   }
 }

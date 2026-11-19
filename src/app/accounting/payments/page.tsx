@@ -235,7 +235,7 @@ export default function RegisterPaymentPage() {
     >
       <section className="surface-card p-5 space-y-3"><h2 className="font-semibold">Koreksi pembayaran</h2><p className="text-sm text-slate-500">Pembayaran yang salah dikoreksi dengan reversal; riwayat asli tetap tersimpan.</p>{payments.filter(p=>!p.reversedAt).map(payment=><div key={payment.id} className="flex flex-wrap justify-between gap-3 border rounded-xl p-3 text-sm"><span>{payment.paymentNumber} · {payment.customer?.name||payment.vendor?.name} · Rp{payment.amount.toLocaleString('id-ID')}</span><FinancialCorrection kind="payments" record={payment} onChanged={fetchPaymentsAndInvoices}/></div>)}</section>
 
-      <VendorPaymentForm onPaid={fetchPaymentsAndInvoices}/>
+      {currentUser && <VendorPaymentForm key={JSON.stringify([currentUser.companyId, currentUser.id])} identity={JSON.stringify([currentUser.companyId, currentUser.id])} onPaid={fetchPaymentsAndInvoices}/>}
 
       <div className="space-y-6">
         {/* Module Header & Sub-Nav */}

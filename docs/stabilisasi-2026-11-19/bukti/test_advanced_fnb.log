@@ -1,0 +1,28 @@
+[PASS] Lot allocation cannot exceed physical stock
+[PASS] Self-referential recipe rejected
+[PASS] Production consumes FEFO, records actual cost and usage variance
+[PASS] Production retry does not duplicate stock or journal
+[PASS] Insufficient production materials roll back all effects
+[PASS] POS recipe backflush consumes ingredients with recipe HPP and one KDS ticket
+[PASS] Cooked refund never restores used raw ingredients
+[PASS] Expired lots rejected for POS without changing stock
+[PASS] Expired batch can be disposed with stock and expense posting
+[PASS] Cashier cannot post production waste
+[PASS] Transfer preserves batch identity and expiration
+[PASS] Reorder rule generates one request for the shortage
+[PASS] Approval required; conversion does not regenerate duplicate PR
+[PASS] Multi-outlet cashier access requires Head Admin assignment
+[PASS] Retired public QR menu and repeated submissions expose no products and create no orders or stock moves
+[PASS] Kitchen enforces status sequence and cannot complete unpaid orders
+[PASS] Internal unpaid ticket checkout posts POS once and keeps original ticket lifecycle
+[PASS] Disabled QR link cannot retrieve menu
+[PASS] Cancelled draft cannot consume ingredients; backflush recipes cannot create production orders
+[PASS] QR quantities are bounded to 1–100 per variant
+[PASS] Head Admin rejection pauses restocking and prevents immediate recreation
+[PASS] Reorder rules can be explicitly resumed
+[PASS] Opening journals inside the report period appear as migration adjustments
+[PASS] Product details include a third location in physical totals
+[PASS] Cashier product and work lists respect assigned outlets without exposing costs
+[PASS] Kitchen overview preserves role isolation and omits retired operations pages
+[PASS] Balance sheet and cash flow reconcile after production, waste, sales and refunds
+[PASS] All generated journals balanced

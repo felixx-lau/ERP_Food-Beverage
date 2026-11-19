@@ -145,7 +145,7 @@ export default function CrmLeadsPage() {
       onSwitchRole={handleSwitchRole}
       breadcrumbs={[{ label: "Penjualan & CRM" }, { label: "CRM Leads Kanban" }]}
       title="Pipeline CRM"
-      subtitle="Manajemen Pipeline Prospek & Peluang Penjualan Katering / Restoran (Fitur F-04, SR-16)"
+      subtitle="Kelola prospek pelanggan dari kontak awal hingga penawaran dan pesanan."
       wireframe="Wireframe S-04"
       actions={
         <div className="flex items-center space-x-2">
@@ -154,7 +154,7 @@ export default function CrmLeadsPage() {
             <p className="text-sm font-bold text-[#1d4ed8]">Rp {totalPipeline.toLocaleString("id-ID")}</p>
           </div>
           <button
-            onClick={() => setCreateModalOpen(true)}
+            hidden={user?.role === "OWNER"} onClick={() => setCreateModalOpen(true)}
             className="inline-flex items-center space-x-1.5 px-3.5 py-2 btn-glass-primary text-white rounded-xl text-xs font-bold shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus-brand-ring"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -199,7 +199,7 @@ export default function CrmLeadsPage() {
                   stageLeads.map((lead) => (
                     <div
                       key={lead.id}
-                      role="button" tabIndex={0} onClick={()=>setEditingLead(lead)} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();setEditingLead(lead);}}}
+                      role={user?.role === "OWNER" ? undefined : "button"} tabIndex={user?.role === "OWNER" ? undefined : 0} onClick={()=>user?.role !== "OWNER" && setEditingLead(lead)} onKeyDown={e=>{if(user?.role !== "OWNER" && (e.key==="Enter"||e.key===" ")){e.preventDefault();setEditingLead(lead);}}}
                       className="glass-3 border border-white/80 hover:border-[#1d4ed8]/40 rounded-xl p-3.5 shadow-xs space-y-2.5 cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-1 hover:bg-white/95 focus-brand-ring"
                     >
                       <div className="flex items-center justify-between">
@@ -232,7 +232,7 @@ export default function CrmLeadsPage() {
         })}
       </div>
 
-      <section className="surface-card p-4 space-y-4">
+      <section hidden={user?.role === "OWNER"} className="surface-card p-4 space-y-4">
         <h2 className="font-semibold">Kelola peluang & penawaran</h2>
         <div className="flex flex-wrap gap-3">
           {leads.map(lead => (

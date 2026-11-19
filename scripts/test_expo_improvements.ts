@@ -28,7 +28,7 @@ function observed(name: string, verdict: "PASS" | "GAP" | "LIMITATION", expected
 async function main() {
   await executeSeed(prisma);
   const db = await getActivePrismaClient();
-  const owner = { ...await db.user.findFirstOrThrow({ where: { role: "OWNER" } }), companyId: "default" };
+  const owner = { ...await db.user.findFirstOrThrow({ where: { role: "HEAD_ADMIN" } }), companyId: "default" };
   const cashier = { ...await db.user.findFirstOrThrow({ where: { role: "CASHIER" } }), companyId: "default" };
   const customer = await db.contact.findFirstOrThrow({ where: { type: "CUSTOMER", archivedAt: null } });
   const vendor = await db.contact.findFirstOrThrow({ where: { type: "VENDOR", archivedAt: null } });

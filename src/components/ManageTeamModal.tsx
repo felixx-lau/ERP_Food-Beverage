@@ -13,7 +13,8 @@ interface ManageTeamModalProps {
 }
 
 const AVAILABLE_ROLES = [
-  { role: "OWNER", label: "Owner (Pemilik - Full Access)", color: "bg-purple-100 text-purple-800" },
+  { role: "OWNER", label: "Owner (Laporan laba/rugi)", color: "bg-purple-100 text-purple-800" },
+  { role: "HEAD_ADMIN", label: "Head Admin (Akses penuh)", color: "bg-purple-100 text-purple-800" },
   { role: "SALES", label: "Sales (Penjualan & CRM)", color: "bg-blue-100 text-blue-800" },
   { role: "WAREHOUSE", label: "Warehouse (Gudang & Stok)", color: "bg-amber-100 text-amber-800" },
   { role: "PROCUREMENT", label: "Procurement (Pengadaan PO)", color: "bg-orange-100 text-orange-800" },
@@ -327,7 +328,7 @@ export default function ManageTeamModal({
 
         {/* Footer */}
         <div className="px-6 py-3 bg-[#f1f5f9] border-t border-[#E5E9E4] flex items-center justify-between text-[11px] text-[#64748b]">
-          <span>Akses dikelola Owner</span>
+          <span>Akses dikelola Head Admin</span>
           <button
             onClick={onClose}
             aria-label="Tutup dialog"

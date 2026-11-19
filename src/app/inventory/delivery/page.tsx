@@ -36,7 +36,8 @@ export default function DeliveryPage() {
         const data = await res.json();
         setDeliveries(data.deliveries || []);
         if (data.deliveries?.length > 0 && !selectedDelivery) {
-          await fetchDeliveryDetail((data.deliveries.find((r: any) => r.id === new URLSearchParams(window.location.search).get("id")) || data.deliveries[0]).id);
+          const requested = data.deliveries.find((r: any) => r.id === new URLSearchParams(window.location.search).get("id"));
+          if (requested) await fetchDeliveryDetail(requested.id);
         }
       }
     } finally {
@@ -169,25 +170,14 @@ export default function DeliveryPage() {
       wireframe="Wireframe S-06"
       actions={
         <div className="flex items-center space-x-2">
-          <span className="text-xs font-semibold text-[#64748b] hidden sm:inline">Pilih Dokumen DO:</span>
-          <select
-            value={selectedDelivery?.id || ""}
-            onChange={(e) => fetchDeliveryDetail(e.target.value)}
-            className="text-xs font-mono font-medium bg-white border border-[#E5E9E4] text-[#0f172a] rounded-lg px-3 py-1.5 shadow-2xs focus:ring-1 focus:ring-[#1d4ed8] focus-brand-ring"
-          >
-            {deliveries.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.deliveryNumber} — SO: {d.salesOrder?.orderNumber} ({d.status})
-              </option>
-            ))}
-          </select>
+
         </div>
       }
     >
 
       {selectedDelivery && <DocumentControls kind="deliveries" record={selectedDelivery} role={user?.role} onChanged={async () => { await fetchDeliveries(); await fetchDeliveryDetail(selectedDelivery.id); }} />}
 
-      <DocumentList loading={loading} records={deliveries} selectedId={selectedDelivery?.id} onSelect={fetchDeliveryDetail}/>
+      <DocumentList loading={loading} records={deliveries} selectedId={selectedDelivery?.id} onClearSelection={()=>setSelectedDelivery(null)} onSelect={fetchDeliveryDetail}/>
 
 
       {/* Selected Delivery Order Detail */}
@@ -378,7 +368,7 @@ export default function DeliveryPage() {
           )}
         </div>
       </details>
-      {selectedDelivery && <DocumentTrail kind="deliveries" record={selectedDelivery}/>}
+      {selectedDelivery && <DocumentTrail kind="deliveries" record={selectedDelivery} role={user?.role}/>}
     </AppLayout>
   );
 }

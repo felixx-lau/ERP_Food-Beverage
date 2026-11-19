@@ -2,7 +2,7 @@ import { atomic } from "./atomic";
 import { permit, quantity, money, discount, uniqueLines, editable } from "./validation";
 import { prisma } from "./prisma";
 import { Role } from "@prisma/client";
-import { recordAuditLog } from "./audit";
+import { AuditedRejection, recordAuditLog } from "./audit";
 import { getNextSequence } from "./sequences";
 
 export interface InvoiceLineInput {
@@ -21,9 +21,9 @@ async function createCustomerInvoiceImpl(params: {
   uniqueLines(lineInputs, l => l.productSku);
   lineInputs.forEach(l => { quantity(l.quantity); if (l.unitPrice !== undefined) money(l.unitPrice); });
 
-  // Role check: FINANCE or OWNER (SR-15)
-  if (actor.role !== Role.FINANCE && actor.role !== Role.OWNER) {
-    throw new Error("Akses ditolak (SR-15): Hanya Finance atau Owner yang berwenang membuat Customer Invoice.");
+  // Role check: FINANCE or HEAD_ADMIN (SR-15)
+  if (actor.role !== Role.FINANCE && actor.role !== Role.HEAD_ADMIN) {
+    throw new Error("Akses ditolak (SR-15): Hanya Finance atau Head Admin yang berwenang membuat Customer Invoice.");
   }
 
   const order = await prisma.salesOrder.findFirst({
@@ -73,7 +73,7 @@ async function createCustomerInvoiceImpl(params: {
 
     // SR-02 / T-20: Block attempt to invoice un-delivered units
     if (item.quantity > maxBillable) {
-      throw new Error(
+      throw new AuditedRejection({actorId:actor.id,actorName:actor.name,actorRole:actor.role,action:"INVOICE_QUANTITY_REJECTED",documentType:"SO",documentId:order.orderNumber,notes:"Kuantitas invoice melebihi sisa pengiriman."},
         `Validasi Penagihan Gagal (SR-02 / F-09 / T-20): Kuantitas tagihan (${item.quantity}) melebihi kuantitas yang telah dikirim (Delivered: ${deliveredQty}, Sudah Ditagih: ${alreadyInvoiced}, Maksimal Boleh Ditagih: ${maxBillable}). Penagihan barang yang belum dikirim dilarang.`
       );
     }
@@ -148,9 +148,9 @@ async function createCustomerInvoiceImpl(params: {
 }
 
 async function postCustomerInvoiceImpl(invoiceId: string, actor: { id: string; name: string; role: Role }) {
-  // Role check: FINANCE or OWNER (SR-15)
-  if (actor.role !== Role.FINANCE && actor.role !== Role.OWNER) {
-    throw new Error("Akses ditolak (SR-15): Hanya Finance atau Owner yang berwenang memposting Customer Invoice.");
+  // Role check: FINANCE or HEAD_ADMIN (SR-15)
+  if (actor.role !== Role.FINANCE && actor.role !== Role.HEAD_ADMIN) {
+    throw new Error("Akses ditolak (SR-15): Hanya Finance atau Head Admin yang berwenang memposting Customer Invoice.");
   }
 
   const invoice = await prisma.customerInvoice.findFirst({
@@ -300,9 +300,9 @@ async function registerCustomerPaymentImpl(params: {
   money(amount);
   if (!["BANK","CASH","QRIS"].includes(paymentMethod)) throw new Error("Metode pembayaran tidak valid.");
 
-  // Role check: FINANCE or OWNER (SR-15)
-  if (actor.role !== Role.FINANCE && actor.role !== Role.OWNER) {
-    throw new Error("Akses ditolak (SR-15): Hanya Finance atau Owner yang berwenang meregister pembayaran.");
+  // Role check: FINANCE or HEAD_ADMIN (SR-15)
+  if (actor.role !== Role.FINANCE && actor.role !== Role.HEAD_ADMIN) {
+    throw new Error("Akses ditolak (SR-15): Hanya Finance atau Head Admin yang berwenang meregister pembayaran.");
   }
 
   const invoice = await prisma.customerInvoice.findFirst({
@@ -318,7 +318,7 @@ async function registerCustomerPaymentImpl(params: {
   // SR-19 / T-24: OVERPAYMENT PROTECTION GUARD
   // Payments exceeding outstanding MUST be rejected
   if (amount > invoice.outstandingAmount) {
-    await recordAuditLog({
+    throw new AuditedRejection({
       actorId: actor.id,
       actorName: actor.name,
       actorRole: actor.role,
@@ -326,10 +326,7 @@ async function registerCustomerPaymentImpl(params: {
       documentType: "CUSTOMER_INVOICE",
       documentId: invoice.invoiceNumber,
       notes: `Percobaan bayar Rp ${amount.toLocaleString("id-ID")} melebihi sisa tagihan Rp ${invoice.outstandingAmount.toLocaleString("id-ID")} ditolak (SR-19).`,
-    });
-
-    throw new Error(
-      `Validasi Pembayaran Gagal (SR-19 / F-15 / T-24): Jumlah pembayaran (Rp ${amount.toLocaleString("id-ID")}) melebihi sisa tagihan outstanding (Rp ${invoice.outstandingAmount.toLocaleString("id-ID")}). Pembayaran melebihi outstanding ditolak.`
+    }, `Validasi Pembayaran Gagal (SR-19 / F-15 / T-24): Jumlah pembayaran (Rp ${amount.toLocaleString("id-ID")}) melebihi sisa tagihan outstanding (Rp ${invoice.outstandingAmount.toLocaleString("id-ID")}). Pembayaran melebihi outstanding ditolak.`
     );
   }
 
@@ -440,12 +437,12 @@ export const postCustomerInvoice = (...args: Parameters<typeof postCustomerInvoi
 export const registerCustomerPayment = (...args: Parameters<typeof registerCustomerPaymentImpl>) => atomic(() => registerCustomerPaymentImpl(...args));
 
 export async function registerVendorPayment(params: { billId: string; amount: number; paymentMethod: string; paymentDate?: Date; notes?: string; actor: { id: string; name: string; role: Role } }) {
-  permit(params.actor, ['OWNER','FINANCE']); money(params.amount);
+  permit(params.actor, ['HEAD_ADMIN','FINANCE']); money(params.amount);
   if (!params.amount || !['BANK','CASH','QRIS'].includes(params.paymentMethod)) throw new Error('Jumlah atau metode pembayaran tidak valid.');
   return atomic(async () => {
     const bill = await prisma.vendorBill.findFirst({ where: { OR: [{ id: params.billId }, { billNumber: params.billId }] } });
     if (!bill || bill.status !== 'POSTED') throw new Error('Vendor Bill harus Posted dan belum lunas.');
-    if (params.amount > bill.outstandingAmount) throw new Error('Pembayaran melebihi outstanding (SR-19).');
+    if (params.amount > bill.outstandingAmount) throw new AuditedRejection({actorId:params.actor.id,actorName:params.actor.name,actorRole:params.actor.role,action:'OVERPAYMENT_REJECTED',documentType:'VENDOR_BILL',documentId:bill.billNumber,notes:'Pembayaran melebihi outstanding (SR-19).'});
     const remainingBalance = bill.outstandingAmount - params.amount;
     const updatedBill = await prisma.vendorBill.update({ where: { id: bill.id }, data: { paidAmount: { increment: params.amount }, outstandingAmount: remainingBalance, status: remainingBalance ? 'POSTED' : 'PAID' } });
     const payment = await prisma.payment.create({ data: { paymentNumber: `PAY/${new Date().getFullYear()}/${crypto.randomUUID()}`, paymentType: 'VENDOR_OUTBOUND', billId: bill.id, vendorId: bill.vendorId, amount: params.amount, paymentMethod: params.paymentMethod, paymentDate: params.paymentDate || new Date(), notes: params.notes } });

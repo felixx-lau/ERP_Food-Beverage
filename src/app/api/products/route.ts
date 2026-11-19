@@ -1,3 +1,4 @@
+import { permittedOutlets } from "@/lib/outlets";
 import { withUser } from "@/lib/apiResult";
 import { createMaster } from "@/lib/masterData";
 import { BusinessError } from "@/lib/validation";
@@ -19,6 +20,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const allowedCodes=user.role==="CASHIER"?(await permittedOutlets(user)).map(l=>l.code):null;
     const products = await prisma.productVariant.findMany({
       where: request.nextUrl.searchParams.get("status") === "all" ? {} : { archivedAt: null },
       include: {
@@ -63,10 +65,10 @@ export async function GET(request: NextRequest) {
     });
 
     const categories = await prisma.category.findMany({ where: { archivedAt: null }, select: { code: true, name: true } });
-    const locations = await prisma.warehouseLocation.findMany({ where: { archivedAt: null, ...(user.role === "CASHIER" ? { code: "CAFE-JKT" } : {}) }, select: { code: true, name: true }, orderBy: { code: "asc" } });
+    const locations = await prisma.warehouseLocation.findMany({ where: { archivedAt: null, ...(user.role === "CASHIER" ? { code: { in: allowedCodes||[] } } : {}) }, select: { code: true, name: true }, orderBy: { code: "asc" } });
     const scoped = enriched.map(p => ({ ...p, lowStockLocations: locations.filter(location => stockAttention(p.stockLevels.find(s => s.locationCode === location.code) || { onHand: 0, reserved: 0 })).map(location => location.code), totalAvailable: p.stockLevels.reduce((n, s) => n + availableStock(s), 0) }));
 
-    return NextResponse.json({ success: true, asOf: new Date().toISOString(), stockPolicy: STOCK_POLICY, locations, categories, products: user.role === "CASHIER" ? scoped.map(p => ({sku:p.sku,name:p.name,size:p.size,color:p.color,unit:p.unit,salesPrice:p.salesPrice,categoryCode:p.categoryCode,cafeStock:p.cafeStock})) : scoped });
+    return NextResponse.json({ success: true, asOf: new Date().toISOString(), stockPolicy: STOCK_POLICY, locations, categories, products: user.role === "CASHIER" ? scoped.map(p => ({sku:p.sku,name:p.name,size:p.size,color:p.color,unit:p.unit,salesPrice:p.salesPrice,categoryCode:p.categoryCode,cafeStock:(allowedCodes||[]).includes("CAFE-JKT")?p.cafeStock:undefined,stockLevels:p.stockLevels.filter(s=>(allowedCodes||[]).includes(s.locationCode)).map(s=>({locationCode:s.locationCode,onHand:s.onHand,reserved:s.reserved,available:s.onHand-s.reserved}))})) : scoped });
   } catch (error) {
     console.error("Fetch products error:", error);
     return NextResponse.json({ error: "Failed to fetch products" }, { status: 500 });

@@ -1,7 +1,8 @@
+import { accessRestriction } from './accessPolicy';
 import { hasAllowedOrigin } from './requestOrigin';
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser, SessionUser } from './auth';
-import { recordAuditLog } from "./audit";
+import { AuditedRejection, recordAuditLog } from "./audit";
 import { BusinessError } from './validation';
 export function apiFailure(error: unknown) {
   if (error instanceof BusinessError) return NextResponse.json({error:error.message},{status:error.status});
@@ -20,10 +21,11 @@ export async function withUser(request: NextRequest, run:(user:SessionUser)=>Pro
   try {
     user=await getCurrentUser(request);
     if (!user) throw new BusinessError('Silakan login ke perusahaan ini.',401);
+    if (accessRestriction(user.role, request.nextUrl.pathname, request.method)) throw new BusinessError('Fitur ini tidak tersedia untuk akun Anda.',403);
     if (!hasAllowedOrigin(request)) throw new BusinessError('Origin tidak diizinkan.',403);
     return NextResponse.json(await run(user));
   } catch (error) {
-    if (user && request.method !== "GET") {
+    if (user && request.method !== "GET" && !(error instanceof AuditedRejection)) {
       try { await recordAuditLog({actorId:user.id,actorName:user.name,actorRole:user.role,action:"OPERATION_REJECTED",documentType:"API",documentId:request.nextUrl.pathname,notes:error instanceof BusinessError ? error.message : "Operasi ditolak; tidak ada perubahan bisnis tersimpan."}); } catch (auditError) { console.error("Denied operation audit failed",auditError); }
     }
     return apiFailure(error);

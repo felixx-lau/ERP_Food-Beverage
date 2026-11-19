@@ -37,7 +37,7 @@ interface TopbarProps {
 }
 
 const ROLES_LIST = [
-  { role: "OWNER", name: "Maya Prasetyo", title: "Pemilik Perusahaan (Full Access)" },
+  { role: "HEAD_ADMIN", name: "Maya Prasetyo", title: "Head Admin (Akses penuh)" },
   { role: "SALES", name: "Dini Anggraini", title: "Manajer Penjualan (Sales & CRM)" },
   { role: "WAREHOUSE", name: "Sinta Maharani", title: "Kepala Gudang (Inventory & Delivery)" },
   { role: "PROCUREMENT", name: "Arief Wicaksono", title: "Manajer Pengadaan (Purchase & RFQ)" },
@@ -93,8 +93,8 @@ export default function Topbar({
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    if (currentUser?.role === "HEAD_ADMIN") void fetchUsers();
+  }, [currentUser?.role]);
 
   const handleSelectRole = async (targetRole: string, userId?: string) => {
     setSwitching(true);
@@ -149,8 +149,9 @@ export default function Topbar({
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             <NavigationSearch role={currentUser?.role} />
             {/* Manage Team Shortcut */}
+            {currentUser?.role === "HEAD_ADMIN" && <>
             <button
-              hidden={currentUser?.role !== "OWNER"}
+              hidden={currentUser?.role !== "HEAD_ADMIN"}
               onClick={() => setManageTeamOpen(true)}
               aria-label="Kelola Tim & Anggota Kelompok"
               className="hidden lg:inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 rounded-lg border border-transparent hover:border-slate-200/60 transition-colors focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none"
@@ -168,14 +169,15 @@ export default function Topbar({
               title="Buka Log Audit & Security History (SR-15 / F-21)"
             >
               <ShieldAlert className="w-3.5 h-3.5 text-violet-600" aria-hidden="true" />
-              <span className="hidden md:inline">Audit Trail</span>
+              <span className="hidden md:inline">Riwayat aktivitas</span>
             </button>
 
+            </>}
             {/* User Profile & Role Switcher */}
             <div className="relative" ref={profileRef}>
               <button
                 onClick={() => setRoleMenuOpen(!roleMenuOpen)}
-                aria-label={`Menu pengguna: ${currentUser?.name || "Pengguna"}, Role: ${currentUser?.role || "OWNER"}`}
+                aria-label={`Menu pengguna: ${currentUser?.name || "Pengguna"}, Role: ${currentUser?.role || "HEAD_ADMIN"}`}
                 aria-expanded={roleMenuOpen}
                 className="flex items-center space-x-2 px-2.5 py-1.5 rounded-xl hover:bg-slate-50/90 border border-slate-200/70 shadow-none text-slate-900 text-xs font-bold transition-colors focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none"
               >
@@ -188,7 +190,7 @@ export default function Topbar({
                   </p>
                   {/* High contrast role label in violet */}
                   <p className="text-xs text-violet-700 font-extrabold uppercase tracking-wider">
-                    {currentUser?.role || "OWNER"}
+                    {currentUser?.role || "HEAD_ADMIN"}
                   </p>
                 </div>
                 <ChevronDown className="w-3.5 h-3.5 text-slate-700" aria-hidden="true" />
@@ -210,9 +212,9 @@ export default function Topbar({
 
                   {/* Actions: Manage Team, Dev Reset Seed, & Logout */}
                   <div className="p-2 border-t border-slate-200 bg-[#f8fafc] space-y-1.5">
-                    <button className="btn-secondary w-full" onClick={() => { setRoleMenuOpen(false); onOpenAuditDrawer(); }}>Riwayat aktivitas & audit</button>
+                    <button hidden={currentUser?.role === "OWNER"} className="btn-secondary w-full" onClick={() => { setRoleMenuOpen(false); onOpenAuditDrawer(); }}>Riwayat aktivitas & audit</button>
                     <button
-                      hidden={currentUser?.role !== "OWNER"}
+                      hidden={currentUser?.role !== "HEAD_ADMIN"}
                       onClick={() => {
                         setRoleMenuOpen(false);
                         setManageTeamOpen(true);
@@ -254,8 +256,8 @@ export default function Topbar({
           </div>
         </div>
         <nav aria-label="Breadcrumb" className="px-4 sm:px-6 lg:px-8 pb-3 flex items-center gap-2 text-xs text-slate-500 overflow-x-auto whitespace-nowrap">
-          <Link href="/" className="hover:text-blue-700">Workspace</Link>
-          {(breadcrumbs || [{label: "Beranda"}]).map((b, idx, all) => <React.Fragment key={idx}><span aria-hidden="true" className="text-slate-300">/</span>{b.href && idx < all.length - 1 ? <Link href={b.href} className="hover:text-blue-700">{b.label}</Link> : <span aria-current={idx === all.length - 1 ? "page" : undefined} className={idx === all.length - 1 ? "font-medium text-slate-700" : ""}>{b.label}</span>}</React.Fragment>)}
+          <Link href="/" className="hover:text-blue-700">Beranda</Link>
+          {(breadcrumbs || []).filter(b=>b.label!=="Beranda" || !!b.href).map((b, idx, all) => <React.Fragment key={idx}><span aria-hidden="true" className="text-slate-300">/</span>{b.href && idx < all.length - 1 ? <Link href={b.href} className="hover:text-blue-700">{b.label}</Link> : <span aria-current={idx === all.length - 1 ? "page" : undefined} className={idx === all.length - 1 ? "font-medium text-slate-700" : ""}>{b.label}</span>}</React.Fragment>)}
         </nav>
       </header>
 

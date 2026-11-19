@@ -10,7 +10,7 @@ import styles from "./ChatbotWidget.module.css";
 
 type Message = { id: string; role: "user" | "assistant"; text: string; tools?: string[]; asOf?: string };
 const roleSuggestions: Record<string, string[]> = {
-  OWNER: ["Buat briefing pekerjaan yang perlu saya tindak lanjuti", "Periksa stok dan usulkan rencana restock", "Tampilkan invoice yang masih harus ditagih"],
+  HEAD_ADMIN: ["Buat briefing pekerjaan yang perlu saya tindak lanjuti", "Periksa stok dan usulkan rencana restock", "Tampilkan invoice yang masih harus ditagih"],
   SALES: ["Tampilkan order penjualan terbaru", "Bantu siapkan penawaran untuk pelanggan", "Tampilkan invoice yang masih harus ditagih"],
   PROCUREMENT: ["Periksa stok dan usulkan rencana restock", "Tampilkan PO terbaru", "Bantu siapkan RFQ untuk vendor"],
   WAREHOUSE: ["Buat briefing pekerjaan gudang", "Periksa stok di WH-JKT", "Bantu siapkan transfer stok ke kafe"],
@@ -24,6 +24,11 @@ export default function ChatbotWidget({ role, identity }: { role: string; identi
   const [hydrated, setHydrated] = useState(false);
   const suggestions = roleSuggestions[role] || roleSuggestions.CASHIER;
   const [open, setOpen] = useState(false);
+  const [service, setService] = useState('checking');
+  const checkService = async () => {
+    setService('checking');
+    try { const r = await fetch('/api/chatbot/health', { cache: 'no-store' }); const d = await r.json(); setService(r.ok ? d.state : 'unknown'); } catch { setService('unknown'); }
+  };
   const [draft, setDraft] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [pending, setPending] = useState(false);
@@ -59,7 +64,7 @@ export default function ChatbotWidget({ role, identity }: { role: string; identi
   }, [messages, hydrated, storageKey]);
   useEffect(() => () => controller.current?.abort(), []);
   useEffect(() => {
-    if (open) { input.current?.focus(); void loadProposals(); }
+    if (open) { input.current?.focus(); void loadProposals(); void checkService(); }
   }, [open]);
   useEffect(() => {
     if (open && history.current) {
@@ -120,7 +125,7 @@ export default function ChatbotWidget({ role, identity }: { role: string; identi
       const response = await fetch("/api/chatbot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message, sessionId: session.current, context: {path:window.location.pathname,documentId:new URLSearchParams(window.location.search).get("id")} }),
+        body: JSON.stringify({ message, sessionId: session.current, context: {path:window.location.pathname,resource:new URLSearchParams(window.location.search).get("type"),documentId:new URLSearchParams(window.location.search).get("id")} }),
         signal: activeController.signal,
       });
       const data = await response.json().catch(() => ({}));
@@ -165,6 +170,11 @@ export default function ChatbotWidget({ role, identity }: { role: string; identi
           </header>
 
           <div className={styles.history} ref={history}>
+            <div className="mb-3 rounded-xl border border-slate-200 p-3 text-xs text-slate-600">
+              <div className="flex items-center justify-between gap-2"><span role="status">{service === 'ready' ? '● Layanan AI aktif' : service === 'offline' ? 'Layanan AI sedang offline' : service === 'checking' ? 'Memeriksa layanan AI…' : 'Status layanan belum terverifikasi'}</span><button className="text-indigo-700 font-semibold shrink-0" disabled={service === 'checking' || pending} onClick={() => void checkService()}>Cek ulang</button></div>
+              {service === 'offline' && <p className="mt-1">Pencarian stok, pelanggan, pesanan, invoice, dan laporan tetap dapat digunakan. Untuk bantuan AI lanjutan, buka “Mulai Asisten ERP.command”, lalu cek ulang.</p>}
+              <details className="mt-2"><summary className="cursor-pointer font-semibold text-slate-700">Apa yang bisa dibantu?</summary><p className="mt-2 leading-relaxed">Cari data sesuai hak akses, periksa stok dan dokumen, serta rangkum prioritas. Draft penawaran, pembelian, dan transfer perlu ditinjau sebelum disimpan.</p><p className="mt-2 leading-relaxed">Untuk menambah produk atau mengunduh invoice PDF, gunakan tombol di modul terkait.</p></details>
+            </div>
             {messages.length === 0 && (
               <div className={styles.welcome}>
                 <span className={styles.welcomeIcon}><Bot size={34} aria-hidden="true" /><Sparkles size={16} className={styles.sparkle} aria-hidden="true" /></span>
@@ -215,7 +225,7 @@ export default function ChatbotWidget({ role, identity }: { role: string; identi
                 </>}
               </article>)}
             </div>}
-            {pending && <><div className={styles.typing} role="status"><Bot size={18} aria-hidden="true" /><span aria-hidden="true"><i /><i /><i /></span><span className="sr-only">Aruna sedang memeriksa data</span></div><p className={styles.waitNote}>Aruna sedang memeriksa. Model lokal dapat memerlukan beberapa saat.</p></>}
+            {pending && <><div className={styles.typing} role="status"><Bot size={18} aria-hidden="true" /><span aria-hidden="true"><i /><i /><i /></span><span className="sr-only">Aruna sedang memeriksa data</span></div><p className={styles.waitNote}>Aruna sedang membaca sumber data dan menyiapkan jawaban.</p></>}
             {error && <div className={styles.error}><p role="alert">{error}</p><button type="button" disabled={pending} onClick={() => void send(failedMessage, true)}><RotateCcw size={13} aria-hidden="true" /> Coba lagi</button></div>}
           </div>
 

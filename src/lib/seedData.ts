@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import { PrismaClient, Role, ContactType, CustomerType, PaymentTerms, AccountType, LeadStage, OrderStatus } from "@prisma/client";
 
 export const SEED_USERS = [
+  { email: "admin@rasaaruna.com", name: "Admin", role: Role.HEAD_ADMIN },
   {
     email: "owner@rasaaruna.com",
     name: "Maya Prasetyo",
@@ -193,7 +194,7 @@ export const SEED_ACCOUNTS = [
   { code: "8010", name: "Inventory Adjustment", type: AccountType.EXPENSE, openingBalance: 0 },
 ];
 
-export async function executeSeed(prisma: PrismaClient, actorName = "System", actorRole: Role = Role.OWNER) {
+export async function executeSeed(prisma: PrismaClient, actorName = "System", actorRole: Role = Role.HEAD_ADMIN) {
   // We execute all cleaning and seeding in a clean transaction or sequence
   // 1. Clean existing transactional and master data
   await prisma.$transaction(async (tx) => {
@@ -212,6 +213,16 @@ export async function executeSeed(prisma: PrismaClient, actorName = "System", ac
     await tx.creditNote.deleteMany();
     await tx.returnRequestLine.deleteMany();
     await tx.returnRequest.deleteMany();
+    await tx.kitchenTicket.deleteMany();
+    await tx.orderingTable.deleteMany();
+    await tx.outletAccess.deleteMany();
+    await tx.purchaseRequest.deleteMany();
+    await tx.reorderRule.deleteMany();
+    await tx.wasteRecord.deleteMany();
+    await tx.lotMovement.deleteMany();
+    await tx.stockLot.deleteMany();
+    await tx.productionOrder.deleteMany();
+    await tx.recipe.deleteMany();
     await tx.posOrderLine.deleteMany();
     await tx.posOrder.deleteMany();
     await tx.posSession.deleteMany();

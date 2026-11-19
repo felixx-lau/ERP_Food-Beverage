@@ -162,7 +162,7 @@ async function runChartTests() {
     // -------------------------------------------------------------------------
     console.log("\n--- 5. Testing Next.js Route Handler /api/dashboard/charts ---");
     const mockUrl = new URL("http://localhost:3000/api/dashboard/charts?period=week&startDate=2026-10-01&endDate=2026-10-31");
-    const owner = (await prisma.user.findFirst({ where: { role: "OWNER" } }))!;
+    const owner = (await prisma.user.findFirst({ where: { role: "HEAD_ADMIN" } }))!;
     const mockReq = new NextRequest(mockUrl, { headers: { authorization: `Bearer ${await createSessionToken(owner)}` } });
     const apiResponse = await getChartApi(mockReq);
 

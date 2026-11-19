@@ -1,0 +1,119 @@
+{
+  "paths": [
+    "/sales/orders",
+    "/crm/leads",
+    "/purchase/orders",
+    "/inventory/products",
+    "/accounting/reports",
+    "/accounting/invoices",
+    "/pos",
+    "/dashboard"
+  ],
+  "pages": [
+    {
+      "path": "/sales/orders",
+      "width": 1440,
+      "scrollWidth": 1440,
+      "headings": [
+        "Pesanan penjualan",
+        "Daftar dokumen"
+      ],
+      "unnamed": 0,
+      "text": "uang penjualan\nPesanan penjualan\nPERSEDIAAN & GUDANG\nPENGADAAN\nKEUANGAN\nPENJUALAN KASIR (POS)\n\nRuang kerja aktif\n\nOWNER\n\nCiutkan sidebar\nPT Rasa Aruna Bersama\nCari halaman…\n⌘ K\nM\n\nMaya Prasetyo\n\nOWNER\n\nBeranda\n/\nPenjualan & CRM\n/\nSales Orders\nPesanan penjualan\n\nPenerbitan Penawaran, Konfirmasi Pesanan, Otorisasi Diskon & Kunci Harga\n\nDaftar dokumen\n\nPilih Detail untuk melihat isi dan langkah berikutnya.\n\nSemua status\nDibatalkan\nDraft\nDikonfirmasi\nNomor\n\tMitra / sumber\tStatus\tTanggal\n\tTindakan\nS00008\tPT Saji Kantor Sejahtera\t\nDibatalkan\n\t19/11/2026\t\nDetail\n\nS00007\tPT Saji Kantor Sejahtera\t\nDraft\n\t19/11/2026\t\nDetail\n\nS00006\tKlinik Harmoni\t\nDikonfirmasi\n\t19/11/2026\t\nDetail\n1–3 dari 3 data\n1 / 1"
+    },
+    {
+      "path": "/crm/leads",
+      "width": 1440,
+      "scrollWidth": 1440,
+      "headings": [
+        "Pipeline CRM",
+        "New Lead",
+        "Qualified",
+        "Proposition",
+        "Won / Deal"
+      ],
+      "unnamed": 0,
+      "text": "i\nRA\n\nRasa Aruna Kitchen\n\nBusiness workspace\n\nRINGKASAN\nBeranda\nDashboard Eksekutif\nPENJUALAN & CRM\nPeluang penjualan\nPesanan penjualan\nPERSEDIAAN & GUDANG\nPENGADAAN\nKEUANGAN\nPENJUALAN KASIR (POS)\n\nRuang kerja aktif\n\nOWNER\n\nCiutkan sidebar\nPT Rasa Aruna Bersama\nCari halaman…\n⌘ K\nM\n\nMaya Prasetyo\n\nOWNER\n\nBeranda\n/\nPenjualan & CRM\n/\nCRM Leads Kanban\nPipeline CRM\n\nKelola prospek pelanggan dari kontak awal hingga penawaran dan pesanan.\n\nTOTAL PIPELINE\n\nRp 1.200.000\n\nNew Lead\nRp 0\n0\nBelum ada lead di tahap ini.\nQualified\nRp 1.200.000\n1\nLD0003\nRp 1.200.000\nPaket Makan Siang Staf Klinik\nKlinik Harmoni\nC03\nProposition\nRp 0\n0\nBelum ada lead di tahap ini.\nWon / Deal\nRp 0\n0\nBelum ada lead di tahap ini."
+    },
+    {
+      "path": "/purchase/orders",
+      "width": 1440,
+      "scrollWidth": 1440,
+      "headings": [
+        "Pesanan pembelian",
+        "Daftar dokumen"
+      ],
+      "unnamed": 0,
+      "text": "a Aruna Kitchen\n\nBusiness workspace\n\nRINGKASAN\nBeranda\nDashboard Eksekutif\nPENJUALAN & CRM\nPERSEDIAAN & GUDANG\nPENGADAAN\nPesanan pembelian\nKEUANGAN\nPENJUALAN KASIR (POS)\n\nRuang kerja aktif\n\nOWNER\n\nCiutkan sidebar\nPT Rasa Aruna Bersama\nCari halaman…\n⌘ K\nM\n\nMaya Prasetyo\n\nOWNER\n\nBeranda\n/\nPengadaan\n/\nPurchase Orders\nPesanan pembelian\n\nKelola penawaran vendor, pesanan pembelian, dan rencana penerimaan barang.\n\nDaftar dokumen\n\nPilih Detail untuk melihat isi dan langkah berikutnya.\n\nSemua status\nDikonfirmasi\nNomor\n\tMitra / sumber\tStatus\tTanggal\n\tTindakan\nP00007\tPT Kopi Minum Prima\t\nDikonfirmasi\n\t19/11/2026\t\nDetail\n\nP00006\tPT Kopi Minum Prima\t\nDikonfirmasi\n\t19/11/2026\t\nDetail\n1–2 dari 2 data\n1 / 1"
+    },
+    {
+      "path": "/inventory/products",
+      "width": 1440,
+      "scrollWidth": 1434,
+      "headings": [
+        "Stok & ketersediaan",
+        "Katalog produk"
+      ],
+      "unnamed": 0,
+      "text": "\n\n\nJUICE-ORN-350\nJus Jeruk\t350 ml\nOriginal · bottle\n\t36\t0\t36\t\n1 lokasi perlu stok\n\tRp 35.000\tRp 15.000\t57%\t\nDetail\n\n\nNOOD-VEG-L\nMie Sayur\tLarge\nOriginal · box\n\t34\t0\t34\t\n1 lokasi perlu stok\n\tRp 52.000\tRp 27.000\t48%\t\nDetail\n\n\nNOOD-VEG-S\nMie Sayur\tSmall\nOriginal · box\n\t54\t0\t54\t\n1 lokasi perlu stok\n\tRp 39.000\tRp 19.000\t51%\t\nDetail\n\n\nRICE-BEEF-L\nNasi Daging Lada\tLarge\nOriginal · box\n\t26\t0\t26\t\n1 lokasi perlu stok\n\tRp 72.000\tRp 42.000\t42%\t\nDetail\n\n\nRICE-BEEF-S\nNasi Daging Lada\tSmall\nOriginal · box\n\t40\t0\t40\t\n1 lokasi perlu stok\n\tRp 56.000\tRp 31.000\t45%\t\nDetail\n\n\nRICE-CHICK-L\nNasi Ayam Panggang\tLarge\nOriginal · box\n\t33\t0\t33\t\n1 lokasi perlu stok\n\tRp 62.000\tRp 34.000\t45%\t\nDetail\n1–10 dari 15 data\n1 / 2"
+    },
+    {
+      "path": "/accounting/reports",
+      "width": 1440,
+      "scrollWidth": 1434,
+      "headings": [
+        "Laporan keuangan",
+        "Rekonsiliasi persediaan · akun 1030",
+        "Jurnal persediaan terbaru",
+        "Neraca saldo · semua jurnal posted",
+        "Neraca per 2026-11-19",
+        "Aset",
+        "Liabilitas",
+        "Ekuitas",
+        "Arus kas · 2026-11-01 – 2026-11-19",
+        "Piutang pelanggan",
+        "Utang vendor"
+      ],
+      "unnamed": 0,
+      "text": " menjadi kas awal. Jurnal pembukaan dalam periode ditampilkan terpisah sebagai saldo migrasi; tidak dihitung sebagai arus operasi, investasi, atau pendanaan.\n\nKas awal\n\nRp 0\n\nSaldo migrasi dalam periode\n\nRp 20.000.000\n\nArus kas bersih\n\nRp 0\n\nKas akhir\n\nRp 20.000.000\n\nOperasi\n\nRp 0\n\nInvestasi\n\nRp 0\n\nPendanaan\n\nRp 0\n\nPerlu ditinjau\n\nRp 0\nTelusuri jurnal arus kas\nPiutang pelanggan\nMitra\tSaldo\nPT Saji Kantor Sejahtera\tRp 1.200.000\nCV Tumbuh Bersama\tRp 300.000\nKlinik Harmoni\tRp 0\nDewi Kartika\tRp 0\nRudi Hartono\tRp 0\nStudio Loka\tRp 0\nHTTP persistence a34d2aff\tRp 0\nUtang vendor\nMitra\tSaldo\nPT Dapur Mitra Nusantara\tRp 600.000\nCV Sayur Segar Abadi\tRp 0\nPT Kopi Minum Prima\tRp 496.000\nCV Kue Harian\tRp 0"
+    },
+    {
+      "path": "/accounting/invoices",
+      "width": 1440,
+      "scrollWidth": 1440,
+      "headings": [
+        "Faktur pelanggan",
+        "Daftar dokumen"
+      ],
+      "unnamed": 0,
+      "text": "N\nBeranda\nDashboard Eksekutif\nPENJUALAN & CRM\nPERSEDIAAN & GUDANG\nPENGADAAN\nKEUANGAN\nTagihan pelanggan\nLaporan Keuangan\nBuku Besar & Jurnal\nPENJUALAN KASIR (POS)\n\nRuang kerja aktif\n\nOWNER\n\nCiutkan sidebar\nPT Rasa Aruna Bersama\nCari halaman…\n⌘ K\nM\n\nMaya Prasetyo\n\nOWNER\n\nBeranda\n/\nKeuangan & Akuntansi\n/\nCustomer Invoices\nFaktur pelanggan\n\nBuat tagihan dari barang yang sudah dikirim, pantau pembayaran, dan unduh invoice PDF.\n\nDaftar dokumen\n\nPilih Detail untuk melihat isi dan langkah berikutnya.\n\nSemua status\nNomor\n\tMitra / sumber\tStatus\tTanggal\n\tTindakan\n\nBelum ada dokumen. Dokumen baru akan muncul di sini setelah dibuat.\n\n0–0 dari 0 data\n1 / 1\nTagihan vendor\n•\nPembayaran\n•\nBuku besar & jurnal"
+    },
+    {
+      "path": "/pos",
+      "width": 1440,
+      "scrollWidth": 1440,
+      "headings": [],
+      "unnamed": 0,
+      "text": "Lewati navigasi\nRA\n\nRasa Aruna Kitchen\n\nBusiness workspace\n\nRINGKASAN\nBeranda\nDashboard Eksekutif\nPENJUALAN & CRM\nPERSEDIAAN & GUDANG\nPENGADAAN\nKEUANGAN\nPENJUALAN KASIR (POS)\nKasir POS\n\nRuang kerja aktif\n\nOWNER\n\nCiutkan sidebar\nPT Rasa Aruna Bersama\nCari halaman…\n⌘ K\nM\n\nMaya Prasetyo\n\nOWNER\n\nBeranda\n/\nPoint of Sale\n/\nKasir POS CAFE-JKT (S-14)\nRiwayat transaksi & struk · 0 transaksi\n\nBelum ada transaksi."
+    },
+    {
+      "path": "/dashboard",
+      "width": 1440,
+      "scrollWidth": 1434,
+      "headings": [
+        "Laporan perusahaan",
+        "Belum ada transaksi tercatat",
+        "Pendapatan dan biaya pada periode pilihan",
+        "Tren laba/rugi 6 bulan"
+      ],
+      "unnamed": 0,
+      "text": "etyo\n\nOWNER\n\nBeranda\n/\nLaporan perusahaan\nLaporan perusahaan\n\nLihat pendapatan, biaya, dan hasil usaha perusahaan Anda.\n\nLaba / rugi\nOperasional hari ini\nAnalisis penjualan\nDari tanggal\nSampai tanggal\nTampilkan laporan\n\n2026-11-01 sampai 2026-11-19\n\nBelum ada transaksi tercatat\n\nRp 0\n\nPendapatan bersih dikurangi biaya dan harga pokok penjualan.\n\nPendapatan bersih\n\nRp 0\n\nTotal biaya & HPP\n\nRp 0\nPendapatan dan biaya pada periode pilihan\nTren laba/rugi 6 bulan\n\nSampai 2026-11-19. Bulan terakhir dihitung sampai tanggal akhir pilihan.\n\nLihat angka per bulan\n\nBerdasarkan jurnal yang sudah diposting, tanpa saldo pembukaan dan PBJT. Transaksi draft belum dihitung. Laba/rugi berbeda dengan saldo kas."
+    }
+  ],
+  "read": {
+    "approved": true,
+    "by": "Maya Prasetyo",
+    "version": 1,
+    "number": "S00007"
+  }
+}

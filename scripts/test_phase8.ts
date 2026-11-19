@@ -192,6 +192,18 @@ async function runPhase8Tests() {
       `Jumlah jurnal sebelum: ${initialJournalCount}, sesudah: ${finalJournalCount} (Tidak ada modifikasi ilegal)`
     );
 
+    const actual = reconNormal.inventoryReconciliation;
+    assert(actual.postingSources.some(entry => entry.sourceDocument && entry.id)
+      && actual.ledgerBalance === actual.cachedBalance, "T-32.8", "Dokumen sumber dan saldo posted", "Akun 1030 memiliki jurnal sumber pada dataset PDF.");
+    await prisma.account.update({where:{code:'1030'},data:{currentBalance:{increment:1}}});
+    try {
+      const drift = (await getFinancialReconciliation()).inventoryReconciliation;
+      assert(drift.status === "MISMATCH" && drift.ledgerBalance === actual.ledgerBalance
+        && drift.cachedBalance === actual.ledgerBalance + 1, "T-32.9", "Deteksi selisih saldo tersimpan", "Saldo jurnal posted tetap berasal dari JournalItem.");
+    } finally {
+      await prisma.account.update({where:{code:'1030'},data:{currentBalance:{decrement:1}}});
+    }
+
     console.log("\n================================================================================");
     console.log(`HASIL AKHIR PENGUJIAN TAHAP 8: ${passed} PASS, ${failed} FAIL`);
     console.log("================================================================================");

@@ -4,6 +4,8 @@
 **Referensi Standar UI/Proses:** Odoo Web Version 17.0 (Desktop Browser)  
 **Dokumen Acuan:** *Student Scenario Handout — Rasa Aruna Kitchen (24SI1 - Group 03)*
 
+**Pembaruan F&B 17 November 2026:** resep/BoM, produksi, batch FEFO, waste, pengajuan stok minimum, KDS/QR ordering, penugasan outlet kasir, neraca dan arus kas tersedia. Lihat [panduan fitur, data PDF dan batasan](docs/ux/FITUR_FNB_LANJUTAN_2026-11-17.md). Akun baseline PDF tetap enam; role tambahan KITCHEN dibuat lewat Kelola Tim.
+
 ---
 
 ## 1. Ringkasan Proyek
@@ -37,11 +39,11 @@ Sistem mengintegrasikan seluruh alur bisnis secara *end-to-end* dengan data pers
 
 ## 3. Akun Pengguna Uji & Matriks Wewenang Role (RBAC)
 
-Sistem menyediakan 6 akun pengguna pengujian bawaan sesuai tabel peran tugas:
+Enam peran pada tabel tugas tersedia bersama peran tambahan Head Admin:
 
 | No | Role | Nama Pengguna | Email Login | Password Default | Tanggung Jawab & Hak Akses |
 | :-: | :--- | :--- | :--- | :--- | :--- |
-| 1 | **OWNER** | Maya Prasetyo | `owner@rasaaruna.com` | `Password123!` | Akses penuh (*Full Access*) ke seluruh 8 aplikasi, approval diskon > 10%, otorisasi Reset Seed. |
+| 1 | **OWNER** | Maya Prasetyo | `owner@rasaaruna.com` | `Password123!` | Delapan pintasan untuk pemantauan dan persetujuan diskon di atas 10%. Administrasi pengguna dan master dikelola Head Admin. |
 | 2 | **SALES** | Dini Anggraini | `sales@rasaaruna.com` | `Password123!` | Manajemen CRM Leads, Kontak Pelanggan, Pembuatan Quotation, Konfirmasi SO (diskon maks 10%). |
 | 3 | **WAREHOUSE** | Sinta Maharani | `warehouse@rasaaruna.com` | `Password123!` | Master Produk, Surat Jalan (Delivery Order), Penerimaan Barang (Goods Receipt), Internal Transfer. |
 | 4 | **PROCUREMENT** | Arief Wicaksono | `procurement@rasaaruna.com` | `Password123!` | Permintaan Penawaran (RFQ), Konfirmasi Purchase Order (PO), monitoring penerimaan barang. |
@@ -84,6 +86,13 @@ Sistem menyediakan 6 akun pengguna pengujian bawaan sesuai tabel peran tugas:
    ```
    Migrasi loyalitas SR-20 juga dijalankan untuk database utama dan database perusahaan pada folder `prisma/companies`. Migrasi diuji pada salinan dahulu, lalu membuat backup sebelum penerapan. Jangan menjalankan `db push` atau seed pada database bisnis yang sudah dipakai. Database baru dapat diinisialisasi dengan schema Prisma, tetapi baseline seed mengganti seluruh isi target dan membutuhkan flag `ALLOW_BASELINE_REPLACE=I_UNDERSTAND_THIS_REPLACES_DATA` yang disengaja.
 
+   Untuk checkout yang baru dengan target SQLite kosong, buat data contoh lokal terlebih dahulu.
+   ```bash
+   touch prisma/erp.db
+   npx prisma db push
+   ALLOW_BASELINE_REPLACE=I_UNDERSTAND_THIS_REPLACES_DATA npm run db:seed
+   ```
+
 5. **Jalankan Server Pengembang:**
    ```bash
    npm run dev
@@ -108,7 +117,9 @@ npm test
 python3 scripts/verify_isolated.py --suites test_crud test_pdf_cases test_integrity --audit-probes --build
 ```
 
-T01–T32 dimulai dari baseline baru per kasus pada suite `test_pdf_cases`. Ini membuktikan perilaku layanan/API, bukan sertifikasi seluruh tampilan browser atau hosting publik. Bukti terbaru dan batas verifikasi tercantum di [laporan implementasi](docs/implementation-2026-11-06/IMPLEMENTATION.md).
+T01–T32 dimulai dari baseline baru per kasus pada suite `test_pdf_cases`. Ini membuktikan perilaku layanan/API, bukan sertifikasi seluruh tampilan browser atau hosting publik. Bukti terbaru dan batas verifikasi tercantum di [laporan implementasi](docs/stabilisasi-2026-11-19/Laporan.md).
+
+Integrasi yang mengirim pembayaran vendor ke `POST /api/accounting/payments` wajib menyertakan header `Idempotency-Key`. Gunakan satu ID baru per pembayaran yang disetujui. Saat respons belum diterima, ulangi dengan ID dan isi permintaan yang sama. Form Finance mengelola ID ini dalam tab pengguna.
 
 Master pelanggan, vendor, produk, kategori, satuan, lokasi, akun, harga vendor, dan lead tersedia pada menu **Master Data**. Record yang sudah dipakai transaksi diarsipkan; hapus permanen tersedia hanya untuk record yang belum digunakan. Dokumen draft dapat diedit/dibatalkan. Koreksi transaksi yang sudah diposting menggunakan reversal, retur/credit note, atau refund POS dengan alasan dan audit.
 
@@ -218,4 +229,4 @@ Sesuai ketentuan Bagian 13 Dokumen Tugas (*Integritas Akademik & Penggunaan AI*)
 
 ### Promosi loyalitas POS (SR-20)
 
-Owner dapat membuat akun loyalitas untuk pelanggan yang terdaftar dan kupon nominal sekali pakai melalui bagian **Promosi & loyalitas** di POS. Kasir dapat memilih akun dan/atau kupon saat pembayaran. Setiap Rp10.000 subtotal setelah diskon menghasilkan satu poin; pajak PBJT dihitung ulang per baris setelah diskon. Diskon dialokasikan ke baris sesuai urutan keranjang dan tidak boleh melebihi subtotal. Refund penuh membatalkan poin yang diperoleh; kupon tetap terpakai. Pembayaran tanpa promosi tetap menggunakan alur POS dasar. Tes tambahan tersedia di `scripts/test_loyalty.ts`.
+Head Admin dapat membuat akun loyalitas untuk pelanggan yang terdaftar dan kupon nominal sekali pakai melalui bagian **Promosi & loyalitas** di POS. Kasir dapat memilih akun dan/atau kupon saat pembayaran. Setiap Rp10.000 subtotal setelah diskon menghasilkan satu poin; pajak PBJT dihitung ulang per baris setelah diskon. Diskon dialokasikan ke baris sesuai urutan keranjang dan tidak boleh melebihi subtotal. Refund penuh membatalkan poin yang diperoleh; kupon tetap terpakai. Pembayaran tanpa promosi tetap menggunakan alur POS dasar. Tes tambahan tersedia di `scripts/test_loyalty.ts`.

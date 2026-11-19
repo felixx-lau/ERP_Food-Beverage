@@ -201,7 +201,7 @@ export async function createCompany(params: {
             data: {
               name: params.adminName,
               passwordHash: hashedPassword,
-              role: Role.OWNER,
+              role: Role.HEAD_ADMIN,
             },
           });
         } else {
@@ -210,7 +210,7 @@ export async function createCompany(params: {
               name: params.adminName,
               email: params.adminEmail,
               passwordHash: hashedPassword,
-              role: Role.OWNER,
+              role: Role.HEAD_ADMIN,
             },
           });
         }
@@ -226,7 +226,7 @@ export async function createCompany(params: {
       await client.user.updateMany({data:{active:false,sessionVersion:{increment:1}}});
       const email = params.adminEmail || params.issuer.email;
       const passwordHash = params.adminPassword ? await bcrypt.hash(params.adminPassword,10) : params.issuer.passwordHash;
-      await client.user.upsert({where:{email},create:{name:params.adminName||params.issuer.name,email,passwordHash,role:Role.OWNER,active:true},update:{name:params.adminName||params.issuer.name,passwordHash,role:Role.OWNER,active:true,sessionVersion:0}});
+      await client.user.upsert({where:{email},create:{name:params.adminName||params.issuer.name,email,passwordHash,role:Role.HEAD_ADMIN,active:true},update:{name:params.adminName||params.issuer.name,passwordHash,role:Role.HEAD_ADMIN,active:true,sessionVersion:0}});
     } finally {await client.$disconnect();}
   }
   const newCompany: Company = {

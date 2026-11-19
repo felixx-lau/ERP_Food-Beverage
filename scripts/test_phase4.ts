@@ -26,7 +26,7 @@ async function runPhase4Tests() {
 
   // Ensure fresh baseline seed before tests
   console.log("--- 0. Restoring Fresh Baseline Seed ---");
-  await executeSeed(prisma, "Test Runner Phase 4", Role.OWNER);
+  await executeSeed(prisma, "Test Runner Phase 4", Role.HEAD_ADMIN);
 
   const ownerUser = (await prisma.user.findFirst({ where: { role: Role.OWNER } }))!;
   const salesUser = (await prisma.user.findFirst({ where: { role: Role.SALES } }))!;

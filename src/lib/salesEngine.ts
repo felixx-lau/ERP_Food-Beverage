@@ -3,7 +3,7 @@ import { permit, quantity, money, discount, uniqueLines, editable } from "./vali
 import { prisma } from "./prisma";
 import { OrderStatus, Role } from "@prisma/client";
 import { validateCreditCheck } from "./creditControl";
-import { recordAuditLog } from "./audit";
+import { AuditedRejection, recordAuditLog } from "./audit";
 import { getNextSequence } from "./sequences";
 
 export interface LineItemInput {
@@ -99,7 +99,7 @@ async function createSalesQuotationImpl(params: {
 }) {
   const { contactId, leadId, lines: lineInputs, actor } = params;
 
-  permit(actor, ['OWNER','SALES']);
+  permit(actor, ['HEAD_ADMIN','SALES']);
   const customer = await prisma.contact.findUnique({ where: { id: contactId } });
   if (!customer || customer.archivedAt || customer.type !== 'CUSTOMER') throw new Error('Pelanggan tidak valid.');
   if (leadId) { const lead = await prisma.crmLead.findUnique({ where: { id: leadId } }); if (!lead || lead.contactId !== contactId) throw new Error('Lead dan pelanggan harus sesuai.'); }
@@ -175,9 +175,9 @@ async function createSalesQuotationImpl(params: {
   return order;
 }
 
-async function approveOrderDiscountImpl(orderId: string, actor: { id: string; name: string; role: Role }) {
-  if (actor.role !== Role.OWNER) {
-    throw new Error("Akses ditolak (SR-08): Hanya Owner (Maya Prasetyo) yang berwenang menyetujui diskon di atas 10%.");
+async function approveOrderDiscountImpl(orderId: string, actor: { id: string; name: string; role: Role }, version?: number) {
+  if (actor.role !== Role.HEAD_ADMIN && actor.role !== Role.OWNER) {
+    throw new Error("Akses ditolak (SR-08): Hanya Owner atau Head Admin yang berwenang menyetujui diskon di atas 10%.");
   }
 
   const order = await prisma.salesOrder.findUnique({
@@ -186,6 +186,8 @@ async function approveOrderDiscountImpl(orderId: string, actor: { id: string; na
 
   if (!order) throw new Error("Order tidak ditemukan.");
   editable(order.status);
+  if (version !== undefined && version !== order.version) throw new Error("Pesanan berubah. Muat ulang sebelum memberi persetujuan.");
+  if (order.discountApproved) return order;
 
   const updated = await prisma.salesOrder.update({
     where: { id: orderId },
@@ -206,14 +208,24 @@ async function approveOrderDiscountImpl(orderId: string, actor: { id: string; na
     afterData: updated,
     documentType: "SO",
     documentId: order.orderNumber,
-    notes: `Diskon ${order.discountPercent}% pada ${order.orderNumber} disetujui oleh Owner (${actor.name}).`,
+    notes: `Diskon ${order.discountPercent}% pada ${order.orderNumber} disetujui oleh ${actor.role} (${actor.name}).`,
   });
 
   return updated;
 }
 
+async function draftDelivery(salesOrderId: string, sourceLocation: string, lines: {productSku: string; quantity: number}[]) {
+  return prisma.deliveryOrder.create({
+    data: {
+      deliveryNumber: await getNextSequence('DO'), salesOrderId, sourceLocation, status: 'DRAFT',
+      lines: {create: lines.map(line => ({productSku: line.productSku, orderedQty: line.quantity}))},
+    },
+    include: {lines: true},
+  });
+}
+
 async function confirmSalesOrderImpl(orderId: string, actor: { id: string; name: string; role: Role }, sourceLocation = "WH-JKT") {
-  permit(actor, ["OWNER","SALES"]);
+  permit(actor, ["HEAD_ADMIN","SALES"]);
   const order = await prisma.salesOrder.findUnique({
     where: { id: orderId },
     include: {
@@ -226,7 +238,19 @@ async function confirmSalesOrderImpl(orderId: string, actor: { id: string; name:
 
   // Idempotency check: if already confirmed, do not re-confirm
   if (order.status === OrderStatus.CONFIRMED) {
-    return { order, confirmedOrder: order, deliveryOrder: await prisma.deliveryOrder.findFirst({ where: { salesOrderId: order.id }, include: { lines: true } }), message: "Order sudah dikonfirmasi sebelumnya (idempotent)." };
+    let deliveryOrder = await prisma.deliveryOrder.findFirst({where: {salesOrderId: order.id}, include: {lines: true}, orderBy: {createdAt:'asc'}});
+    const remaining = order.lines.filter(line => line.quantity > line.deliveredQty)
+      .map(line => ({id:line.id, productSku:line.productSku, quantity:line.quantity-line.deliveredQty}));
+    if (!deliveryOrder && remaining.length) {
+      const allocations = await prisma.stockReservation.findMany({where: {salesOrderLineId:{in:remaining.map(l=>l.id)}, quantity:{gt:0}}});
+      const locations = new Set(allocations.map(a=>a.locationCode));
+      if (locations.size !== 1 || remaining.some(line => !allocations.some(a=>a.salesOrderLineId===line.id && a.quantity===line.quantity))) {
+        throw new Error('Reservasi lama tidak cocok dengan sisa pesanan. Periksa alokasi gudang sebelum menyiapkan pengiriman.');
+      }
+      deliveryOrder = await draftDelivery(order.id, allocations[0].locationCode, remaining);
+      await recordAuditLog({actorId:actor.id,actorRole:actor.role,actorName:actor.name,action:'PREPARE_DELIVERY',documentType:'SO',documentId:order.orderNumber,afterData:{deliveryNumber:deliveryOrder.deliveryNumber}});
+    }
+    return {order, confirmedOrder:order, deliveryOrder, message:'Pesanan sudah dikonfirmasi. Reservasi dipertahankan.'};
   }
 
   editable(order.status);
@@ -235,25 +259,22 @@ async function confirmSalesOrderImpl(orderId: string, actor: { id: string; name:
   for (const l of order.lines) { quantity(l.quantity); money(l.unitPrice); discount(l.discountPercent); }
   // 1. Discount Approval Check (SR-08 / T-10)
   if (order.discountPercent > 10 && !order.discountApproved) {
-    await recordAuditLog({
+    throw new AuditedRejection({
       actorId: actor.id,
       actorName: actor.name,
       actorRole: actor.role,
       action: "CONFIRM_BLOCKED_DISCOUNT",
       documentType: "SO",
       documentId: order.orderNumber,
-      notes: `Konfirmasi ${order.orderNumber} ditolak: Diskon ${order.discountPercent}% memerlukan persetujuan Owner (SR-08).`,
-    });
-
-    throw new Error(
-      `Persetujuan Diperlukan (SR-08 / T-10): Diskon ${order.discountPercent}% melebihi batas 10%. Memerlukan persetujuan Owner sebelum order dapat dikonfirmasi.`
+      notes: `Konfirmasi ${order.orderNumber} ditolak: Diskon ${order.discountPercent}% memerlukan persetujuan Owner atau Head Admin (SR-08).`,
+    }, `Persetujuan Diperlukan (SR-08 / T-10): Diskon ${order.discountPercent}% melebihi batas 10%. Memerlukan persetujuan Owner atau Head Admin sebelum order dapat dikonfirmasi.`
     );
   }
 
   // 2. Credit Control Check (SR-09 / T-04)
   const creditCheck = await validateCreditCheck(order.contactId, order.totalGross);
   if (!creditCheck.allowed) {
-    await recordAuditLog({
+    throw new AuditedRejection({
       actorId: actor.id,
       actorName: actor.name,
       actorRole: actor.role,
@@ -261,10 +282,7 @@ async function confirmSalesOrderImpl(orderId: string, actor: { id: string; name:
       documentType: "SO",
       documentId: order.orderNumber,
       notes: `Credit check gagal: ${creditCheck.reason}`,
-    });
-
-    throw new Error(
-      `Batas Kredit Terlampaui (SR-09 / T-04): ${creditCheck.reason}`
+    }, `Batas Kredit Terlampaui (SR-09 / T-04): ${creditCheck.reason}`
     );
   }
 
@@ -290,24 +308,7 @@ async function confirmSalesOrderImpl(orderId: string, actor: { id: string; name:
     }
 
     // C. Create linked Delivery Order in DRAFT status
-    const deliveryNumber = await getNextSequence("DO");
-    const deliveryOrder = await tx.deliveryOrder.create({
-      data: {
-        deliveryNumber,
-        salesOrderId: confirmedOrder.id,
-        sourceLocation,
-        status: "DRAFT",
-        lines: {
-          create: order.lines.map((l) => ({
-            productSku: l.productSku,
-            orderedQty: l.quantity,
-            deliveredQty: 0,
-            backorderQty: 0,
-          })),
-        },
-      },
-      include: { lines: true },
-    });
+    const deliveryOrder = await draftDelivery(confirmedOrder.id, sourceLocation, order.lines);
 
     return { confirmedOrder, deliveryOrder };
   });
@@ -340,7 +341,7 @@ async function updateSalesOrderLineImpl(params: {
   actor: { id: string; name: string; role: Role };
 }) {
   const { orderId, lineId, quantity: nextQuantity, unitPrice, discountPercent, actor } = params;
-  permit(actor, ["OWNER", "SALES"]);
+  permit(actor, ["HEAD_ADMIN", "SALES"]);
 
   const order = await prisma.salesOrder.findUnique({
     where: { id: orderId },
@@ -351,7 +352,7 @@ async function updateSalesOrderLineImpl(params: {
 
   // SR-08 / F-06: Price and discount locked once Confirmed
   if (order.status === OrderStatus.CONFIRMED || order.isPriceLocked) {
-    await recordAuditLog({
+    throw new AuditedRejection({
       actorId: actor.id,
       actorName: actor.name,
       actorRole: actor.role,
@@ -359,10 +360,7 @@ async function updateSalesOrderLineImpl(params: {
       documentType: "SO",
       documentId: order.orderNumber,
       notes: `Percobaan ubah harga pada order ${order.orderNumber} yang sudah Confirmed dicegah (SR-08 / F-06).`,
-    });
-
-    throw new Error(
-      "Perubahan Tak Sah (SR-08 / F-06): Harga dan diskon telah dikunci setelah Sales Order dikonfirmasi. Perubahan ditolak."
+    }, "Perubahan Tak Sah (SR-08 / F-06): Harga dan diskon telah dikunci setelah Sales Order dikonfirmasi. Perubahan ditolak."
     );
   }
 

@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get("endDate") || undefined;
 
     const data = await getDashboardChartMetrics({
+      locationCode: searchParams.get("locationCode") || undefined,
       period,
       startDate,
       endDate,

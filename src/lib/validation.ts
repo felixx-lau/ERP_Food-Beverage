@@ -4,7 +4,7 @@ export class BusinessError extends Error {
   constructor(message: string, public status = 400) { super(message); }
 }
 export function permit(actor: Actor, roles: string[]) {
-  if (!actor || !roles.includes(actor.role)) throw new BusinessError('Akses ditolak (SR-15).', 403);
+  if (!actor || (actor.role !== 'HEAD_ADMIN' && !roles.includes(actor.role))) throw new BusinessError('Akses ditolak (SR-15).', 403);
 }
 export function textValue(value: unknown, label: string, required = true, max = 250): string {
   if (typeof value !== 'string' || (required && !value.trim()) || value.length > max) throw new BusinessError(`${label} tidak valid.`);

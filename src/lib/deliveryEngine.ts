@@ -1,3 +1,4 @@
+import { consumeLots } from "./lotEngine";
 import { atomic } from "./atomic";
 import { permit, quantity, money, discount, uniqueLines, editable } from "./validation";
 import { prisma } from "./prisma";
@@ -22,8 +23,8 @@ async function validateDeliveryOrderImpl(params: {
   items.forEach(i => quantity(i.deliveredQty, true));
 
   // Role check: Only WAREHOUSE or OWNER can validate delivery
-  if (actor.role !== Role.WAREHOUSE && actor.role !== Role.OWNER) {
-    throw new Error("Akses ditolak (SR-15): Hanya Warehouse atau Owner yang dapat memvalidasi pengiriman.");
+  if (actor.role !== Role.WAREHOUSE && actor.role !== Role.HEAD_ADMIN) {
+    throw new Error("Akses ditolak (SR-15): Hanya Warehouse atau Head Admin yang dapat memvalidasi pengiriman.");
   }
 
   const delivery = await prisma.deliveryOrder.findUnique({
@@ -109,6 +110,7 @@ async function validateDeliveryOrderImpl(params: {
         });
       }
 
+      if (deliverQty) await consumeLots(tx,item.productSku,sourceLocation,deliverQty,delivery.deliveryNumber);
       // 1. Update Stock Level at Source Location
       // On Hand decreases by deliverQty
       // Reserved decreases by deliverQty (the remaining backorderQty stays reserved!)

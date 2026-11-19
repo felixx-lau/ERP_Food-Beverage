@@ -1,5 +1,7 @@
 "use client";
 
+import { usePathname } from "next/navigation";
+import { NAVIGATION_GROUPS } from "./Sidebar";
 import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import Topbar from "@/components/Topbar";
@@ -38,6 +40,7 @@ export default function AppLayout({
   wireframe,
   actions,
 }: AppLayoutProps) {
+  const pathname = usePathname();
   const [user, setUser] = useState(initialUser || null);
   const [isCollapsed, setIsCollapsed] = useState(false);
   useEffect(() => { try { setIsCollapsed(localStorage.getItem("erp-sidebar-collapsed") === "true"); } catch {} }, []);
@@ -100,6 +103,14 @@ export default function AppLayout({
     window.location.reload();
   };
 
+  const pageAllowed = !!user && !pathname.startsWith('/operations') && (
+    user.role === 'HEAD_ADMIN' || NAVIGATION_GROUPS.some(group => group.items.some(item =>
+      (pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href + '/'))) && item.roles.includes(user.role)))
+  );
+
+  if (!user) return <p role="status" className="p-8">Memuat akun…</p>;
+  if (!pageAllowed) return <div className="p-8 space-y-4"><h1 className="text-xl font-semibold">Halaman tidak tersedia untuk akun ini</h1><a className="btn-primary" href="/">Kembali ke beranda</a></div>;
+
   return (
     <div className="app-shell min-h-screen flex">
       <a href="#main-content" className="skip-link">Lewati navigasi</a>
@@ -126,7 +137,7 @@ export default function AppLayout({
           onOpenAuditDrawer={() => setAuditDrawerOpen(true)}
           onOpenAppSwitcher={() => setAppSwitcherOpen(true)}
           onToggleMobileSidebar={() => setIsOpenMobile(!isOpenMobile)}
-          breadcrumbs={breadcrumbs}
+          breadcrumbs={breadcrumbs || (title ? [{label:title}] : undefined)}
         />
 
         {/* Content Body */}
@@ -162,7 +173,7 @@ export default function AppLayout({
       </div>
 
       {/* Modals & Drawers */}
-      {user && <ChatbotWidget key={`${user.companyId}:${user.id}:${user.role}:${user.sessionVersion}`} identity={`${user.companyId || "default"}:${user.id}:${user.role}:${user.sessionVersion || 0}`} role={user.role} />}
+      {user && user.role !== "OWNER" && <ChatbotWidget key={`${user.companyId}:${user.id}:${user.role}:${user.sessionVersion}`} identity={`${user.companyId || "default"}:${user.id}:${user.role}:${user.sessionVersion || 0}`} role={user.role} />}
       <AppSwitcherModal
         isOpen={appSwitcherOpen}
         onClose={() => setAppSwitcherOpen(false)}

@@ -15,7 +15,9 @@ export async function POST(
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { id } = await params;
-    const updated = await approveOrderDiscount(id, user);
+    const raw = await request.text();
+    const version = raw.trim() ? JSON.parse(raw).version : undefined;
+    const updated = await approveOrderDiscount(id, user, version);
 
     return NextResponse.json({ success: true, order: updated });
   } catch (error: unknown) {

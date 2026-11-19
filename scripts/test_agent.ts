@@ -22,7 +22,7 @@ async function main() {
   const db = await getActivePrismaClient();
   const users = await db.user.findMany({ where: { active: true } });
   function actor(role: SessionUser["role"]): SessionUser { const u = users.find(u => u.role === role)!; assert(u); return { ...u, companyId: "default" }; }
-  const owner = actor("OWNER"), sales = actor("SALES"), cashier = actor("CASHIER"), warehouse = actor("WAREHOUSE"), buyer = actor("PROCUREMENT");
+  const owner = actor("HEAD_ADMIN"), sales = actor("SALES"), cashier = actor("CASHIER"), warehouse = actor("WAREHOUSE"), buyer = actor("PROCUREMENT");
   const context = (user: SessionUser) => ({ user, db, companyId: "default", runId: "test" });
   const product = await db.productVariant.findFirstOrThrow({ where: { archivedAt: null, stockLevels: { some: { locationCode: "WH-JKT", onHand: { gt: 1 } } } } });
   const customer = await db.contact.findFirstOrThrow({ where: { archivedAt: null, type: "CUSTOMER" } });
@@ -33,7 +33,8 @@ async function main() {
   });
   await test("Role permissions reject purchases, invoices and unknown actions", async () => {
     for (const action of ["purchase_orders", "invoices", "prepare_purchase_rfq", "execute", "__proto__"]) await assert.rejects(() => dispatchAgentTool(context(cashier), action, {}));
-    await assert.rejects(() => dispatchAgentTool(context(sales), "contacts", { type: "VENDOR" }));
+    const vendors:any = await dispatchAgentTool(context(sales), "contacts", { type: "VENDOR" });
+    assert(vendors.contacts.every((c:any) => c.type === "VENDOR")); // Same read access as the website contacts page.
   });
   await test("Real capability expires at run end and limits concurrency", async () => {
     const run = await beginAgentRun(owner, "test");

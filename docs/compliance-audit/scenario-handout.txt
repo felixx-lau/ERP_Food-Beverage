@@ -1,0 +1,2405 @@
+ERP F&B — Skenario
+
+
+
+ G R OF&B
+ ERP  U P P—
+           RO J E C T · I N F O R M AT I O N S Y S T E M S S T U D E N T S
+             Skenario
+
+
+ Student Scenario Handout —
+ Rasa Aruna Kitchen
+ Skenario implementasi ERP berbasis vibe coding untuk restoran, takeaway dan layanan korporat di
+ Jakarta. Referensi UI/proses: Odoo Web Version 17.0.
+
+   INDUSTRI                                                    BAHASA SKENARIO
+   Food & Beverage — restoran cepat saji,                      Bahasa Indonesia — Odoo terms in English
+   takeaway, pesanan korporat
+
+
+   UKURAN KELOMPOK                                             DURASI
+   4 mahasiswa                                                 4 minggu
+
+
+   REFERENSI                                                   ALAT REKOMENDASI
+   Odoo Web Version 17.0 — desktop browser;                    Antigravity; alat AI coding lain
+   bukan desktop/mobile app                                    diperbolehkan
+
+
+   PRODUK                                                      KONTEKS
+   Web Application — Deployed Link Required                    Jakarta, Indonesia · Rupiah (IDR) · PBJT F&B
+                                                               10%
+
+
+
+
+   TABLE OF CONTENTS · click to jump
+
+   1. Ringkasan Proyek                                       2. Pemangku Kepentingan dan Kebutuhan
+   3. Lingkup Proses dan Modul                               4. Dataset Realistis
+   5. Glosarium                                              6. Fitur Wajib dan Prioritas
+   7. Layar, Wireframe, dan Skenario Pengujian               8. Batasan Teknis dan Deployment
+   9. Jadwal dan Target Mingguan                             10. Paket Penyerahan
+   11. Rubrik Penilaian                                      12. Pertanyaan Refleksi
+   13. Integritas Akademik, Kolaborasi, dan Penggunaan AI
+
+
+
+
+ 1. Ringkasan Proyek
+ PT Rasa Aruna Bersama, bermerek Rasa Aruna Kitchen, adalah usaha restoran cepat saji dan
+ minuman dengan layanan dine-in, takeaway, pesanan korporat, dan paket katering kantor.
+ Beroperasi sejak 2021 dengan 24 staf di Jakarta; lokasi tercatat sebagai WH-JKT (gudang
+ konsolidasi produk siap-jual) dan CAFE-JKT (gerai dan kasir). Produk jadi dibeli dari mitra dapur dan
+ pemasok, lalu dijual sebagai SKU berukuran/varian; bukan pembuatan resep dari bahan mentah.
+ Saat ini staf menyalin pesanan dari chat ke spreadsheet, memakai kasir terpisah, dan merekap
+ stok serta jurnal menjelang tutup hari.
+
+ Masalah bisnis: (1) reservasi stok pesanan kantor bentrok dengan kasir gerai; (2) invoice kadang
+ menyertakan unit yang belum dikirim; (3) barang pemasok ditagih meski sebagian ditolak; (4)
+ retur tidak selalu membalik stok, pajak, dan COGS; (5) diskon mengubah margin tanpa
+ persetujuan; (6) satu transaksi dapat tercatat dua kali ketika input diulang. Tim mahasiswa
+
+
+                                                                                                      Halaman 1
+ERP F&B — Skenario
+
+
+
+ diminta merancang aplikasi web ERP yang benar-benar berjalan dan dapat diuji melalui tautan
+ publik — bukan mock-up statis.
+
+    Definition of Done
+    Dua alur end-to-end (Order to Cash dan Procure to Pay) terbukti dari dokumen awal sampai
+    pembayaran; Point of Sale terhubung ke stok dan akuntansi; kontrol SR-xx dijalankan; data
+    tersimpan setelah refresh; semua T-xx dieksekusi; aplikasi memiliki public URL dan akun uji.
+
+
+ Tujuan Pembelajaran
+       1. Rancang proses dan arsitektur data lintas modul dari kebutuhan stakeholder.
+       2. Bangun aplikasi web ERP yang menjalankan transaksi nyata dan persisten.
+       3. Integrasikan stock, billing, tax, ledger, POS, dan audit secara konsisten.
+       4. Uji setiap fungsi dan aturan melalui bukti Given/When/Then serta T-xx.
+       5. Justifikasikan keputusan konflik, trade-off, risiko, dan rekomendasi bisnis.
+
+
+ Peran dan Tanggung Jawab Anggota Kelompok
+
+  Anggota            Peran               Module              Tanggung jawab        Bukti kontribusi      Rubrik dominan
+                     fungsional          ownership           dominan               (F/T)
+                                         (maks. 2)
+
+  M1                 Product Owner,      Sales/CRM (owner)   Prioritization, SR    Brief; F-02, F-04–    Kebenaran
+                     Project Manager                         mapping,              F-06, F-10; T-03,     aturan, resolusi
+                     dan Business                            acceptance,           T-04, T-07–T-10;      konflik, defense
+                     Analyst                                 Decision Log,         Decision Log
+                                                             roadmap; uji E2E
+                                                             order.
+
+  M2                 Lead AI Developer   Purchase +          Integrasi             Architecture note;    Integrasi fungsi,
+                                         Inventory (owner)   dokumen stok/         F-03, F-07, F-08,     data, stok
+                                                             pengadaan,            F-11, F-12, F-19;
+                                                             sequence,             T-05, T-06, T-11–
+                                                             standard-cost         T-18; commits
+                                                             engine; code
+                                                             review.
+
+  M3                 UI/UX dan           Point of Sale       Wireframes, Odoo      16 wireframe          UI fidelity, demo,
+                     Frontend Lead       (owner); Sales      UI conventions,       sketches; F-01,       kelengkapan layar
+                                         (co-owner)          role-view fidelity;   F-16, F-17, F-20;
+                                                             POS session and       T-01, T-02, T-27,
+                                                             dashboard layout.     T-28, T-31, T-32
+
+  M4                 QA dan              Accounting +        Jurnal/billing/       F-09, F-13–F-15,      Testing, finansial,
+                     Deployment Lead     Invoicing (owner)   payment/return        F-18, F-21, F-22;     deployment
+                                                             tests, test           T-19–T-26, T-29,
+                                                             register,             T-30; Test Results,
+                                                             regression,           deployment URL
+                                                             deploy, seed
+                                                             reset.
+
+
+ Setiap anggota bertanggung jawab end-to-end atas setidaknya satu modul: analisis kebutuhan,
+ pembangunan, pengujian, serta segmen demonstrasi. Co-owner adalah kontributor nyata, bukan
+ nama tambahan. Anggota boleh membantu modul lain, tetapi seluruh anggota harus memahami
+ kedua alur utama.
+
+
+
+
+                                                                                                                    Halaman 2
+ERP F&B — Skenario
+
+
+
+ Matriks RACI
+
+  Aktivitas            M1 PO/BA               M2 Lead Dev          M3 UI/UX                M4 QA
+
+  Analisis kebutuhan   A/R                    C                    C                       I
+  dan acceptance
+
+  Model data dan       A                      R                    C                       R
+  dataset
+
+  Implementasi         C                      C                    A/R                     R
+  wireframe
+
+  Pembangunan modul    C                      A/R                  R                       R
+
+  Uji integrasi dan    C                      R                    C                       A/R
+  aturan
+
+  Decision Log         A/R                    C                    I                       C
+
+  Deployment           I                      R                    C                       A/R
+
+  Video demo dan       A                      C                    R                       R
+  presentasi
+
+
+ Legenda: R = pelaksana; A = satu pemilik keputusan; C = diajak konsultasi; I = diberi informasi;
+ A/R = pemilik keputusan yang sekaligus bekerja.
+
+    Dokumen dan aturan kolaborasi
+    Role Assignment Sheet (nama mahasiswa, peran, modul) diunggah pada checkpoint Minggu 1.
+    Team Agreement wajib disimpan dalam repository: ritme rapat, prosedur persetujuan, dan
+    mekanisme anggota terlambat. Perubahan peran/ownership dicatat di README. Semua
+    anggota membangun dan menguji modul sendiri serta siap menjelaskan alur utuh.
+
+
+
+ 2. Pemangku Kepentingan dan Kebutuhan
+ Setiap permintaan stakeholder memiliki kepentingan bisnis yang dapat dibela. Sejumlah
+ permintaan sulit dipenuhi bersamaan. Kelompok harus mengidentifikasi ketegangan,
+ membandingkan opsi, memutuskan kebijakan serta pihak yang menerima trade-off, lalu
+ menuliskannya dalam Decision Log. Tidak setiap kutipan boleh diterapkan secara literal; tidak ada
+ tanda khusus di tabel yang menunjukkan pasangan benturan.
+
+  Rule ID                    Stakeholder               Pernyataan langsung           Requested rule —
+                                                                                     terukur
+
+  SR-01                      Maya Prasetyo — Pemilik   “Begitu pesanan kantor        Terbitkan Customer Invoice
+                                                       disetujui, tagih semua agar   100% kuantitas Sales Order
+                                                       arus kas tidak tertunda.”     saat status Confirmed,
+                                                                                     walaupun belum ada
+                                                                                     Delivery Order Done.
+
+  SR-02                      Reza Firdaus — Kepala     “Saya hanya mau menagih       Customer Invoice untuk
+                             Keuangan                  yang betul-betul diterima     barang maksimal sama
+                                                       pelanggan.”                   dengan delivered quantity
+                                                                                     yang telah valid; backorder
+                                                                                     belum boleh ditagih.
+
+
+
+
+                                                                                                          Halaman 3
+ERP F&B — Skenario
+
+
+
+  Rule ID            Stakeholder                  Pernyataan langsung           Requested rule —
+                                                                                terukur
+
+  SR-03              Bagas Putra — Kepala Gerai   “Antrean jangan berhenti      Point of Sale boleh
+                                                  hanya karena stok di layar    menuntaskan order
+                                                  belum diperbarui.”            walaupun Available di CAFE-
+                                                                                JKT kurang dari kuantitas
+                                                                                terjual.
+
+  SR-04              Sinta Maharani — Kepala      “Jangan pernah mengurangi     Tidak ada validasi delivery,
+                     Gudang                       stok sampai minus,            Point of Sale, atau transfer
+                                                  termasuk stok yang sudah      yang menghasilkan on-hand
+                                                  dipesan orang.”               negatif atau mengonsumsi
+                                                                                kuantitas Reserved milik
+                                                                                transaksi lain.
+
+  SR-05              Arief Wicaksono — Manajer    “Vendor ingin faktur sesuai   Vendor Bill dapat diposting
+                     Pengadaan                    Purchase Order; jangan        senilai seluruh ordered
+                                                  tunda bayarnya.”              quantity segera setelah
+                                                                                Purchase Order Confirmed.
+
+  SR-06              Reza Firdaus — Kepala        “Tagihan harus mengikuti      Kuantitas Vendor Bill
+                     Keuangan                     barang yang lolos             maksimal accepted quantity
+                                                  penerimaan.”                  yang sudah Receipt Done
+                                                                                dan belum ditagih, dengan
+                                                                                unit price sesuai Purchase
+                                                                                Order.
+
+  SR-07              Dini Anggraini — Manajer     “Untuk kontrak kantor besar   Sales boleh memberi diskon
+                     Penjualan                    saya butuh diskon sampai      0–20% pada Quotation
+                                                  20%.”                         tanpa persetujuan
+                                                                                tambahan.
+
+  SR-08              Maya Prasetyo — Pemilik      “Margin harus saya            Diskon di atas 10%
+                                                  lindungi.”                    memerlukan persetujuan
+                                                                                Owner terekam; harga dan
+                                                                                diskon dikunci setelah Sales
+                                                                                Order Confirmed.
+
+  SR-09              Reza Firdaus — Kepala        “Jangan tambah piutang bila   Credit exposure = open
+                     Keuangan                     debitur sudah melewati        receivable + gross
+                                                  batasnya.”                    confirmed-uninvoiced
+                                                                                orders; pesanan baru tak
+                                                                                boleh mengakibatkan
+                                                                                exposure melampaui credit
+                                                                                limit.
+
+  SR-10              Sinta Maharani — Kepala      “Sisa pesanan jangan hilang   Jika delivery sebagian, buat
+                     Gudang                       ketika kiriman baru           backorder hanya untuk
+                                                  sebagian.”                    selisih ordered minus
+                                                                                delivered; stok dan
+                                                                                Reserved diperbarui satu
+                                                                                kali.
+
+  SR-11              Reza Firdaus — Kepala        “Retur harus punya bukti      Return menambah stok
+                     Keuangan                     dan pembalikan keuangan.”     hanya untuk barang
+                                                                                inspected-accepted; Credit
+                                                                                Note maksimal nilai barang
+                                                                                diterima kembali, termasuk
+                                                                                pembalikan pajak dan
+                                                                                COGS.
+
+
+
+
+                                                                                                     Halaman 4
+ERP F&B — Skenario
+
+
+
+  Rule ID            Stakeholder                  Pernyataan langsung           Requested rule —
+                                                                                terukur
+
+  SR-12              Sinta Maharani — Kepala      “Pindah stok antar lokasi     Internal Transfer
+                     Gudang                       tidak boleh mengubah total    mengurangi lokasi asal dan
+                                                  perusahaan.”                  menambah lokasi tujuan
+                                                                                dengan SKU, kuantitas, dan
+                                                                                nilai sama; total perusahaan
+                                                                                tetap.
+
+  SR-13              Reza Firdaus — Kepala        “Satu transaksi, satu         Nomor dokumen unik;
+                     Keuangan                     posting.”                     validasi/post berulang pada
+                                                                                transaksi yang sama tidak
+                                                                                boleh menambah stok atau
+                                                                                jurnal kedua kali; setiap
+                                                                                jurnal debit = kredit.
+
+  SR-14              Bagas Putra — Kepala Gerai   “Kasir harus bisa melihat     Setiap POS Order memiliki
+                                                  tutup kas dengan jelas.”      session ID dan metode
+                                                                                bayar; session ditutup
+                                                                                dengan ringkasan transaksi;
+                                                                                close ulang tidak mengulang
+                                                                                posting.
+
+  SR-15              Maya Prasetyo — Pemilik      “Tanggung jawab harus         Akses per role Sales,
+                                                  terlihat tanpa semua orang    Warehouse, Procurement,
+                                                  bisa mengubah semuanya.”      Finance, Cashier, Owner;
+                                                                                perubahan status
+                                                                                menyimpan actor,
+                                                                                timestamp, action,
+                                                                                document dan before-after
+                                                                                inti.
+
+  SR-16              Dini Anggraini — Manajer     “Prospek katering tidak       Lead memiliki nama,
+                     Penjualan                    boleh hilang di antara chat   pelanggan, nilai peluang,
+                                                  dan penawaran.”               tahap New/Qualified/
+                                                                                Proposition/Won; pembuatan
+                                                                                Quotation mencatat link ke
+                                                                                lead.
+
+  SR-17              Sinta Maharani — Kepala      “Ukuran dan jenis minuman     Setiap variant SKU berbeda
+                     Gudang                       harus punya kode sendiri.”    memiliki price, standard
+                                                                                cost, satuan dan kuantitas
+                                                                                per lokasi sendiri; tidak
+                                                                                boleh digabung otomatis.
+
+  SR-18              Reza Firdaus — Kepala        “Tampilkan pajak restoran     Penjualan F&B gerai dikenai
+                     Keuangan                     dengan benar, jangan sebut    PBJT 10% dari net line sales
+                                                  PPN.”                         setelah diskon; pembulatan
+                                                                                per baris ke Rupiah
+                                                                                terdekat; vendor fixture
+                                                                                diberi tax 0%.
+
+  SR-19              Reza Firdaus — Kepala        “Pembayaran sebagian          Register Payment
+                     Keuangan                     harus terbaca sebagai sisa    mengurangi outstanding
+                                                  tagihan.”                     invoice/bill dan menambah/
+                                                                                mengurangi Bank;
+                                                                                pembayaran melebihi
+                                                                                outstanding ditolak pada
+                                                                                latihan ini.
+
+
+
+
+                                                                                                     Halaman 5
+ERP F&B — Skenario
+
+
+
+  Rule ID                          Stakeholder                        Pernyataan langsung               Requested rule —
+                                                                                                        terukur
+
+  SR-20                            Maya Prasetyo — Pemilik            “Saya mau dashboard bisa          Dashboard menunjukkan
+                                                                      dibuktikan dari dokumen           stok/valuation, A/R, A/P,
+                                                                      sumber.”                          order terbuka, PBJT dan
+                                                                                                        transaksi POS; setiap KPI
+                                                                                                        dapat ditelusuri ke
+                                                                                                        dokumen, tanpa posting
+                                                                                                        ganda.
+
+
+ Aturan yang dinilai: SR-xx menjadi sumber keputusan, pengujian, dan defense. Ketika tuntutan
+ saling menegasikan, dokumentasikan opsi, konsekuensi, dan jejak terhadap kebutuhan awal;
+ jangan menghapus tuntutan yang kalah.
+
+
+
+ 3. Lingkup Proses dan Modul
+ Modul inti: Sales, CRM, Purchase, Inventory, Accounting, Invoicing. Satu aplikasi industri: Point of
+ Sale untuk meja restoran/takeaway, kasir, sesi, pembayaran, dan pergerakan stok gerai. SKU
+ variant, retur, dan internal transfer adalah kemampuan lintas modul, bukan aplikasi industri
+ tambahan.
+
+
+ Alur 1 — Order to Cash
+
+    Lead      →      Opportunity      →      Quotation          →     Sales Order       →       Delivery Order       →
+
+    Customer Invoice      →        Payment
+
+
+
+
+ Alur 2 — Procure to Pay
+
+    Reordering / RFQ      →        Purchase Order       →       Receipt (accepted qty)      →         Vendor Bill        →
+
+    Payment
+
+
+
+
+ Alur industri — Point of Sale
+
+    POS Basket / Table       →       Stock Validation       →        Paid Receipt       →       Stock Move       →
+
+    Journal / Session Close
+
+
+
+
+ Alur silang — Return / Credit Note
+
+    Return Request       →       Inspection Accepted        →       Return Stock Move       →       Credit Note      →
+
+    A/R Adjustment
+
+
+
+ Dampak lintas modul yang wajib: konfirmasi order membuat reservasi yang mengurangi
+ Available; delivery mengurangi on-hand dan mengakui COGS memakai standard cost sesuai
+ kebijakan simulasi; receipt accepted menambah valuation dan GRNI; invoice dan bill membentuk
+ A/R, A/P, dan pajak; pembayaran mengurangi saldo; return accepted membalik stok, COGS dan
+
+
+
+
+                                                                                                                             Halaman 6
+ERP F&B — Skenario
+
+
+
+ invoicing; satu event tidak dapat diposting dua kali. Timing COGS yang dipilih untuk latihan tidak
+ otomatis identik dengan semua konfigurasi Odoo nyata.
+
+ Konvensi struktur Odoo Web 17.0: home app switcher; List, Kanban, Form view; control panel
+ dengan search, filters, group-by; status bar seperti Draft → Confirmed → Done untuk dokumen ber-
+ lifecycle; sequence seperti S00007, P00007; detail multi-line tax/total; Log Notes dan smart buttons
+ untuk dokumen terkait. Referensi hanyalah pengalaman Odoo Web pada desktop browser, bukan
+ kode, database, atau aset visual Odoo.
+
+
+
+ 4. Dataset Realistis
+ Seluruh tabel berikut merupakan seed baseline yang dapat diimpor atau dimasukkan manual
+ melalui mekanisme seed; gunakan header persis sebagaimana tertulis. Semua SKU adalah barang
+ stok dengan satuan, harga belum termasuk pajak, dan biaya standar sesuai kolom cost. Fixture:
+ setiap T-xx dimulai dari fresh seed baseline, kecuali jika eksplisit menyebut “After T-xx (fixture)”;
+ hasil pengujian lain tidak boleh terakumulasi diam-diam.
+
+    Asumsi pajak latihan
+    Lokasi simulasi Jakarta: penjualan makanan/minuman restoran diasumsikan memenuhi kriteria
+    PBJT dan dibebankan 10% × net sale setelah diskon, dihitung serta dibulatkan pada setiap
+    baris ke Rupiah terdekat (half up). Ini pajak daerah PBJT, bukan PPN. Semua harga contoh
+    kelipatan Rp1.000 dan hasil bulat. Pembelian dari mitra grosir dalam fixture diset vendor tax
+    0% agar fokus pada three-way match; keputusan ini tidak mewakili perlakuan pajak seluruh
+    transaksi nyata. Kasus mensimulasikan usaha terdaftar dan bukan pengganti prosedur pajak
+    resmi.
+
+ contacts_customers
+
+  id                 name               type              city              credit limit      payment terms
+
+  C01                PT Saji Kantor     Company           Jakarta Pusat     Rp3.000.000       NET14
+                     Sejahtera
+
+  C02                CV Tumbuh          Company           Jakarta Selatan   Rp350.000         NET7
+                     Bersama
+
+  C03                Klinik Harmoni     Company           Jakarta Timur     Rp5.000.000       NET30
+
+  C04                Dewi Kartika       Individual        Jakarta Selatan   Rp1.000.000       IMMEDIATE
+
+  C05                Rudi Hartono       Individual        Jakarta Barat     Rp1.000.000       IMMEDIATE
+
+  C06                Studio Loka        Company           Jakarta Utara     Rp2.000.000       NET14
+
+
+ contacts_vendors
+
+  id                           name                       city                        payment terms
+
+  V01                          PT Dapur Mitra Nusantara   Jakarta Timur               NET14
+
+  V02                          CV Sayur Segar Abadi       Bogor                       NET14
+
+  V03                          PT Kopi Minum Prima        Tangerang                   NET7
+
+  V04                          CV Kue Harian              Jakarta Barat               NET14
+
+
+
+
+                                                                                                          Halaman 7
+ERP F&B — Skenario
+
+
+
+ products
+
+  variant        name             size      color         unit       sales price   cost         default
+  SKU                                                                                           vendor
+
+  RICE-CHICK-S   Nasi Ayam        Small     Original      box        Rp48.000      Rp26.000     V01
+                 Panggang
+
+  RICE-CHICK-L   Nasi Ayam        Large     Original      box        Rp62.000      Rp34.000     V01
+                 Panggang
+
+  RICE-BEEF-S    Nasi Daging      Small     Original      box        Rp56.000      Rp31.000     V01
+                 Lada
+
+  RICE-BEEF-L    Nasi Daging      Large     Original      box        Rp72.000      Rp42.000     V01
+                 Lada
+
+  NOOD-VEG-S     Mie Sayur        Small     Original      box        Rp39.000      Rp19.000     V02
+
+  NOOD-VEG-L     Mie Sayur        Large     Original      box        Rp52.000      Rp27.000     V02
+
+  SALAD-GRN-S    Salad Hijau      Small     Original      box        Rp42.000      Rp21.000     V02
+
+  SALAD-GRN-L    Salad Hijau      Large     Original      box        Rp58.000      Rp30.000     V02
+
+  COF-LATT-HOT   Latte            Regular   Hot           cup        Rp30.000      Rp12.000     V03
+
+  COF-LATT-ICE   Latte            Regular   Iced          cup        Rp33.000      Rp13.000     V03
+
+  TEA-LEMN-HOT   Lemon Tea        Regular   Hot           cup        Rp26.000      Rp8.000      V03
+
+  TEA-LEMN-ICE   Lemon Tea        Regular   Iced          cup        Rp28.000      Rp9.000      V03
+
+  COOKIE-CHO-1   Cookie           Single    Cokelat       pack       Rp20.000      Rp9.000      V04
+                 Cokelat
+
+  COOKIE-CHO-3   Cookie           Triple    Cokelat       pack       Rp54.000      Rp25.000     V04
+                 Cokelat
+
+  JUICE-         Jus Jeruk        350 ml    Original      bottle     Rp35.000      Rp15.000     V03
+  ORN-350
+
+
+ vendor_pricelist
+
+  vendor id                  variant SKU       vendor price        currency               minimum qty
+
+  V01                        RICE-CHICK-S      Rp26.000            IDR                    1
+
+  V01                        RICE-CHICK-L      Rp34.000            IDR                    1
+
+  V01                        RICE-BEEF-S       Rp31.000            IDR                    1
+
+  V01                        RICE-BEEF-L       Rp42.000            IDR                    1
+
+  V02                        NOOD-VEG-S        Rp19.000            IDR                    1
+
+  V02                        NOOD-VEG-L        Rp27.000            IDR                    1
+
+  V02                        SALAD-GRN-S       Rp21.000            IDR                    1
+
+  V02                        SALAD-GRN-L       Rp30.000            IDR                    1
+
+  V03                        COF-LATT-HOT      Rp12.000            IDR                    1
+
+  V03                        COF-LATT-ICE      Rp13.000            IDR                    1
+
+  V03                        TEA-LEMN-HOT      Rp8.000             IDR                    1
+
+  V03                        TEA-LEMN-ICE      Rp9.000             IDR                    1
+
+  V04                        COOKIE-CHO-1      Rp9.000             IDR                    1
+
+
+
+
+                                                                                                        Halaman 8
+ERP F&B — Skenario
+
+
+
+  vendor id                   variant SKU             vendor price                   currency              minimum qty
+
+  V04                         COOKIE-CHO-3            Rp25.000                       IDR                   1
+
+  V03                         JUICE-ORN-350           Rp15.000                       IDR                   1
+
+
+ Harga vendor dan standard cost sengaja sama untuk memudahkan rekonsiliasi GRNI pada seed;
+ tidak berarti harus selalu sama dalam implementasi nyata.
+
+ warehouses_locations
+
+  code                             name                              type                            usage
+
+  WH-JKT                           Gudang Pusat Jakarta              Internal                        Fulfillment B2B dan supply
+
+  CAFE-JKT                         Gerai Jakarta                     Internal                        Dine-in, takeaway, Point of
+                                                                                                     Sale
+
+
+ opening_stock
+
+  variant SKU        location A           on hand A       location B            on hand B       company            standard
+                                                                                                total              value
+
+  RICE-CHICK-S       WH-JKT               40              CAFE-JKT              12              52                 Rp1.352.000
+
+  RICE-CHICK-L       WH-JKT               25              CAFE-JKT              8               33                 Rp1.122.000
+
+  RICE-BEEF-S        WH-JKT               30              CAFE-JKT              10              40                 Rp1.240.000
+
+  RICE-BEEF-L        WH-JKT               20              CAFE-JKT              6               26                 Rp1.092.000
+
+  NOOD-VEG-S         WH-JKT               40              CAFE-JKT              14              54                 Rp1.026.000
+
+  NOOD-VEG-L         WH-JKT               25              CAFE-JKT              9               34                 Rp918.000
+
+  SALAD-GRN-S        WH-JKT               30              CAFE-JKT              10              40                 Rp840.000
+
+  SALAD-GRN-L        WH-JKT               25              CAFE-JKT              8               33                 Rp990.000
+
+  COF-LATT-HOT       WH-JKT               20              CAFE-JKT              24              44                 Rp528.000
+
+  COF-LATT-ICE       WH-JKT               25              CAFE-JKT              18              43                 Rp559.000
+
+  TEA-LEMN-HOT       WH-JKT               30              CAFE-JKT              24              54                 Rp432.000
+
+  TEA-LEMN-ICE       WH-JKT               30              CAFE-JKT              20              50                 Rp450.000
+
+  COOKIE-CHO-1       WH-JKT               30              CAFE-JKT              20              50                 Rp450.000
+
+  COOKIE-CHO-3       WH-JKT               18              CAFE-JKT              9               27                 Rp675.000
+
+  JUICE-ORN-350      WH-JKT               22              CAFE-JKT              14              36                 Rp540.000
+
+
+ Control baseline: WH 410 unit = Rp8.600.000; CAFE 206 unit = Rp3.614.000; total perusahaan
+ 616 unit = Rp12.214.000. Existing reservation S00006 untuk 6 × RICE-CHICK-S di WH: Reserved
+ = 6, Available SKU di WH = 40 − 6 = 34, on-hand tetap 40.
+
+ chart_of_accounts
+
+  code                             account name                      type                            opening balance
+
+  1010                             Bank                              Asset                           Rp20.000.000
+
+  1020                             Accounts Receivable               Asset                           Rp1.500.000
+
+  1030                             Inventory                         Asset                           Rp12.214.000
+
+  1040                             GRNI / Stock Interim              Liability                       0
+
+
+
+
+                                                                                                                          Halaman 9
+ERP F&B — Skenario
+
+
+
+  code                      account name                      type                           opening balance
+
+  2010                      Accounts Payable                  Liability                      Rp1.000.000
+
+  2020                      PBJT Payable                      Liability                      0
+
+  2030                      Customer Deposits                 Liability                      0
+
+  3010                      Opening Equity                    Equity                         Rp32.714.000
+
+  4010                      Sales Revenue                     Income                         0
+
+  4020                      Sales Returns                     Contra Income                  0
+
+  5010                      COGS                              Expense                        0
+
+  5020                      Purchase Variance                 Expense                        0
+
+  6010                      Operating Expense                 Expense                        0
+
+  7010                      Cash Clearing                     Asset                          0
+
+  8010                      Inventory Adjustment              Expense                        0
+
+
+ Kolom opening balance bernilai absolut; posisi Debit/Credit ditentukan oleh opening ledger entry di
+ bawah.
+
+ tax_rates
+
+  tax code            tax name                  rate                      scope                   rounding
+
+  PBJT10              PBJT makanan/             10%                       Customer Sales & POS    Per line, nearest IDR
+                      minuman Jakarta
+
+  VENDOR0             Vendor tax fixture        0%                        Fixture procurement     Per line, nearest IDR
+
+
+ payment_terms
+
+  code                                 description                                due days
+
+  IMMEDIATE                            At payment                                 0
+
+  NET7                                 7 days from invoice                        7
+
+  NET14                                14 days from invoice                       14
+
+  NET30                                30 days from invoice                       30
+
+
+ existing_documents
+
+  number              document type             status                    contents                stock / financial
+                                                                                                  state
+
+  LD0003              CRM Lead                  Qualified                 C03, expected           No stock/ledger
+                                                                          revenue Rp1.200.000     movement
+
+  S00006              Sales Order               Confirmed                 C03, 6 × RICE-CHICK-    Reserved 6, delivered
+                                                                          S; WH-JKT               0, invoiced 0, GL 0
+
+  P00006              Purchase Order            Confirmed                 V03, 10 × COF-LATT-     Receipt 0, bill 0, GRNI
+                                                                          HOT at Rp12.000         0
+
+
+ Opening receivables: C01 Rp1.200.000 dan C02 Rp300.000; opening payables: V01
+ Rp600.000 dan V03 Rp400.000. Bank Rp20.000.000. Item A/R dan A/P awal adalah saldo migrasi,
+ bukan transaksi uji.
+
+
+
+
+                                                                                                                Halaman 10
+ERP F&B — Skenario
+
+
+
+ Opening ledger entry (opening only): Dr Bank Rp20.000.000; Dr A/R Rp1.500.000; Dr
+ Inventory Rp12.214.000; Cr A/P Rp1.000.000; Cr Opening Equity Rp32.714.000. Total debit =
+ total credit = Rp33.714.000. Jangan menghitung posting pembuka sebagai transaksi T-xx.
+
+
+
+ 5. Glosarium
+
+  Istilah                                                    Definisi
+
+  Variant SKU                                                Identitas unik untuk ukuran, temperatur, atau kemasan;
+                                                             stok dan harga tiap variant tidak digabung.
+
+  Accepted quantity                                          Jumlah yang disetujui setelah pemeriksaan saat receipt
+                                                             atau return.
+
+  Credit exposure                                            Piutang terbuka plus gross confirmed order yang belum
+                                                             ditagih; dihitung tanpa double counting.
+
+  Reserved                                                   Unit on-hand yang dialokasikan untuk Sales Order tertentu,
+                                                             bukan stok bebas.
+
+  Available                                                  On-hand dikurangi Reserved, dihitung per SKU dan lokasi.
+
+  GRNI                                                       Goods Received Not Invoiced; akun interim hingga Vendor
+                                                             Bill diterima.
+
+  Standard cost                                              Biaya unit tetap untuk valuation dan COGS pada simulasi
+                                                             ini.
+
+  Baseline seed                                              Dataset awal yang harus dipulihkan sebelum T-xx
+                                                             independen.
+
+  Business-rule trap                                         Situasi yang menggoda implementasi visual benar tetapi
+                                                             salah secara bisnis.
+
+  Decision Defense                                           Argumen alternatif, kebijakan, pihak dirugikan, mitigasi,
+                                                             dan bukti uji.
+
+  Idempotent posting                                         Pengulangan perintah tidak boleh menghasilkan transaksi/
+                                                             entri tambahan.
+
+  PBJT                                                       Pajak Barang dan Jasa Tertentu atas penjualan makanan/
+                                                             minuman restoran dalam skenario.
+
+
+
+
+ 6. Fitur Wajib dan Prioritas
+ Setiap fitur memuat prioritas, sumber SR-xx, sedikitnya dua kriteria penerimaan dalam format
+ Given / When / Then, dan pemetaan T-xx. Must wajib; Should dikerjakan setelah seluruh Must
+ stabil; Optional tidak pernah menggantikan Must. Jika kebijakan stakeholder berkonflik, kriteria
+ kontrol diputuskan dan dibuktikan melalui Decision Log, bukan ditebak dari tampilan.
+
+
+    F-01     Navigasi dan otorisasi                                                                              Must
+
+   Source: SR-15. App switcher dan hak role mengikuti tanggung jawab pengguna.
+
+     1. Given role Owner aktif; When home dimuat; Then delapan pintasan utama terlihat.
+     2. Given role Cashier aktif; When General Ledger diminta; Then akses Finance-only dibatasi.
+   Mapped to tests: T-01, T-02
+
+
+
+
+                                                                                                                 Halaman 11
+ERP F&B — Skenario
+
+
+
+
+    F-02   Kontak dan ketentuan kredit                                                                     Must
+
+   Source: SR-09. Menyimpan customer, credit limit, payment terms, piutang terbuka.
+
+     1. Given C01 dibuka; When detail diperiksa; Then headroom dihitung dari piutang dan exposure.
+     2. Given C02 punya headroom terbatas; When order baru diajukan; Then sistem menjalankan credit check.
+   Mapped to tests: T-03, T-04
+
+
+
+    F-03   Produk dan variant SKU                                                                          Must
+
+   Source: SR-17. Memisahkan SKU, price, cost, satuan serta lokasi.
+
+     1. Given SKU RICE-CHICK-S dipilih; When stok dilihat; Then angka WH dan CAFE terpisah.
+     2. Given Hot dan Iced sama-sama dijual; When satu variant diubah; Then SKU lain tidak berubah.
+   Mapped to tests: T-05, T-06
+
+
+
+    F-04   CRM pipeline                                                                                   Should
+
+   Source: SR-16. Lead sampai Quotation ditautkan ke pelanggan dan peluang.
+
+     1. Given LD0003 dimuat; When Kanban dibuka; Then tahap Qualified dan nilai terlihat.
+     2. Given lead belum lengkap; When stage diubah; Then validasi data minimum muncul.
+   Mapped to tests: T-07, T-08
+
+
+
+    F-05   Quotation ke Sales Order                                                                        Must
+
+   Source: SR-16, SR-09. Mengunci sales document dan menghitung line totals.
+
+     1. Given dua SKU dijadikan Quotation; When Confirm dilakukan; Then SO bernomor unik terbentuk.
+     2. Given Sales Order Confirmed; When nilai dicek; Then detail item dan customer tertaut.
+   Mapped to tests: T-09, T-10
+
+
+
+    F-06   Diskon dan price lock                                                                           Must
+
+   Source: SR-07, SR-08. Menangani persetujuan diskon dan harga tetap setelah Confirmed.
+
+     1. Given Quotation tanpa diskon; When total dihitung; Then pajak dihitung atas net.
+     2. Given diskon 20% diminta; When tidak ada Owner approval; Then decision dan status persetujuan dicatat.
+     3. Given SO sudah Confirmed; When edit harga dicoba; Then perubahan tak sah dicegah.
+   Mapped to tests: T-09, T-10
+
+
+
+    F-07   Reservation dan available stock                                                                 Must
+
+   Source: SR-04. Reservations dikurangi dari available sebelum pemenuhan.
+
+     1. Given SO 8 unit Confirmed; When lokasi WH dipilih; Then reservation baru tercatat.
+     2. Given stok telah Reserved untuk SO lain; When delivery lebih dari available diminta; Then reservasi lain
+        terlindungi.
+   Mapped to tests: T-11, T-12
+
+
+
+    F-08   Partial delivery dan backorder                                                                  Must
+
+   Source: SR-10. Mengirim sebagian tanpa kehilangan kuantitas belum dipenuhi.
+
+     1. Given SO delapan; When delivery lima; Then backorder tiga dan reserved terbaru terbentuk.
+     2. Given permintaan over-delivery; When validasi; Then tidak menghasilkan stok negatif.
+   Mapped to tests: T-11, T-12
+
+
+
+
+                                                                                                           Halaman 12
+ERP F&B — Skenario
+
+
+
+
+    F-09   Delivery-based invoicing                                                                      Must
+
+   Source: SR-01, SR-02. Invoice mengikuti kuantitas delivered yang sudah tervalidasi.
+
+     1. Given lima unit delivered; When Create Invoice; Then lima unit eligible untuk ditagih.
+     2. Given delapan ordered, lima delivered; When invoice delapan diajukan; Then pilihan aturan
+        terdokumentasi.
+   Mapped to tests: T-19, T-20
+
+
+
+    F-10   Credit control                                                                                Must
+
+   Source: SR-09. Mencegah penambahan kredit yang melampaui limit.
+
+     1. Given piutang customer ada; When Quotation disiapkan; Then projected exposure dihitung.
+     2. Given gross SO akan melampaui limit; When Confirm diminta; Then kontrol kebijakan diterapkan.
+   Mapped to tests: T-03, T-04, T-09
+
+
+
+    F-11   RFQ dan Purchase Order                                                                        Must
+
+   Source: SR-05, SR-13. RFQ menjadi PO bernomor unik dan bukan stok fisik.
+
+     1. Given RFQ 10 unit dikonfirmasi; When PO dilihat; Then total dan status benar.
+     2. Given konfirmasi yang sama diulangi; When sistem memeriksa idempotency; Then tidak menambah
+        dokumen.
+   Mapped to tests: T-15, T-16
+
+
+
+    F-12   Receipt dan accepted quantity                                                                 Must
+
+   Source: SR-06. Memisahkan accepted dari rejected saat penerimaan.
+
+     1. Given 10 datang, 8 accepted; When Done ditekan; Then hanya delapan unit masuk persediaan.
+     2. Given ada rejected 2; When bill sepuluh diminta; Then pengecekan acceptance dijalankan.
+   Mapped to tests: T-17, T-18
+
+
+
+    F-13   Vendor Bill dan three-way match                                                               Must
+
+   Source: SR-05, SR-06. Mencocokkan PO, Receipt accepted, dan Vendor Bill.
+
+     1. Given Receipt delapan; When Vendor Bill delapan dibuat; Then GRNI dan A/P bergerak seimbang.
+     2. Given Bill untuk unit sama diposting lagi; When kontrol duplikasi; Then saldo tidak bertambah.
+   Mapped to tests: T-21, T-22
+
+
+
+    F-14   Ledger dan COGS                                                                               Must
+
+   Source: SR-13. Posting balance, standard cost, dan kaitan ke stock move.
+
+     1. Given delivery lima; When valuasi dihitung; Then COGS = quantity × standard cost.
+     2. Given invoice diposting; When journal lines dicek; Then total Dr = total Cr.
+     3. Given post diulang; When document identity dicek; Then tidak terjadi jurnal kedua.
+   Mapped to tests: T-25, T-26
+
+
+
+
+                                                                                                         Halaman 13
+ERP F&B — Skenario
+
+
+
+
+    F-15   Partial payment                                                                               Must
+
+   Source: SR-19. Mengalokasikan pembayaran ke invoice tanpa kelebihan.
+
+     1. Given invoice belum lunas; When pembayaran parsial diterima; Then outstanding turun tepat.
+     2. Given bayar lebih dari sisa; When validasi; Then transaksi tak melebihi outstanding.
+   Mapped to tests: T-23, T-24
+
+
+
+    F-16   Point of Sale restoran                                                                        Must
+
+   Source: SR-03, SR-04, SR-18. Order POS terhubung ke stok lokasi gerai dan payment.
+
+     1. Given basket 2 latte + 1 cookie; When QRIS dipilih; Then receipt dan jurnal tunggal tercatat.
+     2. Given jumlah melebihi Available CAFE; When Payment diminta; Then aturan stok dievaluasi.
+   Mapped to tests: T-27, T-28
+
+
+
+    F-17   POS session closing                                                                           Must
+
+   Source: SR-14, SR-13. Mengikat POS Order ke session dan ringkasan close.
+
+     1. Given session dibuka; When order dibayar; Then session dan payment method tersimpan.
+     2. Given session di-close dua kali; When hasil diperiksa; Then tidak terjadi double posting.
+   Mapped to tests: T-27, T-28
+
+
+
+    F-18   Return dan Credit Note                                                                        Must
+
+   Source: SR-11. Mengembalikan nilai stok, COGS, piutang dan pajak.
+
+     1. Given 1 unit sudah accepted; When Return disetujui; Then Credit Note dan pembalikan COGS terlihat.
+     2. Given 2 unit belum diperiksa; When refund diminta; Then aturan inspeksi diterapkan.
+   Mapped to tests: T-29, T-30
+
+
+
+    F-19   Internal Transfer                                                                             Must
+
+   Source: SR-12, SR-04. Memindahkan stok antar lokasi tanpa perubahan company total.
+
+     1. Given 4 Iced dipindah; When move Done; Then nilai lokasi berubah berlawanan arah.
+     2. Given stok lokasi sumber tak cukup; When transfer diproses; Then stok negatif dicegah.
+   Mapped to tests: T-13, T-14
+
+
+
+    F-20   Dashboard operasional                                                                        Should
+
+   Source: SR-20. KPI hanya dihitung dari dokumen sumber yang sah.
+
+     1. Given baseline dimuat; When dashboard dibuka; Then KPI cocok dengan seed.
+     2. Given ringkasan berbeda dari sumber; When rekonsiliasi dijalankan; Then mismatch ditandai.
+   Mapped to tests: T-31, T-32
+
+
+
+    F-21   Audit trail dan document relations                                                            Must
+
+   Source: SR-13, SR-15, SR-20. Actor/time/action/source links terlacak sampai ledger.
+
+     1. Given aksi role tak sah dicoba; When audit diperiksa; Then identitas dan waktu terekam.
+     2. Given KPI dan dokumen terkait dibuka; When smart-link diikuti; Then sumber posting ditemukan.
+   Mapped to tests: T-02, T-32
+
+
+
+
+                                                                                                         Halaman 14
+ERP F&B — Skenario
+
+
+
+
+    F-22   PBJT F&B                                                                                 Must
+
+   Source: SR-18. PBJT 10% dihitung per net line setelah diskon.
+
+     1. Given invoice delivered diposting; When tax diperiksa; Then PBJT 10% dari net.
+     2. Given POS basket dibayar; When tax dihitung; Then receipt dan payable pajak konsisten.
+   Mapped to tests: T-19, T-27
+
+
+
+ Fitur Opsional yang Dapat Ditunda
+
+    Fitur pilihan: F-23 — Promosi loyalitas digital
+    Prioritas Optional; sumber SR-20. Poin pelanggan dan kupon promosi (tidak menggantikan
+    Must).
+     1. Given akun loyalitas tersedia; When pembelian sukses; Then poin opsional bertambah.
+     2. Given kupon tersedia; When dipakai satu kali; Then nilai pajak diperbarui setelah diskon.
+
+    Apabila dibangun, kelompok menambah tes khusus di luar T-01–T-32; T-27/T-28 tetap wajib
+    untuk POS dasar.
+
+
+
+ 7. Layar, Wireframe, dan Skenario Pengujian
+ Wireframe hitam-abu menggambarkan struktur desktop-browser dan field minimum, bukan warna
+ final, identitas visual, atau tutorial klik. Kelompok bebas merancang estetika. Setiap layar
+ mempunyai satu uji normal dan satu uji aturan/edge case; semua T-xx wajib dilakukan. Untuk
+ test aturan, kelompok menentukan konsekuensi yang benar dari SR-xx, menjalankan aplikasi, lalu
+ membandingkan expected dan actual. Fixture tes berdiri sendiri kecuali menyatakan “After T-xx
+ (fixture)”.
+
+
+
+
+                                                                                                    Halaman 15
+ERP F&B — Skenario
+
+
+
+
+    S-01     Beranda dan App Switcher
+   Modul: Core / Home · Roles: Owner, Sales, Warehouse, Finance, Cashier
+   Tujuan: Akses modul berdasar role · Features: F-01 F-21
+
+    ◀ ▶ ⌂        https://example-app.example / desktop browser — structure sketch, not the deployment URL
+
+
+    ▦ Apps      Core / Home                                                                                                       User / Company ▾
+
+
+    MENU                             ① Beranda dan App Switcher                                                              Search · Filters · Group By
+    Overview
+                                     ②      List        Kanban             Form          Activity
+    Orders / Documents
+    Reporting
+    Configuration                    ③                                                          Company
+                                                                                                PT Rasa Aruna Bersama
+
+
+                                      User role                                                 Default location
+                                      Owner                                                     WH-JKT
+
+                                     ④ Akses modul berdasar role
+
+                                      App                                   Destination                            Access
+
+                                      Sales / CRM                           Quotation & Leads                      Sales
+
+                                      Inventory / Purchase                  Stock & RFQ                            Operations
+
+                                      Point of Sale                         POS01                                  Cashier
+
+
+                                     ⑤ Related Docs    |   Log Notes   |   Audit / History
+
+
+
+
+   Legenda anotasi: ① judul, search, filters, group-by; ② mode view, tahap, atau status dokumen; ③ field/produk/kartu inti; ④ rincian
+   transaksi, kolom Kanban, atau KPI; ⑤ link dokumen terkait, Log Notes, Audit / History. Struktur dan field wajib; warna, branding,
+   dan styling bebas.
+
+
+
+   Pengujian yang Wajib Dijalankan
+
+      T-01   Alur normal · Fitur F-01
+
+     Situasi: Login sebagai Owner; data baseline terpasang.
+     Hasil yang diharapkan: Tampil delapan titik navigasi (Sales, CRM, Purchase, Inventory, Accounting, Invoicing,
+     Point of Sale, Dashboard) dan identitas PT Rasa Aruna Bersama.
+     Bukti wajib: Screenshot halaman beranda dan identitas role.
+
+
+
+      T-02   Aturan / edge case · Fitur F-01; Related feature: F-21
+
+     Situasi: Login sebagai Cashier, lalu minta akses ke General Ledger yang dikhususkan untuk Finance/Owner
+     (SR-15).
+     Hasil yang diharapkan: Determine from SR-15, then record the actual result and compare it with the expected
+     one.
+     Bukti wajib: Tangkapan layar penolakan akses serta event Audit / History.
+
+
+
+
+                                                                                                                                                Halaman 16
+ERP F&B — Skenario
+
+
+
+
+    S-02     Contact Form dan Credit Exposure
+   Modul: Sales / Contacts · Roles: Sales, Finance
+   Tujuan: Piutang dan batas kredit · Features: F-02 F-10
+
+    ◀ ▶ ⌂        https://example-app.example / desktop browser — structure sketch, not the deployment URL
+
+
+    ▦ Apps      Sales / Contacts                                                                                     User / Company ▾
+
+
+    MENU                             ① Contact Form dan Credit Exposure                                         Search · Filters · Group By
+    Overview
+                                     ②      List        Kanban              Form          Activity
+    Orders / Documents
+    Reporting
+    Configuration                    ③                                                          Customer ID
+                                                                                                C01
+
+
+                                      Name                                                      Payment Terms
+                                      PT Saji Kantor Sejahtera                                  NET14
+
+
+                                      Credit Limit
+                                      Rp3.000.000
+
+                                     ④ Piutang dan batas kredit
+
+                                      Metric                                                    Value
+
+                                      Open A/R                                                  Rp1.200.000
+
+                                      Credit headroom                                           Rp1.800.000
+
+
+                                     ⑤ Related Docs     |   Log Notes   |   Audit / History
+
+
+
+   Legenda anotasi: ① judul, search, filters, group-by; ② mode view, tahap, atau status dokumen; ③ field/produk/kartu inti; ④ rincian
+   transaksi, kolom Kanban, atau KPI; ⑤ link dokumen terkait, Log Notes, Audit / History. Struktur dan field wajib; warna, branding,
+   dan styling bebas.
+
+
+
+   Pengujian yang Wajib Dijalankan
+
+      T-03   Alur normal · Fitur F-02; Related feature: F-10
+
+     Situasi: Buka C01 dan C02 pada fixture awal, sebelum membuat order baru.
+     Hasil yang diharapkan: C01 credit limit Rp3.000.000, piutang Rp1.200.000, headroom Rp1.800.000; C02 limit
+     Rp350.000, piutang Rp300.000, headroom Rp50.000.
+     Bukti wajib: Form contacts, ledger open-item, ringkasan exposure.
+
+
+
+      T-04   Aturan / edge case · Fitur F-02; Related feature: F-10
+
+     Situasi: Untuk C02 buat order 2 × RICE-CHICK-S; gross order Rp105.600 melebihi headroom Rp50.000 (SR-09).
+     Hasil yang diharapkan: Determine from SR-09, then record the actual result and compare it with the expected
+     one.
+     Bukti wajib: Validasi limit, saldo sebelum/sesudah, audit.
+
+
+
+
+                                                                                                                                   Halaman 17
+ERP F&B — Skenario
+
+
+
+
+    S-03     Product dan Variant SKU
+   Modul: Inventory / Products · Roles: Warehouse, Sales
+   Tujuan: Produk, nilai dan stok lokasi · Features: F-03
+
+    ◀ ▶ ⌂        https://example-app.example / desktop browser — structure sketch, not the deployment URL
+
+
+    ▦ Apps      Inventory / Products                                                                                User / Company ▾
+
+
+    MENU                             ① Product dan Variant SKU                                                 Search · Filters · Group By
+    Overview
+                                     ②       List       Kanban             Form          Activity
+    Orders / Documents
+    Reporting
+    Configuration                    ③                                                          Variant SKU
+                                                                                                RICE-CHICK-S
+
+
+                                      Product                                                   Size
+                                      Nasi Ayam Panggang                                        Small
+
+
+                                      Unit                                                      Sales Price
+                                      box                                                       Rp48.000
+
+
+                                      Standard Cost
+                                      Rp26.000
+
+                                     ④ Produk, nilai dan stok lokasi
+
+                                      Location                    On Hand                      Reserved        Available
+
+                                      WH-JKT                      40                           6               34
+
+                                      CAFE-JKT                    12                           0               12
+
+
+                                     ⑤ Related Docs    |   Log Notes   |   Audit / History
+
+
+
+   Legenda anotasi: ① judul, search, filters, group-by; ② mode view, tahap, atau status dokumen; ③ field/produk/kartu inti; ④ rincian
+   transaksi, kolom Kanban, atau KPI; ⑤ link dokumen terkait, Log Notes, Audit / History. Struktur dan field wajib; warna, branding,
+   dan styling bebas.
+
+
+
+   Pengujian yang Wajib Dijalankan
+
+      T-05   Alur normal · Fitur F-03
+
+     Situasi: Buka SKU RICE-CHICK-S pada seed awal.
+     Hasil yang diharapkan: Price Rp48.000; standard cost Rp26.000; WH-JKT 40, CAFE-JKT 12, company on-hand
+     52; reserved WH 6; available WH 34.
+     Bukti wajib: Form product dan kartu stok kedua lokasi.
+
+
+
+      T-06   Aturan / edge case · Fitur F-03
+
+     Situasi: Bandingkan COF-LATT-HOT (20 WH, 24 CAFE, Rp30.000) dengan COF-LATT-ICE (25 WH, 18 CAFE,
+     Rp33.000); ubah stok varian Hot saja (SR-17).
+     Hasil yang diharapkan: Determine from SR-17, then record the actual result and compare it with the expected
+     one.
+     Bukti wajib: Perubahan stok Hot dan bukti SKU Iced tidak ikut berubah.
+
+
+
+
+                                                                                                                                  Halaman 18
+ERP F&B — Skenario
+
+
+
+
+    S-04     CRM Pipeline Kanban
+   Modul: CRM · Roles: Sales
+   Tujuan: Mengelola peluang dan tahap · Features: F-04
+
+    ◀ ▶ ⌂       https://example-app.example / desktop browser — structure sketch, not the deployment URL
+
+
+    ▦ Apps      CRM                                                                                                     User / Company ▾
+
+
+    MENU                            ① CRM Pipeline Kanban                                                         Search · Filters · Group By
+    Overview
+                                    ②      New            Qualified          Proposition          Won
+    Orders / Documents
+    Reporting
+    Configuration                   ③                                                          Lead
+                                                                                               LD0003
+
+
+                                     Customer                                                  Expected Revenue
+                                     C03 Klinik Harmoni                                        Rp1.200.000
+
+                                    ④ Mengelola peluang dan tahap
+
+                                     New                         Qualified                    Proposition         Won
+
+                                     LD0002                      LD0003 / Klinik Harmoni      —                   —
+
+
+                                    ⑤ Related Docs    |   Log Notes   |   Audit / History
+
+
+
+
+   Legenda anotasi: ① judul, search, filters, group-by; ② mode view, tahap, atau status dokumen; ③ field/produk/kartu inti; ④ rincian
+   transaksi, kolom Kanban, atau KPI; ⑤ link dokumen terkait, Log Notes, Audit / History. Struktur dan field wajib; warna, branding,
+   dan styling bebas.
+
+
+
+   Pengujian yang Wajib Dijalankan
+
+      T-07   Alur normal · Fitur F-04
+
+     Situasi: Buka lead LD0003: Klinik Harmoni, peluang Rp1.200.000, tahap Qualified.
+     Hasil yang diharapkan: LD0003 terlihat di kolom Qualified bernilai Rp1.200.000; kontak C03 dapat ditelusuri.
+     Bukti wajib: Kanban dengan kartu LD0003 dan detail kontak.
+
+
+
+      T-08   Aturan / edge case · Fitur F-04
+
+     Situasi: Coba memindahkan lead yang belum memiliki pelanggan atau opportunity value ke Proposition (SR-16).
+     Hasil yang diharapkan: Determine from SR-16, then record the actual result and compare it with the expected
+     one.
+     Bukti wajib: Hasil validasi serta audit data lead.
+
+
+
+
+                                                                                                                                     Halaman 19
+ERP F&B — Skenario
+
+
+
+
+    S-05     Quotation dan Sales Order Form
+   Modul: Sales · Roles: Sales, Owner
+   Tujuan: Penawaran dan konfirmasi order · Features: F-05 F-06 F-10
+
+    ◀ ▶ ⌂        https://example-app.example / desktop browser — structure sketch, not the deployment URL
+
+
+    ▦ Apps      Sales                                                                                                User / Company ▾
+
+
+    MENU                             ① Quotation dan Sales Order Form                                          Search · Filters · Group By
+    Overview
+                                     ②      Draft          Confirmed             Done
+    Orders / Documents
+    Reporting
+    Configuration                    ③                                                          Customer
+                                                                                                C01
+
+
+                                      Document                                                  Pricing
+                                      S00007                                                    Exclude PBJT
+
+
+                                      Payment Terms
+                                      NET14
+
+                                     ④ Penawaran dan konfirmasi order
+
+                                      Variant SKU                 Qty                          Unit Price      Net
+
+                                      RICE-CHICK-S                4                            Rp48.000        Rp192.000
+
+                                      RICE-CHICK-L                2                            Rp62.000        Rp124.000
+
+
+                                     ⑤ Related Docs    |   Log Notes    |   Audit / History
+
+
+
+   Legenda anotasi: ① judul, search, filters, group-by; ② mode view, tahap, atau status dokumen; ③ field/produk/kartu inti; ④ rincian
+   transaksi, kolom Kanban, atau KPI; ⑤ link dokumen terkait, Log Notes, Audit / History. Struktur dan field wajib; warna, branding,
+   dan styling bebas.
+
+
+
+   Pengujian yang Wajib Dijalankan
+
+      T-09   Alur normal · Fitur F-05; Related feature: F-06, F-10
+
+     Situasi: Buat quotation C01 berisi 4 × RICE-CHICK-S dan 2 × RICE-CHICK-L, tanpa diskon, kemudian Confirm.
+     Hasil yang diharapkan: Net Rp316.000, PBJT Rp31.600, gross Rp347.600; projected standard cost Rp172.000;
+     exposure C01 Rp1.547.600 dan headroom Rp1.452.400.
+     Bukti wajib: Quotation, Sales Order dan credit-exposure log.
+
+
+
+      T-10   Aturan / edge case · Fitur F-06; Related feature: F-05
+
+     Situasi: Pada quotation 2 × RICE-CHICK-S, Dini mencoba diskon 20% tanpa Owner approval; nilai net setelah
+     diskon Rp76.800 dan PBJT Rp7.680 (SR-07/SR-08).
+     Hasil yang diharapkan: Determine from SR-07 / SR-08, then record the actual result and compare it with the
+     expected one.
+     Bukti wajib: Status approval, price lock, jejak perubahan sebelum dan sesudah Confirmed.
+
+
+
+
+                                                                                                                                  Halaman 20
+ERP F&B — Skenario
+
+
+
+
+    S-06     Delivery Order dan Backorder
+   Modul: Inventory / Delivery · Roles: Warehouse
+   Tujuan: Pemenuhan sebagian dan reservation · Features: F-07 F-08
+
+    ◀ ▶ ⌂        https://example-app.example / desktop browser — structure sketch, not the deployment URL
+
+
+    ▦ Apps      Inventory / Delivery                                                                               User / Company ▾
+
+
+    MENU                             ① Delivery Order dan Backorder                                           Search · Filters · Group By
+    Overview
+                                     ②      Draft          Confirmed            Done
+    Orders / Documents
+    Reporting
+    Configuration                    ③                                                          Delivery
+                                                                                                WH/OUT/0007
+
+
+                                      SO                                                        Source
+                                      S00007                                                    WH-JKT
+
+
+                                      Customer
+                                      C01
+
+                                     ④ Pemenuhan sebagian dan reservation
+
+                                      Variant SKU                 Ordered                      Done           Backorder
+
+                                      RICE-CHICK-S                8                            5              3
+
+
+                                     ⑤ Related Docs    |   Log Notes   |   Audit / History
+
+
+
+   Legenda anotasi: ① judul, search, filters, group-by; ② mode view, tahap, atau status dokumen; ③ field/produk/kartu inti; ④ rincian
+   transaksi, kolom Kanban, atau KPI; ⑤ link dokumen terkait, Log Notes, Audit / History. Struktur dan field wajib; warna, branding,
+   dan styling bebas.
+
+
+
+   Pengujian yang Wajib Dijalankan
+
+      T-11   Alur normal · Fitur F-07; Related feature: F-08
+
+     Situasi: C01 order 8 × RICE-CHICK-S dari WH-JKT; konfirmasi lalu deliver 5 unit saja.
+     Hasil yang diharapkan: Delivered 5, backorder 3; WH on-hand 35, Reserved 9 (6 existing + 3 new), Available
+     26; COGS Rp130.000; nilai eligible-to-invoice net Rp240.000, PBJT Rp24.000, gross Rp264.000.
+     Bukti wajib: Delivery Order, Backorder, stock card, COGS journal.
+
+
+
+      T-12   Aturan / edge case · Fitur F-08; Related feature: F-07
+
+     Situasi: Coba delivery 38 × RICE-CHICK-S WH-JKT sementara 40 on-hand dan 6 reserved untuk SO existing;
+     available hanya 34 (SR-04/SR-10).
+     Hasil yang diharapkan: Determine from SR-04 / SR-10, then record the actual result and compare it with the
+     expected one.
+     Bukti wajib: Kartu Reserved/Available dan hasil validasi delivery.
+
+
+
+
+                                                                                                                                 Halaman 21
+ERP F&B — Skenario
+
+
+
+
+    S-07     Stock Overview dan Internal Transfer
+   Modul: Inventory · Roles: Warehouse
+   Tujuan: Stok per lokasi dan transfer · Features: F-19
+
+    ◀ ▶ ⌂        https://example-app.example / desktop browser — structure sketch, not the deployment URL
+
+
+    ▦ Apps      Inventory                                                                                          User / Company ▾
+
+
+    MENU                             ① Stock Overview dan Internal Transfer                                   Search · Filters · Group By
+    Overview
+                                     ②      Draft          Confirmed            Done
+    Orders / Documents
+    Reporting
+    Configuration                    ③                                                          Transfer
+                                                                                                WH/INT/0007
+
+
+                                      Source                                                    Destination
+                                      WH-JKT                                                    CAFE-JKT
+
+
+                                      SKU
+                                      COF-LATT-ICE
+
+                                     ④ Stok per lokasi dan transfer
+
+                                      Location                    Before                       After          Movement
+
+                                      WH-JKT                      25                           21             -4
+
+                                      CAFE-JKT                    18                           22             +4
+
+
+                                     ⑤ Related Docs    |   Log Notes   |   Audit / History
+
+
+
+   Legenda anotasi: ① judul, search, filters, group-by; ② mode view, tahap, atau status dokumen; ③ field/produk/kartu inti; ④ rincian
+   transaksi, kolom Kanban, atau KPI; ⑤ link dokumen terkait, Log Notes, Audit / History. Struktur dan field wajib; warna, branding,
+   dan styling bebas.
+
+
+
+   Pengujian yang Wajib Dijalankan
+
+      T-13   Alur normal · Fitur F-19
+
+     Situasi: Transfer internal 4 × COF-LATT-ICE dari WH-JKT ke CAFE-JKT.
+     Hasil yang diharapkan: WH turun 25→21; CAFE naik 18→22; company stock tetap 43 unit; nilai pindah
+     Rp52.000; total nilai persediaan perusahaan tidak berubah.
+     Bukti wajib: Stock moves untuk dua lokasi dan jurnal ringkasan nilai.
+
+
+
+      T-14   Aturan / edge case · Fitur F-19
+
+     Situasi: Coba transfer 28 × COF-LATT-ICE dari WH-JKT, sedangkan WH on-hand 25 (SR-04/SR-12).
+     Hasil yang diharapkan: Determine from SR-04 / SR-12, then record the actual result and compare it with the
+     expected one.
+     Bukti wajib: Bukti penolakan dan on-hand kedua lokasi sebelum/sesudah.
+
+
+
+
+                                                                                                                                 Halaman 22
+ERP F&B — Skenario
+
+
+
+
+    S-08     Request for Quotation dan Purchase Order
+   Modul: Purchase · Roles: Procurement
+   Tujuan: Persetujuan pembelian · Features: F-11
+
+    ◀ ▶ ⌂        https://example-app.example / desktop browser — structure sketch, not the deployment URL
+
+
+    ▦ Apps      Purchase                                                                                               User / Company ▾
+
+
+    MENU                             ① Request for Quotation dan Purchase Order                                  Search · Filters · Group By
+    Overview
+                                     ②      Draft          Confirmed            Done
+    Orders / Documents
+    Reporting
+    Configuration                    ③                                                          RFQ
+                                                                                                P00007
+
+
+                                      Vendor                                                    Scheduled Date
+                                      V03                                                       22 Okt 2026
+
+
+                                      Status
+                                      Confirmed
+
+                                     ④ Persetujuan pembelian
+
+                                      Variant SKU                 Ordered                      Unit Cost         Net
+
+                                      COF-LATT-HOT                10                           Rp12.000          Rp120.000
+
+
+                                     ⑤ Related Docs    |   Log Notes   |   Audit / History
+
+
+
+   Legenda anotasi: ① judul, search, filters, group-by; ② mode view, tahap, atau status dokumen; ③ field/produk/kartu inti; ④ rincian
+   transaksi, kolom Kanban, atau KPI; ⑤ link dokumen terkait, Log Notes, Audit / History. Struktur dan field wajib; warna, branding,
+   dan styling bebas.
+
+
+
+   Pengujian yang Wajib Dijalankan
+
+      T-15   Alur normal · Fitur F-11
+
+     Situasi: Buat RFQ V03 untuk 10 × COF-LATT-HOT harga supplier Rp12.000 per unit, lalu Confirm PO.
+     Hasil yang diharapkan: PO subtotal Rp120.000, vendor tax 0%, total Rp120.000; on-hand tidak berubah dan
+     commitment pembelian tercatat.
+     Bukti wajib: RFQ/PO serta stok sebelum/sesudah Confirm.
+
+
+
+      T-16   Aturan / edge case · Fitur F-11
+
+     Situasi: Klik Confirm atau Post ulang PO yang sama; perhatikan sequence dan tidak boleh ada receipt/jurnal
+     duplikat (SR-13).
+     Hasil yang diharapkan: Determine from SR-13, then record the actual result and compare it with the expected
+     one.
+     Bukti wajib: Nomor PO dan audit status serta jumlah linked documents.
+
+
+
+
+                                                                                                                                    Halaman 23
+ERP F&B — Skenario
+
+
+
+
+    S-09     Receipt dan Quality Acceptance
+   Modul: Inventory / Receipt · Roles: Warehouse, Procurement
+   Tujuan: Accepted dan rejected quantity · Features: F-12
+
+    ◀ ▶ ⌂        https://example-app.example / desktop browser — structure sketch, not the deployment URL
+
+
+    ▦ Apps      Inventory / Receipt                                                                                User / Company ▾
+
+
+    MENU                             ① Receipt dan Quality Acceptance                                         Search · Filters · Group By
+    Overview
+                                     ②      Draft          Confirmed            Done
+    Orders / Documents
+    Reporting
+    Configuration                    ③                                                          Receipt
+                                                                                                WH/IN/0007
+
+
+                                      PO                                                        Destination
+                                      P00007                                                    WH-JKT
+
+
+                                      Vendor
+                                      V03
+
+                                     ④ Accepted dan rejected quantity
+
+                                      Variant SKU                 Demand                       Accepted       Rejected
+
+                                      COF-LATT-HOT                10                           8              2
+
+
+                                     ⑤ Related Docs    |   Log Notes   |   Audit / History
+
+
+
+   Legenda anotasi: ① judul, search, filters, group-by; ② mode view, tahap, atau status dokumen; ③ field/produk/kartu inti; ④ rincian
+   transaksi, kolom Kanban, atau KPI; ⑤ link dokumen terkait, Log Notes, Audit / History. Struktur dan field wajib; warna, branding,
+   dan styling bebas.
+
+
+
+   Pengujian yang Wajib Dijalankan
+
+      T-17   Alur normal · Fitur F-12
+
+     Situasi: Pada PO 10 × COF-LATT-HOT, Receipt menerima 8 accepted dan 2 rejected di WH-JKT.
+     Hasil yang diharapkan: Accepted 8; rejected 2; WH on-hand 20→28; valuation bertambah Rp96.000; GRNI
+     credit Rp96.000; tidak ada tambahan stok dari 2 rejected.
+     Bukti wajib: Receipt, acceptance, kartu stok, inventory/GRNI journal.
+
+
+
+      T-18   Aturan / edge case · Fitur F-12
+
+     Situasi: Dari penerimaan 8 accepted dan 2 rejected, coba menagih 10 × Rp12.000 meskipun accepted hanya 8
+     (SR-06).
+     Hasil yang diharapkan: Determine from SR-06, then record the actual result and compare it with the expected
+     one.
+     Bukti wajib: Kuantitas acceptance, draft Vendor Bill, kontrol three-way match.
+
+
+
+
+                                                                                                                                 Halaman 24
+ERP F&B — Skenario
+
+
+
+
+    S-10     Customer Invoice Form
+   Modul: Invoicing · Roles: Finance
+   Tujuan: Menagih delivered quantity · Features: F-09 F-22
+
+    ◀ ▶ ⌂        https://example-app.example / desktop browser — structure sketch, not the deployment URL
+
+
+    ▦ Apps      Invoicing                                                                                              User / Company ▾
+
+
+    MENU                             ① Customer Invoice Form                                                    Search · Filters · Group By
+    Overview
+                                     ②      Draft          Confirmed            Done
+    Orders / Documents
+    Reporting
+    Configuration                    ③                                                          Invoice
+                                                                                                INV/2026/0007
+
+
+                                      Customer                                                  Sales Order
+                                      C01                                                       S00007
+
+
+                                      Tax
+                                      PBJT 10%
+
+                                     ④ Menagih delivered quantity
+
+                                      SKU                         Invoiced Qty                 Subtotal         PBJT
+
+                                      RICE-CHICK-S                5                            Rp240.000        Rp24.000
+
+
+                                     ⑤ Related Docs    |   Log Notes   |   Audit / History
+
+
+
+
+   Legenda anotasi: ① judul, search, filters, group-by; ② mode view, tahap, atau status dokumen; ③ field/produk/kartu inti; ④ rincian
+   transaksi, kolom Kanban, atau KPI; ⑤ link dokumen terkait, Log Notes, Audit / History. Struktur dan field wajib; warna, branding,
+   dan styling bebas.
+
+
+
+   Pengujian yang Wajib Dijalankan
+
+      T-19   Alur normal · Fitur F-09; Related feature: F-22
+
+     Situasi: After T-11 (fixture), terbitkan dan Post Customer Invoice untuk 5 delivered RICE-CHICK-S.
+     Hasil yang diharapkan: Invoice net Rp240.000, PBJT Rp24.000, gross Rp264.000; Dr A/R Rp264.000, Cr
+     Revenue Rp240.000, Cr PBJT Rp24.000.
+     Bukti wajib: Sales Order link, posted invoice, Journal Entry.
+
+
+
+      T-20   Aturan / edge case · Fitur F-09
+
+     Situasi: After T-11 (fixture), coba invoice 8 ordered saat delivered hanya 5; selisih 3 unit = net Rp144.000 + PBJT
+     Rp14.400 (SR-01/SR-02).
+     Hasil yang diharapkan: Determine from SR-01 / SR-02, then record the actual result and compare it with the
+     expected one.
+     Bukti wajib: Delivered vs invoiced, penolakan/keputusan, audit.
+
+
+
+
+                                                                                                                                   Halaman 25
+ERP F&B — Skenario
+
+
+
+
+    S-11     Vendor Bill dan Three-Way Match
+   Modul: Accounting / Vendors · Roles: Finance
+   Tujuan: Mencocokkan PO, receipt, bill · Features: F-13
+
+    ◀ ▶ ⌂        https://example-app.example / desktop browser — structure sketch, not the deployment URL
+
+
+    ▦ Apps      Accounting / Vendors                                                                                  User / Company ▾
+
+
+    MENU                             ① Vendor Bill dan Three-Way Match                                           Search · Filters · Group By
+    Overview
+                                     ②      Draft          Confirmed            Done
+    Orders / Documents
+    Reporting
+    Configuration                    ③                                                          Bill
+                                                                                                BILL/2026/0007
+
+
+                                      Vendor                                                    Purchase Order
+                                      V03                                                       P00007
+
+
+                                      Vendor Tax
+                                      0% (fixture)
+
+                                     ④ Mencocokkan PO, receipt, bill
+
+                                      Ordered                     Accepted                     Already Billed    New Bill
+
+                                      10                          8                            0                 8
+
+
+                                     ⑤ Related Docs    |   Log Notes   |   Audit / History
+
+
+
+   Legenda anotasi: ① judul, search, filters, group-by; ② mode view, tahap, atau status dokumen; ③ field/produk/kartu inti; ④ rincian
+   transaksi, kolom Kanban, atau KPI; ⑤ link dokumen terkait, Log Notes, Audit / History. Struktur dan field wajib; warna, branding,
+   dan styling bebas.
+
+
+
+   Pengujian yang Wajib Dijalankan
+
+      T-21   Alur normal · Fitur F-13
+
+     Situasi: After T-17 (fixture), buat Vendor Bill terhadap 8 accepted × COF-LATT-HOT.
+     Hasil yang diharapkan: Vendor Bill net Rp96.000, tax 0, total Rp96.000; Dr GRNI Rp96.000, Cr A/P Rp96.000;
+     GRNI untuk receipt itu nol.
+     Bukti wajib: PO–Receipt–Vendor Bill linkage dan posted journal.
+
+
+
+      T-22   Aturan / edge case · Fitur F-13
+
+     Situasi: After T-17 dan T-21 (fixture), coba Post Vendor Bill duplikat terhadap delapan unit yang sudah ditagih
+     (SR-06/SR-13).
+     Hasil yang diharapkan: Determine from SR-06 / SR-13, then record the actual result and compare it with the
+     expected one.
+     Bukti wajib: Perbandingan accepted, billed, AP dan linked invoices.
+
+
+
+
+                                                                                                                                    Halaman 26
+ERP F&B — Skenario
+
+
+
+
+    S-12     Register Payment
+   Modul: Accounting / Payments · Roles: Finance
+   Tujuan: Pembayaran parsial dan sisa · Features: F-15
+
+    ◀ ▶ ⌂        https://example-app.example / desktop browser — structure sketch, not the deployment URL
+
+
+    ▦ Apps      Accounting / Payments                                                                                         User / Company ▾
+
+
+    MENU                             ① Register Payment                                                                Search · Filters · Group By
+    Overview
+                                     ②      Invoice         Payment             Reconciled
+    Orders / Documents
+    Reporting
+    Configuration                    ③                                                          Invoice
+                                                                                                INV/2026/0007
+
+
+                                      Payment Method                                            Amount
+                                      Bank                                                      Rp100.000
+
+
+                                      Payment Date
+                                      22 Okt 2026
+
+                                     ④ Pembayaran parsial dan sisa
+
+                                      Invoice Total                         Paid                                Outstanding
+
+                                      Rp264.000                             Rp100.000                           Rp164.000
+
+
+                                     ⑤ Related Docs    |   Log Notes   |   Audit / History
+
+
+
+
+   Legenda anotasi: ① judul, search, filters, group-by; ② mode view, tahap, atau status dokumen; ③ field/produk/kartu inti; ④ rincian
+   transaksi, kolom Kanban, atau KPI; ⑤ link dokumen terkait, Log Notes, Audit / History. Struktur dan field wajib; warna, branding,
+   dan styling bebas.
+
+
+
+   Pengujian yang Wajib Dijalankan
+
+      T-23   Alur normal · Fitur F-15
+
+     Situasi: After T-19 (fixture), register pembayaran Customer Invoice Rp100.000 via Bank.
+     Hasil yang diharapkan: Gross awal Rp264.000; Paid Rp100.000; Outstanding Rp164.000; Bank naik Rp100.000;
+     A/R turun Rp100.000.
+     Bukti wajib: Register Payment, payment history dan bank journal.
+
+
+
+      T-24   Aturan / edge case · Fitur F-15
+
+     Situasi: After T-19 (fixture), coba bayar Rp300.000 untuk invoice outstanding Rp264.000 (SR-19).
+     Hasil yang diharapkan: Determine from SR-19, then record the actual result and compare it with the expected
+     one.
+     Bukti wajib: Validasi nilai, saldo before-after, audit pembayaran.
+
+
+
+
+                                                                                                                                          Halaman 27
+ERP F&B — Skenario
+
+
+
+
+    S-13     Journal Entries dan General Ledger
+   Modul: Accounting / Journal · Roles: Finance, Owner
+   Tujuan: Debet-kredit dan hubungan stock · Features: F-14
+
+    ◀ ▶ ⌂        https://example-app.example / desktop browser — structure sketch, not the deployment URL
+
+
+    ▦ Apps      Accounting / Journal                                                                                          User / Company ▾
+
+
+    MENU                             ① Journal Entries dan General Ledger                                                Search · Filters · Group By
+    Overview
+                                     ②      List        Kanban             Form          Activity
+    Orders / Documents
+    Reporting
+    Configuration                    ③                                                          Source
+                                                                                                WH/OUT/0007
+
+
+                                      Journal                                                   Posting State
+                                      STOCK / SALES                                             Posted
+
+                                     ④ Debet-kredit dan hubungan stock
+
+                                      Account                               Debit                               Credit
+
+                                      COGS                                  Rp130.000                           —
+
+                                      Inventory                             —                                   Rp130.000
+
+
+                                     ⑤ Related Docs    |   Log Notes   |   Audit / History
+
+
+
+   Legenda anotasi: ① judul, search, filters, group-by; ② mode view, tahap, atau status dokumen; ③ field/produk/kartu inti; ④ rincian
+   transaksi, kolom Kanban, atau KPI; ⑤ link dokumen terkait, Log Notes, Audit / History. Struktur dan field wajib; warna, branding,
+   dan styling bebas.
+
+
+
+   Pengujian yang Wajib Dijalankan
+
+      T-25   Alur normal · Fitur F-14
+
+     Situasi: After T-11 dan T-19 (fixture), periksa dua event jurnal delivery dan customer invoice.
+     Hasil yang diharapkan: Delivery: Dr COGS Rp130.000 = Cr Inventory Rp130.000; invoice: Dr A/R Rp264.000 =
+     Cr Revenue Rp240.000 + Cr PBJT Rp24.000; total debit = credit Rp394.000.
+     Bukti wajib: General Ledger, journal lines dan stock valuation trace.
+
+
+
+      T-26   Aturan / edge case · Fitur F-14
+
+     Situasi: After T-11 dan T-19 (fixture), ulangi Post dokumen delivery/invoice sama; potensi duplikasi COGS
+     Rp130.000 dan piutang Rp264.000 (SR-13).
+     Hasil yang diharapkan: Determine from SR-13, then record the actual result and compare it with the expected
+     one.
+     Bukti wajib: Counter jurnal dan on-hand sebelum/sesudah retry.
+
+
+
+
+                                                                                                                                            Halaman 28
+ERP F&B — Skenario
+
+
+
+
+    S-14     Point of Sale Restoran
+   Modul: Point of Sale · Roles: Cashier, Owner
+   Tujuan: Basket, pembayaran, session · Features: F-16 F-17 F-22
+
+    ◀ ▶ ⌂        https://example-app.example / desktop browser — structure sketch, not the deployment URL
+
+
+    ▦ Apps      Point of Sale                                                                                      User / Company ▾
+
+
+    MENU                             ① Point of Sale Restoran                                                 Search · Filters · Group By
+    Overview
+                                     ②        Tables       Basket             Payment          Session
+    Orders / Documents
+    Reporting
+    Configuration                    ③                                                          Session
+                                                                                                POS01
+
+
+                                      Location                                                  Payment
+                                      CAFE-JKT                                                  QRIS / Bank
+
+
+                                      Table
+                                      Takeaway
+
+                                     ④ Basket, pembayaran, session
+
+                                      SKU                         Qty                          Unit Price     Subtotal
+
+                                      COF-LATT-HOT                2                            Rp30.000       Rp60.000
+
+                                      COOKIE-CHO-1                1                            Rp20.000       Rp20.000
+
+
+                                     ⑤ Related Docs    |   Log Notes    |   Audit / History
+
+
+
+
+   Legenda anotasi: ① judul, search, filters, group-by; ② mode view, tahap, atau status dokumen; ③ field/produk/kartu inti; ④ rincian
+   transaksi, kolom Kanban, atau KPI; ⑤ link dokumen terkait, Log Notes, Audit / History. Struktur dan field wajib; warna, branding,
+   dan styling bebas.
+
+
+
+   Pengujian yang Wajib Dijalankan
+
+      T-27   Alur normal · Fitur F-16; Related feature: F-17, F-22
+
+     Situasi: Session POS01; jual 2 × COF-LATT-HOT dan 1 × COOKIE-CHO-1 dari CAFE-JKT, dibayar QRIS/Bank.
+     Hasil yang diharapkan: Net Rp80.000, PBJT Rp8.000, paid Rp88.000; COGS Rp33.000; CAFE Hot 24→22, Cookie
+     20→19; Bank naik Rp88.000.
+     Bukti wajib: POS receipt, session, stock moves, journal dan payment.
+
+
+
+      T-28   Aturan / edge case · Fitur F-17; Related feature: F-16
+
+     Situasi: Pada CAFE-JKT coba POS 25 × COF-LATT-HOT (stok awal hanya 24); lalu uji Close Session berulang
+     (SR-03/SR-04/SR-14).
+     Hasil yang diharapkan: Determine from SR-03 / SR-04 / SR-14, then record the actual result and compare it
+     with the expected one.
+     Bukti wajib: Penolakan/otorisasi, saldo stok, session closure dan tidak ada double journal.
+
+
+
+
+                                                                                                                                 Halaman 29
+ERP F&B — Skenario
+
+
+
+
+    S-15     Return Inspection dan Credit Note
+   Modul: Inventory / Invoicing · Roles: Warehouse, Finance
+   Tujuan: Retur, restock, pembalikan pajak · Features: F-18
+
+    ◀ ▶ ⌂        https://example-app.example / desktop browser — structure sketch, not the deployment URL
+
+
+    ▦ Apps      Inventory / Invoicing                                                                                 User / Company ▾
+
+
+    MENU                             ① Return Inspection dan Credit Note                                         Search · Filters · Group By
+    Overview
+                                     ②      Draft            Confirmed            Done
+    Orders / Documents
+    Reporting
+    Configuration                    ③                                                          Return
+                                                                                                RET/2026/0007
+
+
+                                      Original Invoice                                          Inspect status
+                                      INV/2026/0007                                             Accepted
+
+
+                                      Credit Note
+                                      RINV/2026/0007
+
+                                     ④ Retur, restock, pembalikan pajak
+
+                                      SKU                          Qty                         Cost Reverse      Credit gross
+
+                                      RICE-CHICK-S                 1                           Rp26.000          Rp52.800
+
+
+                                     ⑤ Related Docs      |   Log Notes   |   Audit / History
+
+
+
+   Legenda anotasi: ① judul, search, filters, group-by; ② mode view, tahap, atau status dokumen; ③ field/produk/kartu inti; ④ rincian
+   transaksi, kolom Kanban, atau KPI; ⑤ link dokumen terkait, Log Notes, Audit / History. Struktur dan field wajib; warna, branding,
+   dan styling bebas.
+
+
+
+   Pengujian yang Wajib Dijalankan
+
+      T-29   Alur normal · Fitur F-18
+
+     Situasi: After T-11 dan T-19 (fixture), pelanggan kembalikan 1 × RICE-CHICK-S yang inspected-accepted.
+     Hasil yang diharapkan: WH on-hand 35→36; reverse cost Rp26.000; Credit Note net Rp48.000, PBJT Rp4.800,
+     total Rp52.800; A/R berkurang Rp52.800.
+     Bukti wajib: Return inspection, stock move, Credit Note, reversal journal.
+
+
+
+      T-30   Aturan / edge case · Fitur F-18
+
+     Situasi: After T-11 dan T-19 (fixture), pelanggan mengembalikan 2 × RICE-CHICK-S tetapi pemeriksaan kualitas
+     belum accepted (SR-11).
+     Hasil yang diharapkan: Determine from SR-11, then record the actual result and compare it with the expected
+     one.
+     Bukti wajib: Bukti status pemeriksaan, stock move dan Credit Note.
+
+
+
+
+                                                                                                                                    Halaman 30
+ERP F&B — Skenario
+
+
+
+
+    S-16     Dashboard dan Rekonsiliasi
+   Modul: Reporting · Roles: Owner, Finance
+   Tujuan: KPI operasional dan audit · Features: F-20 F-21
+
+    ◀ ▶ ⌂        https://example-app.example / desktop browser — structure sketch, not the deployment URL
+
+
+    ▦ Apps      Reporting                                                                                              User / Company ▾
+
+
+    MENU                             ① Dashboard dan Rekonsiliasi                                                Search · Filters · Group By
+    Overview
+                                     ②      List        Kanban             Form          Activity
+    Orders / Documents
+    Reporting
+    Configuration                    ③                                                          Reporting Date
+                                                                                                20 Okt 2026
+
+
+                                      Company                                                   Dataset
+                                      PT Rasa Aruna Bersama                                     Baseline Seed
+
+                                     ④ KPI operasional dan audit
+
+                                      Inventory Units             Inventory Value              A/R               A/P
+
+                                      616                         Rp12.214.000                 Rp1.500.000       Rp1.000.000
+
+
+                                     ⑤ Related Docs    |   Log Notes   |   Audit / History
+
+
+
+   Legenda anotasi: ① judul, search, filters, group-by; ② mode view, tahap, atau status dokumen; ③ field/produk/kartu inti; ④ rincian
+   transaksi, kolom Kanban, atau KPI; ⑤ link dokumen terkait, Log Notes, Audit / History. Struktur dan field wajib; warna, branding,
+   dan styling bebas.
+
+
+
+   Pengujian yang Wajib Dijalankan
+
+      T-31   Alur normal · Fitur F-20
+
+     Situasi: Muat dashboard langsung dari baseline; belum menjalankan transaksi tes lain.
+     Hasil yang diharapkan: Company stock 616 unit dan valuation Rp12.214.000; A/R Rp1.500.000, A/P
+     Rp1.000.000, Bank Rp20.000.000; 1 lead, 1 confirmed SO dengan reserved 6, 1 confirmed PO, POS revenue 0.
+     Bukti wajib: KPI dashboard dengan smart-links ke source documents.
+
+
+
+      T-32   Aturan / edge case · Fitur F-21; Related feature: F-20
+
+     Situasi: Simulasikan KPI stok 1 unit berbeda dari ledger sumber tanpa mengubah posted transaction; periksa
+     indikator rekonsiliasi, tautan sumber dan audit (SR-20).
+     Hasil yang diharapkan: Determine from SR-20, then record the actual result and compare it with the expected
+     one.
+     Bukti wajib: Peringatan rekonsiliasi dan source trail; tidak boleh auto-post.
+
+
+
+
+ 8. Batasan Teknis dan Deployment
+ Produk akhir berupa web application dengan link publik yang dapat diakses saat penilaian; data
+ persisten sesudah browser refresh; seed dataset tersedia; ada setidaknya enam role pengguna
+ aplikasi yang berbeda dari anggota tim: Sales, Warehouse, Finance, Cashier, Procurement, Owner,
+ dengan kredensial uji masing-masing. Setiap dokumen mempunyai sequence unik, lifecycle status
+ jika relevan, locking setelah confirmation, dan minimum audit log (actor, time, action, document).
+ Implementasi harus orisinal, tidak menyalin source code atau aset visual Odoo.
+
+
+
+
+                                                                                                                                    Halaman 31
+ERP F&B — Skenario
+
+
+
+ Vibe coding dilakukan secara iteratif: bangun per modul, berikan wireframe dan acceptance
+ criteria kepada tool AI, commit ketika fitur bekerja, ulangi regression T-xx setiap perubahan, dan
+ telaah logic AI-generated bukan sekadar UI. Teknologi, struktur data, framework, deployment
+ provider, dan alat AI bebas dipilih oleh kelompok; Antigravity hanyalah rekomendasi.
+
+
+
+ 9. Jadwal dan Target Mingguan
+
+  Minggu                             Fokus                                 Checkpoint dan bukti
+
+  Minggu 1                           Discovery, desain, data               Role Assignment Sheet; Team
+                                                                           Agreement di repo; prioritas Must/
+                                                                           Should/Optional; draft wireframe S-01–
+                                                                           S-16; SR-to-F mapping; seed baseline
+                                                                           bersih; arsitektur/data model.
+
+  Minggu 2                           Alur Order to Cash + Procure to Pay   CRM–Sales, Purchase–Inventory;
+                                                                           sequences, reservation, delivery dan
+                                                                           receipt; T-01–T-18 dijalankan; commit
+                                                                           nyata oleh M1–M4.
+
+  Minggu 3                           Accounting, POS dan integrasi         Customer Invoice, Vendor Bill, PBJT,
+                                                                           journaling, partial payment, POS
+                                                                           session, retur; draft Decision Log;
+                                                                           T-19–T-30; defect triage dan regresi.
+
+  Minggu 4                           QA, deployment, penyerahan            Eksekusi ulang T-01–T-32 dari fixture
+                                                                           sesuai aturan; perbaikan; deployment
+                                                                           URL publik, test accounts, repo, Test
+                                                                           Results, defect log, Decision Defense,
+                                                                           video ≤10 menit, presentasi 15 menit
+                                                                           + tanya jawab 10 menit.
+
+
+
+
+ 10. Paket Penyerahan
+      1. Aplikasi berfungsi: public deployed URL yang tetap dapat diakses untuk grading, enam
+         akun uji sesuai role, seed baseline, bukti data persisten setelah refresh.
+      2. Source code repository: README cara menjalankan; diagram arsitektur/data; Decision
+         Log semua konflik; Test Results tiap T-xx (expected vs actual, Pass/Fail, bukti); AI-tool usage
+         note; Role Assignment Sheet; Team Agreement; contribution table (member, role, module, F-
+         xx built, T-xx tested, key commits); riwayat commit semua anggota.
+      3. Video dan presentasi: video demonstrasi maksimal 10 menit untuk kedua alur end-to-end
+         dan penanganan SR; slide presentasi dengan bukti, perhitungan dan Decision Defense.
+
+ Format nama file: GroupXX_Class_FnB_ItemName (misalnya Group04_IS02_FnB_TestResults).
+
+
+ Ketentuan presentasi — 15 menit + 10 menit tanya jawab
+
+  Urutan                             Durasi                                Isi dan bukti minimum
+
+  1                                  ±2 menit                              Konteks dan masalah: profil, proses
+                                                                           lama, stakeholder, contoh SR-xx.
+
+  2                                  ±2 menit                              Dampak bisnis jika diabaikan: stok,
+                                                                           invoicing, kas, audit, angka dari
+                                                                           dataset serta SR terkait.
+
+
+
+
+                                                                                                          Halaman 32
+ERP F&B — Skenario
+
+
+
+  Urutan                                       Durasi                            Isi dan bukti minimum
+
+  3                                            ±2 menit                          Solusi: peta modul, F-xx/S-xx, dua alur;
+                                                                                 video memperlihatkan web application
+                                                                                 berjalan.
+
+  4                                            ±5 menit                          Decision Defense inti: setiap konflik/
+                                                                                 aturan kunci, opsi, keputusan,
+                                                                                 implementasi, pihak dirugikan, bukti T-
+                                                                                 xx, konsekuensi jika kebijakan dibalik;
+                                                                                 fitur scope cut juga
+                                                                                 dipertanggungjawabkan.
+
+  5                                            ±1 menit                          Testing dan lessons learned: hasil uji,
+                                                                                 defect, satu keluaran AI yang tampil
+                                                                                 benar tetapi gagal aturan.
+
+  6                                            ±3 menit                          Future recommendations: kinerja,
+                                                                                 fungsi, efikasi, kemudahan — masing-
+                                                                                 masing masalah, manfaat, estimasi
+                                                                                 usaha kasar, prioritas Now/Next/Later,
+                                                                                 terhubung keterbatasan nyata yang
+                                                                                 ditemukan.
+
+  7                                            ±10 menit (Q&A)                   Individual questions: setiap anggota
+                                                                                 menjelaskan modul sendiri, Decision
+                                                                                 Log, dan dampak lintas modul.
+
+
+
+ Format wajib Decision Defense
+
+  Masalah / konflik         Opsi dibandingkan           Keputusan + F/S   Trade-off dan siapa     Bukti (T)
+  (SR)                                                                    dirugikan
+
+  SR-…                      Opsi A vs opsi B            F-…, S-…          Pihak menerima          T-…
+                                                                          kompromi; mitigasi
+
+
+ Setiap klaim penting harus menunjuk SR-xx, F-xx, S-xx, T-xx, atau angka dataset — bukan
+ screenshot tanpa penalaran.
+
+
+
+ 11. Rubrik Penilaian
+
+  Kriteria                                     Bobot                             Alasan pengurangan umum
+
+  Kelengkapan fungsi dan integrasi             20%                               Flow terputus, stok dan billing tidak
+                                                                                 terhubung.
+
+  Kebenaran aturan bisnis                      25%                               Credit check, invoice, three-way match
+                                                                                 atau posting salah.
+
+  Resolusi konflik dan Decision Log            10%                               Menyalin tuntutan kontradiktif tanpa
+                                                                                 argumentasi.
+
+  Kesetiaan struktur Odoo dan wireframe        10%                               Field penting, status, menu, related
+                                                                                 documents hilang.
+
+  Bukti pengujian                              10%                               T-xx tidak dieksekusi atau expected/
+                                                                                 actual tidak ada.
+
+  Deployment dan repository                    5%                                Link tidak publik, data tidak persist,
+                                                                                 riwayat commit minim.
+
+  Presentasi, defense, dan demo                20%                               Trade-off tak dapat dibela, anggota
+                                                                                 tidak memahami modul.
+
+
+
+
+                                                                                                                 Halaman 33
+ERP F&B — Skenario
+
+
+
+  Kriteria                                 Bobot                                    Alasan pengurangan umum
+
+  Total                                    100%                                     Ambang lulus 70%
+
+
+ Nilai individual dapat disesuaikan melalui contribution table, riwayat commit, artefak peran, peer
+ assessment, dan jawaban demonstrasi. Kesalahan business logic lebih berat daripada
+ selisih kosmetik UI.
+
+
+
+ 12. Pertanyaan Refleksi
+
+    Refleksi 1
+    Konflik stakeholder apa yang paling sulit diselesaikan? Jelaskan kepentingan yang
+    dikorbankan, ukuran kerugiannya, dan kontrol mitigasi yang dipilih. Cantumkan SR-xx, F-xx, S-
+    xx, T-xx.
+
+
+    Refleksi 2
+    Bagian mana yang dihasilkan AI dan terlihat benar di UI tetapi ternyata melanggar business
+    rule? Paparkan cara mendeteksinya, defect log, solusi, dan hasil regression test.
+
+
+
+ 13. Integritas Akademik, Kolaborasi, dan Penggunaan AI
+ Kerja sama dalam kelompok diperbolehkan dan diwajibkan, sedangkan antar-kelompok hanya
+ boleh membahas konsep, tidak menukar kode, prompt, atau solusi akhir. Penggunaan AI adalah
+ metode kerja yang diharapkan; seluruh alat AI yang dipakai wajib diungkapkan dalam README.
+ Semua anggota harus sanggup menjelaskan bagian mana pun secara langsung. Dosen dapat
+ menguji anggota mana pun tentang modul yang berbeda. Membangun fitur tanpa memahami
+ konsekuensi bisnis bukan bukti kompetensi.
+
+
+ Referensi instruktur dan asumsi: sumber resmi ketentuan PBJT dan dokumentasi Odoo Web 17.0 yang menjadi acuan
+ istilah, invoicing dan valuation:
+
+      • Bapenda DKI Jakarta — PBJT makanan/minuman 10%
+      • DJP — PPN versus pajak restoran
+      • Odoo 17.0 — Invoicing policies
+      • Odoo 17.0 — Automatic inventory valuation
+      • Odoo 17.0 — Restaurant features
+
+ Seluruh nama perusahaan, orang, lokasi internal, saldo, dokumen, dan transaksi di atas bersifat fiktif untuk pembelajaran.
+ Standard-cost COGS saat delivery, vendor tax 0%, dan credit exposure adalah kebijakan skenario, bukan klaim konfigurasi
+ otomatis setiap instalasi Odoo.
+
+
+
+
+                                                                                                                  Halaman 34
+

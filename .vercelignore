@@ -1,0 +1,11 @@
+.env
+.env.*
+**/*.db
+**/*.db-*
+prisma/companies.json
+backups/
+.local/
+.agent-data/
+docs/stabilisasi-2026-11-19/
+docs/ux/
+output/

@@ -49,7 +49,7 @@ async function capture() {
   const outDir = path.resolve(process.cwd(), "docs/screens/step1");
   fs.mkdirSync(outDir, { recursive: true });
 
-  const user = await prisma.user.findFirst({ where: { role: "OWNER" } });
+  const user = await prisma.user.findFirst({ where: { role: "HEAD_ADMIN" } });
   if (!user) throw new Error("No owner user found");
 
   const token = await createSessionToken({

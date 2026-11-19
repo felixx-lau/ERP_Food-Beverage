@@ -35,3 +35,12 @@ backups/
 # Local AI runtime, models, capability/proposal storage and logs
 .local/
 .agent-data/
+
+# Data perusahaan, rekonsiliasi internal, dan cache TypeScript
+*.db
+*.sqlite
+*.sqlite3
+/prisma/companies.json
+/docs/stabilisasi-2026-11-19/Rekonsiliasi.md
+/docs/stabilisasi-2026-11-19/bukti/a3-dry-run.json
+*.tsbuildinfo

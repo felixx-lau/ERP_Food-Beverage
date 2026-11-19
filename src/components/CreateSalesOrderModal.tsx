@@ -382,7 +382,7 @@ export default function CreateSalesOrderModal({
             <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800 flex items-start space-x-2">
               <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
               <span>
-                <strong>Info Diskon:</strong> Ada item dengan diskon &gt; 10%. Pesanan akan memerlukan persetujuan Owner.
+                <strong>Info Diskon:</strong> Ada item dengan diskon &gt; 10%. Pesanan akan memerlukan persetujuan Head Admin.
               </span>
             </div>
           )}

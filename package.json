@@ -3,15 +3,19 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "postinstall": "prisma generate",
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "db:push": "prisma db push",
     "db:seed": "tsx scripts/seed.ts",
-    "db:migrate": "python3 scripts/migrate_preserving_data.py --apply && python3 scripts/migrate_loyalty.py --apply",
-    "db:migrate:check": "python3 scripts/migrate_preserving_data.py && python3 scripts/migrate_loyalty.py",
-    "test": "python3 scripts/verify_isolated.py --suites test_agent test_expo_improvements test_phase2_3 test_phase4 test_phase5 test_phase6 test_phase7 test_phase8 test_loyalty test_charts test_crud test_pdf_cases test_integrity --audit-probes"
+    "db:migrate": "python3 scripts/migrate_preserving_data.py --apply && python3 scripts/migrate_loyalty.py --apply && python3 scripts/migrate_advanced.py --apply",
+    "db:migrate:check": "python3 scripts/migrate_preserving_data.py && python3 scripts/migrate_loyalty.py && python3 scripts/migrate_advanced.py",
+    "test": "python3 scripts/verify_isolated.py --suites test_advanced_fnb test_agent test_expo_improvements test_phase2_3 test_phase4 test_phase5 test_phase6 test_phase7 test_phase8 test_loyalty test_charts test_crud test_pdf_cases test_integrity test_role_access test_invoice_choices test_invoice_pdf test_ux_status test_ux_flows test_chatbot test_chatbot_website_data",
+    "test:roles": "node --import tsx scripts/test_role_access.ts",
+    "test:chatbot-data": "node --import tsx scripts/test_chatbot_website_data.ts",
+    "test:ux-flows": "node --import tsx scripts/test_ux_flows.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.4.1",
@@ -19,8 +23,11 @@
     "chart.js": "^4.6.1",
     "clsx": "^2.1.1",
     "jose": "^6.2.13",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.9",
     "lucide-react": "^1.16.0",
     "next": "^15.2.1",
+    "qrcode": "^1.5.4",
     "react": "^19.0.0",
     "react-chartjs-2": "^5.3.1",
     "react-dom": "^19.0.0",
@@ -30,6 +37,7 @@
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22.13.9",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "autoprefixer": "^10.4.20",

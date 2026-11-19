@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
   try {
     const { role, userId } = await request.json();
     const prevUser = await getCurrentUser(request);
-    if (!prevUser || prevUser.role !== Role.OWNER || process.env.ALLOW_DEMO_ROLE_SWITCH !== "true" || process.env.NODE_ENV === "production") return NextResponse.json({ error: "Gunakan login dengan kredensial akun yang dituju." }, { status: 403 });
+    if (!prevUser || prevUser.role !== Role.HEAD_ADMIN || process.env.ALLOW_DEMO_ROLE_SWITCH !== "true" || process.env.NODE_ENV === "production") return NextResponse.json({ error: "Gunakan login dengan kredensial akun yang dituju." }, { status: 403 });
 
     let targetUser = null;
     if (userId) {

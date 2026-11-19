@@ -1,0 +1,119 @@
+   ▲ Next.js 15.5.28
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 7.9s
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/63) ...
+   Generating static pages (15/63) 
+   Generating static pages (31/63) 
+   Generating static pages (47/63) 
+ ✓ Generating static pages (63/63)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                     Size  First Load JS
+┌ ○ /                                        8.23 kB         184 kB
+├ ○ /_not-found                                994 B         103 kB
+├ ○ /accounting/invoices                     7.21 kB         187 kB
+├ ○ /accounting/journal-entries              10.9 kB         183 kB
+├ ○ /accounting/payments                     9.78 kB         178 kB
+├ ○ /accounting/reports                      3.77 kB         172 kB
+├ ○ /accounting/vendor-bills                  5.7 kB         185 kB
+├ ƒ /api/accounting/corrections                312 B         102 kB
+├ ƒ /api/accounting/general-ledger             312 B         102 kB
+├ ƒ /api/accounting/invoices                   312 B         102 kB
+├ ƒ /api/accounting/invoices/[id]              312 B         102 kB
+├ ƒ /api/accounting/invoices/[id]/pdf          312 B         102 kB
+├ ƒ /api/accounting/invoices/[id]/post         312 B         102 kB
+├ ƒ /api/accounting/journal-entries            312 B         102 kB
+├ ƒ /api/accounting/payments                   312 B         102 kB
+├ ƒ /api/accounting/reports                    312 B         102 kB
+├ ƒ /api/accounting/vendor-bills               312 B         102 kB
+├ ƒ /api/accounting/vendor-bills/[id]          312 B         102 kB
+├ ƒ /api/accounting/vendor-bills/[id]/post     312 B         102 kB
+├ ƒ /api/advanced                              312 B         102 kB
+├ ƒ /api/agent/proposals                       312 B         102 kB
+├ ƒ /api/agent/proposals/[id]/cancel           312 B         102 kB
+├ ƒ /api/agent/proposals/[id]/execute          312 B         102 kB
+├ ƒ /api/agent/tools                           312 B         102 kB
+├ ƒ /api/audit/logs                            312 B         102 kB
+├ ƒ /api/auth/login                            312 B         102 kB
+├ ƒ /api/auth/logout                           312 B         102 kB
+├ ƒ /api/auth/me                               312 B         102 kB
+├ ƒ /api/auth/switch-role                      312 B         102 kB
+├ ƒ /api/chatbot                               312 B         102 kB
+├ ƒ /api/chatbot/health                        312 B         102 kB
+├ ƒ /api/companies                             312 B         102 kB
+├ ƒ /api/companies/switch                      312 B         102 kB
+├ ƒ /api/contacts                              312 B         102 kB
+├ ƒ /api/contacts/[id]                         312 B         102 kB
+├ ƒ /api/crm/leads                             312 B         102 kB
+├ ƒ /api/crm/leads/[id]                        312 B         102 kB
+├ ƒ /api/dashboard/charts                      312 B         102 kB
+├ ƒ /api/dashboard/metrics                     312 B         102 kB
+├ ƒ /api/dashboard/profit                      312 B         102 kB
+├ ƒ /api/dashboard/reconciliation              312 B         102 kB
+├ ƒ /api/documents/[kind]/[id]                 312 B         102 kB
+├ ƒ /api/inventory/adjustments                 312 B         102 kB
+├ ƒ /api/inventory/deliveries                  312 B         102 kB
+├ ƒ /api/inventory/deliveries/[id]             312 B         102 kB
+├ ƒ /api/inventory/deliveries/[id]/validate    312 B         102 kB
+├ ƒ /api/inventory/movements                   312 B         102 kB
+├ ƒ /api/inventory/receipts                    312 B         102 kB
+├ ƒ /api/inventory/receipts/[id]               312 B         102 kB
+├ ƒ /api/inventory/receipts/[id]/validate      312 B         102 kB
+├ ƒ /api/inventory/transfers                   312 B         102 kB
+├ ƒ /api/inventory/transfers/[id]/validate     312 B         102 kB
+├ ƒ /api/master/[resource]                     312 B         102 kB
+├ ƒ /api/master/[resource]/[id]                312 B         102 kB
+├ ƒ /api/master/options                        312 B         102 kB
+├ ƒ /api/operations                            312 B         102 kB
+├ ƒ /api/order/[company]/[token]               312 B         102 kB
+├ ƒ /api/pos/orders                            312 B         102 kB
+├ ƒ /api/pos/orders/[id]/refund                312 B         102 kB
+├ ƒ /api/pos/promotions                        312 B         102 kB
+├ ƒ /api/pos/sessions                          312 B         102 kB
+├ ƒ /api/pos/sessions/[id]/close               312 B         102 kB
+├ ƒ /api/products                              312 B         102 kB
+├ ƒ /api/products/[sku]                        312 B         102 kB
+├ ƒ /api/purchase/orders                       312 B         102 kB
+├ ƒ /api/purchase/orders/[id]                  312 B         102 kB
+├ ƒ /api/purchase/orders/[id]/confirm          312 B         102 kB
+├ ƒ /api/returns                               312 B         102 kB
+├ ƒ /api/returns/[id]/inspect                  312 B         102 kB
+├ ƒ /api/returns/[id]/process                  312 B         102 kB
+├ ƒ /api/sales/orders                          312 B         102 kB
+├ ƒ /api/sales/orders/[id]                     312 B         102 kB
+├ ƒ /api/sales/orders/[id]/approve-discount    312 B         102 kB
+├ ƒ /api/sales/orders/[id]/confirm             312 B         102 kB
+├ ƒ /api/seed/demo-charts                      312 B         102 kB
+├ ƒ /api/seed/reset                            312 B         102 kB
+├ ƒ /api/users                                 312 B         102 kB
+├ ƒ /api/users/[id]                            312 B         102 kB
+├ ƒ /api/workflow/[kind]/[id]                  312 B         102 kB
+├ ○ /crm/leads                               6.23 kB         178 kB
+├ ○ /dashboard                               80.6 kB         249 kB
+├ ○ /inventory/delivery                      3.81 kB         183 kB
+├ ○ /inventory/movements                     2.36 kB         171 kB
+├ ○ /inventory/products                      10.1 kB         178 kB
+├ ○ /inventory/receipts                      3.97 kB         184 kB
+├ ○ /inventory/returns                       9.32 kB         178 kB
+├ ○ /inventory/transfers                     4.79 kB         184 kB
+├ ○ /login                                   5.63 kB         108 kB
+├ ƒ /master/[resource]                         173 B         177 kB
+├ ƒ /operations/[area]                         312 B         102 kB
+├ ƒ /order/[company]/[token]                   312 B         102 kB
+├ ○ /pos                                     12.4 kB         181 kB
+├ ○ /purchase/orders                          4.3 kB         188 kB
+├ ○ /sales/contacts                            270 B         177 kB
+└ ○ /sales/orders                            4.38 kB         188 kB
++ First Load JS shared by all                 102 kB
+  ├ chunks/9637-3e9878d34679f4d7.js          45.8 kB
+  ├ chunks/eb08db52-a9fd35f7b8a4eee6.js      54.2 kB
+  └ other shared chunks (total)              1.94 kB
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

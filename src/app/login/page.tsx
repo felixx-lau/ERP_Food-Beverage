@@ -17,10 +17,17 @@ import {
 
 const DEMO_ACCOUNTS = [
   {
+    role: "HEAD_ADMIN",
+    name: "Admin",
+    email: "admin@rasaaruna.com",
+    label: "Admin (Akses penuh)",
+    color: "bg-indigo-50 text-indigo-800 border-indigo-200",
+  },
+  {
     role: "OWNER",
     name: "Maya Prasetyo",
     email: "owner@rasaaruna.com",
-    label: "Owner (Akses Penuh)",
+    label: "Owner (Laporan & persetujuan diskon)",
     color: "bg-emerald-50 text-emerald-800 border-emerald-200",
   },
   {
@@ -62,13 +69,14 @@ const DEMO_ACCOUNTS = [
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("owner@rasaaruna.com");
-  const [password, setPassword] = useState("Password123!");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const handleLogin = async (e?: React.FormEvent) => {
+  const handleLogin = async (e?: React.FormEvent, demoAdmin = false) => {
+    if (loading) return;
     if (e) e.preventDefault();
     setErrorMsg(null);
     setLoading(true);
@@ -77,7 +85,7 @@ export default function LoginPage() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(demoAdmin ? { email: "admin@rasaaruna.com", demoAdmin: true } : { email, password }),
       });
 
       const data = await res.json();
@@ -211,14 +219,14 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Quick Demo Accounts Helper */}
+          {process.env.NODE_ENV === 'development' && (
           <div className="pt-4 border-t border-black/5 space-y-2.5">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-slate-800 flex items-center space-x-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-violet-600" />
                 <span>Pilih Akun Cepat (Skenario Demo)</span>
               </span>
-              <span className="text-[10px] text-slate-600 font-mono font-medium">pass: Password123!</span>
+              <span className="text-[10px] text-slate-600 font-mono font-medium">Password akun demo: Password123!</span>
             </div>
 
             <div className="grid grid-cols-2 gap-2">
@@ -226,7 +234,13 @@ export default function LoginPage() {
                 <button
                   key={acc.email}
                   type="button"
-                  onClick={() => selectDemoAccount(acc.email)}
+                  disabled={loading}
+                  onClick={() => {
+                    if (acc.role === "HEAD_ADMIN") {
+                      setEmail(acc.email);
+                      void handleLogin(undefined, true);
+                    } else selectDemoAccount(acc.email);
+                  }}
                   className={`p-2.5 rounded-lg border text-left transition-colors duration-200 focus-brand-ring ${
                     email === acc.email
                       ? "ring-2 ring-blue-600/70 bg-blue-50 border-blue-200 text-blue-900"
@@ -234,11 +248,11 @@ export default function LoginPage() {
                   }`}
                 >
                   <p className="text-[11px] font-bold text-slate-900 truncate">{acc.label}</p>
-                  <p className="text-[10px] text-slate-600 font-normal truncate">{acc.name}</p>
+                  <p className="text-[10px] text-slate-600 font-normal truncate">{acc.name}{acc.role === "HEAD_ADMIN" ? " · Langsung masuk" : " · Isi formulir login"}</p>
                 </button>
               ))}
             </div>
-          </div>
+          </div>)}
         </div>
 
         {/* Footer info */}

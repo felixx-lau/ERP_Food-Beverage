@@ -1,19 +1,20 @@
+import type { Role } from '@prisma/client';
+import { AuditedRejection, recordAuditLog } from './audit';
 import { prisma } from './prisma';
 import { atomic } from './atomic';
-import { recordAuditLog } from './audit';
 import { calculateCustomerCreditStatus } from './creditControl';
 import { Actor, BusinessError, permit, textValue, money, quantity, numberValue } from './validation';
 
 const configs = {
-  customers: { model: 'contact', key: 'id', roles: ['OWNER','SALES'], fixed: { type: 'CUSTOMER' } },
-  vendors: { model: 'contact', key: 'id', roles: ['OWNER','PROCUREMENT'], fixed: { type: 'VENDOR' } },
-  products: { model: 'productVariant', key: 'sku', roles: ['OWNER','WAREHOUSE'], fixed: {} },
-  categories: { model: 'category', key: 'code', roles: ['OWNER','WAREHOUSE'], fixed: {} },
-  units: { model: 'unitOfMeasure', key: 'code', roles: ['OWNER','WAREHOUSE'], fixed: {} },
-  locations: { model: 'warehouseLocation', key: 'code', roles: ['OWNER','WAREHOUSE'], fixed: {} },
-  accounts: { model: 'account', key: 'code', roles: ['OWNER','FINANCE'], fixed: {} },
-  'vendor-prices': { model: 'vendorPrice', key: 'id', roles: ['OWNER','PROCUREMENT'], fixed: {} },
-  leads: { model: 'crmLead', key: 'id', roles: ['OWNER','SALES'], fixed: {} },
+  customers: { model: 'contact', key: 'id', roles: ['HEAD_ADMIN','SALES'], fixed: { type: 'CUSTOMER' } },
+  vendors: { model: 'contact', key: 'id', roles: ['HEAD_ADMIN','PROCUREMENT'], fixed: { type: 'VENDOR' } },
+  products: { model: 'productVariant', key: 'sku', roles: ['HEAD_ADMIN','WAREHOUSE'], fixed: {} },
+  categories: { model: 'category', key: 'code', roles: ['HEAD_ADMIN','WAREHOUSE'], fixed: {} },
+  units: { model: 'unitOfMeasure', key: 'code', roles: ['HEAD_ADMIN','WAREHOUSE'], fixed: {} },
+  locations: { model: 'warehouseLocation', key: 'code', roles: ['HEAD_ADMIN','WAREHOUSE'], fixed: {} },
+  accounts: { model: 'account', key: 'code', roles: ['HEAD_ADMIN','FINANCE'], fixed: {} },
+  'vendor-prices': { model: 'vendorPrice', key: 'id', roles: ['HEAD_ADMIN','PROCUREMENT'], fixed: {} },
+  leads: { model: 'crmLead', key: 'id', roles: ['HEAD_ADMIN','SALES'], fixed: {} },
 } as const;
 export type Resource = keyof typeof configs;
 export function masterConfig(resource: string) {
@@ -24,7 +25,7 @@ const coreAccounts = ['1010','1020','1030','1040','2010','2020','2030','3010','4
 function protectedMaster(resource: string, record: any) { return (resource === 'accounts' && coreAccounts.includes(record.code)) || (resource === 'locations' && ['WH-JKT','CAFE-JKT'].includes(record.code)); }
 export function canReadMaster(actor: Actor, resource: string) {
   masterConfig(resource);
-  const read = resource === 'accounts' ? ['OWNER','FINANCE'] : resource === 'leads' ? ['OWNER','SALES'] : ['OWNER','SALES','WAREHOUSE','PROCUREMENT','FINANCE'];
+  const read = resource === 'accounts' ? ['HEAD_ADMIN','FINANCE'] : resource === 'leads' ? ['HEAD_ADMIN','SALES'] : ['HEAD_ADMIN','SALES','WAREHOUSE','PROCUREMENT','FINANCE'];
   permit(actor, read);
 }
 
@@ -74,7 +75,7 @@ async function validated(resource: string, input: any, actor: Actor, before?: an
       data.customerType=value.customerType ?? 'COMPANY';
       if (!['COMPANY','INDIVIDUAL'].includes(data.customerType)) throw new BusinessError('Tipe pelanggan tidak valid.');
       data.creditLimit=money(value.creditLimit ?? 0);
-      if (data.creditLimit !== (before?.creditLimit ?? 0) && actor.role!=='OWNER') throw new BusinessError('Perubahan limit kredit hanya oleh Owner.',403);
+      if (data.creditLimit !== (before?.creditLimit ?? 0) && actor.role!=='HEAD_ADMIN') throw new BusinessError('Perubahan limit kredit hanya oleh Owner.',403);
     }
   } else if (resource==='products') {
     for (const field of ['size','color','unit']) data[field]=textValue(value[field] ?? ({size:'Regular',color:'Original',unit:'porsi'} as any)[field],field);
@@ -97,10 +98,20 @@ async function validated(resource: string, input: any, actor: Actor, before?: an
     await active('productVariant','sku',data.productSku,'SKU');
     data.price=money(value.price); data.minimumQty=quantity(value.minimumQty ?? 1); data.currency='IDR';
   } else if (resource==='leads') {
+    data.stage = value.stage ?? 'NEW';
+    data.expectedRevenue = money(value.expectedRevenue ?? 0);
+    const advanced = ['PROPOSITION','WON'].includes(data.stage);
+    if (!['NEW','QUALIFIED','PROPOSITION','WON'].includes(data.stage) ||
+        (advanced && (!data.expectedRevenue || typeof value.contactId !== 'string' || !value.contactId.trim()))) {
+      throw new AuditedRejection({
+        actorId:actor.id, actorName:actor.name, actorRole:actor.role as Role,
+        action:'STAGE_REJECTED', documentType:'CRM_LEAD', documentId:before?.id || 'DRAFT',
+        afterData:{stage:data.stage,expectedRevenue:data.expectedRevenue},
+        notes:'Pelanggan dan nilai peluang wajib sebelum Proposition/Won (SR-16).',
+      });
+    }
     data.contactId=textValue(value.contactId,'Pelanggan');
     if ((await active('contact','id',data.contactId,'Pelanggan')).type!=='CUSTOMER') throw new BusinessError('Kontak harus Pelanggan.');
-    data.expectedRevenue=money(value.expectedRevenue ?? 0); data.stage=value.stage ?? 'NEW';
-    if (!['NEW','QUALIFIED','PROPOSITION','WON'].includes(data.stage) || (['PROPOSITION','WON'].includes(data.stage) && !data.expectedRevenue)) throw new BusinessError('Pelanggan dan nilai peluang wajib sebelum Proposition/Won (SR-16).');
   }
   if (!before) {
     data[c.key]=c.key==='id' ? `${resource==='customers'?'C':resource==='vendors'?'V':resource==='leads'?'LD':''}${crypto.randomUUID()}` : textValue(input[c.key],c.key,true,60);
@@ -129,7 +140,7 @@ export async function getMaster(resource: string, id: string, actor: Actor) {
   let related:any={};
   if (['customers','vendors'].includes(resource)) {
     related=resource==='customers'?{salesOrders:await prisma.salesOrder.findMany({where:{contactId:id}}),invoices:await prisma.customerInvoice.findMany({where:{customerId:id}}),credit:await calculateCustomerCreditStatus(id)}:{purchaseOrders:await prisma.purchaseOrder.findMany({where:{vendorId:id}}),bills:await prisma.vendorBill.findMany({where:{vendorId:id}}),prices:await prisma.vendorPrice.findMany({where:{vendorId:id,archivedAt:null}})};
-    if (!['OWNER','FINANCE','SALES'].includes(actor.role) && resource==='customers') related={};
+    if (!['HEAD_ADMIN','FINANCE','SALES'].includes(actor.role) && resource==='customers') related={};
   } else if (resource==='products') related={stock:await prisma.stockLevel.findMany({where:{productSku:id}}),movements:await prisma.stockMove.findMany({where:{productSku:id},orderBy:{date:'desc'},take:100})};
   else if (resource==='leads') related={salesOrders:await prisma.salesOrder.findMany({where:{leadId:id}})};
   return {record:await decorate(resource,record,actor),history,related};

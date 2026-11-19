@@ -46,7 +46,8 @@ export default function InternalTransfersPage() {
         const data = await res.json();
         setTransfers(data.transfers || []);
         if (data.transfers?.length > 0 && !selectedTransfer) {
-          setSelectedTransfer(data.transfers.find((r: any) => r.id === new URLSearchParams(window.location.search).get("id")) || data.transfers[0]);
+          const requested = data.transfers.find((r: any) => r.id === new URLSearchParams(window.location.search).get("id"));
+          if(requested) setSelectedTransfer(requested);
         }
       }
     } finally {
@@ -248,37 +249,20 @@ export default function InternalTransfersPage() {
         </div>
       }
     >
-      <DocumentList records={transfers} selectedId={selectedTransfer?.id} onSelect={(id: string) => setSelectedTransfer(transfers.find(t => t.id === id))}/>
+      <DocumentList loading={loading} records={transfers} selectedId={selectedTransfer?.id} onClearSelection={()=>setSelectedTransfer(null)} onSelect={(id: string) => setSelectedTransfer(transfers.find(t => t.id === id))}/>
 
       {selectedTransfer && <DocumentControls kind="transfers" record={selectedTransfer} role={user?.role} onChanged={async () => { await fetchTransfers(); }} />}
 
       {/* Transfer Selector Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-[#E5E9E4] shadow-xs">
-        <div className="flex items-center space-x-2">
-          <span className="text-xs font-semibold text-[#64748b]">Pilih Dokumen Transfer:</span>
-          <select
-            value={selectedTransfer?.id || ""}
-            onChange={(e) => {
-              const sel = transfers.find((t) => t.id === e.target.value);
-              if (sel) setSelectedTransfer(sel);
-            }}
-            className="text-xs font-mono font-medium bg-[#f1f5f9] border border-[#E5E9E4] rounded-lg px-3 py-1.5 text-[#0f172a] focus:ring-1 focus:ring-[#1d4ed8] focus-brand-ring"
-          >
-            {transfers.length === 0 && <option value="">(Belum ada dokumen transfer)</option>}
-            {transfers.map((tr) => (
-              <option key={tr.id} value={tr.id}>
-                {tr.transferNumber} — {tr.sourceLocation} → {tr.destLocation} ({tr.status})
-              </option>
-            ))}
-          </select>
-        </div>
+
 
         <div className="flex items-center space-x-2 text-xs text-[#64748b]">
-          <Link href="/inventory/products" className="hover:text-[#1d4ed8] underline">15 SKU Master</Link>
+          <Link href="/inventory/products" className="hover:text-[#1d4ed8] underline">Stok & ketersediaan</Link>
           <span>•</span>
-          <Link href="/inventory/delivery" className="hover:text-[#1d4ed8] underline">Deliveries</Link>
+          <Link href="/inventory/delivery" className="hover:text-[#1d4ed8] underline">Pengiriman</Link>
           <span>•</span>
-          <Link href="/inventory/returns" className="hover:text-[#1d4ed8] underline">Customer Returns</Link>
+          <Link href="/inventory/returns" className="hover:text-[#1d4ed8] underline">Retur pelanggan</Link>
         </div>
       </div>
 
@@ -570,7 +554,7 @@ export default function InternalTransfersPage() {
           )}
         </div>
       </details>
-      {selectedTransfer && <DocumentTrail kind="transfers" record={selectedTransfer}/>}
+      {selectedTransfer && <DocumentTrail kind="transfers" record={selectedTransfer} role={user?.role}/>}
     </AppLayout>
   );
 }

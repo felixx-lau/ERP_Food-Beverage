@@ -1,3 +1,4 @@
+import { permittedOutlets } from "@/lib/outlets";
 import { authorizeApi } from "@/lib/apiAuthorization";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -13,7 +14,7 @@ export async function GET(request: NextRequest) {
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const sessions = await prisma.posSession.findMany({
-      where: user.role === "OWNER" ? {} : { cashierId: user.id },
+      where: ["HEAD_ADMIN","OWNER"].includes(user.role) ? {} : { cashierId: user.id },
       include: {
         cashier: { select: { id: true, name: true, role: true } },
         orders: { include: { lines: true } },
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json({ success: true, sessions });
+    return NextResponse.json({ success: true, sessions, outlets: await permittedOutlets(user) });
   } catch (error) {
     console.error("Fetch sessions error:", error);
     return NextResponse.json({ error: "Failed to fetch POS sessions" }, { status: 500 });

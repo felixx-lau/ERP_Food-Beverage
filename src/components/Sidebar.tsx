@@ -47,60 +47,60 @@ export const NAVIGATION_GROUPS: NavGroup[] = [
   {
     group: "Ringkasan",
     items: [
-      { name: "Beranda", href: "/", icon: Home, roles: ["OWNER", "SALES", "WAREHOUSE", "PROCUREMENT", "FINANCE", "CASHIER"], wireframe: "S-01" },
-      { name: "Dashboard Eksekutif", href: "/dashboard", icon: BarChart3, roles: ["OWNER", "FINANCE", "SALES", "WAREHOUSE", "PROCUREMENT"], wireframe: "S-16" },
+      { name: "Beranda", href: "/", icon: Home, roles: ["OWNER", "HEAD_ADMIN", "SALES", "WAREHOUSE", "PROCUREMENT", "FINANCE", "CASHIER", "KITCHEN"], wireframe: "S-01" },
+      { name: "Dashboard Eksekutif", href: "/dashboard", icon: BarChart3, roles: ["HEAD_ADMIN", "FINANCE", "OWNER"], wireframe: "S-16" },
     ],
   },
   {
     group: "Penjualan & CRM",
     items: [
-      { name: "Peluang CRM (Leads)", href: "/crm/leads", icon: Users2, roles: ["OWNER", "SALES"], wireframe: "S-04" },
-      { name: "Pelanggan & Vendor", href: "/sales/contacts", icon: Contact2, roles: ["OWNER", "SALES", "PROCUREMENT", "FINANCE"], wireframe: "S-02" },
-      { name: "Pesanan Penjualan (SO)", href: "/sales/orders", icon: ShoppingCart, roles: ["OWNER", "SALES"], wireframe: "S-05" },
+      { name: "Peluang penjualan", href: "/crm/leads", icon: Users2, roles: ["OWNER", "HEAD_ADMIN", "SALES"], wireframe: "S-04" },
+      { name: "Pelanggan & Vendor", href: "/sales/contacts", icon: Contact2, roles: ["HEAD_ADMIN", "SALES", "PROCUREMENT", "FINANCE"], wireframe: "S-02" },
+      { name: "Pesanan penjualan", href: "/sales/orders", icon: ShoppingCart, roles: ["OWNER", "HEAD_ADMIN", "SALES"], wireframe: "S-05" },
     ],
   },
   {
     group: "Persediaan & Gudang",
     items: [
-      { name: "Produk & Menu", href: "/inventory/products", icon: Package, roles: ["OWNER", "WAREHOUSE", "PROCUREMENT"], wireframe: "S-03" },
-      { name: "Pergerakan & Penyesuaian", href: "/inventory/movements", icon: ArrowLeftRight, roles: ["OWNER","WAREHOUSE","PROCUREMENT","FINANCE"] },
-      { name: "Pengiriman (Delivery)", href: "/inventory/delivery", icon: Truck, roles: ["OWNER", "WAREHOUSE"], wireframe: "S-06" },
-      { name: "Transfer Gudang", href: "/inventory/transfers", icon: ArrowLeftRight, roles: ["OWNER", "WAREHOUSE"], wireframe: "S-07" },
-      { name: "Penerimaan Barang", href: "/inventory/receipts", icon: PackageCheck, roles: ["OWNER", "WAREHOUSE"], wireframe: "S-09" },
-      { name: "Retur Barang", href: "/inventory/returns", icon: RotateCcw, roles: ["OWNER", "WAREHOUSE", "FINANCE"], wireframe: "S-15" },
+      { name: "Stok & Ketersediaan", href: "/inventory/products", icon: Package, roles: ["OWNER", "HEAD_ADMIN", "WAREHOUSE", "PROCUREMENT"], wireframe: "S-03" },
+      { name: "Pergerakan & Penyesuaian", href: "/inventory/movements", icon: ArrowLeftRight, roles: ["OWNER", "HEAD_ADMIN","WAREHOUSE","PROCUREMENT","FINANCE"] },
+      { name: "Pengiriman barang", href: "/inventory/delivery", icon: Truck, roles: ["HEAD_ADMIN", "WAREHOUSE"], wireframe: "S-06" },
+      { name: "Transfer Gudang", href: "/inventory/transfers", icon: ArrowLeftRight, roles: ["HEAD_ADMIN", "WAREHOUSE"], wireframe: "S-07" },
+      { name: "Penerimaan Barang", href: "/inventory/receipts", icon: PackageCheck, roles: ["HEAD_ADMIN", "WAREHOUSE"], wireframe: "S-09" },
+      { name: "Retur Barang", href: "/inventory/returns", icon: RotateCcw, roles: ["HEAD_ADMIN", "WAREHOUSE", "FINANCE"], wireframe: "S-15" },
     ],
   },
   {
     group: "Pengadaan",
     items: [
-      { name: "Pesanan Pembelian (PO)", href: "/purchase/orders", icon: ShoppingBag, roles: ["OWNER", "PROCUREMENT"], wireframe: "S-08" },
+      { name: "Pesanan pembelian", href: "/purchase/orders", icon: ShoppingBag, roles: ["OWNER", "HEAD_ADMIN", "PROCUREMENT"], wireframe: "S-08" },
     ],
   },
   {
     group: "Keuangan",
     items: [
-      { name: "Faktur Tagihan (Invoice)", href: "/accounting/invoices", icon: Receipt, roles: ["OWNER", "FINANCE", "SALES"], wireframe: "S-10" },
-      { name: "Tagihan Vendor (Bills)", href: "/accounting/vendor-bills", icon: FileText, roles: ["OWNER", "FINANCE"], wireframe: "S-11" },
-      { name: "Pembayaran Kas & Bank", href: "/accounting/payments", icon: CreditCard, roles: ["OWNER", "FINANCE"], wireframe: "S-12" },
-      { name: "Laporan Keuangan", href: "/accounting/reports", icon: BarChart3, roles: ["OWNER","FINANCE"] },
-      { name: "Buku Besar & Jurnal", href: "/accounting/journal-entries", icon: BookOpen, roles: ["OWNER", "FINANCE"], wireframe: "S-13" },
+      { name: "Tagihan pelanggan", href: "/accounting/invoices", icon: Receipt, roles: ["OWNER", "HEAD_ADMIN", "FINANCE", "SALES"], wireframe: "S-10" },
+      { name: "Tagihan vendor", href: "/accounting/vendor-bills", icon: FileText, roles: ["HEAD_ADMIN", "FINANCE"], wireframe: "S-11" },
+      { name: "Pembayaran Kas & Bank", href: "/accounting/payments", icon: CreditCard, roles: ["HEAD_ADMIN", "FINANCE"], wireframe: "S-12" },
+      { name: "Laporan Keuangan", href: "/accounting/reports", icon: BarChart3, roles: ["OWNER", "HEAD_ADMIN","FINANCE"] },
+      { name: "Buku Besar & Jurnal", href: "/accounting/journal-entries", icon: BookOpen, roles: ["OWNER", "HEAD_ADMIN", "FINANCE"], wireframe: "S-13" },
     ],
   },
   {
     group: "Data Master",
     items: [
-      { name: "Kelola Produk", href: "/master/products", icon: Package, roles: ["OWNER","WAREHOUSE","PROCUREMENT","SALES","FINANCE"] },
-      { name: "Kategori & Menu", href: "/master/categories", icon: Package, roles: ["OWNER","WAREHOUSE","PROCUREMENT"] },
-      { name: "Satuan Produk", href: "/master/units", icon: Package, roles: ["OWNER","WAREHOUSE","PROCUREMENT"] },
-      { name: "Gudang & Lokasi", href: "/master/locations", icon: Package, roles: ["OWNER","WAREHOUSE","PROCUREMENT"] },
-      { name: "Harga Vendor", href: "/master/vendor-prices", icon: ShoppingBag, roles: ["OWNER","PROCUREMENT","FINANCE"] },
-      { name: "Chart of Accounts", href: "/master/accounts", icon: BookOpen, roles: ["OWNER","FINANCE"] },
+      { name: "Data Produk & Harga", href: "/master/products", icon: Package, roles: ["HEAD_ADMIN","WAREHOUSE","PROCUREMENT","SALES","FINANCE"] },
+      { name: "Kategori & Menu", href: "/master/categories", icon: Package, roles: ["HEAD_ADMIN","WAREHOUSE","PROCUREMENT"] },
+      { name: "Satuan Produk", href: "/master/units", icon: Package, roles: ["HEAD_ADMIN","WAREHOUSE","PROCUREMENT"] },
+      { name: "Gudang & Lokasi", href: "/master/locations", icon: Package, roles: ["HEAD_ADMIN","WAREHOUSE","PROCUREMENT"] },
+      { name: "Harga Vendor", href: "/master/vendor-prices", icon: ShoppingBag, roles: ["HEAD_ADMIN","PROCUREMENT","FINANCE"] },
+      { name: "Daftar akun keuangan", href: "/master/accounts", icon: BookOpen, roles: ["HEAD_ADMIN","FINANCE"] },
     ],
   },
   {
     group: "Penjualan Kasir (POS)",
     items: [
-      { name: "Kasir POS", href: "/pos", icon: Store, roles: ["OWNER", "CASHIER"], wireframe: "S-14" },
+      { name: "Kasir POS", href: "/pos", icon: Store, roles: ["OWNER", "HEAD_ADMIN", "CASHIER"], wireframe: "S-14" },
     ],
   },
 ];
@@ -113,10 +113,10 @@ interface SidebarProps {
   onCloseMobile: () => void;
 }
 
-export default function Sidebar({ userRole = "OWNER", isCollapsed, onToggleCollapse, isOpenMobile, onCloseMobile }: SidebarProps) {
+export default function Sidebar({ userRole = "", isCollapsed, onToggleCollapse, isOpenMobile, onCloseMobile }: SidebarProps) {
   const pathname = usePathname();
   const { activeCompany } = useCompany();
-  const [closedGroups, setClosedGroups] = useState<string[]>([]);
+  const [closedGroups, setClosedGroups] = useState<string[]>(["Penjualan & CRM", "Persediaan & Gudang", "Pengadaan", "Keuangan", "Data Master", "Penjualan Kasir (POS)"]);
   useEffect(() => { setClosedGroups(groups => groups.filter(name => !NAVIGATION_GROUPS.find(g => g.group === name)?.items.some(i => i.href === pathname))); }, [pathname]);
   const content = (collapsed: boolean, mobile = false) => <div className="sidebar-shell flex flex-col h-full">
     <div className={`h-[72px] flex items-center gap-3 border-b border-white/15 shrink-0 ${collapsed ? "justify-center" : "px-5"}`}>
@@ -127,7 +127,7 @@ export default function Sidebar({ userRole = "OWNER", isCollapsed, onToggleColla
       {mobile && <button className="icon-button ml-auto" onClick={onCloseMobile} aria-label="Tutup navigasi"><X className="w-5 h-5" /></button>}
     </div>
     <nav aria-label="Navigasi utama" className={`flex-1 py-5 space-y-5 ${collapsed ? "px-3 overflow-y-auto" : "px-4 overflow-y-auto"}`}>
-      {NAVIGATION_GROUPS.map((group, index) => <div key={group.group}>
+      {NAVIGATION_GROUPS.map(group => ({ ...group, items: group.items.filter(item => item.roles.includes(userRole)) })).filter(group => group.items.length).map((group, index) => <div key={group.group}>
         {!collapsed && <button type="button" onClick={() => setClosedGroups(prev => prev.includes(group.group) ? prev.filter(g => g !== group.group) : [...prev, group.group])} aria-expanded={!closedGroups.includes(group.group)} aria-controls={`${mobile ? "mobile" : "desktop"}-nav-${index}`} className="w-full flex items-center justify-between px-3 mb-1 text-[10px] font-semibold uppercase tracking-[.1em] text-indigo-200 min-h-8">
           {group.group}<ChevronDown className={`w-3 h-3 transition-transform ${closedGroups.includes(group.group) ? "-rotate-90" : ""}`} />
         </button>}

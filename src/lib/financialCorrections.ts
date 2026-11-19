@@ -18,7 +18,7 @@ async function reverseEntry(entryId:string,reason:string) {
   return postLines(`REV/${original.entryNumber}`,original.items.map(l=>({accountCode:l.accountCode,label:`Reversal ${original.entryNumber}`,debit:l.credit,credit:l.debit,partnerId:l.partnerId})),reason,entryId);
 }
 export async function reverseFinancial(kind:string,id:string,reason:string,actor:Actor) {
-  permit(actor,['OWNER','FINANCE']);reason=textValue(reason,'Alasan reversal',true,1000);
+  permit(actor,['HEAD_ADMIN','FINANCE']);reason=textValue(reason,'Alasan reversal',true,1000);
   return atomic(async()=>{
     let result:any;
     if(kind==='payments'){
@@ -47,7 +47,7 @@ export async function reverseFinancial(kind:string,id:string,reason:string,actor
   });
 }
 export async function createManualJournal(input:{lines:{accountCode:string;debit:number;credit:number}[];reason:string},actor:Actor) {
-  permit(actor,['OWNER','FINANCE']);const reason=textValue(input.reason,'Alasan jurnal',true,1000);
+  permit(actor,['HEAD_ADMIN','FINANCE']);const reason=textValue(input.reason,'Alasan jurnal',true,1000);
   if(!Array.isArray(input.lines)||input.lines.length<2||input.lines.length>100)throw new BusinessError('Isi 2–100 baris jurnal.');
   return atomic(async()=>{
     const lines=[];

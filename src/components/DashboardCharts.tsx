@@ -63,6 +63,9 @@ export default function DashboardCharts() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<DashboardChartData | null>(null);
+  const [locationCode,setLocationCode]=useState("");
+  const [locations,setLocations]=useState<Array<{code:string;name:string}>>([]);
+  useEffect(()=>{fetch("/api/master/options").then(r=>r.json()).then(d=>setLocations(d.locations||[])).catch(()=>{});},[]);
   const [period, setPeriod] = useState<"day" | "week" | "month">("day");
 
   // Date filters
@@ -101,6 +104,7 @@ export default function DashboardCharts() {
     try {
       const q = new URLSearchParams();
       q.set("period", p);
+      if(locationCode)q.set("locationCode",locationCode);
       if (s) q.set("startDate", s);
       if (e) q.set("endDate", e);
 
@@ -296,7 +300,7 @@ export default function DashboardCharts() {
     },
   };
 
-  // 2. Bar Chart 1: Top 10 Products
+  // 2. Bar Chart 1: Top 15 Products
   const topProductsData = {
     labels: data?.topProducts.labels || [],
     datasets: [
@@ -534,6 +538,7 @@ export default function DashboardCharts() {
         </div>
       )}
 
+      <label className="text-sm block">Lokasi grafik<select className="input-glass p-2 ml-2" value={locationCode} onChange={e=>setLocationCode(e.target.value)}><option value="">Seluruh perusahaan</option>{locations.map(l=><option key={l.code} value={l.code}>{l.code} · {l.name}</option>)}</select><span className="text-xs text-slate-500 ml-2">Klik Segarkan setelah memilih lokasi.</span></label>
       {/* Filter Bar & Toggle Toolbar */}
       <div className="glass-3 rounded-2xl border border-white/80 p-4 shadow-glass-3 flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Period Buttons */}
@@ -675,7 +680,7 @@ export default function DashboardCharts() {
 
       {/* 3 BAR CHARTS SECTION */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* BAR CHART 1: Top 10 Best Sellers */}
+        {/* BAR CHART 1: Top 15 Best Sellers */}
         <div className="glass-2 rounded-3xl border border-white/70 p-5 shadow-glass-2 space-y-3 lg:col-span-1 flex flex-col justify-between">
           <div>
             <div className="flex items-center space-x-2 pb-2.5 border-b border-black/5">
@@ -685,11 +690,11 @@ export default function DashboardCharts() {
               </h4>
             </div>
             <p className="text-[11px] text-[var(--glass-text-secondary)] mt-1">
-              Berdasarkan kuantitas unit terjual
+              {topProductsData.labels.length} produk terjual · maksimal 15 varian dalam periode ini
             </p>
           </div>
 
-          <div className="h-64 w-full relative">
+          <div className="w-full relative" style={{ height: Math.max(256, topProductsData.labels.length * 27) }}>
             {loading && !data ? (
               <div className="h-full flex items-center justify-center text-xs text-[var(--glass-text-muted)]">
                 Memuat produk terlaris...

@@ -21,9 +21,9 @@ async function createPurchaseQuotationImpl(params: {
   uniqueLines(lineInputs, l => l.productSku);
   lineInputs.forEach(l => { quantity(l.orderedQty); if (l.unitPrice !== undefined) money(l.unitPrice); });
 
-  // Role check: PROCUREMENT or OWNER
-  if (actor.role !== Role.PROCUREMENT && actor.role !== Role.OWNER) {
-    throw new Error("Akses ditolak (SR-15): Hanya Procurement atau Owner yang dapat membuat RFQ / PO.");
+  // Role check: PROCUREMENT or HEAD_ADMIN
+  if (actor.role !== Role.PROCUREMENT && actor.role !== Role.HEAD_ADMIN) {
+    throw new Error("Akses ditolak (SR-15): Hanya Procurement atau Head Admin yang dapat membuat RFQ / PO.");
   }
 
   const vendor = await prisma.contact.findUnique({
@@ -104,10 +104,21 @@ async function createPurchaseQuotationImpl(params: {
   return purchaseOrder;
 }
 
+async function draftReceipt(po: {id:string; scheduledDate:Date}, destLocation:string, lines:{productSku:string; orderedQty:number}[]) {
+  return prisma.goodsReceipt.create({
+    data: {
+      receiptNumber:await getNextSequence('RECEIPT'), purchaseOrderId:po.id, destLocation,
+      scheduledDate:po.scheduledDate, status:'DRAFT',
+      lines:{create:lines.map(line=>({productSku:line.productSku, demandQty:line.orderedQty}))},
+    },
+    include:{lines:true},
+  });
+}
+
 async function confirmPurchaseOrderImpl(poId: string, actor: { id: string; name: string; role: Role }, destLocation = "WH-JKT") {
-  // Role check: PROCUREMENT or OWNER
-  if (actor.role !== Role.PROCUREMENT && actor.role !== Role.OWNER) {
-    throw new Error("Akses ditolak (SR-15): Hanya Procurement atau Owner yang dapat mengonfirmasi Purchase Order.");
+  // Role check: PROCUREMENT or HEAD_ADMIN
+  if (actor.role !== Role.PROCUREMENT && actor.role !== Role.HEAD_ADMIN) {
+    throw new Error("Akses ditolak (SR-15): Hanya Procurement atau Head Admin yang dapat mengonfirmasi Purchase Order.");
   }
 
   const po = await prisma.purchaseOrder.findFirst({
@@ -120,9 +131,19 @@ async function confirmPurchaseOrderImpl(poId: string, actor: { id: string; name:
   // Idempotency Check (SR-13 / T-16):
   // If already confirmed, do not create duplicate receipt or commit twice
   if (po.status === OrderStatus.CONFIRMED || po.status === OrderStatus.DONE) {
+    let receipt = po.receipts[0] || null;
+    if (!receipt && po.status === OrderStatus.CONFIRMED) {
+      const outstanding = po.lines.filter(line=>line.orderedQty>line.receivedQty)
+        .map(line=>({productSku:line.productSku, orderedQty:line.orderedQty-line.receivedQty}));
+      if (outstanding.length) {
+        if (!await prisma.warehouseLocation.findFirst({where:{code:destLocation,archivedAt:null}})) throw new Error('Lokasi penerimaan tidak aktif.');
+        receipt = await draftReceipt(po, destLocation, outstanding);
+        await recordAuditLog({actorId:actor.id,actorRole:actor.role,actorName:actor.name,action:'PREPARE_RECEIPT',documentType:'PO',documentId:po.poNumber,afterData:{receiptNumber:receipt.receiptNumber}});
+      }
+    }
     return {
       purchaseOrder: po,
-      receipt: po.receipts[0] || null,
+      receipt,
       message: "Purchase Order sudah dikonfirmasi sebelumnya (idempotent). Tidak ada duplikasi dokumen.",
       alreadyConfirmed: true,
     };
@@ -139,25 +160,7 @@ async function confirmPurchaseOrderImpl(poId: string, actor: { id: string; name:
     });
 
     // 2. Create GoodsReceipt in DRAFT status
-    const receiptNumber = await getNextSequence("RECEIPT");
-    const receipt = await tx.goodsReceipt.create({
-      data: {
-        receiptNumber,
-        purchaseOrderId: po.id,
-        destLocation,
-        scheduledDate: po.scheduledDate,
-        status: "DRAFT",
-        lines: {
-          create: po.lines.map((l) => ({
-            productSku: l.productSku,
-            demandQty: l.orderedQty,
-            acceptedQty: 0,
-            rejectedQty: 0,
-          })),
-        },
-      },
-      include: { lines: true },
-    });
+    const receipt = await draftReceipt(po, destLocation, po.lines);
 
     return { updatedPo, receipt };
   });
@@ -203,9 +206,9 @@ async function validateGoodsReceiptImpl(params: {
   uniqueLines(items, l => l.lineId); uniqueLines(items, l => l.productSku);
   items.forEach(i => { quantity(i.acceptedQty, true); quantity(i.rejectedQty, true); });
 
-  // Role check: WAREHOUSE or OWNER
-  if (actor.role !== Role.WAREHOUSE && actor.role !== Role.OWNER) {
-    throw new Error("Akses ditolak (SR-15): Hanya Warehouse atau Owner yang berwenang memvalidasi penerimaan barang.");
+  // Role check: WAREHOUSE or HEAD_ADMIN
+  if (actor.role !== Role.WAREHOUSE && actor.role !== Role.HEAD_ADMIN) {
+    throw new Error("Akses ditolak (SR-15): Hanya Warehouse atau Head Admin yang berwenang memvalidasi penerimaan barang.");
   }
 
   const receipt = await prisma.goodsReceipt.findFirst({
@@ -408,9 +411,9 @@ async function createVendorBillImpl(params: {
   uniqueLines(lineInputs, l => l.productSku);
   lineInputs.forEach(l => { quantity(l.quantity); if (l.unitPrice !== undefined) money(l.unitPrice); });
 
-  // Role check: FINANCE or OWNER
-  if (actor.role !== Role.FINANCE && actor.role !== Role.OWNER) {
-    throw new Error("Akses ditolak (SR-15): Hanya Finance atau Owner yang dapat membuat Vendor Bill.");
+  // Role check: FINANCE or HEAD_ADMIN
+  if (actor.role !== Role.FINANCE && actor.role !== Role.HEAD_ADMIN) {
+    throw new Error("Akses ditolak (SR-15): Hanya Finance atau Head Admin yang dapat membuat Vendor Bill.");
   }
 
   const po = await prisma.purchaseOrder.findFirst({
@@ -530,9 +533,9 @@ async function createVendorBillImpl(params: {
 }
 
 async function postVendorBillImpl(billId: string, actor: { id: string; name: string; role: Role }) {
-  // Role check: FINANCE or OWNER
-  if (actor.role !== Role.FINANCE && actor.role !== Role.OWNER) {
-    throw new Error("Akses ditolak (SR-15): Hanya Finance atau Owner yang berwenang memposting Vendor Bill.");
+  // Role check: FINANCE or HEAD_ADMIN
+  if (actor.role !== Role.FINANCE && actor.role !== Role.HEAD_ADMIN) {
+    throw new Error("Akses ditolak (SR-15): Hanya Finance atau Head Admin yang berwenang memposting Vendor Bill.");
   }
 
   const bill = await prisma.vendorBill.findFirst({

@@ -1,0 +1,1893 @@
+--- a/README.md
++++ b/README.md
+@@ -39,11 +39,11 @@
+ 
+ ## 3. Akun Pengguna Uji & Matriks Wewenang Role (RBAC)
+ 
+-Sistem menyediakan 6 akun pengguna pengujian bawaan sesuai tabel peran tugas:
++Enam peran pada tabel tugas tersedia bersama peran tambahan Head Admin:
+ 
+ | No | Role | Nama Pengguna | Email Login | Password Default | Tanggung Jawab & Hak Akses |
+ | :-: | :--- | :--- | :--- | :--- | :--- |
+-| 1 | **OWNER** | Maya Prasetyo | `owner@rasaaruna.com` | `Password123!` | Akses penuh (*Full Access*) ke seluruh 8 aplikasi, approval diskon > 10%, otorisasi Reset Seed. |
++| 1 | **OWNER** | Maya Prasetyo | `owner@rasaaruna.com` | `Password123!` | Delapan pintasan untuk pemantauan dan persetujuan diskon di atas 10%. Administrasi pengguna dan master dikelola Head Admin. |
+ | 2 | **SALES** | Dini Anggraini | `sales@rasaaruna.com` | `Password123!` | Manajemen CRM Leads, Kontak Pelanggan, Pembuatan Quotation, Konfirmasi SO (diskon maks 10%). |
+ | 3 | **WAREHOUSE** | Sinta Maharani | `warehouse@rasaaruna.com` | `Password123!` | Master Produk, Surat Jalan (Delivery Order), Penerimaan Barang (Goods Receipt), Internal Transfer. |
+ | 4 | **PROCUREMENT** | Arief Wicaksono | `procurement@rasaaruna.com` | `Password123!` | Permintaan Penawaran (RFQ), Konfirmasi Purchase Order (PO), monitoring penerimaan barang. |
+@@ -110,7 +110,9 @@
+ python3 scripts/verify_isolated.py --suites test_crud test_pdf_cases test_integrity --audit-probes --build
+ ```
+ 
+-T01–T32 dimulai dari baseline baru per kasus pada suite `test_pdf_cases`. Ini membuktikan perilaku layanan/API, bukan sertifikasi seluruh tampilan browser atau hosting publik. Bukti terbaru dan batas verifikasi tercantum di [laporan implementasi](docs/implementation-2026-11-06/IMPLEMENTATION.md).
++T01–T32 dimulai dari baseline baru per kasus pada suite `test_pdf_cases`. Ini membuktikan perilaku layanan/API, bukan sertifikasi seluruh tampilan browser atau hosting publik. Bukti terbaru dan batas verifikasi tercantum di [laporan implementasi](docs/stabilisasi-2026-11-19/Laporan.md).
++
++Integrasi yang mengirim pembayaran vendor ke `POST /api/accounting/payments` wajib menyertakan header `Idempotency-Key`. Gunakan satu ID baru per pembayaran yang disetujui. Saat respons belum diterima, ulangi dengan ID dan isi permintaan yang sama. Form Finance mengelola ID ini dalam tab pengguna.
+ 
+ Master pelanggan, vendor, produk, kategori, satuan, lokasi, akun, harga vendor, dan lead tersedia pada menu **Master Data**. Record yang sudah dipakai transaksi diarsipkan; hapus permanen tersedia hanya untuk record yang belum digunakan. Dokumen draft dapat diedit/dibatalkan. Koreksi transaksi yang sudah diposting menggunakan reversal, retur/credit note, atau refund POS dengan alasan dan audit.
+ 
+@@ -220,4 +222,4 @@
+ 
+ ### Promosi loyalitas POS (SR-20)
+ 
+-Owner dapat membuat akun loyalitas untuk pelanggan yang terdaftar dan kupon nominal sekali pakai melalui bagian **Promosi & loyalitas** di POS. Kasir dapat memilih akun dan/atau kupon saat pembayaran. Setiap Rp10.000 subtotal setelah diskon menghasilkan satu poin; pajak PBJT dihitung ulang per baris setelah diskon. Diskon dialokasikan ke baris sesuai urutan keranjang dan tidak boleh melebihi subtotal. Refund penuh membatalkan poin yang diperoleh; kupon tetap terpakai. Pembayaran tanpa promosi tetap menggunakan alur POS dasar. Tes tambahan tersedia di `scripts/test_loyalty.ts`.
++Head Admin dapat membuat akun loyalitas untuk pelanggan yang terdaftar dan kupon nominal sekali pakai melalui bagian **Promosi & loyalitas** di POS. Kasir dapat memilih akun dan/atau kupon saat pembayaran. Setiap Rp10.000 subtotal setelah diskon menghasilkan satu poin; pajak PBJT dihitung ulang per baris setelah diskon. Diskon dialokasikan ke baris sesuai urutan keranjang dan tidak boleh melebihi subtotal. Refund penuh membatalkan poin yang diperoleh; kupon tetap terpakai. Pembayaran tanpa promosi tetap menggunakan alur POS dasar. Tes tambahan tersedia di `scripts/test_loyalty.ts`.
+--- a/package.json
++++ b/package.json
+@@ -11,7 +11,7 @@
+     "db:seed": "tsx scripts/seed.ts",
+     "db:migrate": "python3 scripts/migrate_preserving_data.py --apply && python3 scripts/migrate_loyalty.py --apply && python3 scripts/migrate_advanced.py --apply",
+     "db:migrate:check": "python3 scripts/migrate_preserving_data.py && python3 scripts/migrate_loyalty.py && python3 scripts/migrate_advanced.py",
+-    "test": "python3 scripts/verify_isolated.py --suites test_advanced_fnb test_agent test_expo_improvements test_phase2_3 test_phase4 test_phase5 test_phase6 test_phase7 test_phase8 test_loyalty test_charts test_crud test_pdf_cases test_integrity --audit-probes",
++    "test": "python3 scripts/verify_isolated.py --suites test_advanced_fnb test_agent test_expo_improvements test_phase2_3 test_phase4 test_phase5 test_phase6 test_phase7 test_phase8 test_loyalty test_charts test_crud test_pdf_cases test_integrity test_role_access test_invoice_choices test_invoice_pdf test_ux_status test_ux_flows test_chatbot test_chatbot_website_data",
+     "test:roles": "node --import tsx scripts/test_role_access.ts",
+     "test:chatbot-data": "node --import tsx scripts/test_chatbot_website_data.ts",
+     "test:ux-flows": "node --import tsx scripts/test_ux_flows.ts"
+--- a/src/app/accounting/journal-entries/page.tsx
++++ b/src/app/accounting/journal-entries/page.tsx
+@@ -56,7 +56,8 @@
+     setLoading(true);
+     setAccessDeniedMessage(null);
+     try {
+-      const res = await fetch("/api/accounting/journal-entries");
++      const account = new URLSearchParams(window.location.search).get("account");
++      const res = await fetch("/api/accounting/journal-entries" + (account ? "?account=" + encodeURIComponent(account) : ""));
+       if (res.status === 403) {
+         const err = await res.json();
+         setAccessDeniedMessage(err.error || "Akses Ditolak: Hanya Finance dan Owner yang berwenang membuka General Ledger (SR-15).");
+--- a/src/app/accounting/payments/page.tsx
++++ b/src/app/accounting/payments/page.tsx
+@@ -235,7 +235,7 @@
+     >
+       <section className="surface-card p-5 space-y-3"><h2 className="font-semibold">Koreksi pembayaran</h2><p className="text-sm text-slate-500">Pembayaran yang salah dikoreksi dengan reversal; riwayat asli tetap tersimpan.</p>{payments.filter(p=>!p.reversedAt).map(payment=><div key={payment.id} className="flex flex-wrap justify-between gap-3 border rounded-xl p-3 text-sm"><span>{payment.paymentNumber} · {payment.customer?.name||payment.vendor?.name} · Rp{payment.amount.toLocaleString('id-ID')}</span><FinancialCorrection kind="payments" record={payment} onChanged={fetchPaymentsAndInvoices}/></div>)}</section>
+ 
+-      <VendorPaymentForm onPaid={fetchPaymentsAndInvoices}/>
++      {currentUser && <VendorPaymentForm key={JSON.stringify([currentUser.companyId, currentUser.id])} identity={JSON.stringify([currentUser.companyId, currentUser.id])} onPaid={fetchPaymentsAndInvoices}/>}
+ 
+       <div className="space-y-6">
+         {/* Module Header & Sub-Nav */}
+--- a/src/app/accounting/reports/page.tsx
++++ b/src/app/accounting/reports/page.tsx
+@@ -1,6 +1,7 @@
+ 'use client';
+ import React,{useEffect,useState} from 'react';
+ import Link from 'next/link';
++import InventoryReconciliation from '@/components/InventoryReconciliation';
+ import AppLayout from '@/components/AppLayout';
+ import {businessDate} from '@/lib/businessDate';
+ export default function ReportsPage(){
+@@ -15,10 +16,11 @@
+       <p className="text-sm text-slate-600">Laba/rugi {data.periodReport?.period.start} – {data.periodReport?.period.end} · jurnal posted · tanpa PBJT</p>
+       <div className="grid sm:grid-cols-4 gap-4">{[['Pendapatan',(data.periodReport||data.profitAndLoss).revenue],['Retur penjualan',(data.periodReport||data.profitAndLoss).returns],['Beban & HPP',(data.periodReport||data.profitAndLoss).expenses],['Laba / rugi',(data.periodReport||data.profitAndLoss).profit]].map(([label,value])=><div className="surface-card p-5" key={String(label)}><p className="text-sm text-slate-500">{label}</p><strong className="text-lg">{rupiah(Number(value))}</strong></div>)}</div>
+       {(!data.reconciliation.generalLedger.isBalanced||!data.reconciliation.subledgerMatching.arIsMatched||!data.reconciliation.subledgerMatching.apIsMatched||data.reconciliation.inventoryReconciliation.status!=='BALANCED'||data.trialBalance.some((a:any)=>!a.matched))&&<p role="alert" className="bg-amber-50 text-amber-900 p-4 rounded-xl">Terdapat perbedaan rekonsiliasi sumber. Periksa dokumen dan jurnal; sistem tidak membuat jurnal penyeimbang otomatis.</p>}
++      <InventoryReconciliation inventory={data.reconciliation.inventoryReconciliation} />
+       <section className="surface-card overflow-x-auto"><h2 className="font-semibold text-lg p-5">Neraca saldo · semua jurnal posted</h2><table className="w-full text-sm text-left"><thead><tr>{['Akun','Debit kumulatif','Kredit kumulatif','Saldo normal','Kesesuaian saldo'].map(h=><th scope="col" key={h} className="p-3">{h}</th>)}</tr></thead><tbody>{data.trialBalance.map((a:any)=><tr key={a.code} className="border-t"><td className="p-3">{a.code} · {a.name}</td><td className="p-3">{rupiah(a.debit)}</td><td className="p-3">{rupiah(a.credit)}</td><td className="p-3">{rupiah(a.balance)}</td><td className="p-3">{a.matched?'Sesuai':'Perlu diperiksa'}</td></tr>)}</tbody><tfoot><tr className="border-t font-semibold"><td className="p-3">Total</td><td className="p-3">{rupiah(data.trialBalance.reduce((n:number,a:any)=>n+a.debit,0))}</td><td className="p-3">{rupiah(data.trialBalance.reduce((n:number,a:any)=>n+a.credit,0))}</td><td colSpan={2}/></tr></tfoot></table></section>
+       {data.statements&&<>
+       <section className="surface-card p-5 space-y-4"><h2 className="text-lg font-semibold">Neraca per {data.statements.balanceSheet.asOf}</h2><p className="text-xs text-slate-600">Seluruh jurnal terposting sampai tanggal akhir, termasuk saldo pembukaan. Laba berjalan dimasukkan ke ekuitas.</p><div className="grid md:grid-cols-3 gap-4">{[['Aset','assets'],['Liabilitas','liabilities'],['Ekuitas','equity']].map(([label,key])=><div key={key}><h3 className="font-semibold mb-2">{label}</h3>{data.statements.balanceSheet[key].map((a:any)=><div key={a.code} className="flex justify-between gap-3 py-2 border-b text-sm"><span>{a.code} · {a.name}</span><span>{rupiah(a.balance)}</span></div>)}{key==='equity'&&<p className="text-sm mt-2">Laba berjalan: {rupiah(data.statements.balanceSheet.retainedEarnings)}</p>}</div>)}</div><p className="text-sm font-semibold">Aset {rupiah(data.statements.balanceSheet.totalAssets)} = Liabilitas {rupiah(data.statements.balanceSheet.totalLiabilities)} + Ekuitas {rupiah(data.statements.balanceSheet.totalEquity)}</p>{Math.abs(data.statements.balanceSheet.difference)>.01&&<p role="alert" className="text-rose-800">Neraca tidak seimbang: {rupiah(data.statements.balanceSheet.difference)}. Periksa jurnal sumber.</p>}</section>
+-      <section className="surface-card p-5 space-y-4"><h2 className="text-lg font-semibold">Arus kas · {data.statements.period.start} – {data.statements.period.end}</h2><p className="text-xs text-slate-600">{data.statements.cashFlow.note}</p><div className="grid sm:grid-cols-3 gap-3">{[['Kas awal',data.statements.cashFlow.opening],['Saldo migrasi dalam periode',data.statements.cashFlow.openingAdjustments],['Arus kas bersih',data.statements.cashFlow.net],['Kas akhir',data.statements.cashFlow.closing]].map(([label,n])=><div key={String(label)} className="rounded-xl bg-slate-50 p-3"><p className="text-xs text-slate-500">{label}</p><strong>{rupiah(Number(n))}</strong></div>)}</div><div className="grid sm:grid-cols-4 gap-3">{data.statements.cashFlow.groups.map((g:any)=><div key={g.category}><p className="text-sm">{({OPERATING:'Operasi',INVESTING:'Investasi',FINANCING:'Pendanaan',REVIEW:'Perlu ditinjau'} as Record<string,string>)[g.category]||g.category}</p><strong>{rupiah(g.net)}</strong></div>)}</div><details><summary className="cursor-pointer text-sm font-semibold">Telusuri jurnal arus kas</summary><div className="space-y-2 mt-3">{data.statements.cashFlow.flows.map((f:any)=><div key={f.number} className="flex justify-between gap-3 border-b py-2 text-sm"><span>{f.number} · {f.source} · {f.category}</span><span>{rupiah(f.amount)}</span></div>)}</div></details>{Math.abs(data.statements.cashFlow.difference)>.01&&<p role="alert" className="text-rose-800">Perubahan kas belum sesuai saldo awal dan akhir.</p>}</section>
++      <section className="surface-card p-5 space-y-4"><h2 className="text-lg font-semibold">Arus kas · {data.statements.period.start} – {data.statements.period.end}</h2><p className="text-xs text-slate-600">{data.statements.cashFlow.note}</p><div className="grid sm:grid-cols-3 gap-3">{[['Kas awal',data.statements.cashFlow.opening],['Saldo migrasi dalam periode',data.statements.cashFlow.openingAdjustments],['Arus kas bersih',data.statements.cashFlow.net],['Kas akhir',data.statements.cashFlow.closing]].map(([label,n])=><div key={String(label)} className="rounded-xl bg-slate-50 p-3"><p className="text-xs text-slate-500">{label}</p><strong>{rupiah(Number(n))}</strong></div>)}</div><div className="grid sm:grid-cols-4 gap-3">{data.statements.cashFlow.groups.map((g:any)=><div key={g.category}><p className="text-sm">{({OPERATING:'Operasi',INVESTING:'Investasi',FINANCING:'Pendanaan',REVIEW:'Perlu ditinjau'} as Record<string,string>)[g.category]||g.category}</p><strong>{rupiah(g.net)}</strong></div>)}</div><details><summary className="cursor-pointer text-sm font-semibold">Telusuri jurnal arus kas</summary><div className="space-y-2 mt-3">{data.statements.cashFlow.flows.map((f:any)=><div key={f.number} className="flex justify-between gap-3 border-b py-2 text-sm"><Link className="text-indigo-700 underline" href={`/accounting/journal-entries?id=${f.id}`}>{f.number} · {f.source} · {f.category}</Link><span>{rupiah(f.amount)}</span></div>)}</div></details>{Math.abs(data.statements.cashFlow.difference)>.01&&<p role="alert" className="text-rose-800">Perubahan kas belum sesuai saldo awal dan akhir.</p>}</section>
+       </>}
+       <div className="grid lg:grid-cols-2 gap-5">{[['Piutang pelanggan',data.receivables,'/sales/contacts'],['Utang vendor',data.payables,'/sales/contacts']].map(([title,rows,url])=><section key={String(title)} className="surface-card p-5"><h2 className="font-semibold text-lg mb-3">{String(title)}</h2><table className="w-full text-sm text-left"><thead><tr><th scope="col" className="p-2">Mitra</th><th scope="col" className="p-2">Saldo</th></tr></thead><tbody>{(rows as any[]).map(r=><tr className="border-t" key={r.id}><td className="p-2"><Link className="text-blue-700 underline" href={String(url)}>{r.name}</Link></td><td className="p-2">{rupiah(r.openReceivable??r.outstanding)}</td></tr>)}</tbody></table></section>)}</div>
+     </>}
+--- a/src/app/api/accounting/general-ledger/route.ts
++++ b/src/app/api/accounting/general-ledger/route.ts
+@@ -20,7 +20,7 @@
+     }
+ 
+     // SR-15 & T-02: Access restricted to FINANCE and OWNER only
+-    if (user.role !== Role.FINANCE && user.role !== Role.HEAD_ADMIN) {
++    if (user.role !== Role.OWNER && user.role !== Role.FINANCE && user.role !== Role.HEAD_ADMIN) {
+       await recordAuditLog({
+         actorId: user.id,
+         actorName: user.name,
+--- a/src/app/api/accounting/journal-entries/route.ts
++++ b/src/app/api/accounting/journal-entries/route.ts
+@@ -13,7 +13,7 @@
+     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+ 
+     // SR-15: General Ledger and Journal Entries restricted to FINANCE and OWNER
+-    if (user.role !== Role.FINANCE && user.role !== Role.HEAD_ADMIN) {
++    if (user.role !== Role.OWNER && user.role !== Role.FINANCE && user.role !== Role.HEAD_ADMIN) {
+       return NextResponse.json(
+         { error: "Akses Ditolak (SR-15): Akses Journal Entries dibatasi khusus untuk Finance dan Owner." },
+         { status: 403 }
+@@ -27,6 +27,8 @@
+     const where: Record<string, unknown> = {};
+     if (sourceDocument) where.sourceDocument = sourceDocument;
+     if (journalType) where.journalType = journalType;
++    const account = searchParams.get("account");
++    if (account) where.items = { some: { accountCode: account } };
+ 
+     const entries = await prisma.journalEntry.findMany({
+       where,
+--- a/src/app/api/accounting/payments/route.ts
++++ b/src/app/api/accounting/payments/route.ts
+@@ -1,3 +1,4 @@
++import { apiFailure } from '@/lib/apiResult';
+ import { idempotent } from "@/lib/atomic";
+ import { authorizeApi } from "@/lib/apiAuthorization";
+ import { NextRequest, NextResponse } from "next/server";
+@@ -41,15 +42,16 @@
+     const body = await request.json();
+     const { invoiceId, billId, paymentMethod = 'BANK', amount, paymentDate, notes } = body;
+     if ((!invoiceId && !billId) || (invoiceId && billId)) return NextResponse.json({ error: 'Pilih tepat satu invoice atau vendor bill.' }, { status: 400 });
++    const key = request.headers.get('idempotency-key')?.trim() || undefined;
++    if (billId && !key) return NextResponse.json({error:'Idempotency-Key wajib untuk pembayaran vendor.'},{status:400});
+     const date = paymentDate ? new Date(paymentDate) : undefined;
+     if (date && !Number.isFinite(date.getTime())) return NextResponse.json({ error: 'Tanggal pembayaran tidak valid.' }, { status: 400 });
+-    const result = await idempotent<Awaited<ReturnType<typeof registerCustomerPayment>> | Awaited<ReturnType<typeof registerVendorPayment>>>(user, 'REGISTER_PAYMENT', request.headers.get('idempotency-key') || undefined, body, () => billId
++    const result = await idempotent<Awaited<ReturnType<typeof registerCustomerPayment>> | Awaited<ReturnType<typeof registerVendorPayment>>>(user, 'REGISTER_PAYMENT', key, body, () => billId
+       ? registerVendorPayment({ billId, paymentMethod, amount, paymentDate: date, notes, actor: user })
+       : registerCustomerPayment({ invoiceId, paymentMethod, amount, paymentDate: date, notes, actor: user }));
+ 
+     return NextResponse.json({ success: true, ...result });
+   } catch (error: unknown) {
+-    const msg = error instanceof Error ? error.message : String(error);
+-    return NextResponse.json({ error: msg }, { status: 400 });
++    return apiFailure(error);
+   }
+ }
+--- a/src/app/api/accounting/reports/route.ts
++++ b/src/app/api/accounting/reports/route.ts
+@@ -7,7 +7,7 @@
+ import { financialSummary } from '@/lib/financialSummary';
+ import { getFinancialReconciliation } from '@/lib/dashboardEngine';
+ export async function GET(request:NextRequest){return withUser(request,async user=>{
+-  permit(user,['HEAD_ADMIN','FINANCE']);
++  permit(user,['OWNER','HEAD_ADMIN','FINANCE']);
+   const accounts=await prisma.account.findMany({include:{journalItems:{where:{journalEntry:{state:'POSTED'}}}},orderBy:{code:'asc'}});
+   const trialBalance=accounts.map(a=>{const debit=a.journalItems.reduce((n,l)=>n+l.debit,0),credit=a.journalItems.reduce((n,l)=>n+l.credit,0);const normal=['ASSET','EXPENSE','CONTRA_INCOME'].includes(a.type)?debit-credit:credit-debit;return {code:a.code,name:a.name,type:a.type,debit,credit,balance:normal,cachedBalance:a.currentBalance,matched:normal===a.currentBalance};});
+   const revenue=trialBalance.filter(a=>a.type==='INCOME').reduce((n,a)=>n+a.balance,0),returns=trialBalance.filter(a=>a.type==='CONTRA_INCOME').reduce((n,a)=>n+a.balance,0),expenses=trialBalance.filter(a=>a.type==='EXPENSE').reduce((n,a)=>n+a.balance,0);
+--- a/src/app/api/crm/leads/[id]/route.ts
++++ b/src/app/api/crm/leads/[id]/route.ts
+@@ -4,6 +4,6 @@
+ import { prisma } from '@/lib/prisma';
+ import { changeMaster } from '@/lib/masterData';
+ type Context={params:Promise<{id:string}>};
+-export const GET=(request:NextRequest,{params}:Context)=>withUser(request,async user=>{permit(user,['HEAD_ADMIN','SALES']);const lead=await prisma.crmLead.findUnique({where:{id:(await params).id},include:{contact:true,salesOrders:true}});if(!lead)throw new BusinessError('Lead tidak ditemukan.',404);return {success:true,lead};});
++export const GET=(request:NextRequest,{params}:Context)=>withUser(request,async user=>{permit(user,['OWNER','HEAD_ADMIN','SALES']);const lead=await prisma.crmLead.findUnique({where:{id:(await params).id},include:{contact:true,salesOrders:true}});if(!lead)throw new BusinessError('Lead tidak ditemukan.',404);return {success:true,lead};});
+ export const PATCH=(request:NextRequest,{params}:Context)=>withUser(request,async user=>({success:true,lead:await changeMaster('leads',(await params).id,await request.json(),user)}));
+ export const DELETE=(request:NextRequest,{params}:Context)=>withUser(request,async user=>({success:true,...await changeMaster('leads',(await params).id,{version:Number(request.nextUrl.searchParams.get('version')??NaN)},user,true)}));
+--- a/src/app/api/crm/leads/route.ts
++++ b/src/app/api/crm/leads/route.ts
+@@ -4,5 +4,5 @@
+ import { prisma } from '@/lib/prisma';
+ import { createMaster } from '@/lib/masterData';
+ import { idempotent } from '@/lib/atomic';
+-export const GET=(request:NextRequest)=>withUser(request,async user=>{permit(user,['HEAD_ADMIN','SALES']);return {success:true,leads:await prisma.crmLead.findMany({where:{archivedAt:null},include:{contact:true},orderBy:{id:'asc'}})};});
++export const GET=(request:NextRequest)=>withUser(request,async user=>{permit(user,['OWNER','HEAD_ADMIN','SALES']);return {success:true,leads:await prisma.crmLead.findMany({where:{archivedAt:null},include:{contact:true},orderBy:{id:'asc'}})};});
+ export const POST=(request:NextRequest)=>withUser(request,async user=>{permit(user,['HEAD_ADMIN','SALES']);const body=await request.json();return {success:true,lead:await idempotent(user,'CREATE_CRM_LEAD',request.headers.get('idempotency-key')||undefined,body,()=>createMaster('leads',body,user))};});
+--- a/src/app/api/inventory/movements/route.ts
++++ b/src/app/api/inventory/movements/route.ts
+@@ -2,4 +2,4 @@
+ import { withUser } from '@/lib/apiResult';
+ import { prisma } from '@/lib/prisma';
+ import { permit } from '@/lib/validation';
+-export async function GET(request:NextRequest){return withUser(request,async user=>{permit(user,['HEAD_ADMIN','WAREHOUSE','FINANCE','PROCUREMENT']);const q=request.nextUrl.searchParams,where:any={};if(q.get('sku'))where.productSku={contains:q.get('sku')};if(q.get('location'))where.OR=[{sourceLocation:q.get('location')},{destLocation:q.get('location')}];const page=Math.max(1,Number(q.get('page'))||1);const [movements,total]=await Promise.all([prisma.stockMove.findMany({where,orderBy:{date:'desc'},skip:(page-1)*25,take:25}),prisma.stockMove.count({where})]);return {success:true,movements,total,pages:Math.max(1,Math.ceil(total/25))};});}
++export async function GET(request:NextRequest){return withUser(request,async user=>{permit(user,['OWNER','HEAD_ADMIN','WAREHOUSE','FINANCE','PROCUREMENT']);const q=request.nextUrl.searchParams,where:any={};if(q.get('sku'))where.productSku={contains:q.get('sku')};if(q.get('location'))where.OR=[{sourceLocation:q.get('location')},{destLocation:q.get('location')}];const page=Math.max(1,Number(q.get('page'))||1);const [movements,total]=await Promise.all([prisma.stockMove.findMany({where,orderBy:{date:'desc'},skip:(page-1)*25,take:25}),prisma.stockMove.count({where})]);return {success:true,movements,total,pages:Math.max(1,Math.ceil(total/25))};});}
+--- a/src/app/api/pos/orders/route.ts
++++ b/src/app/api/pos/orders/route.ts
+@@ -14,7 +14,7 @@
+     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+ 
+     const orders = await prisma.posOrder.findMany({
+-      where: user.role === "HEAD_ADMIN" ? {} : { session: { cashierId: user.id } },
++      where: ["HEAD_ADMIN","OWNER"].includes(user.role) ? {} : { session: { cashierId: user.id } },
+       include: {
+         session: true,
+         lines: { include: { product: true } },
+--- a/src/app/api/pos/sessions/route.ts
++++ b/src/app/api/pos/sessions/route.ts
+@@ -14,7 +14,7 @@
+     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+ 
+     const sessions = await prisma.posSession.findMany({
+-      where: user.role === "HEAD_ADMIN" ? {} : { cashierId: user.id },
++      where: ["HEAD_ADMIN","OWNER"].includes(user.role) ? {} : { cashierId: user.id },
+       include: {
+         cashier: { select: { id: true, name: true, role: true } },
+         orders: { include: { lines: true } },
+--- a/src/app/api/sales/orders/[id]/approve-discount/route.ts
++++ b/src/app/api/sales/orders/[id]/approve-discount/route.ts
+@@ -15,7 +15,9 @@
+     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+ 
+     const { id } = await params;
+-    const updated = await approveOrderDiscount(id, user);
++    const raw = await request.text();
++    const version = raw.trim() ? JSON.parse(raw).version : undefined;
++    const updated = await approveOrderDiscount(id, user, version);
+ 
+     return NextResponse.json({ success: true, order: updated });
+   } catch (error: unknown) {
+--- a/src/app/crm/leads/page.tsx
++++ b/src/app/crm/leads/page.tsx
+@@ -154,7 +154,7 @@
+             <p className="text-sm font-bold text-[#1d4ed8]">Rp {totalPipeline.toLocaleString("id-ID")}</p>
+           </div>
+           <button
+-            onClick={() => setCreateModalOpen(true)}
++            hidden={user?.role === "OWNER"} onClick={() => setCreateModalOpen(true)}
+             className="inline-flex items-center space-x-1.5 px-3.5 py-2 btn-glass-primary text-white rounded-xl text-xs font-bold shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus-brand-ring"
+           >
+             <Plus className="w-3.5 h-3.5" />
+@@ -199,7 +199,7 @@
+                   stageLeads.map((lead) => (
+                     <div
+                       key={lead.id}
+-                      role="button" tabIndex={0} onClick={()=>setEditingLead(lead)} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();setEditingLead(lead);}}}
++                      role={user?.role === "OWNER" ? undefined : "button"} tabIndex={user?.role === "OWNER" ? undefined : 0} onClick={()=>user?.role !== "OWNER" && setEditingLead(lead)} onKeyDown={e=>{if(user?.role !== "OWNER" && (e.key==="Enter"||e.key===" ")){e.preventDefault();setEditingLead(lead);}}}
+                       className="glass-3 border border-white/80 hover:border-[#1d4ed8]/40 rounded-xl p-3.5 shadow-xs space-y-2.5 cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-1 hover:bg-white/95 focus-brand-ring"
+                     >
+                       <div className="flex items-center justify-between">
+@@ -232,7 +232,7 @@
+         })}
+       </div>
+ 
+-      <section className="surface-card p-4 space-y-4">
++      <section hidden={user?.role === "OWNER"} className="surface-card p-4 space-y-4">
+         <h2 className="font-semibold">Kelola peluang & penawaran</h2>
+         <div className="flex flex-wrap gap-3">
+           {leads.map(lead => (
+--- a/src/app/dashboard/page.tsx
++++ b/src/app/dashboard/page.tsx
+@@ -20,14 +20,14 @@
+       setMetrics(d.data);
+     } catch (e) { setError(e instanceof Error ? e.message : 'Gagal memuat ringkasan.'); }
+   }
+-  useEffect(() => { if (user && ['HEAD_ADMIN', 'FINANCE'].includes(user.role) && view === 'operations') void loadMetrics(); }, [user?.role, view]);
++  useEffect(() => { if (user && ['OWNER', 'HEAD_ADMIN', 'FINANCE'].includes(user.role) && view === 'operations') void loadMetrics(); }, [user?.role, view]);
+   const owner = user?.role === 'OWNER';
+   return <AppLayout currentUser={user} title={owner ? 'Laporan perusahaan' : 'Dashboard eksekutif'} subtitle={owner ? 'Lihat pendapatan, biaya, dan hasil usaha perusahaan Anda.' : 'Pilih laporan untuk melihat kondisi perusahaan dengan lebih mudah.'}>
+     {user && <>
+-      {!owner && <div className="flex flex-wrap gap-2" aria-label="Pilihan dashboard">{[['profit', 'Laba / rugi'], ['operations', 'Operasional hari ini'], ['sales', 'Analisis penjualan']].map(([key, label]) => <button key={key} aria-pressed={view === key} onClick={() => setView(key)} className={view === key ? 'btn-primary' : 'btn-secondary'}>{label}</button>)}</div>}
+-      {(owner || view === 'profit') && <ProfitDashboard />}
+-      {!owner && view === 'operations' && <>{error && <p role="alert" className="text-rose-800">{error}</p>}{metrics ? <OperationalMetricsChart metrics={metrics} /> : !error && <p role="status">Memuat grafik operasional…</p>}<button className="btn-secondary" onClick={() => void loadMetrics()}>Segarkan</button></>}
+-      {!owner && view === 'sales' && <DashboardCharts />}
++      {<div className="flex flex-wrap gap-2" aria-label="Pilihan dashboard">{[['profit', 'Laba / rugi'], ['operations', 'Operasional hari ini'], ['sales', 'Analisis penjualan']].map(([key, label]) => <button key={key} aria-pressed={view === key} onClick={() => setView(key)} className={view === key ? 'btn-primary' : 'btn-secondary'}>{label}</button>)}</div>}
++      {(view === 'profit') && <ProfitDashboard />}
++      {view === 'operations' && <>{error && <p role="alert" className="text-rose-800">{error}</p>}{metrics ? <OperationalMetricsChart metrics={metrics} role={user.role} /> : !error && <p role="status">Memuat grafik operasional…</p>}<button className="btn-secondary" onClick={() => void loadMetrics()}>Segarkan</button></>}
++      {view === 'sales' && <DashboardCharts />}
+     </>}
+   </AppLayout>;
+ }
+--- a/src/app/login/page.tsx
++++ b/src/app/login/page.tsx
+@@ -27,7 +27,7 @@
+     role: "OWNER",
+     name: "Maya Prasetyo",
+     email: "owner@rasaaruna.com",
+-    label: "Owner (Laporan laba/rugi)",
++    label: "Owner (Laporan & persetujuan diskon)",
+     color: "bg-emerald-50 text-emerald-800 border-emerald-200",
+   },
+   {
+@@ -95,9 +95,7 @@
+       }
+ 
+       // Redirect based on role or home
+-      if (data.user?.role === "OWNER") {
+-        router.push("/dashboard");
+-      } else if (data.user?.role === "CASHIER") {
++      if (data.user?.role === "CASHIER") {
+         router.push("/pos");
+       } else {
+         router.push("/");
+--- a/src/app/page.tsx
++++ b/src/app/page.tsx
+@@ -15,6 +15,7 @@
+ 
+ const destinations:Record<string,string>={sales:'/sales/orders',crm:'/crm/leads',purchase:'/purchase/orders',inventory:'/inventory/products',accounting:'/accounting/reports',invoicing:'/accounting/invoices',pos:'/pos',dashboard:'/dashboard'};
+ const workplaces:Record<string,{href:string;label:string;hint:string}>={
++  OWNER:{href:"/sales/orders",label:"Tinjau pesanan dan diskon",hint:"Periksa pesanan, setujui diskon, atau buka laporan perusahaan."},
+   HEAD_ADMIN:{href:'/dashboard',label:'Lihat ringkasan perusahaan',hint:'Pantau kondisi perusahaan atau mulai transaksi melalui pintasan di bawah.'},
+   FINANCE:{href:'/accounting/invoices',label:'Periksa tagihan pelanggan',hint:'Periksa tagihan, catat pembayaran, lalu pantau laporan keuangan.'},
+   SALES:{href:'/sales/orders',label:'Lihat pesanan penjualan',hint:'Mulai dari pelanggan dan pesanan. Tim gudang melanjutkan pengiriman.'},
+@@ -26,7 +27,7 @@
+   const router=useRouter();const {activeCompany}=useCompany();
+   const [user,setUser]=useState<any>(null);
+   const [modal,setModal]=useState('');
+-  useEffect(()=>{fetch('/api/auth/me').then(async r=>{if(!r.ok){router.replace('/login');return;}const d=await r.json();setUser(d.user);if(d.user?.role==='OWNER')router.replace('/dashboard');}).catch(()=>router.replace('/login'));},[router]);
++  useEffect(()=>{fetch('/api/auth/me').then(async r=>{if(!r.ok){router.replace('/login');return;}const d=await r.json();setUser(d.user);}).catch(()=>router.replace('/login'));},[router]);
+   const workspace=workplaces[user?.role]||{href:'/',label:'Beranda',hint:'Pilih tugas yang tersedia untuk akun Anda.'};
+   const actions=[
+     {key:'product',label:'Tambah produk',hint:'Daftarkan produk dan harga',roles:['HEAD_ADMIN','WAREHOUSE'],icon:Package},
+@@ -40,8 +41,8 @@
+       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"><div><h2 className="text-xl font-semibold">Selamat datang, {user?.name?.split(' ')[0]||'Pengguna'}.</h2><p className="text-sm text-slate-600 mt-2 max-w-2xl">{workspace.hint}</p></div><Link className="btn-primary self-start shrink-0" href={workspace.href}>{workspace.label}<ArrowRight className="w-4 h-4" aria-hidden="true"/></Link></div>
+       {actions.length>0&&<div><h3 className="text-sm font-semibold mb-3">Mulai pekerjaan</h3><div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-3">{actions.map(a=><button key={a.key} onClick={()=>setModal(a.key)} className="rounded-xl border border-slate-200 p-4 text-left hover:bg-indigo-50 hover:border-indigo-200 focus-visible:outline-indigo-600"><a.icon className="w-5 h-5 text-indigo-600 mb-3" aria-hidden="true"/><span className="block text-sm font-semibold">{a.label}</span><span className="block text-xs text-slate-500 mt-1">{a.hint}</span></button>)}</div></div>}
+     </section>
+-    {user&&<OperationalOverview identity={`${user.id}:${user.role}`}/>}
+-    <details className="surface-card p-5"><summary className="cursor-pointer font-semibold text-sm">Lihat semua modul yang tersedia</summary><p className="text-sm text-slate-500 mt-2">Modul juga dapat dibuka melalui menu samping atau pencarian halaman.</p><div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-4">{APPS_CATALOG.filter(a=>a.roles.includes(user?.role)).map(a=><Link key={a.key} href={destinations[a.key]} className="flex items-start gap-3 rounded-xl border border-slate-200 p-4 hover:bg-slate-50"><a.icon className="w-5 h-5 text-indigo-600 shrink-0"/><span><strong className="block text-sm">{a.name}</strong><span className="block mt-1 text-xs text-slate-500">{a.desc}</span></span></Link>)}</div></details>
++    {user && user.role !== 'OWNER' && <OperationalOverview identity={`${user.id}:${user.role}`}/>}
++    <details open={user?.role === "OWNER" || undefined} className="surface-card p-5"><summary className="cursor-pointer font-semibold text-sm">Lihat semua modul yang tersedia</summary><p className="text-sm text-slate-500 mt-2">Modul juga dapat dibuka melalui menu samping atau pencarian halaman.</p><div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-4">{APPS_CATALOG.filter(a=>a.roles.includes(user?.role)).map(a=><Link key={a.key} href={destinations[a.key]} className="flex items-start gap-3 rounded-xl border border-slate-200 p-4 hover:bg-slate-50"><a.icon className="w-5 h-5 text-indigo-600 shrink-0"/><span><strong className="block text-sm">{a.name}</strong><span className="block mt-1 text-xs text-slate-500">{a.desc}</span></span></Link>)}</div></details>
+     <CreateProductModal isOpen={modal==='product'} onClose={()=>setModal('')} onProductCreated={()=>saved('/master/products',null)}/>
+     <CreateContactModal isOpen={modal==='contact'} onClose={()=>setModal('')} defaultType={user?.role==='PROCUREMENT'?'VENDOR':'CUSTOMER'} onContactCreated={record=>saved('/sales/contacts?type='+(user?.role==='PROCUREMENT'?'vendors':'customers'),null)}/>
+     <CreateSalesOrderModal isOpen={modal==='sale'} onClose={()=>setModal('')} onOrderCreated={record=>saved('/sales/orders',record)}/>
+--- a/src/app/pos/page.tsx
++++ b/src/app/pos/page.tsx
+@@ -87,6 +87,7 @@
+       if (res.ok) {
+         const data = await res.json();
+         setCurrentUser(data.user);
++        if (['CASHIER', 'HEAD_ADMIN'].includes(data.user.role)) await loadPromotions();
+       }
+     } catch (e) {
+       console.error(e);
+@@ -130,7 +131,6 @@
+   useEffect(() => {
+     fetchSession();
+     fetchSessionsAndOrders();
+-    loadPromotions();
+   }, []);
+ 
+   const handleSwitchRole = async (targetRole: string) => {
+@@ -484,7 +484,8 @@
+       <div className="space-y-6">
+         {refreshError && <p role="alert" className="bg-rose-50 text-rose-800 p-3 rounded-xl text-sm">{refreshError}</p>}
+         {receipt&&<PosReceipt order={receipt} onClose={()=>setReceipt(null)} onRefunded={fetchSessionsAndOrders} canRefund={currentUser?.role==='HEAD_ADMIN'||(receipt.session?.cashierId===currentUser?.id&&receipt.session?.status==='OPEN')||(!receipt.session&&activeSession?.id===receipt.sessionId&&activeSession?.status==='OPEN')}/>}
+-      <details className="surface-card p-4 space-y-3"><summary className="cursor-pointer text-sm font-semibold">Riwayat transaksi & struk · {orders.length} transaksi</summary>{orders.length?<div className="overflow-x-auto"><table className="w-full text-sm text-left"><thead><tr><th scope="col" className="p-3">Nomor</th><th scope="col" className="p-3">Tanggal</th><th scope="col" className="p-3">Status</th><th scope="col" className="p-3">Total</th><th scope="col" className="p-3">Tindakan</th></tr></thead><tbody>{orders.map(order=><tr className="border-t" key={order.id}><td className="p-3">{order.orderNumber}</td><td className="p-3">{new Date(order.orderDate).toLocaleString('id-ID')}</td><td className="p-3"><StatusBadge status={order.status}/></td><td className="p-3">Rp{order.totalAmount.toLocaleString('id-ID')}</td><td className="p-3"><button className="text-blue-700 underline" onClick={()=>setReceipt(order)}>Lihat struk / refund</button></td></tr>)}</tbody></table></div>:<p className="text-sm text-slate-500">Belum ada transaksi.</p>}</details>
++      <details open={currentUser?.role === "OWNER" || undefined} className="surface-card p-4 space-y-3"><summary className="cursor-pointer text-sm font-semibold">Riwayat transaksi & struk · {orders.length} transaksi</summary>{orders.length?<div className="overflow-x-auto"><table className="w-full text-sm text-left"><thead><tr><th scope="col" className="p-3">Nomor</th><th scope="col" className="p-3">Tanggal</th><th scope="col" className="p-3">Status</th><th scope="col" className="p-3">Total</th><th scope="col" className="p-3">Tindakan</th></tr></thead><tbody>{orders.map(order=><tr className="border-t" key={order.id}><td className="p-3">{order.orderNumber}</td><td className="p-3">{new Date(order.orderDate).toLocaleString('id-ID')}</td><td className="p-3"><StatusBadge status={order.status}/></td><td className="p-3">Rp{order.totalAmount.toLocaleString('id-ID')}</td><td className="p-3"><button className="text-blue-700 underline" onClick={()=>setReceipt(order)}>{currentUser?.role === 'OWNER' ? 'Lihat struk' : 'Lihat struk / refund'}</button></td></tr>)}</tbody></table></div>:<p className="text-sm text-slate-500">Belum ada transaksi.</p>}</details>
++      {currentUser?.role !== "OWNER" && <>
+       {(closeSessionResult || activeSession?.status === "CLOSED") && <section className="surface-card p-5 space-y-3" aria-label="Ringkasan penutupan sesi">
+         <h2 className="text-lg font-semibold">Ringkasan sesi kasir {(closeSessionResult?.session || activeSession)?.sessionCode}</h2>
+         <p role="status" className="text-sm text-emerald-800">Sesi CLOSED. Transaksi dan pencatatan stok serta jurnal sudah tersimpan.</p>
+@@ -1167,6 +1168,7 @@
+             )}
+           </div>
+         </details>
++      </>}
+       </div>
+     </AppLayout>
+   );
+--- a/src/app/purchase/orders/page.tsx
++++ b/src/app/purchase/orders/page.tsx
+@@ -167,7 +167,7 @@
+       actions={
+         <div className="flex items-center space-x-2">
+           <button
+-            onClick={() => setCreateModalOpen(true)}
++            hidden={user?.role === "OWNER"} onClick={() => setCreateModalOpen(true)}
+             className="flex items-center space-x-1.5 px-3.5 py-2 text-xs font-bold btn-glass-primary rounded-xl shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus-brand-ring"
+           >
+             <Plus className="w-3.5 h-3.5" />
+--- a/src/app/sales/orders/page.tsx
++++ b/src/app/sales/orders/page.tsx
+@@ -209,7 +209,7 @@
+       actions={
+         <div className="flex items-center space-x-2">
+           <button
+-            onClick={() => setCreateModalOpen(true)}
++            hidden={user?.role === "OWNER"} onClick={() => setCreateModalOpen(true)}
+             className="flex items-center space-x-1.5 px-3.5 py-2 text-xs font-bold btn-glass-primary rounded-xl shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus-brand-ring"
+           >
+             <Plus className="w-3.5 h-3.5" />
+--- a/src/components/AppLayout.tsx
++++ b/src/components/AppLayout.tsx
+@@ -1,6 +1,6 @@
+ "use client";
+ 
+-import { usePathname, useRouter } from "next/navigation";
++import { usePathname } from "next/navigation";
+ import { NAVIGATION_GROUPS } from "./Sidebar";
+ import React, { useState, useEffect } from "react";
+ import Sidebar from "@/components/Sidebar";
+@@ -41,7 +41,6 @@
+   actions,
+ }: AppLayoutProps) {
+   const pathname = usePathname();
+-  const router = useRouter();
+   const [user, setUser] = useState(initialUser || null);
+   const [isCollapsed, setIsCollapsed] = useState(false);
+   useEffect(() => { try { setIsCollapsed(localStorage.getItem("erp-sidebar-collapsed") === "true"); } catch {} }, []);
+@@ -105,13 +104,12 @@
+   };
+ 
+   const pageAllowed = !!user && !pathname.startsWith('/operations') && (
+-    user.role === 'OWNER' ? pathname === '/dashboard' :
+     user.role === 'HEAD_ADMIN' || NAVIGATION_GROUPS.some(group => group.items.some(item =>
+       (pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href + '/'))) && item.roles.includes(user.role)))
+   );
+-  useEffect(() => { if (user?.role === 'OWNER' && pathname !== '/dashboard') router.replace('/dashboard'); }, [user?.role, pathname, router]);
++
+   if (!user) return <p role="status" className="p-8">Memuat akun…</p>;
+-  if (!pageAllowed) return <div className="p-8 space-y-4"><h1 className="text-xl font-semibold">Halaman tidak tersedia untuk akun ini</h1><a className="btn-primary" href={user.role === 'OWNER' ? '/dashboard' : '/'}>Kembali ke beranda</a></div>;
++  if (!pageAllowed) return <div className="p-8 space-y-4"><h1 className="text-xl font-semibold">Halaman tidak tersedia untuk akun ini</h1><a className="btn-primary" href="/">Kembali ke beranda</a></div>;
+ 
+   return (
+     <div className="app-shell min-h-screen flex">
+--- a/src/components/AppSwitcherModal.tsx
++++ b/src/components/AppSwitcherModal.tsx
+@@ -32,7 +32,7 @@
+     desc: "Buat penawaran pelanggan dan pantau pesanan penjualan",
+     icon: ShoppingCart,
+     color: "bg-blue-600/10 text-blue-600 border border-blue-600/20",
+-    roles: ["HEAD_ADMIN", "SALES"],
++    roles: ["OWNER", "HEAD_ADMIN", "SALES"],
+     destination: "Penawaran & Pesanan (SO)",
+   },
+   {
+@@ -41,7 +41,7 @@
+     desc: "Pantau calon pelanggan dan peluang penjualan",
+     icon: Users2,
+     color: "bg-blue-600/10 text-blue-600 border border-blue-600/20",
+-    roles: ["HEAD_ADMIN", "SALES"],
++    roles: ["OWNER", "HEAD_ADMIN", "SALES"],
+     destination: "Papan Prospek (Leads CRM)",
+   },
+   {
+@@ -50,7 +50,7 @@
+     desc: "Buat pesanan vendor dan pantau penerimaan barang",
+     icon: Truck,
+     color: "bg-blue-600/10 text-blue-600 border border-blue-600/20",
+-    roles: ["HEAD_ADMIN", "PROCUREMENT"],
++    roles: ["OWNER", "HEAD_ADMIN", "PROCUREMENT"],
+     destination: "Permintaan Penawaran (RFQ) & PO",
+   },
+   {
+@@ -59,7 +59,7 @@
+     desc: "Stok barang per lokasi, pengiriman, dan transfer gudang",
+     icon: Package,
+     color: "bg-blue-600/10 text-blue-600 border border-blue-600/20",
+-    roles: ["HEAD_ADMIN", "WAREHOUSE", "PROCUREMENT"],
++    roles: ["OWNER", "HEAD_ADMIN", "WAREHOUSE", "PROCUREMENT"],
+     destination: "Stok & Operasional",
+   },
+   {
+@@ -68,7 +68,7 @@
+     desc: "Laporan keuangan, jurnal, serta pencatatan biaya dan pendapatan",
+     icon: BookOpen,
+     color: "bg-blue-600/10 text-blue-600 border border-blue-600/20",
+-    roles: ["HEAD_ADMIN", "FINANCE"],
++    roles: ["OWNER", "HEAD_ADMIN", "FINANCE"],
+     destination: "Buku Besar & Jurnal",
+   },
+   {
+@@ -77,7 +77,7 @@
+     desc: "Buat tagihan pelanggan dari barang yang sudah dikirim",
+     icon: Receipt,
+     color: "bg-blue-600/10 text-blue-600 border border-blue-600/20",
+-    roles: ["HEAD_ADMIN", "FINANCE", "SALES"],
++    roles: ["OWNER", "HEAD_ADMIN", "FINANCE", "SALES"],
+     destination: "Faktur & Tagihan",
+   },
+   {
+@@ -86,7 +86,7 @@
+     desc: "Buka sesi kasir dan catat transaksi gerai",
+     icon: Store,
+     color: "bg-blue-600/10 text-blue-600 border border-blue-600/20",
+-    roles: ["HEAD_ADMIN", "CASHIER"],
++    roles: ["OWNER", "HEAD_ADMIN", "CASHIER"],
+     destination: "Sesi Kasir POS",
+   },
+   {
+--- a/src/components/DocumentControls.tsx
++++ b/src/components/DocumentControls.tsx
+@@ -15,7 +15,7 @@
+   const dirty=dialog==='edit'||dialog==='validate'?JSON.stringify(form)!==base.current:false;
+   useEffect(()=>{const warn=(e:BeforeUnloadEvent)=>{if(dirty){e.preventDefault();e.returnValue='';}};window.addEventListener('beforeunload',warn);return()=>window.removeEventListener('beforeunload',warn);},[dirty]);
+   if(!record)return null;
+-  if(!roles[kind]?.includes(role||''))return <div className="surface-card p-4"><DocumentGuidance kind={kind} record={record} role={role}/></div>;
++  if(!(kind==='sales' && role==='OWNER') && !roles[kind]?.includes(role||''))return <div className="surface-card p-4"><DocumentGuidance kind={kind} record={record} role={role}/></div>;
+   const open=(action:string)=>{
+     const next={contactId:record.contactId,vendorId:record.vendorId,scheduledDate:record.scheduledDate?businessDate(new Date(record.scheduledDate)):'',sourceLocation:record.sourceLocation||'WH-JKT',destLocation:record.destLocation||'WH-JKT',lines:record.lines?.map((l:any)=>({productSku:l.productSku,quantity:l.quantity,orderedQty:l.orderedQty,unitPrice:l.unitPrice,discountPercent:l.discountPercent??0})),items:record.lines?.map((l:any)=>({lineId:l.id,productSku:l.productSku,deliveredQty:l.orderedQty,acceptedQty:l.demandQty,rejectedQty:0,rejectionReason:''}))};
+     setForm(next);base.current=JSON.stringify(next);setError('');setDialog(action);
+@@ -24,14 +24,17 @@
+   const submit=async()=>{
+     if(pending.current)return;pending.current=true;setBusy(true);setError('');
+     try{
+-      const payload={action:dialog,version:record.version,...(dialog==='edit'?form:dialog==='validate'?{items:form.items}:dialog==='confirm'&&kind==='sales'?{sourceLocation:form.sourceLocation}:dialog==='confirm'&&kind==='purchase'?{destLocation:form.destLocation}:{})};const fingerprint=JSON.stringify(payload);if(!keys.current.has(fingerprint))keys.current.set(fingerprint,crypto.randomUUID());
+-      const response=await fetch(`/api/workflow/${kind}/${record.id}`,{method:'POST',headers:{'Content-Type':'application/json','Idempotency-Key':keys.current.get(fingerprint)!},body:JSON.stringify(payload)});const data=await response.json();if(!response.ok)throw new Error(data.error||'Operasi gagal.');setDialog('');publishDataRefresh();await onChanged();
++      const payload={action:dialog,version:record.version,...(dialog==='edit'?form:dialog==='validate'?{items:form.items}:dialog==='confirm'&&kind==='sales'?{sourceLocation:form.sourceLocation}:['confirm','prepare'].includes(dialog)&&kind==='purchase'?{destLocation:form.destLocation}:{})};const fingerprint=JSON.stringify(payload);if(!keys.current.has(fingerprint))keys.current.set(fingerprint,crypto.randomUUID());
++      const endpoint = dialog === "approve" ? `/api/sales/orders/${record.id}/approve-discount` : `/api/workflow/${kind}/${record.id}`;
++      const response=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json','Idempotency-Key':keys.current.get(fingerprint)!},body:JSON.stringify(payload)});const data=await response.json();if(!response.ok)throw new Error(data.error||'Operasi gagal.');setDialog('');publishDataRefresh();await onChanged();
+     }catch(e){setError(e instanceof Error?e.message:'Operasi gagal.');}finally{pending.current=false;setBusy(false);}
+   };
+   const field=(label:string,key:string,list:any[],idKey='id')=><label className="block text-sm space-y-1">{label}<select className="input-glass w-full px-3 py-2" value={form[key]||''} onChange={e=>setForm((f:any)=>({...f,[key]:e.target.value}))}>{list.map(o=><option key={o[idKey]} value={o[idKey]}>{o[idKey]} · {o.name}</option>)}</select></label>;
+-  const labels:Record<string,string>={edit:'Edit draft',confirm:'Konfirmasi',approve:'Setujui diskon',post:'Posting ke pembukuan',validate:kind==='deliveries'?'Validasi pengiriman':kind==='receipts'?'Validasi penerimaan':'Validasi transfer',cancel:'Batalkan'};
++  const labels:Record<string,string>={prepare:kind==='sales'?'Siapkan pengiriman':'Siapkan penerimaan',edit:'Edit draft',confirm:'Konfirmasi',approve:'Setujui diskon',post:'Posting ke pembukuan',validate:kind==='deliveries'?'Validasi pengiriman':kind==='receipts'?'Validasi penerimaan':'Validasi transfer',cancel:'Batalkan'};
+   const buttons:string[]=[];
+-  if(record.status==='DRAFT'){
++  if(role==='OWNER'){
++    if(kind==='sales' && record.status==='DRAFT' && record.discountPercent>10 && !record.discountApproved) buttons.push('approve');
++  } else if(record.status==='DRAFT'){
+     if(['sales','purchase','invoices','bills','transfers'].includes(kind))buttons.push('edit');
+     if(kind==='sales'&&record.discountPercent>10&&!record.discountApproved&&role==='HEAD_ADMIN')buttons.push('approve');
+     if(['sales','purchase'].includes(kind))buttons.push('confirm');
+@@ -39,6 +42,8 @@
+     if(['deliveries','receipts','transfers'].includes(kind))buttons.push('validate');
+     if(!['deliveries','receipts'].includes(kind))buttons.push('cancel');
+   } else if(record.status==='CONFIRMED'){
++    if ((kind==='sales' && record.deliveryOrders?.length===0 && record.lines.some((l:any)=>l.quantity>l.deliveredQty)) ||
++        (kind==='purchase' && record.receipts?.length===0 && record.lines.some((l:any)=>l.orderedQty>l.receivedQty))) buttons.push('prepare');
+     if(['sales','purchase'].includes(kind)&&canCancelDocument(kind,record))buttons.push('cancel');
+     if(['deliveries','receipts'].includes(kind))buttons.push('validate');
+   }
+@@ -46,7 +51,7 @@
+   return <><div className="surface-card p-4 flex flex-wrap items-center gap-3"><div className="flex-1 min-w-[200px]"><DocumentGuidance kind={kind} record={record} role={role}/></div>{buttons.map(action=>action==='edit'?<ActionButton key={action} action="edit" onClick={()=>open(action)}>Edit draft</ActionButton>:<button key={action} onClick={()=>open(action)} className={['confirm','post','validate','approve'].includes(action)?'btn-primary':'btn-secondary'}>{labels[action]}</button>)}</div>
+     {dialog&&<DialogFrame onClose={close} label={labels[dialog]}><div className="bg-white w-full max-w-4xl rounded-2xl p-6 max-h-[90dvh] overflow-y-auto space-y-5"><h2 className="text-xl font-bold">{labels[dialog]} · {record.orderNumber||record.poNumber||record.invoiceNumber||record.billNumber||record.deliveryNumber||record.receiptNumber||record.transferNumber}</h2>
+       {error&&<p role="alert" className="p-3 bg-rose-50 text-rose-800 rounded-xl text-sm">{error}</p>}
+-      {dialog==='confirm'&&['sales','purchase'].includes(kind)&&<div className="space-y-2">{field(kind==='sales'?'Gudang pemenuhan':'Gudang penerimaan',kind==='sales'?'sourceLocation':'destLocation',options.locations||[],'code')}<p className="text-sm text-slate-600">{kind==='sales'?'Seluruh baris pesanan akan direservasi dari lokasi ini. Stok tersedia diperiksa kembali saat konfirmasi.':'Penerimaan dibuat untuk lokasi ini dengan tanggal rencana pesanan.'}</p></div>}
++      {(dialog==='confirm'||(dialog==='prepare'&&kind==='purchase'))&&['sales','purchase'].includes(kind)&&<div className="space-y-2">{field(kind==='sales'?'Gudang pemenuhan':'Gudang penerimaan',kind==='sales'?'sourceLocation':'destLocation',options.locations||[],'code')}<p className="text-sm text-slate-600">{kind==='sales'?'Seluruh baris pesanan akan direservasi dari lokasi ini. Stok tersedia diperiksa kembali saat konfirmasi.':'Penerimaan dibuat untuk lokasi ini dengan tanggal rencana pesanan.'}</p></div>}
+       {dialog==='edit'&&<>
+         {kind==='sales'&&field('Pelanggan','contactId',options.customers||[])}{kind==='purchase'&&<div className="grid sm:grid-cols-2 gap-4">{field('Vendor','vendorId',options.vendors||[])}<label className="text-sm">Tanggal rencana<input aria-label="Tanggal rencana" type="date" value={form.scheduledDate} className="input-glass w-full px-3 py-2" onChange={e=>setForm((f:any)=>({...f,scheduledDate:e.target.value}))}/></label></div>}
+         {kind==='transfers'&&<div className="grid sm:grid-cols-2 gap-4">{field('Lokasi asal','sourceLocation',options.locations||[],'code')}{field('Lokasi tujuan','destLocation',options.locations||[],'code')}</div>}
+@@ -54,7 +59,7 @@
+         <button className="btn-secondary" onClick={()=>setForm((f:any)=>({...f,lines:[...f.lines,{productSku:'',quantity:1,orderedQty:1,unitPrice:0,discountPercent:0}]}))}>+ Tambah baris</button>
+       </>}
+       {dialog==='validate'&&kind!=='transfers'&&<div className="space-y-3"><p className="text-sm text-slate-600">{kind==='deliveries'?'Isi jumlah yang dikirim saat ini. Contoh: pesanan 8, dikirim 5, maka sisa 3 otomatis menjadi backorder. Stok dan jumlah yang dapat ditagih diperbarui setelah validasi.':'Isi jumlah diterima dan ditolak sesuai pemeriksaan. Hanya barang diterima yang masuk stok dan menjadi dasar tagihan vendor.'}</p>{form.items?.map((item:any,index:number)=><div key={item.lineId} className="border rounded-xl p-4"><p className="font-medium mb-3">{item.productSku} · Permintaan {record.lines[index].orderedQty??record.lines[index].demandQty}</p><div className="grid sm:grid-cols-3 gap-3">{(kind==='deliveries'?['deliveredQty']:['acceptedQty','rejectedQty']).map(key=><label key={key} className="text-sm">{key==='deliveredQty'?'Dikirim':key==='acceptedQty'?'Diterima':'Ditolak'}<input aria-label={`${key==='deliveredQty'?'Jumlah dikirim':key==='acceptedQty'?'Jumlah diterima':'Jumlah ditolak'} ${item.productSku}`} type="number" min={0} max={record.lines[index].orderedQty??record.lines[index].demandQty} step={1} value={item[key]??0} className="input-glass w-full p-2" onChange={e=>setForm((f:any)=>({...f,items:f.items.map((l:any,i:number)=>i===index?{...l,[key]:Number(e.target.value)}:l)}))}/></label>)}{kind==='deliveries'&&<p className="text-sm text-slate-600 self-end pb-2">Sisa backorder: {Math.max(0,record.lines[index].orderedQty-(item.deliveredQty||0))} unit</p>}{kind==='receipts'&&<label className="text-sm">Alasan penolakan<input value={item.rejectionReason||''} className="input-glass w-full p-2" onChange={e=>setForm((f:any)=>({...f,items:f.items.map((l:any,i:number)=>i===index?{...l,rejectionReason:e.target.value}:l)}))}/></label>}</div></div>)}</div>}
+-      {!['edit','validate'].includes(dialog)&&<p className="text-sm text-slate-600">{dialog==='cancel'?'Pembatalan menjaga riwayat dokumen. Order yang sudah dipenuhi atau diposting memerlukan alur retur/reversal.':dialog==='approve'?'Persetujuan Head Admin akan tercatat bersama identitas dan waktu.':'Status, stok, saldo, dan audit diperiksa serta disimpan sebagai satu transaksi. Harga dokumen yang dikonfirmasi/diposting akan dikunci.'}</p>}
++      {!['edit','validate'].includes(dialog)&&<p className="text-sm text-slate-600">{dialog==='prepare'?'Gudang akan menerima dokumen draft untuk sisa pesanan. Stok fisik dan saldo buku besar baru berubah saat validasi.':dialog==='cancel'?'Pembatalan menjaga riwayat dokumen. Order yang sudah dipenuhi atau diposting memerlukan alur retur/reversal.':dialog==='approve'?'Persetujuan Anda akan tercatat bersama identitas dan waktu.':'Status, stok, saldo, dan audit diperiksa serta disimpan sebagai satu transaksi. Harga dokumen yang dikonfirmasi/diposting akan dikunci.'}</p>}
+       <div className="flex justify-end gap-3 border-t pt-4"><button className="btn-secondary" disabled={busy} onClick={close}>Batal</button><button className="btn-primary" disabled={busy} onClick={submit}>{busy?'Memproses…':dialog==='edit'?'Simpan perubahan':labels[dialog]}</button></div>
+     </div></DialogFrame>}
+   </>;
+--- a/src/components/DocumentTrail.tsx
++++ b/src/components/DocumentTrail.tsx
+@@ -8,5 +8,5 @@
+   const load=async()=>{const r=await fetch(`/api/documents/${kind}/${record.id}`);const d=await r.json();if(!r.ok)throw new Error(d.error);setData(d);};
+   useEffect(()=>{load().catch(e=>setError(String(e)));},[kind,record.id,record.status,record.version]);
+   const save=async()=>{if(busy||!note.trim())return;setBusy(true);setError('');try{const r=await fetch(`/api/documents/${kind}/${record.id}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({note})});const d=await r.json();if(!r.ok)throw new Error(d.error);setNote('');await load();}catch(e){setError(e instanceof Error?e.message:'Catatan gagal disimpan.');}finally{setBusy(false);}};
+-  return <section className="surface-card p-5 space-y-4"><h2 className="font-semibold text-lg">Dokumen terkait & aktivitas</h2>{error&&<p role="alert" className="text-rose-700">{error}</p>}<div className="flex flex-wrap gap-2">{data.links.filter((l:any)=>NAVIGATION_GROUPS.some(g=>g.items.some(i=>i.href===l.href.split('?')[0]&&i.roles.includes(role||'')))).map((l:any)=><Link key={l.href+l.label} className="btn-secondary text-sm" href={l.href}>{l.label}</Link>)}</div>{data.creditNotes.map((n:any)=><p key={n.number} className="text-sm text-violet-800">Nota kredit {n.number} · Rp{n.total.toLocaleString('id-ID')}</p>)}<label className="block text-sm">Catatan dokumen<textarea rows={2} maxLength={2000} disabled={busy} value={note} onChange={e=>setNote(e.target.value)} className="input-glass w-full p-3 mt-1" placeholder="Tambahkan catatan pada dokumen ini…"/></label><button className="btn-secondary" disabled={busy||!note.trim()} onClick={save}>{busy?'Menyimpan…':'Simpan catatan'}</button><details><summary className="cursor-pointer font-medium text-sm">Riwayat aktivitas ({data.activity.length})</summary><ol className="space-y-3 pt-4">{data.activity.map((log:any)=><li key={log.id} className="border-l-2 border-indigo-200 pl-3 text-sm"><strong>{log.actorName}</strong> · {log.actorRole} · {log.action}<p className="text-slate-500">{new Date(log.timestamp).toLocaleString('id-ID')}</p>{log.notes&&<p>{log.notes}</p>}{(log.beforeState||log.afterState)&&<details className="mt-1"><summary className="cursor-pointer text-blue-700">Perubahan sebelum / sesudah</summary><div className="grid sm:grid-cols-2 gap-2 mt-2">{[log.beforeState,log.afterState].map((state,index)=><pre key={index} className="text-xs bg-slate-50 p-3 overflow-auto max-h-48">{state?displayState(state):'—'}</pre>)}</div></details>}</li>)}</ol></details></section>;
++  return <section className="surface-card p-5 space-y-4"><h2 className="font-semibold text-lg">Dokumen terkait & aktivitas</h2>{error&&<p role="alert" className="text-rose-700">{error}</p>}<div className="flex flex-wrap gap-2">{data.links.filter((l:any)=>NAVIGATION_GROUPS.some(g=>g.items.some(i=>i.href===l.href.split('?')[0]&&i.roles.includes(role||'')))).map((l:any)=><Link key={l.href+l.label} className="btn-secondary text-sm" href={l.href}>{l.label}</Link>)}</div>{data.creditNotes.map((n:any)=><p key={n.number} className="text-sm text-violet-800">Nota kredit {n.number} · Rp{n.total.toLocaleString('id-ID')}</p>)}{role !== 'OWNER' && <><label className="block text-sm">Catatan dokumen<textarea rows={2} maxLength={2000} disabled={busy} value={note} onChange={e=>setNote(e.target.value)} className="input-glass w-full p-3 mt-1" placeholder="Tambahkan catatan pada dokumen ini…"/></label><button className="btn-secondary" disabled={busy||!note.trim()} onClick={save}>{busy?'Menyimpan…':'Simpan catatan'}</button></>}<details><summary className="cursor-pointer font-medium text-sm">Riwayat aktivitas ({data.activity.length})</summary><ol className="space-y-3 pt-4">{data.activity.map((log:any)=><li key={log.id} className="border-l-2 border-indigo-200 pl-3 text-sm"><strong>{log.actorName}</strong> · {log.actorRole} · {log.action}<p className="text-slate-500">{new Date(log.timestamp).toLocaleString('id-ID')}</p>{log.notes&&<p>{log.notes}</p>}{(log.beforeState||log.afterState)&&<details className="mt-1"><summary className="cursor-pointer text-blue-700">Perubahan sebelum / sesudah</summary><div className="grid sm:grid-cols-2 gap-2 mt-2">{[log.beforeState,log.afterState].map((state,index)=><pre key={index} className="text-xs bg-slate-50 p-3 overflow-auto max-h-48">{state?displayState(state):'—'}</pre>)}</div></details>}</li>)}</ol></details></section>;
+ }
+--- /dev/null
++++ b/src/components/InventoryReconciliation.tsx
+@@ -0,0 +1,44 @@
++'use client';
++import { useState } from 'react';
++import Link from 'next/link';
++import type { FinancialReconciliation } from '@/lib/dashboardEngine';
++
++type Inventory = FinancialReconciliation['inventoryReconciliation'];
++const currency = new Intl.NumberFormat('id-ID', {style:'currency', currency:'IDR', maximumFractionDigits:0});
++
++export default function InventoryReconciliation({inventory}: {inventory:Inventory}) {
++  const [simulation, setSimulation] = useState<Inventory | null>(null);
++  const [busy, setBusy] = useState(false);
++  const [error, setError] = useState('');
++  async function simulate() {
++    setBusy(true);
++    setError('');
++    try {
++      const response = await fetch('/api/dashboard/reconciliation?simulatedDiff=1', {cache:'no-store'});
++      if (!response.ok) throw new Error();
++      const result = await response.json();
++      setSimulation(result.data.inventoryReconciliation);
++    } catch {
++      setError('Simulasi gagal dimuat. Silakan coba kembali.');
++    } finally {
++      setBusy(false);
++    }
++  }
++  return <section id="inventory" className="surface-card p-5 space-y-3">
++    <h2 className="text-lg font-semibold">Rekonsiliasi persediaan · akun 1030</h2>
++    <dl className="grid gap-3 sm:grid-cols-3 text-sm">
++      <div><dt>Valuasi stok fisik</dt><dd>{currency.format(inventory.physicalValuation)}</dd></div>
++      <div><dt>Saldo akun tersimpan</dt><dd>{inventory.cachedBalance === null ? 'Belum tersedia' : currency.format(inventory.cachedBalance)}</dd></div>
++      <div><dt>Saldo dari jurnal posted</dt><dd>{currency.format(inventory.ledgerBalance)}</dd></div>
++    </dl>
++    {inventory.warningMessage && <p role="alert" className="text-amber-900">{inventory.warningMessage}</p>}
++    <details><summary className="cursor-pointer">Telusuri sumber persediaan</summary>
++      <ul className="mt-2 space-y-1 text-sm">{inventory.sourceTrail.map((item,i)=><li key={i}>{item}</li>)}</ul>
++    </details>
++    <h3 className="font-medium">Jurnal persediaan terbaru</h3>
++    {inventory.postingSources.length ? <ul>{inventory.postingSources.map(j=><li key={j.id}><Link className="text-indigo-700 underline" href={'/accounting/journal-entries?id='+encodeURIComponent(j.id)}>{j.entryNumber} · {j.sourceDocument}</Link></li>)}</ul> : <p>Belum ada jurnal posted untuk akun 1030.</p>}
++    <button className="btn-secondary" type="button" disabled={busy} onClick={simulate}>{busy ? 'Menghitung…' : 'Simulasikan selisih +1 unit'}</button>
++    {error && <p role="alert">{error}</p>}
++    {simulation && <div role="status" className="rounded-lg bg-amber-50 p-3"><strong>Hasil simulasi +1 unit</strong><p>{simulation.warningMessage}</p><p>Stok dan jurnal tetap pada nilai aktual.</p><button className="underline" onClick={()=>setSimulation(null)}>Tutup simulasi</button></div>}
++  </section>;
++}
+--- a/src/components/OperationalMetricsChart.tsx
++++ b/src/components/OperationalMetricsChart.tsx
+@@ -1,16 +1,17 @@
+ 'use client';
++import Link from 'next/link';
+ import { useState } from 'react';
+ import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Tooltip, Legend } from 'chart.js';
+ import { Bar } from 'react-chartjs-2';
+ import type { OperationalMetrics } from '@/lib/dashboardEngine';
+ ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
+-export default function OperationalMetricsChart({ metrics: m }: { metrics: OperationalMetrics }) {
++export default function OperationalMetricsChart({ metrics: m, role }: { metrics: OperationalMetrics; role: string }) {
+   const [selected, setSelected] = useState('stock');
+   const choices = [
+-    { key: 'stock', label: 'Persediaan', unit: 'Unit', labels: ['Gudang', 'Kafe', 'Direservasi'], values: [m.inventory.whUnits, m.inventory.cafeUnits, m.inventory.reservedUnits], note: 'Stok gudang dan kafe adalah stok fisik. Stok direservasi merupakan bagian dari stok fisik.' },
+-    { key: 'money', label: 'Kas, piutang & utang', unit: 'Rupiah', labels: ['Kas & bank', 'Piutang pelanggan', 'Utang vendor', 'PBJT terutang'], values: [m.bank.balance, m.receivables.totalAR, m.payables.totalAP, m.tax.balance], note: 'Saldo berjalan perusahaan; piutang adalah tagihan pelanggan, utang adalah kewajiban kepada vendor.' },
+-    { key: 'orders', label: 'Pesanan & peluang', unit: 'Jumlah', labels: ['Pesanan penjualan', 'Pesanan pembelian', 'Peluang penjualan'], values: [m.sales.confirmedOrdersCount, m.purchase.confirmedOrdersCount, m.crm.leadsCount], note: 'Jumlah pesanan terkonfirmasi dan peluang penjualan yang tercatat.' },
+-    { key: 'value', label: 'Nilai bisnis', unit: 'Rupiah', labels: ['Persediaan', 'Penjualan bersih POS', 'Peluang penjualan'], values: [m.inventory.totalValuation, m.pos.revenue, m.crm.leadsValue], note: 'Nilai persediaan memakai biaya standar. Nilai peluang penjualan belum menjadi pendapatan.' },
++    { key: 'stock', links: role === 'FINANCE' ? ['/accounting/reports#inventory','/accounting/reports#inventory',null] : [m.inventory.sourceLink+'?location=WH-JKT', m.inventory.sourceLink+'?location=CAFE-JKT', m.sales.sourceLink], label: 'Persediaan', unit: 'Unit', labels: ['Gudang', 'Kafe', 'Direservasi'], values: [m.inventory.whUnits, m.inventory.cafeUnits, m.inventory.reservedUnits], note: 'Stok gudang dan kafe adalah stok fisik. Stok direservasi merupakan bagian dari stok fisik.' },
++    { key: 'money', links: ['1010','1020','2010','2020'].map(code => '/accounting/journal-entries?account='+code), label: 'Kas, piutang & utang', unit: 'Rupiah', labels: ['Kas & bank', 'Piutang pelanggan', 'Utang vendor', 'PBJT terutang'], values: [m.bank.balance, m.receivables.totalAR, m.payables.totalAP, m.tax.balance], note: 'Saldo berjalan perusahaan; piutang adalah tagihan pelanggan, utang adalah kewajiban kepada vendor.' },
++    { key: 'orders', links: role === 'FINANCE' ? [null,null,null] : [m.sales.sourceLink,m.purchase.sourceLink,m.crm.sourceLink], label: 'Pesanan & peluang', unit: 'Jumlah', labels: ['Pesanan penjualan', 'Pesanan pembelian', 'Peluang penjualan'], values: [m.sales.confirmedOrdersCount, m.purchase.confirmedOrdersCount, m.crm.leadsCount], note: 'Jumlah pesanan terkonfirmasi dan peluang penjualan yang tercatat.' },
++    { key: 'value', links: ['/accounting/reports#inventory',role === 'FINANCE' ? null : m.pos.sourceLink, role === 'FINANCE' ? null : m.crm.sourceLink], label: 'Nilai bisnis', unit: 'Rupiah', labels: ['Persediaan', 'Penjualan bersih POS', 'Peluang penjualan'], values: [m.inventory.totalValuation, m.pos.revenue, m.crm.leadsValue], note: 'Nilai persediaan memakai biaya standar. Nilai peluang penjualan belum menjadi pendapatan.' },
+   ];
+   const chart = choices.find(c => c.key === selected)!;
+   return <section className="surface-card p-5 sm:p-6 space-y-5">
+@@ -19,6 +20,7 @@
+     <h3 className="font-semibold">{chart.label} <span className="font-normal text-sm text-slate-500">({chart.unit})</span></h3>
+     <div className="h-72 sm:h-80"><Bar key={selected} role="img" aria-label={`${chart.label} dalam ${chart.unit}`} data={{ labels: chart.labels, datasets: [{ label: chart.unit, data: chart.values, backgroundColor: ['#4f46e5', '#0d9488', '#f59e0b', '#e11d48'], borderRadius: 6 }] }} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `${chart.unit === 'Rupiah' ? 'Rp ' : ''}${Number(ctx.raw).toLocaleString('id-ID')}` } } }, scales: { y: { beginAtZero: true, ticks: chart.unit === 'Jumlah' || chart.unit === 'Unit' ? { precision: 0 } : {} } } }} /></div>
+     <p className="text-sm text-slate-500">{chart.note}</p>
+-    <details><summary className="text-sm font-medium cursor-pointer">Lihat angka {chart.label.toLowerCase()}</summary><dl className="mt-3 space-y-2">{chart.labels.map((label, i) => <div key={label} className="flex justify-between gap-4 border-b py-2 text-sm"><dt>{label}</dt><dd className="font-semibold">{chart.unit === 'Rupiah' ? 'Rp ' : ''}{chart.values[i].toLocaleString('id-ID')}</dd></div>)}</dl></details>
++    <Link href="/accounting/reports#inventory" className="text-indigo-700 underline">Rekonsiliasi persediaan dan jurnal sumber</Link>
++    <details open><summary className="text-sm font-medium cursor-pointer">Lihat angka {chart.label.toLowerCase()}</summary><dl className="mt-3 space-y-2">{chart.labels.map((label, i) => <div key={label} className="flex justify-between gap-4 border-b py-2 text-sm"><dt>{chart.links[i] ? <Link href={chart.links[i]!} className="text-indigo-700 underline">{label}</Link> : label}</dt><dd className="font-semibold">{chart.unit === 'Rupiah' ? 'Rp ' : ''}{chart.values[i].toLocaleString('id-ID')}</dd></div>)}</dl></details>
+   </section>;
+ }
+--- a/src/components/Sidebar.tsx
++++ b/src/components/Sidebar.tsx
+@@ -47,23 +47,23 @@
+   {
+     group: "Ringkasan",
+     items: [
+-      { name: "Beranda", href: "/", icon: Home, roles: ["HEAD_ADMIN", "SALES", "WAREHOUSE", "PROCUREMENT", "FINANCE", "CASHIER", "KITCHEN"], wireframe: "S-01" },
++      { name: "Beranda", href: "/", icon: Home, roles: ["OWNER", "HEAD_ADMIN", "SALES", "WAREHOUSE", "PROCUREMENT", "FINANCE", "CASHIER", "KITCHEN"], wireframe: "S-01" },
+       { name: "Dashboard Eksekutif", href: "/dashboard", icon: BarChart3, roles: ["HEAD_ADMIN", "FINANCE", "OWNER"], wireframe: "S-16" },
+     ],
+   },
+   {
+     group: "Penjualan & CRM",
+     items: [
+-      { name: "Peluang penjualan", href: "/crm/leads", icon: Users2, roles: ["HEAD_ADMIN", "SALES"], wireframe: "S-04" },
++      { name: "Peluang penjualan", href: "/crm/leads", icon: Users2, roles: ["OWNER", "HEAD_ADMIN", "SALES"], wireframe: "S-04" },
+       { name: "Pelanggan & Vendor", href: "/sales/contacts", icon: Contact2, roles: ["HEAD_ADMIN", "SALES", "PROCUREMENT", "FINANCE"], wireframe: "S-02" },
+-      { name: "Pesanan penjualan", href: "/sales/orders", icon: ShoppingCart, roles: ["HEAD_ADMIN", "SALES"], wireframe: "S-05" },
++      { name: "Pesanan penjualan", href: "/sales/orders", icon: ShoppingCart, roles: ["OWNER", "HEAD_ADMIN", "SALES"], wireframe: "S-05" },
+     ],
+   },
+   {
+     group: "Persediaan & Gudang",
+     items: [
+-      { name: "Stok & Ketersediaan", href: "/inventory/products", icon: Package, roles: ["HEAD_ADMIN", "WAREHOUSE", "PROCUREMENT"], wireframe: "S-03" },
+-      { name: "Pergerakan & Penyesuaian", href: "/inventory/movements", icon: ArrowLeftRight, roles: ["HEAD_ADMIN","WAREHOUSE","PROCUREMENT","FINANCE"] },
++      { name: "Stok & Ketersediaan", href: "/inventory/products", icon: Package, roles: ["OWNER", "HEAD_ADMIN", "WAREHOUSE", "PROCUREMENT"], wireframe: "S-03" },
++      { name: "Pergerakan & Penyesuaian", href: "/inventory/movements", icon: ArrowLeftRight, roles: ["OWNER", "HEAD_ADMIN","WAREHOUSE","PROCUREMENT","FINANCE"] },
+       { name: "Pengiriman barang", href: "/inventory/delivery", icon: Truck, roles: ["HEAD_ADMIN", "WAREHOUSE"], wireframe: "S-06" },
+       { name: "Transfer Gudang", href: "/inventory/transfers", icon: ArrowLeftRight, roles: ["HEAD_ADMIN", "WAREHOUSE"], wireframe: "S-07" },
+       { name: "Penerimaan Barang", href: "/inventory/receipts", icon: PackageCheck, roles: ["HEAD_ADMIN", "WAREHOUSE"], wireframe: "S-09" },
+@@ -73,17 +73,17 @@
+   {
+     group: "Pengadaan",
+     items: [
+-      { name: "Pesanan pembelian", href: "/purchase/orders", icon: ShoppingBag, roles: ["HEAD_ADMIN", "PROCUREMENT"], wireframe: "S-08" },
++      { name: "Pesanan pembelian", href: "/purchase/orders", icon: ShoppingBag, roles: ["OWNER", "HEAD_ADMIN", "PROCUREMENT"], wireframe: "S-08" },
+     ],
+   },
+   {
+     group: "Keuangan",
+     items: [
+-      { name: "Tagihan pelanggan", href: "/accounting/invoices", icon: Receipt, roles: ["HEAD_ADMIN", "FINANCE", "SALES"], wireframe: "S-10" },
++      { name: "Tagihan pelanggan", href: "/accounting/invoices", icon: Receipt, roles: ["OWNER", "HEAD_ADMIN", "FINANCE", "SALES"], wireframe: "S-10" },
+       { name: "Tagihan vendor", href: "/accounting/vendor-bills", icon: FileText, roles: ["HEAD_ADMIN", "FINANCE"], wireframe: "S-11" },
+       { name: "Pembayaran Kas & Bank", href: "/accounting/payments", icon: CreditCard, roles: ["HEAD_ADMIN", "FINANCE"], wireframe: "S-12" },
+-      { name: "Laporan Keuangan", href: "/accounting/reports", icon: BarChart3, roles: ["HEAD_ADMIN","FINANCE"] },
+-      { name: "Buku Besar & Jurnal", href: "/accounting/journal-entries", icon: BookOpen, roles: ["HEAD_ADMIN", "FINANCE"], wireframe: "S-13" },
++      { name: "Laporan Keuangan", href: "/accounting/reports", icon: BarChart3, roles: ["OWNER", "HEAD_ADMIN","FINANCE"] },
++      { name: "Buku Besar & Jurnal", href: "/accounting/journal-entries", icon: BookOpen, roles: ["OWNER", "HEAD_ADMIN", "FINANCE"], wireframe: "S-13" },
+     ],
+   },
+   {
+@@ -100,7 +100,7 @@
+   {
+     group: "Penjualan Kasir (POS)",
+     items: [
+-      { name: "Kasir POS", href: "/pos", icon: Store, roles: ["HEAD_ADMIN", "CASHIER"], wireframe: "S-14" },
++      { name: "Kasir POS", href: "/pos", icon: Store, roles: ["OWNER", "HEAD_ADMIN", "CASHIER"], wireframe: "S-14" },
+     ],
+   },
+ ];
+--- a/src/components/VendorPaymentForm.tsx
++++ b/src/components/VendorPaymentForm.tsx
+@@ -1,10 +1,66 @@
+ 'use client';
+ import React,{useEffect,useRef,useState} from 'react';
+-export default function VendorPaymentForm({onPaid}:{onPaid:()=>void|Promise<void>}) {
+-  const [bills,setBills]=useState<any[]>([]),[selected,setSelected]=useState(''),[amount,setAmount]=useState(0),[method,setMethod]=useState('BANK'),[date,setDate]=useState(new Date().toISOString().slice(0,10)),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');const pending=useRef(false),keys=useRef(new Map<string,string>());
+-  const load=async()=>{const r=await fetch('/api/accounting/vendor-bills');const d=await r.json();if(!r.ok)throw new Error(d.error);const available=(d.bills||[]).filter((b:any)=>b.status==='POSTED'&&b.outstandingAmount>0);setBills(available);const requested=new URLSearchParams(window.location.search).get('billId');const target=available.find((b:any)=>b.id===requested);if(target){setSelected(target.id);setAmount(target.outstandingAmount);}};
+-  useEffect(()=>{load().catch(e=>setError(String(e)));},[]);
++type PaymentIntent = {key:string; body:string; billNumber:string; amount:number};
++export default function VendorPaymentForm({onPaid, identity}:{onPaid:()=>void|Promise<void>; identity:string}) {
++  const [bills,setBills]=useState<any[]>([]),[selected,setSelected]=useState(''),[amount,setAmount]=useState(0),[method,setMethod]=useState('BANK'),[date,setDate]=useState(new Date().toISOString().slice(0,10)),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');const pending=useRef(false);
++  const load=async(prefill=false)=>{const r=await fetch('/api/accounting/vendor-bills');const d=await r.json();if(!r.ok)throw new Error(d.error);const available=(d.bills||[]).filter((b:any)=>b.status==='POSTED'&&b.outstandingAmount>0);setBills(available);const requested=new URLSearchParams(window.location.search).get('billId');const target=available.find((b:any)=>b.id===requested);if(prefill && target){setSelected(target.id);setAmount(target.outstandingAmount);}};
++  const slot = 'rasa-aruna.vendor-payment.' + identity;
++  const [recovery,setRecovery] = useState<PaymentIntent | null>(null);
++  const [ready,setReady] = useState(false);
++  useEffect(()=>{
++    try {
++      const stored = sessionStorage.getItem(slot);
++      setRecovery(stored ? JSON.parse(stored) : null);
++      setReady(true);
++    } catch {
++      setError('Riwayat permintaan di tab ini tidak dapat dibaca. Periksa riwayat pembayaran sebelum melanjutkan.');
++    }
++    load(true).catch(e=>setError(String(e)));
++  },[slot]);
+   const bill=bills.find(b=>b.id===selected);
+-  const submit=async(e:React.FormEvent)=>{e.preventDefault();if(pending.current)return;pending.current=true;setBusy(true);setError('');setNotice('');try{const input={billId:selected,amount,paymentMethod:method,paymentDate:date},key=JSON.stringify(input);if(!keys.current.has(key))keys.current.set(key,crypto.randomUUID());const r=await fetch('/api/accounting/payments',{method:'POST',headers:{'Content-Type':'application/json','Idempotency-Key':keys.current.get(key)!},body:JSON.stringify(input)});const d=await r.json();if(!r.ok)throw new Error(d.error);setNotice(`Pembayaran vendor tercatat. Sisa tagihan Rp${d.remainingBalance.toLocaleString('id-ID')}.`);await load();await onPaid();setSelected('');setAmount(0);}catch(e){setError(e instanceof Error?e.message:'Pembayaran gagal.');}finally{pending.current=false;setBusy(false);}};
+-  return <form onSubmit={submit} className="surface-card p-6 space-y-4"><h2 className="text-lg font-semibold">Pembayaran vendor</h2><p className="text-sm text-slate-500">Bayar sebagian atau seluruh tagihan yang sudah diposting.</p>{error&&<p role="alert" className="text-rose-800 bg-rose-50 p-3 rounded-xl">{error}</p>}{notice&&<p role="status" className="text-emerald-800 bg-emerald-50 p-3 rounded-xl">{notice}</p>}<fieldset disabled={busy} className="grid sm:grid-cols-4 gap-4"><label className="text-sm sm:col-span-2">Tagihan vendor<select required className="input-glass w-full p-2 mt-1" value={selected} onChange={e=>{setSelected(e.target.value);setAmount(bills.find(b=>b.id===e.target.value)?.outstandingAmount||0);}}><option value="">Pilih tagihan…</option>{bills.map(b=><option key={b.id} value={b.id}>{b.billNumber} · {b.vendor?.name} · Rp{b.outstandingAmount.toLocaleString('id-ID')}</option>)}</select></label><label className="text-sm">Jumlah (Rp)<input required type="number" min={1} max={bill?.outstandingAmount} step={1} className="input-glass w-full p-2 mt-1" value={amount} onChange={e=>setAmount(Number(e.target.value))}/></label><label className="text-sm">Metode<select className="input-glass w-full p-2 mt-1" value={method} onChange={e=>setMethod(e.target.value)}>{['BANK','CASH','QRIS'].map(m=><option key={m}>{m}</option>)}</select></label><label className="text-sm">Tanggal<input required type="date" className="input-glass w-full p-2 mt-1" value={date} onChange={e=>setDate(e.target.value)}/></label></fieldset><button className="btn-primary" disabled={busy||!selected}>{busy?'Memproses…':'Catat pembayaran vendor'}</button></form>;
++  async function submit(event: React.FormEvent) {
++    event.preventDefault();
++    if (pending.current) return;
++    pending.current = true;
++    setBusy(true);
++    setError('');
++    setNotice('');
++    try {
++      const intent = recovery || {
++        key: crypto.randomUUID(),
++        body: JSON.stringify({billId: selected, amount, paymentMethod: method, paymentDate: date}),
++        billNumber: bill.billNumber,
++        amount,
++      };
++      sessionStorage.setItem(slot, JSON.stringify(intent));
++      setRecovery(intent);
++      const response = await fetch('/api/accounting/payments', {
++        method: 'POST', headers: {'Content-Type': 'application/json', 'Idempotency-Key': intent.key}, body: intent.body,
++      });
++      const result = await response.json();
++      if (!response.ok) {
++        if (response.status === 400) {
++          sessionStorage.removeItem(slot);
++          setRecovery(null);
++        }
++        throw new Error(result.error || 'Pembayaran belum dapat dikonfirmasi.');
++      }
++      sessionStorage.removeItem(slot);
++      setRecovery(null);
++      setSelected('');
++      setAmount(0);
++      setNotice(`Pembayaran ${result.payment.paymentNumber} tercatat. Sisa tagihan Rp${result.remainingBalance.toLocaleString('id-ID')}.`);
++      try {
++        await Promise.all([load(), onPaid()]);
++      } catch {
++        setError('Pembayaran sudah tercatat. Segarkan halaman untuk memperbarui daftar tagihan.');
++      }
++    } catch (err) {
++      setError(err instanceof TypeError ? 'Respons belum diterima. Periksa kembali permintaan pembayaran di bawah.' : err instanceof Error ? err.message : 'Pembayaran gagal.');
++    } finally {
++      pending.current = false;
++      setBusy(false);
++    }
++  }
++  return <form onSubmit={submit} className="surface-card p-6 space-y-4"><h2 className="text-lg font-semibold">Pembayaran vendor</h2><p className="text-sm text-slate-500">Bayar sebagian atau seluruh tagihan yang sudah diposting.</p>{error&&<p role="alert" className="text-rose-800 bg-rose-50 p-3 rounded-xl">{error}</p>}{notice&&<p role="status" className="text-emerald-800 bg-emerald-50 p-3 rounded-xl">{notice}</p>}{recovery && <p className="rounded-xl bg-amber-50 p-3">Menunggu kepastian pembayaran {recovery.billNumber} sebesar Rp{recovery.amount.toLocaleString('id-ID')}. Periksa kembali untuk mendapatkan nomor transaksi.</p>}<fieldset disabled={busy||!!recovery} className="grid sm:grid-cols-4 gap-4"><label className="text-sm sm:col-span-2">Tagihan vendor<select required className="input-glass w-full p-2 mt-1" value={selected} onChange={e=>{setSelected(e.target.value);setAmount(bills.find(b=>b.id===e.target.value)?.outstandingAmount||0);}}><option value="">Pilih tagihan…</option>{bills.map(b=><option key={b.id} value={b.id}>{b.billNumber} · {b.vendor?.name} · Rp{b.outstandingAmount.toLocaleString('id-ID')}</option>)}</select></label><label className="text-sm">Jumlah (Rp)<input required type="number" min={1} max={bill?.outstandingAmount} step={1} className="input-glass w-full p-2 mt-1" value={amount} onChange={e=>setAmount(Number(e.target.value))}/></label><label className="text-sm">Metode<select className="input-glass w-full p-2 mt-1" value={method} onChange={e=>setMethod(e.target.value)}>{['BANK','CASH','QRIS'].map(m=><option key={m}>{m}</option>)}</select></label><label className="text-sm">Tanggal<input required type="date" className="input-glass w-full p-2 mt-1" value={date} onChange={e=>setDate(e.target.value)}/></label></fieldset><button className="btn-primary" disabled={!ready||busy||(!selected&&!recovery)}>{busy?'Memproses…':recovery?'Periksa kembali pembayaran':'Catat pembayaran vendor'}</button></form>;
+ }
+--- a/src/lib/accessPolicy.ts
++++ b/src/lib/accessPolicy.ts
+@@ -2,6 +2,15 @@
+ export function accessRestriction(role: string, path: string, method = 'GET'): boolean {
+   if (path === '/api/advanced' || path.startsWith('/api/order/')) return true;
+   if (role === 'OWNER') {
++    if (method === 'GET') {
++      const reports = ['/api/dashboard/metrics', '/api/dashboard/charts', '/api/dashboard/reconciliation',
++        '/api/accounting/reports', '/api/accounting/general-ledger', '/api/accounting/journal-entries',
++        '/api/pos/orders', '/api/pos/sessions', '/api/master/options', '/api/inventory/movements'];
++      if (reports.includes(path) || /^\/api\/accounting\/invoices\/[^/]+\/pdf$/.test(path)) return false;
++      if (/^\/api\/(?:sales\/orders|purchase\/orders|crm\/leads|products|accounting\/invoices)(?:\/[^/]+)?$/.test(path)) return false;
++      if (/^\/api\/documents\/(?:sales|purchase|invoices)\/[^/]+$/.test(path)) return false;
++    }
++    if (method === 'POST' && /^\/api\/sales\/orders\/[^/]+\/approve-discount$/.test(path)) return false;
+     return !(method === 'GET' && ['/api/auth/me', '/api/companies', '/api/dashboard/profit'].includes(path))
+       && !(method === 'POST' && path === '/api/auth/logout');
+   }
+--- a/src/lib/accountingEngine.ts
++++ b/src/lib/accountingEngine.ts
+@@ -2,7 +2,7 @@
+ import { permit, quantity, money, discount, uniqueLines, editable } from "./validation";
+ import { prisma } from "./prisma";
+ import { Role } from "@prisma/client";
+-import { recordAuditLog } from "./audit";
++import { AuditedRejection, recordAuditLog } from "./audit";
+ import { getNextSequence } from "./sequences";
+ 
+ export interface InvoiceLineInput {
+@@ -21,9 +21,9 @@
+   uniqueLines(lineInputs, l => l.productSku);
+   lineInputs.forEach(l => { quantity(l.quantity); if (l.unitPrice !== undefined) money(l.unitPrice); });
+ 
+-  // Role check: FINANCE or OWNER (SR-15)
++  // Role check: FINANCE or HEAD_ADMIN (SR-15)
+   if (actor.role !== Role.FINANCE && actor.role !== Role.HEAD_ADMIN) {
+-    throw new Error("Akses ditolak (SR-15): Hanya Finance atau Owner yang berwenang membuat Customer Invoice.");
++    throw new Error("Akses ditolak (SR-15): Hanya Finance atau Head Admin yang berwenang membuat Customer Invoice.");
+   }
+ 
+   const order = await prisma.salesOrder.findFirst({
+@@ -73,7 +73,7 @@
+ 
+     // SR-02 / T-20: Block attempt to invoice un-delivered units
+     if (item.quantity > maxBillable) {
+-      throw new Error(
++      throw new AuditedRejection({actorId:actor.id,actorName:actor.name,actorRole:actor.role,action:"INVOICE_QUANTITY_REJECTED",documentType:"SO",documentId:order.orderNumber,notes:"Kuantitas invoice melebihi sisa pengiriman."},
+         `Validasi Penagihan Gagal (SR-02 / F-09 / T-20): Kuantitas tagihan (${item.quantity}) melebihi kuantitas yang telah dikirim (Delivered: ${deliveredQty}, Sudah Ditagih: ${alreadyInvoiced}, Maksimal Boleh Ditagih: ${maxBillable}). Penagihan barang yang belum dikirim dilarang.`
+       );
+     }
+@@ -148,9 +148,9 @@
+ }
+ 
+ async function postCustomerInvoiceImpl(invoiceId: string, actor: { id: string; name: string; role: Role }) {
+-  // Role check: FINANCE or OWNER (SR-15)
++  // Role check: FINANCE or HEAD_ADMIN (SR-15)
+   if (actor.role !== Role.FINANCE && actor.role !== Role.HEAD_ADMIN) {
+-    throw new Error("Akses ditolak (SR-15): Hanya Finance atau Owner yang berwenang memposting Customer Invoice.");
++    throw new Error("Akses ditolak (SR-15): Hanya Finance atau Head Admin yang berwenang memposting Customer Invoice.");
+   }
+ 
+   const invoice = await prisma.customerInvoice.findFirst({
+@@ -300,9 +300,9 @@
+   money(amount);
+   if (!["BANK","CASH","QRIS"].includes(paymentMethod)) throw new Error("Metode pembayaran tidak valid.");
+ 
+-  // Role check: FINANCE or OWNER (SR-15)
++  // Role check: FINANCE or HEAD_ADMIN (SR-15)
+   if (actor.role !== Role.FINANCE && actor.role !== Role.HEAD_ADMIN) {
+-    throw new Error("Akses ditolak (SR-15): Hanya Finance atau Owner yang berwenang meregister pembayaran.");
++    throw new Error("Akses ditolak (SR-15): Hanya Finance atau Head Admin yang berwenang meregister pembayaran.");
+   }
+ 
+   const invoice = await prisma.customerInvoice.findFirst({
+@@ -318,7 +318,7 @@
+   // SR-19 / T-24: OVERPAYMENT PROTECTION GUARD
+   // Payments exceeding outstanding MUST be rejected
+   if (amount > invoice.outstandingAmount) {
+-    await recordAuditLog({
++    throw new AuditedRejection({
+       actorId: actor.id,
+       actorName: actor.name,
+       actorRole: actor.role,
+@@ -326,10 +326,7 @@
+       documentType: "CUSTOMER_INVOICE",
+       documentId: invoice.invoiceNumber,
+       notes: `Percobaan bayar Rp ${amount.toLocaleString("id-ID")} melebihi sisa tagihan Rp ${invoice.outstandingAmount.toLocaleString("id-ID")} ditolak (SR-19).`,
+-    });
+-
+-    throw new Error(
+-      `Validasi Pembayaran Gagal (SR-19 / F-15 / T-24): Jumlah pembayaran (Rp ${amount.toLocaleString("id-ID")}) melebihi sisa tagihan outstanding (Rp ${invoice.outstandingAmount.toLocaleString("id-ID")}). Pembayaran melebihi outstanding ditolak.`
++    }, `Validasi Pembayaran Gagal (SR-19 / F-15 / T-24): Jumlah pembayaran (Rp ${amount.toLocaleString("id-ID")}) melebihi sisa tagihan outstanding (Rp ${invoice.outstandingAmount.toLocaleString("id-ID")}). Pembayaran melebihi outstanding ditolak.`
+     );
+   }
+ 
+@@ -445,7 +442,7 @@
+   return atomic(async () => {
+     const bill = await prisma.vendorBill.findFirst({ where: { OR: [{ id: params.billId }, { billNumber: params.billId }] } });
+     if (!bill || bill.status !== 'POSTED') throw new Error('Vendor Bill harus Posted dan belum lunas.');
+-    if (params.amount > bill.outstandingAmount) throw new Error('Pembayaran melebihi outstanding (SR-19).');
++    if (params.amount > bill.outstandingAmount) throw new AuditedRejection({actorId:params.actor.id,actorName:params.actor.name,actorRole:params.actor.role,action:'OVERPAYMENT_REJECTED',documentType:'VENDOR_BILL',documentId:bill.billNumber,notes:'Pembayaran melebihi outstanding (SR-19).'});
+     const remainingBalance = bill.outstandingAmount - params.amount;
+     const updatedBill = await prisma.vendorBill.update({ where: { id: bill.id }, data: { paidAmount: { increment: params.amount }, outstandingAmount: remainingBalance, status: remainingBalance ? 'POSTED' : 'PAID' } });
+     const payment = await prisma.payment.create({ data: { paymentNumber: `PAY/${new Date().getFullYear()}/${crypto.randomUUID()}`, paymentType: 'VENDOR_OUTBOUND', billId: bill.id, vendorId: bill.vendorId, amount: params.amount, paymentMethod: params.paymentMethod, paymentDate: params.paymentDate || new Date(), notes: params.notes } });
+--- a/src/lib/apiResult.ts
++++ b/src/lib/apiResult.ts
+@@ -2,7 +2,7 @@
+ import { hasAllowedOrigin } from './requestOrigin';
+ import { NextRequest, NextResponse } from 'next/server';
+ import { getCurrentUser, SessionUser } from './auth';
+-import { recordAuditLog } from "./audit";
++import { AuditedRejection, recordAuditLog } from "./audit";
+ import { BusinessError } from './validation';
+ export function apiFailure(error: unknown) {
+   if (error instanceof BusinessError) return NextResponse.json({error:error.message},{status:error.status});
+@@ -25,7 +25,7 @@
+     if (!hasAllowedOrigin(request)) throw new BusinessError('Origin tidak diizinkan.',403);
+     return NextResponse.json(await run(user));
+   } catch (error) {
+-    if (user && request.method !== "GET") {
++    if (user && request.method !== "GET" && !(error instanceof AuditedRejection)) {
+       try { await recordAuditLog({actorId:user.id,actorName:user.name,actorRole:user.role,action:"OPERATION_REJECTED",documentType:"API",documentId:request.nextUrl.pathname,notes:error instanceof BusinessError ? error.message : "Operasi ditolak; tidak ada perubahan bisnis tersimpan."}); } catch (auditError) { console.error("Denied operation audit failed",auditError); }
+     }
+     return apiFailure(error);
+--- a/src/lib/atomic.ts
++++ b/src/lib/atomic.ts
+@@ -1,3 +1,4 @@
++import { AuditedRejection, recordAuditLog } from './audit';
+ import { evaluateReorderRules } from './reorderRules';
+ import { prisma, getActivePrismaClient } from './prisma';
+ import { transactionContext } from './transactionContext';
+@@ -9,10 +10,19 @@
+ export async function atomic<T>(operation: () => Promise<T>): Promise<T> {
+   if (transactionContext.getStore()) return operation();
+   const client = await getActivePrismaClient();
+-  return client.$transaction(async tx => {
+-    await tx.$executeRawUnsafe('UPDATE "Account" SET "currentBalance" = "currentBalance" WHERE "code" = \'1010\'');
+-    return transactionContext.run(tx, async () => { const result = await operation(); await evaluateReorderRules(tx); return result; });
+-  }, { maxWait: 10000, timeout: 20000 });
++  try {
++    return await client.$transaction(async tx => {
++      await tx.$executeRawUnsafe('UPDATE "Account" SET "currentBalance" = "currentBalance" WHERE "code" = \'1010\'');
++      return transactionContext.run(tx, async () => {
++        const result = await operation();
++        await evaluateReorderRules(tx);
++        return result;
++      });
++    }, { maxWait: 10000, timeout: 20000 });
++  } catch (error) {
++    if (error instanceof AuditedRejection) await recordAuditLog({...error.event, tx:client});
++    throw error;
++  }
+ }
+ 
+ export async function idempotent<T>(actor: Actor, operation: string, key: string | undefined, input: unknown, run: () => Promise<T>): Promise<T> {
+--- a/src/lib/audit.ts
++++ b/src/lib/audit.ts
+@@ -1,3 +1,4 @@
++import { BusinessError } from './validation';
+ import { prisma } from "./prisma";
+ import { Role } from "@prisma/client";
+ 
+@@ -15,6 +16,13 @@
+   afterData?: any;
+   notes?: string;
+   tx?: any;
++}
++
++/** Persist the denial only after the business transaction has rolled back. */
++export class AuditedRejection extends BusinessError {
++  constructor(readonly event: AuditParams, message = event.notes || 'Transaksi ditolak.') {
++    super(message);
++  }
+ }
+ 
+ export async function recordAuditLog(params: AuditParams) {
+--- a/src/lib/auth.ts
++++ b/src/lib/auth.ts
+@@ -81,13 +81,13 @@
+ }
+ 
+ export const MODULE_PERMISSIONS: Record<string, Role[]> = {
+-  sales: [Role.HEAD_ADMIN, Role.SALES],
+-  crm: [Role.HEAD_ADMIN, Role.SALES],
+-  purchase: [Role.HEAD_ADMIN, Role.PROCUREMENT],
+-  inventory: [Role.HEAD_ADMIN, Role.WAREHOUSE, Role.PROCUREMENT],
+-  accounting: [Role.HEAD_ADMIN, Role.FINANCE],
+-  invoicing: [Role.HEAD_ADMIN, Role.FINANCE, Role.SALES],
+-  pos: [Role.HEAD_ADMIN, Role.CASHIER],
++  sales: [Role.HEAD_ADMIN, Role.OWNER, Role.SALES],
++  crm: [Role.HEAD_ADMIN, Role.OWNER, Role.SALES],
++  purchase: [Role.HEAD_ADMIN, Role.OWNER, Role.PROCUREMENT],
++  inventory: [Role.HEAD_ADMIN, Role.OWNER, Role.WAREHOUSE, Role.PROCUREMENT],
++  accounting: [Role.HEAD_ADMIN, Role.OWNER, Role.FINANCE],
++  invoicing: [Role.HEAD_ADMIN, Role.OWNER, Role.FINANCE, Role.SALES],
++  pos: [Role.HEAD_ADMIN, Role.OWNER, Role.CASHIER],
+   dashboard: [Role.HEAD_ADMIN, Role.OWNER, Role.FINANCE],
+ };
+ 
+--- a/src/lib/dashboardEngine.ts
++++ b/src/lib/dashboardEngine.ts
+@@ -73,6 +73,8 @@
+     ledgerAccountCode: string;
+     ledgerAccountName: string;
+     ledgerBalance: number;
++    cachedBalance: number | null;
++    postingSources: {id:string; entryNumber:string; sourceDocument:string}[];
+     unitDiscrepancy: number;
+     valueDiscrepancy: number;
+     status: "BALANCED" | "MISMATCH";
+@@ -238,13 +240,13 @@
+  */
+ export async function getFinancialReconciliation(simulatedStockDiff: number = 0): Promise<FinancialReconciliation> {
+   // 1. Keseimbangan Double-Entry Buku Besar (General Ledger Balance)
+-  const journalItems = await prisma.journalItem.findMany();
++  const journalItems = await prisma.journalItem.findMany({where:{journalEntry:{state:'POSTED'}}});
+   const totalDebit = journalItems.reduce((sum, item) => sum + item.debit, 0);
+   const totalCredit = journalItems.reduce((sum, item) => sum + item.credit, 0);
+   const isBalanced = totalDebit === totalCredit;
+   const difference = Math.abs(totalDebit - totalCredit);
+ 
+-  const totalEntries = await prisma.journalEntry.count();
++  const totalEntries = await prisma.journalEntry.count({where:{state:'POSTED'}});
+ 
+   // 2. Rekonsiliasi Persediaan: Fisik vs Akun Buku Besar 1030
+   const stockLevels = await prisma.stockLevel.findMany({
+@@ -266,11 +268,17 @@
+   const inventoryAccount = await prisma.account.findUnique({
+     where: { code: "1030" },
+   });
+-  const ledgerBalance = inventoryAccount?.currentBalance ?? 0;
++  const ledgerBalance = journalItems.filter(item => item.accountCode === '1030').reduce((sum,item) => sum + item.debit - item.credit, 0);
++  const cachedBalance = inventoryAccount?.currentBalance ?? null;
++  const postingSources = await prisma.journalEntry.findMany({
++    where: {state:'POSTED', items:{some:{accountCode:'1030'}}},
++    select: {id:true, entryNumber:true, sourceDocument:true},
++    orderBy: [{date:'desc'},{entryNumber:'desc'}], take:25,
++  });
+ 
+   const unitDiscrepancy = simulatedStockDiff;
+   const valueDiscrepancy = physicalValuation - ledgerBalance;
+-  const isStockReconciled = simulatedStockDiff === 0 && Math.abs(valueDiscrepancy) === 0;
++  const isStockReconciled = simulatedStockDiff === 0 && valueDiscrepancy === 0 && cachedBalance === ledgerBalance;
+ 
+   const sourceMoves = await prisma.stockMove.findMany({ orderBy: { date: 'desc' }, take: 100 });
+   const sourceTrail = [
+@@ -281,8 +289,9 @@
+ 
+   let warningMessage: string | undefined = undefined;
+   if (!isStockReconciled) {
+-    warningMessage = `PERINGATAN REKONSILIASI (SR-20 / T-32): Terdeteksi selisih ${unitDiscrepancy > 0 ? `+${unitDiscrepancy}` : unitDiscrepancy} unit (senilai Rp ${Math.abs(valueDiscrepancy).toLocaleString("id-ID")}) antara Stok Fisik dan Saldo Buku Besar. Auto-post penyesuaian dilarang keras tanpa dokumen sumber yang sah.`;
+-    sourceTrail.push(`ANOMALI TERCATAT: Discrepancy ${unitDiscrepancy} unit tanpa transaksi jurnal pembeda.`);
++    const scenario = simulatedStockDiff ? `Simulasi perubahan ${simulatedStockDiff} unit. ` : '';
++    warningMessage = `SR-20 / T-32 · ${scenario}Selisih valuasi stok terhadap jurnal posted Rp ${valueDiscrepancy.toLocaleString("id-ID")}. Saldo akun tersimpan ${cachedBalance === null ? 'belum tersedia' : 'Rp ' + cachedBalance.toLocaleString("id-ID")}. Periksa dokumen sumber sebelum mengusulkan koreksi.`;
++
+   }
+ 
+   // 3. Subledger Matching
+@@ -312,7 +321,7 @@
+       physicalValuation,
+       ledgerAccountCode: "1030",
+       ledgerAccountName: inventoryAccount?.name || "Persediaan Barang Dagang",
+-      ledgerBalance,
++      ledgerBalance, cachedBalance, postingSources,
+       unitDiscrepancy,
+       valueDiscrepancy,
+       status: isStockReconciled ? "BALANCED" : "MISMATCH",
+--- a/src/lib/documentTrail.ts
++++ b/src/lib/documentTrail.ts
+@@ -2,15 +2,15 @@
+ import { Actor,permit,BusinessError,textValue } from './validation';
+ import { recordAuditLog } from './audit';
+ const definitions:any={sales:{model:'salesOrder',roles:['HEAD_ADMIN','SALES','WAREHOUSE','FINANCE'],include:{deliveryOrders:true,invoices:true}},purchase:{model:'purchaseOrder',roles:['HEAD_ADMIN','PROCUREMENT','WAREHOUSE','FINANCE'],include:{receipts:true,bills:true}},invoices:{model:'customerInvoice',roles:['HEAD_ADMIN','FINANCE','SALES','WAREHOUSE'],include:{payments:true,returns:{include:{creditNotes:true}}}},bills:{model:'vendorBill',roles:['HEAD_ADMIN','FINANCE','PROCUREMENT','WAREHOUSE'],include:{payments:true}},deliveries:{model:'deliveryOrder',roles:['HEAD_ADMIN','WAREHOUSE','FINANCE','SALES'],include:{}},receipts:{model:'goodsReceipt',roles:['HEAD_ADMIN','WAREHOUSE','PROCUREMENT','FINANCE'],include:{}},transfers:{model:'internalTransfer',roles:['HEAD_ADMIN','WAREHOUSE','PROCUREMENT','FINANCE'],include:{}},returns:{model:'returnRequest',roles:['HEAD_ADMIN','WAREHOUSE','FINANCE','SALES'],include:{creditNotes:true}}};
+-async function source(kind:string,id:string,actor:Actor){if(!Object.hasOwn(definitions,kind))throw new BusinessError('Jenis dokumen tidak valid.',404);const d=definitions[kind];permit(actor,d.roles);const record=await (prisma as any)[d.model].findUnique({where:{id},include:d.include});if(!record)throw new BusinessError('Dokumen tidak ditemukan.',404);return record;}
++async function source(kind:string,id:string,actor:Actor,readOnly=false){if(!Object.hasOwn(definitions,kind))throw new BusinessError('Jenis dokumen tidak valid.',404);const d=definitions[kind];permit(actor,readOnly ? [...d.roles,"OWNER"] : d.roles);const record=await (prisma as any)[d.model].findUnique({where:{id},include:d.include});if(!record)throw new BusinessError('Dokumen tidak ditemukan.',404);return record;}
+ export async function documentTrail(kind:string,id:string,actor:Actor){
+-  const r=await source(kind,id,actor),links:{label:string;href:string}[]=[],numbers:string[]=[r.orderNumber,r.poNumber,r.invoiceNumber,r.billNumber,r.deliveryNumber,r.receiptNumber,r.transferNumber,r.returnNumber].filter(Boolean);
++  const r=await source(kind,id,actor,true),links:{label:string;href:string}[]=[],numbers:string[]=[r.orderNumber,r.poNumber,r.invoiceNumber,r.billNumber,r.deliveryNumber,r.receiptNumber,r.transferNumber,r.returnNumber].filter(Boolean);
+   const link=(label:string,path:string,id?:string)=>{if(id)links.push({label,href:`${path}?id=${encodeURIComponent(id)}`});};
+   link('Pelanggan','/master/customers',r.contactId||r.customerId);link('Vendor','/master/vendors',r.vendorId);link('Lead','/master/leads',r.leadId);link('Sales Order','/sales/orders',r.salesOrderId);link('Delivery','/inventory/delivery',r.deliveryOrderId);link('Purchase Order','/purchase/orders',r.purchaseOrderId);link('Receipt','/inventory/receipts',r.receiptId);link('Invoice asal','/accounting/invoices',r.invoiceId);
+   for(const [field,path] of [['deliveryOrders','/inventory/delivery'],['invoices','/accounting/invoices'],['receipts','/inventory/receipts'],['bills','/accounting/vendor-bills'],['returns','/inventory/returns']] as [string,string][]){for(const d of r[field]||[]){const n=d.deliveryNumber||d.invoiceNumber||d.receiptNumber||d.billNumber||d.returnNumber;link(n,path,d.id);numbers.push(n);}}
+   if(r.payments?.length)links.push({label:`Pembayaran (${r.payments.length})`,href:`/accounting/payments?${kind==='bills'?'billId':'invoiceId'}=${id}`});
+   const creditNotes=r.creditNotes||r.returns?.flatMap((ret:any)=>ret.creditNotes)||[];numbers.push(...creditNotes.map((n:any)=>n.creditNoteNumber));
+-  if(['HEAD_ADMIN','FINANCE'].includes(actor.role)){const journals=await prisma.journalEntry.findMany({where:{sourceDocument:{in:numbers}},select:{id:true,entryNumber:true}});for(const journal of journals)link(journal.entryNumber,'/accounting/journal-entries',journal.id);}
++  if(['HEAD_ADMIN','FINANCE','OWNER'].includes(actor.role)){const journals=await prisma.journalEntry.findMany({where:{sourceDocument:{in:numbers}},select:{id:true,entryNumber:true}});for(const journal of journals)link(journal.entryNumber,'/accounting/journal-entries',journal.id);}
+   const activity=await prisma.auditLog.findMany({where:{OR:[{documentId:{in:[id,...numbers]}},{documentId:id,documentType:`NOTE_${kind}`}]},orderBy:{timestamp:'desc'},take:100});
+   return {links,activity,creditNotes:creditNotes.map((n:any)=>({number:n.creditNoteNumber,total:n.totalGross}))};
+ }
+--- a/src/lib/documentWorkflow.ts
++++ b/src/lib/documentWorkflow.ts
+@@ -19,6 +19,12 @@
+     if(!before)throw new BusinessError('Dokumen tidak ditemukan.',404);
+     if(before.version!==undefined){numberValue(input.version,'Versi',0,true);if(before.version!==input.version)throw new BusinessError('Dokumen berubah. Muat ulang terlebih dahulu.',409);}
+     const actorWithId=actor as {id:string;name:string;role:any};
++    if(input.action==='prepare'){
++      if(before.status!=='CONFIRMED') throw new BusinessError('Hanya pesanan terkonfirmasi yang dapat disiapkan.',409);
++      if(kind==='sales')return confirmSalesOrder(id,actorWithId);
++      if(kind==='purchase')return confirmPurchaseOrder(id,actorWithId,textValue(input.destLocation??'WH-JKT','Gudang penerimaan'));
++      throw new BusinessError('Persiapan ini hanya tersedia untuk pesanan.');
++    }
+     if(input.action==='confirm')return kind==='sales'?confirmSalesOrder(id,actorWithId,input.sourceLocation===undefined?undefined:textValue(input.sourceLocation,'Gudang pemenuhan')):kind==='purchase'?confirmPurchaseOrder(id,actorWithId,input.destLocation===undefined?undefined:textValue(input.destLocation,'Gudang penerimaan')):Promise.reject(new BusinessError('Dokumen tidak dapat dikonfirmasi.'));
+     if(input.action==='approve'&&kind==='sales')return approveOrderDiscount(id,actorWithId);
+     if(input.action==='post')return kind==='invoices'?postCustomerInvoice(id,actorWithId):kind==='bills'?postVendorBill(id,actorWithId):Promise.reject(new BusinessError('Dokumen tidak dapat diposting.'));
+--- a/src/lib/financialStatements.ts
++++ b/src/lib/financialStatements.ts
+@@ -11,12 +11,12 @@
+  const totalAssets=assets.reduce((n,a)=>n+a.balance,0),totalLiabilities=liabilities.reduce((n,a)=>n+a.balance,0),totalEquity=equity.reduce((n,a)=>n+a.balance,0)+retainedEarnings;
+  const cashCodes=accounts.filter(a=>a.type==='ASSET'&&(/kas|bank|cash/i.test(a.name)||a.code==='1010')).map(a=>a.code);
+  const journals=await prisma.journalEntry.findMany({where:{state:'POSTED',date:{lte:to}},include:{items:{include:{account:true}}},orderBy:{date:'asc'}});
+- let opening=0,closing=0,openingAdjustments=0;const flows:{number:string;date:Date;category:string;amount:number;source:string}[]=[];
+- for(const j of journals){const amount=j.items.filter(i=>cashCodes.includes(i.accountCode)).reduce((n,i)=>n+i.debit-i.credit,0);closing+=amount;if(j.date<from){opening+=amount;continue;}if(!amount)continue;if(j.isOpening){openingAdjustments+=amount;flows.push({number:j.entryNumber,date:j.date,category:'OPENING',amount,source:j.sourceDocument});continue;}
++ let opening=0,closing=0,openingAdjustments=0;const flows:{id:string;number:string;date:Date;category:string;amount:number;source:string}[]=[];
++ for(const j of journals){const amount=j.items.filter(i=>cashCodes.includes(i.accountCode)).reduce((n,i)=>n+i.debit-i.credit,0);closing+=amount;if(j.date<from){opening+=amount;continue;}if(!amount)continue;if(j.isOpening){openingAdjustments+=amount;flows.push({id:j.id,number:j.entryNumber,date:j.date,category:'OPENING',amount,source:j.sourceDocument});continue;}
+   const counterpart=j.items.filter(i=>!cashCodes.includes(i.accountCode));
+   // Mixed journals are shown for review rather than silently assigned a misleading class.
+   const kinds=new Set(counterpart.map(i=>i.account.type==='EQUITY'||(/pinjaman|loan|modal/i.test(i.account.name)&&i.account.type==='LIABILITY')?'FINANCING':i.account.type==='ASSET'&&!['1020','1030','1040'].includes(i.accountCode)?'INVESTING':'OPERATING'));
+-  const category=kinds.size===1?[...kinds][0]:'REVIEW';flows.push({number:j.entryNumber,date:j.date,category,amount,source:j.sourceDocument});
++  const category=kinds.size===1?[...kinds][0]:'REVIEW';flows.push({id:j.id,number:j.entryNumber,date:j.date,category,amount,source:j.sourceDocument});
+  }
+  const net=flows.filter(f=>f.category!=='OPENING').reduce((n,f)=>n+f.amount,0);
+  const groups=['OPERATING','INVESTING','FINANCING','REVIEW'].map(category=>({category,net:flows.filter(f=>f.category===category).reduce((n,f)=>n+f.amount,0)}));
+--- a/src/lib/masterData.ts
++++ b/src/lib/masterData.ts
+@@ -1,6 +1,7 @@
++import type { Role } from '@prisma/client';
++import { AuditedRejection, recordAuditLog } from './audit';
+ import { prisma } from './prisma';
+ import { atomic } from './atomic';
+-import { recordAuditLog } from './audit';
+ import { calculateCustomerCreditStatus } from './creditControl';
+ import { Actor, BusinessError, permit, textValue, money, quantity, numberValue } from './validation';
+ 
+@@ -97,10 +98,20 @@
+     await active('productVariant','sku',data.productSku,'SKU');
+     data.price=money(value.price); data.minimumQty=quantity(value.minimumQty ?? 1); data.currency='IDR';
+   } else if (resource==='leads') {
++    data.stage = value.stage ?? 'NEW';
++    data.expectedRevenue = money(value.expectedRevenue ?? 0);
++    const advanced = ['PROPOSITION','WON'].includes(data.stage);
++    if (!['NEW','QUALIFIED','PROPOSITION','WON'].includes(data.stage) ||
++        (advanced && (!data.expectedRevenue || typeof value.contactId !== 'string' || !value.contactId.trim()))) {
++      throw new AuditedRejection({
++        actorId:actor.id, actorName:actor.name, actorRole:actor.role as Role,
++        action:'STAGE_REJECTED', documentType:'CRM_LEAD', documentId:before?.id || 'DRAFT',
++        afterData:{stage:data.stage,expectedRevenue:data.expectedRevenue},
++        notes:'Pelanggan dan nilai peluang wajib sebelum Proposition/Won (SR-16).',
++      });
++    }
+     data.contactId=textValue(value.contactId,'Pelanggan');
+     if ((await active('contact','id',data.contactId,'Pelanggan')).type!=='CUSTOMER') throw new BusinessError('Kontak harus Pelanggan.');
+-    data.expectedRevenue=money(value.expectedRevenue ?? 0); data.stage=value.stage ?? 'NEW';
+-    if (!['NEW','QUALIFIED','PROPOSITION','WON'].includes(data.stage) || (['PROPOSITION','WON'].includes(data.stage) && !data.expectedRevenue)) throw new BusinessError('Pelanggan dan nilai peluang wajib sebelum Proposition/Won (SR-16).');
+   }
+   if (!before) {
+     data[c.key]=c.key==='id' ? `${resource==='customers'?'C':resource==='vendors'?'V':resource==='leads'?'LD':''}${crypto.randomUUID()}` : textValue(input[c.key],c.key,true,60);
+--- a/src/lib/operationalOverview.ts
++++ b/src/lib/operationalOverview.ts
+@@ -39,7 +39,7 @@
+   if (['HEAD_ADMIN','SALES'].includes(user.role)) {
+     const where={status:'DRAFT' as const,discountPercent:{gt:10},discountApproved:false};
+     counts.discountApprovals=await db.salesOrder.count({where});
+-    for(const r of await db.salesOrder.findMany({where,orderBy:{orderDate:'asc'},take:4})) tasks.push({id:r.id,department:'Sales → Head Admin',title:`Tinjau diskon ${r.orderNumber}`,reason:`Diskon ${r.discountPercent}% menunggu persetujuan Head Admin sebelum konfirmasi.`,href:`/sales/orders?id=${encodeURIComponent(r.id)}`,priority:'NORMAL'});
++    for(const r of await db.salesOrder.findMany({where,orderBy:{orderDate:'asc'},take:4})) tasks.push({id:r.id,department:'Sales → Owner / Head Admin',title:`Tinjau diskon ${r.orderNumber}`,reason:`Diskon ${r.discountPercent}% menunggu persetujuan Owner atau Head Admin sebelum konfirmasi.`,href:`/sales/orders?id=${encodeURIComponent(r.id)}`,priority:'NORMAL'});
+   }
+   if (['HEAD_ADMIN','WAREHOUSE','PROCUREMENT','CASHIER'].includes(user.role)) {
+     const assignments=user.role==='CASHIER'?await db.outletAccess.findMany({where:{userId:user.id}}):[];
+--- a/src/lib/purchaseEngine.ts
++++ b/src/lib/purchaseEngine.ts
+@@ -21,9 +21,9 @@
+   uniqueLines(lineInputs, l => l.productSku);
+   lineInputs.forEach(l => { quantity(l.orderedQty); if (l.unitPrice !== undefined) money(l.unitPrice); });
+ 
+-  // Role check: PROCUREMENT or OWNER
++  // Role check: PROCUREMENT or HEAD_ADMIN
+   if (actor.role !== Role.PROCUREMENT && actor.role !== Role.HEAD_ADMIN) {
+-    throw new Error("Akses ditolak (SR-15): Hanya Procurement atau Owner yang dapat membuat RFQ / PO.");
++    throw new Error("Akses ditolak (SR-15): Hanya Procurement atau Head Admin yang dapat membuat RFQ / PO.");
+   }
+ 
+   const vendor = await prisma.contact.findUnique({
+@@ -104,10 +104,21 @@
+   return purchaseOrder;
+ }
+ 
++async function draftReceipt(po: {id:string; scheduledDate:Date}, destLocation:string, lines:{productSku:string; orderedQty:number}[]) {
++  return prisma.goodsReceipt.create({
++    data: {
++      receiptNumber:await getNextSequence('RECEIPT'), purchaseOrderId:po.id, destLocation,
++      scheduledDate:po.scheduledDate, status:'DRAFT',
++      lines:{create:lines.map(line=>({productSku:line.productSku, demandQty:line.orderedQty}))},
++    },
++    include:{lines:true},
++  });
++}
++
+ async function confirmPurchaseOrderImpl(poId: string, actor: { id: string; name: string; role: Role }, destLocation = "WH-JKT") {
+-  // Role check: PROCUREMENT or OWNER
++  // Role check: PROCUREMENT or HEAD_ADMIN
+   if (actor.role !== Role.PROCUREMENT && actor.role !== Role.HEAD_ADMIN) {
+-    throw new Error("Akses ditolak (SR-15): Hanya Procurement atau Owner yang dapat mengonfirmasi Purchase Order.");
++    throw new Error("Akses ditolak (SR-15): Hanya Procurement atau Head Admin yang dapat mengonfirmasi Purchase Order.");
+   }
+ 
+   const po = await prisma.purchaseOrder.findFirst({
+@@ -120,9 +131,19 @@
+   // Idempotency Check (SR-13 / T-16):
+   // If already confirmed, do not create duplicate receipt or commit twice
+   if (po.status === OrderStatus.CONFIRMED || po.status === OrderStatus.DONE) {
++    let receipt = po.receipts[0] || null;
++    if (!receipt && po.status === OrderStatus.CONFIRMED) {
++      const outstanding = po.lines.filter(line=>line.orderedQty>line.receivedQty)
++        .map(line=>({productSku:line.productSku, orderedQty:line.orderedQty-line.receivedQty}));
++      if (outstanding.length) {
++        if (!await prisma.warehouseLocation.findFirst({where:{code:destLocation,archivedAt:null}})) throw new Error('Lokasi penerimaan tidak aktif.');
++        receipt = await draftReceipt(po, destLocation, outstanding);
++        await recordAuditLog({actorId:actor.id,actorRole:actor.role,actorName:actor.name,action:'PREPARE_RECEIPT',documentType:'PO',documentId:po.poNumber,afterData:{receiptNumber:receipt.receiptNumber}});
++      }
++    }
+     return {
+       purchaseOrder: po,
+-      receipt: po.receipts[0] || null,
++      receipt,
+       message: "Purchase Order sudah dikonfirmasi sebelumnya (idempotent). Tidak ada duplikasi dokumen.",
+       alreadyConfirmed: true,
+     };
+@@ -139,25 +160,7 @@
+     });
+ 
+     // 2. Create GoodsReceipt in DRAFT status
+-    const receiptNumber = await getNextSequence("RECEIPT");
+-    const receipt = await tx.goodsReceipt.create({
+-      data: {
+-        receiptNumber,
+-        purchaseOrderId: po.id,
+-        destLocation,
+-        scheduledDate: po.scheduledDate,
+-        status: "DRAFT",
+-        lines: {
+-          create: po.lines.map((l) => ({
+-            productSku: l.productSku,
+-            demandQty: l.orderedQty,
+-            acceptedQty: 0,
+-            rejectedQty: 0,
+-          })),
+-        },
+-      },
+-      include: { lines: true },
+-    });
++    const receipt = await draftReceipt(po, destLocation, po.lines);
+ 
+     return { updatedPo, receipt };
+   });
+@@ -203,9 +206,9 @@
+   uniqueLines(items, l => l.lineId); uniqueLines(items, l => l.productSku);
+   items.forEach(i => { quantity(i.acceptedQty, true); quantity(i.rejectedQty, true); });
+ 
+-  // Role check: WAREHOUSE or OWNER
++  // Role check: WAREHOUSE or HEAD_ADMIN
+   if (actor.role !== Role.WAREHOUSE && actor.role !== Role.HEAD_ADMIN) {
+-    throw new Error("Akses ditolak (SR-15): Hanya Warehouse atau Owner yang berwenang memvalidasi penerimaan barang.");
++    throw new Error("Akses ditolak (SR-15): Hanya Warehouse atau Head Admin yang berwenang memvalidasi penerimaan barang.");
+   }
+ 
+   const receipt = await prisma.goodsReceipt.findFirst({
+@@ -408,9 +411,9 @@
+   uniqueLines(lineInputs, l => l.productSku);
+   lineInputs.forEach(l => { quantity(l.quantity); if (l.unitPrice !== undefined) money(l.unitPrice); });
+ 
+-  // Role check: FINANCE or OWNER
++  // Role check: FINANCE or HEAD_ADMIN
+   if (actor.role !== Role.FINANCE && actor.role !== Role.HEAD_ADMIN) {
+-    throw new Error("Akses ditolak (SR-15): Hanya Finance atau Owner yang dapat membuat Vendor Bill.");
++    throw new Error("Akses ditolak (SR-15): Hanya Finance atau Head Admin yang dapat membuat Vendor Bill.");
+   }
+ 
+   const po = await prisma.purchaseOrder.findFirst({
+@@ -530,9 +533,9 @@
+ }
+ 
+ async function postVendorBillImpl(billId: string, actor: { id: string; name: string; role: Role }) {
+-  // Role check: FINANCE or OWNER
++  // Role check: FINANCE or HEAD_ADMIN
+   if (actor.role !== Role.FINANCE && actor.role !== Role.HEAD_ADMIN) {
+-    throw new Error("Akses ditolak (SR-15): Hanya Finance atau Owner yang berwenang memposting Vendor Bill.");
++    throw new Error("Akses ditolak (SR-15): Hanya Finance atau Head Admin yang berwenang memposting Vendor Bill.");
+   }
+ 
+   const bill = await prisma.vendorBill.findFirst({
+--- a/src/lib/salesEngine.ts
++++ b/src/lib/salesEngine.ts
+@@ -3,7 +3,7 @@
+ import { prisma } from "./prisma";
+ import { OrderStatus, Role } from "@prisma/client";
+ import { validateCreditCheck } from "./creditControl";
+-import { recordAuditLog } from "./audit";
++import { AuditedRejection, recordAuditLog } from "./audit";
+ import { getNextSequence } from "./sequences";
+ 
+ export interface LineItemInput {
+@@ -175,9 +175,9 @@
+   return order;
+ }
+ 
+-async function approveOrderDiscountImpl(orderId: string, actor: { id: string; name: string; role: Role }) {
+-  if (actor.role !== Role.HEAD_ADMIN) {
+-    throw new Error("Akses ditolak (SR-08): Hanya Head Admin yang berwenang menyetujui diskon di atas 10%.");
++async function approveOrderDiscountImpl(orderId: string, actor: { id: string; name: string; role: Role }, version?: number) {
++  if (actor.role !== Role.HEAD_ADMIN && actor.role !== Role.OWNER) {
++    throw new Error("Akses ditolak (SR-08): Hanya Owner atau Head Admin yang berwenang menyetujui diskon di atas 10%.");
+   }
+ 
+   const order = await prisma.salesOrder.findUnique({
+@@ -186,6 +186,8 @@
+ 
+   if (!order) throw new Error("Order tidak ditemukan.");
+   editable(order.status);
++  if (version !== undefined && version !== order.version) throw new Error("Pesanan berubah. Muat ulang sebelum memberi persetujuan.");
++  if (order.discountApproved) return order;
+ 
+   const updated = await prisma.salesOrder.update({
+     where: { id: orderId },
+@@ -206,10 +208,20 @@
+     afterData: updated,
+     documentType: "SO",
+     documentId: order.orderNumber,
+-    notes: `Diskon ${order.discountPercent}% pada ${order.orderNumber} disetujui oleh Head Admin (${actor.name}).`,
++    notes: `Diskon ${order.discountPercent}% pada ${order.orderNumber} disetujui oleh ${actor.role} (${actor.name}).`,
+   });
+ 
+   return updated;
++}
++
++async function draftDelivery(salesOrderId: string, sourceLocation: string, lines: {productSku: string; quantity: number}[]) {
++  return prisma.deliveryOrder.create({
++    data: {
++      deliveryNumber: await getNextSequence('DO'), salesOrderId, sourceLocation, status: 'DRAFT',
++      lines: {create: lines.map(line => ({productSku: line.productSku, orderedQty: line.quantity}))},
++    },
++    include: {lines: true},
++  });
+ }
+ 
+ async function confirmSalesOrderImpl(orderId: string, actor: { id: string; name: string; role: Role }, sourceLocation = "WH-JKT") {
+@@ -226,7 +238,19 @@
+ 
+   // Idempotency check: if already confirmed, do not re-confirm
+   if (order.status === OrderStatus.CONFIRMED) {
+-    return { order, confirmedOrder: order, deliveryOrder: await prisma.deliveryOrder.findFirst({ where: { salesOrderId: order.id }, include: { lines: true } }), message: "Order sudah dikonfirmasi sebelumnya (idempotent)." };
++    let deliveryOrder = await prisma.deliveryOrder.findFirst({where: {salesOrderId: order.id}, include: {lines: true}, orderBy: {createdAt:'asc'}});
++    const remaining = order.lines.filter(line => line.quantity > line.deliveredQty)
++      .map(line => ({id:line.id, productSku:line.productSku, quantity:line.quantity-line.deliveredQty}));
++    if (!deliveryOrder && remaining.length) {
++      const allocations = await prisma.stockReservation.findMany({where: {salesOrderLineId:{in:remaining.map(l=>l.id)}, quantity:{gt:0}}});
++      const locations = new Set(allocations.map(a=>a.locationCode));
++      if (locations.size !== 1 || remaining.some(line => !allocations.some(a=>a.salesOrderLineId===line.id && a.quantity===line.quantity))) {
++        throw new Error('Reservasi lama tidak cocok dengan sisa pesanan. Periksa alokasi gudang sebelum menyiapkan pengiriman.');
++      }
++      deliveryOrder = await draftDelivery(order.id, allocations[0].locationCode, remaining);
++      await recordAuditLog({actorId:actor.id,actorRole:actor.role,actorName:actor.name,action:'PREPARE_DELIVERY',documentType:'SO',documentId:order.orderNumber,afterData:{deliveryNumber:deliveryOrder.deliveryNumber}});
++    }
++    return {order, confirmedOrder:order, deliveryOrder, message:'Pesanan sudah dikonfirmasi. Reservasi dipertahankan.'};
+   }
+ 
+   editable(order.status);
+@@ -235,25 +259,22 @@
+   for (const l of order.lines) { quantity(l.quantity); money(l.unitPrice); discount(l.discountPercent); }
+   // 1. Discount Approval Check (SR-08 / T-10)
+   if (order.discountPercent > 10 && !order.discountApproved) {
+-    await recordAuditLog({
++    throw new AuditedRejection({
+       actorId: actor.id,
+       actorName: actor.name,
+       actorRole: actor.role,
+       action: "CONFIRM_BLOCKED_DISCOUNT",
+       documentType: "SO",
+       documentId: order.orderNumber,
+-      notes: `Konfirmasi ${order.orderNumber} ditolak: Diskon ${order.discountPercent}% memerlukan persetujuan Head Admin (SR-08).`,
+-    });
+-
+-    throw new Error(
+-      `Persetujuan Diperlukan (SR-08 / T-10): Diskon ${order.discountPercent}% melebihi batas 10%. Memerlukan persetujuan Head Admin sebelum order dapat dikonfirmasi.`
++      notes: `Konfirmasi ${order.orderNumber} ditolak: Diskon ${order.discountPercent}% memerlukan persetujuan Owner atau Head Admin (SR-08).`,
++    }, `Persetujuan Diperlukan (SR-08 / T-10): Diskon ${order.discountPercent}% melebihi batas 10%. Memerlukan persetujuan Owner atau Head Admin sebelum order dapat dikonfirmasi.`
+     );
+   }
+ 
+   // 2. Credit Control Check (SR-09 / T-04)
+   const creditCheck = await validateCreditCheck(order.contactId, order.totalGross);
+   if (!creditCheck.allowed) {
+-    await recordAuditLog({
++    throw new AuditedRejection({
+       actorId: actor.id,
+       actorName: actor.name,
+       actorRole: actor.role,
+@@ -261,10 +282,7 @@
+       documentType: "SO",
+       documentId: order.orderNumber,
+       notes: `Credit check gagal: ${creditCheck.reason}`,
+-    });
+-
+-    throw new Error(
+-      `Batas Kredit Terlampaui (SR-09 / T-04): ${creditCheck.reason}`
++    }, `Batas Kredit Terlampaui (SR-09 / T-04): ${creditCheck.reason}`
+     );
+   }
+ 
+@@ -290,24 +308,7 @@
+     }
+ 
+     // C. Create linked Delivery Order in DRAFT status
+-    const deliveryNumber = await getNextSequence("DO");
+-    const deliveryOrder = await tx.deliveryOrder.create({
+-      data: {
+-        deliveryNumber,
+-        salesOrderId: confirmedOrder.id,
+-        sourceLocation,
+-        status: "DRAFT",
+-        lines: {
+-          create: order.lines.map((l) => ({
+-            productSku: l.productSku,
+-            orderedQty: l.quantity,
+-            deliveredQty: 0,
+-            backorderQty: 0,
+-          })),
+-        },
+-      },
+-      include: { lines: true },
+-    });
++    const deliveryOrder = await draftDelivery(confirmedOrder.id, sourceLocation, order.lines);
+ 
+     return { confirmedOrder, deliveryOrder };
+   });
+@@ -351,7 +352,7 @@
+ 
+   // SR-08 / F-06: Price and discount locked once Confirmed
+   if (order.status === OrderStatus.CONFIRMED || order.isPriceLocked) {
+-    await recordAuditLog({
++    throw new AuditedRejection({
+       actorId: actor.id,
+       actorName: actor.name,
+       actorRole: actor.role,
+@@ -359,10 +360,7 @@
+       documentType: "SO",
+       documentId: order.orderNumber,
+       notes: `Percobaan ubah harga pada order ${order.orderNumber} yang sudah Confirmed dicegah (SR-08 / F-06).`,
+-    });
+-
+-    throw new Error(
+-      "Perubahan Tak Sah (SR-08 / F-06): Harga dan diskon telah dikunci setelah Sales Order dikonfirmasi. Perubahan ditolak."
++    }, "Perubahan Tak Sah (SR-08 / F-06): Harga dan diskon telah dikunci setelah Sales Order dikonfirmasi. Perubahan ditolak."
+     );
+   }
+ 
+--- a/src/lib/uxFlows.ts
++++ b/src/lib/uxFlows.ts
+@@ -10,7 +10,7 @@
+   if(['invoices','bills'].includes(kind)&&r.isPosted){
+     return r.outstandingAmount>0?{text:'Finance melanjutkan pencatatan pembayaran. Dokumen sudah terposting, tetapi belum lunas.',href:'/accounting/payments',label:'Buka pembayaran',roles:['HEAD_ADMIN','FINANCE']}:{text:'Tagihan sudah tidak memiliki sisa pembayaran. Riwayat tetap dapat diperiksa.'};
+   }
+-  if(kind==='sales'&&r.status==='DRAFT'&&r.discountPercent>10&&!r.discountApproved)return {text:'Diskon di atas 10% menunggu persetujuan Head Admin. Setelah disetujui, Sales dapat mengonfirmasi pesanan.'};
++  if(kind==='sales'&&r.status==='DRAFT'&&r.discountPercent>10&&!r.discountApproved)return {text:'Diskon di atas 10% menunggu persetujuan Owner atau Head Admin. Setelah disetujui, Sales dapat mengonfirmasi pesanan.'};
+   if(['sales','purchase'].includes(kind)&&['CONFIRMED','DONE'].includes(r.status)&&r.lines?.length){
+     const sales=kind==='sales';
+     const documents=(sales?r.invoices:r.bills)?.filter((d:any)=>d.status!=='CANCELLED')||[];
+--- /dev/null
++++ b/scripts/reconcile_inventory.py
+@@ -0,0 +1,49 @@
++"""Read-only dry run: compare physical stock, account cache and posted GL per company."""
++import json
++import sqlite3
++from contextlib import closing
++from pathlib import Path
++
++
++def inspect(db_file):
++    with closing(sqlite3.connect(db_file.resolve().as_uri() + "?mode=ro", uri=True)) as db:
++        db.row_factory = sqlite3.Row
++        db.execute("PRAGMA query_only = ON")
++        db.execute("BEGIN")
++        stock = [dict(row) for row in db.execute("""
++            SELECT s.locationCode, s.productSku, s.onHand, p.standardCost,
++                   s.onHand * p.standardCost AS valuation
++            FROM StockLevel s JOIN ProductVariant p ON p.sku = s.productSku
++            ORDER BY s.locationCode, s.productSku
++        """)]
++        accounts = [dict(row) for row in db.execute("""
++            SELECT a.code, a.openingBalance, a.currentBalance,
++                   COALESCE(posted.balance, 0) AS postedBalance
++            FROM Account a LEFT JOIN (
++                SELECT i.accountCode, SUM(i.debit - i.credit) AS balance
++                FROM JournalItem i JOIN JournalEntry j ON j.id = i.journalEntryId
++                WHERE j.state = 'POSTED' GROUP BY i.accountCode
++            ) posted ON posted.accountCode = a.code
++            WHERE a.code = '1030'
++        """)]
++        journals = db.execute("SELECT COUNT(*) FROM JournalEntry WHERE state='POSTED'").fetchone()[0]
++        value = sum(line["valuation"] for line in stock)
++        account = accounts[0] if accounts else None
++        stored = account["currentBalance"] if account else None
++        posted = account["postedBalance"] if account else None
++        return {
++            "inventoryValuation": value, "stockByLocationAndSku": stock,
++            "account1030": account, "postedJournalCount": journals,
++            "physicalMinusCached": value - stored if account else None,
++            "physicalMinusPosted": value - posted if account else None,
++            "cachedMinusPosted": stored - posted if account else None,
++            "status": "MATCH" if value == stored == posted else "REVIEW",
++            "action": "No change" if value == stored == posted else "Require signed opening inventory and trial balance before proposing a posting",
++        }
++
++
++if __name__ == "__main__":
++    folder = Path(__file__).resolve().parents[1] / "prisma"
++    companies = json.loads((folder / "companies.json").read_text())
++    report = [{"company": c["name"], "id": c["id"], **inspect(folder / c["dbFile"])} for c in companies]
++    print(json.dumps({"mode": "read-only", "companies": report}, ensure_ascii=False, indent=2))
+--- a/scripts/smoke_http.py
++++ b/scripts/smoke_http.py
+@@ -26,11 +26,20 @@
+ def passed(name): evidence.append({'name':name,'status':'PASS'});print('[PASS]',name,flush=True)
+ 
+ request('GET','/api/master/customers',status=401);passed('Anonymous master API denied')
+-login,headers=request('POST','/api/auth/login',{'email':'owner@rasaaruna.com','password':'Password123!'})
+-cookie=SimpleCookie();cookie.load(headers['set-cookie']);assert all(c['httponly'] for c in cookie.values())
+-# Production secure cookies are sent explicitly to the fixed loopback test host.
+-cookies='; '.join(k+'='+v.value for k,v in cookie.items())
+-me,_=request('GET','/api/auth/me');assert me['user']['role']=='OWNER';passed('Real HTTP login and authenticated session')
++def login_as(email,role):
++    global cookies
++    cookies=''
++    _,headers=request('POST','/api/auth/login',{'email':email,'password':'Password123!'})
++    cookie=SimpleCookie();cookie.load(headers['set-cookie'])
++    assert cookie and all(c['httponly'] for c in cookie.values())
++    cookies='; '.join(k+'='+v.value for k,v in cookie.items())
++    me,_=request('GET','/api/auth/me');assert me['user']['role']==role
++login_as('owner@rasaaruna.com','OWNER')
++request('GET','/api/dashboard/metrics')
++request('POST','/api/master/customers',{'name':'Denied'},status=403)
++passed('Owner reads company metrics and cannot create master customers')
++login_as('admin@rasaaruna.com','HEAD_ADMIN')
++passed('Head Admin starts authenticated administration session')
+ if args.verify_restart:
+     probe=json.loads((project/'http-persistence-checkpoint.json').read_text())
+     detail,_=request('GET','/api/master/customers/'+probe['id']);assert detail['record']['name']==probe['name']
+@@ -54,13 +63,10 @@
+ order,_=request('POST','/api/sales/orders',{'contactId':'C01','lines':[{'productSku':'RICE-CHICK-S','quantity':2,'unitPrice':48000}]},key=uuid.uuid4().hex);so=order['order'];workflow='/api/workflow/sales/'+so['id']
+ edit,_=request('POST',workflow,{'action':'edit','version':0,'lines':[{'productSku':'RICE-CHICK-S','quantity':3,'unitPrice':48000,'discountPercent':0}]});assert edit['record']['totalGross']==158400
+ request('POST',workflow,{'action':'cancel','version':1});passed('Sales HTTP draft edit and safe cancellation')
+-cashier,headers=request('POST','/api/auth/login',{'email':'cashier@rasaaruna.com','password':'Password123!'})
+-cookie=SimpleCookie();cookie.load(headers['set-cookie']);cookies='; '.join(k+'='+v.value for k,v in cookie.items())
++login_as('cashier@rasaaruna.com','CASHIER')
+ request('GET','/api/accounting/general-ledger',status=403);request('POST','/api/master/customers',{'name':'Denied'},status=403);passed('Cashier is denied GL and master mutations over HTTP')
+ # Leave one disposable checkpoint for a separate process-restart check.
+-cookies=''
+-_,owner_headers=request('POST','/api/auth/login',{'email':'owner@rasaaruna.com','password':'Password123!'})
+-owner_cookie=SimpleCookie();owner_cookie.load(owner_headers['set-cookie']);cookies='; '.join(k+'='+v.value for k,v in owner_cookie.items())
++login_as('admin@rasaaruna.com','HEAD_ADMIN')
+ checkpoint,_=request('POST','/api/master/customers',{'name':'HTTP persistence '+suffix,'city':'Jakarta'})
+ (project/'http-persistence-checkpoint.json').write_text(json.dumps({'id':checkpoint['record']['id'],'name':checkpoint['record']['name']}))
+ Path(project/'http-smoke-results.json').write_text(json.dumps(evidence,indent=2))
+--- a/scripts/test_advanced_fnb.ts
++++ b/scripts/test_advanced_fnb.ts
+@@ -52,25 +52,31 @@
+  const transfer=await createInternalTransfer({sourceLocation:'CAFE-JKT',destLocation:'WH-JKT',lines:[{productSku:'RAW-TEST',quantity:10}],actor:warehouse});await validateInternalTransfer(transfer.id,warehouse);assert.equal(await stock('RAW-TEST','WH-JKT'),10);assert.equal((await prisma.stockLot.findFirstOrThrow({where:{productSku:'RAW-TEST',locationCode:'WH-JKT'}})).code,'LATER');pass('Transfer preserves batch identity and expiration');
+  await advancedMutation('rule',{productSku:'RAW-TEST',locationCode:'WH-JKT',minimum:20,target:30},owner);const pr=await prisma.purchaseRequest.findFirstOrThrow({where:{productSku:'RAW-TEST',locationCode:'WH-JKT'}});assert.equal(pr.quantity,20);await advancedMutation('evaluateRules',{},owner);assert.equal(await prisma.purchaseRequest.count({where:{productSku:'RAW-TEST',locationCode:'WH-JKT'}}),1);pass('Reorder rule generates one request for the shortage');
+  await assert.rejects(()=>advancedMutation('requestToPO',{id:pr.id,vendorId:'V01'},owner));await advancedMutation('approveRequest',{id:pr.id},owner);await advancedMutation('requestToPO',{id:pr.id,vendorId:'V01'},owner);assert.equal(await prisma.purchaseRequest.count({where:{productSku:'RAW-TEST',locationCode:'WH-JKT'}}),1);pass('Approval required; conversion does not regenerate duplicate PR');
+- await assert.rejects(()=>openPosSession({cashierId:cashier.id,locationCode:'WH-JKT',actor:cashier}));await advancedMutation('outletAccess',{userId:cashier.id,locationCode:'WH-JKT'},owner);const second=await openPosSession({cashierId:cashier.id,locationCode:'WH-JKT',actor:cashier});assert.equal(second.locationCode,'WH-JKT');pass('Multi-outlet cashier access requires Owner assignment');
++ await assert.rejects(()=>openPosSession({cashierId:cashier.id,locationCode:'WH-JKT',actor:cashier}));await advancedMutation('outletAccess',{userId:cashier.id,locationCode:'WH-JKT'},owner);const second=await openPosSession({cashierId:cashier.id,locationCode:'WH-JKT',actor:cashier});assert.equal(second.locationCode,'WH-JKT');pass('Multi-outlet cashier access requires Head Admin assignment');
+  const table:any=await kitchenAction('table',{name:'Meja Uji',locationCode:'CAFE-JKT'},owner);
+- const params=Promise.resolve({company:'default',token:table.token});const menu=await publicMenu(new NextRequest('http://localhost/api/order/default/'+table.token),{params});assert.equal(menu.status,200);const menuData=await menu.json();assert(!('standardCost' in menuData.products[0]));pass('Public QR menu exposes no costs or customer data');
+- const reqKey=crypto.randomUUID();const post=()=>publicOrder(new NextRequest('http://localhost/api/order/default/'+table.token,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({requestKey:reqKey,lines:[{productSku:'COF-LATT-HOT',quantity:1}],notes:'Test kitchen'})}),{params});
+- assert.equal((await post()).status,200);assert.equal((await post()).status,200);const ticket=await prisma.kitchenTicket.findFirstOrThrow({where:{tableId:table.id}});assert.equal(await prisma.kitchenTicket.count({where:{tableId:table.id}}),1);pass('QR submission retries create exactly one unpaid kitchen ticket');
++ const beforePublic = await Promise.all([prisma.kitchenTicket.count(), prisma.posOrder.count(), prisma.stockMove.count()]);
++ const menu = await publicMenu();
++ assert.equal(menu.status,410);
++ assert(!('products' in await menu.json()));
++ assert.equal((await publicOrder()).status,410);
++ assert.equal((await publicOrder()).status,410);
++ assert.deepEqual(await Promise.all([prisma.kitchenTicket.count(), prisma.posOrder.count(), prisma.stockMove.count()]),beforePublic);
++ pass('Retired public QR menu and repeated submissions expose no products and create no orders or stock moves');
++ const ticket = await prisma.kitchenTicket.create({data:{number:'KDS-TEST',requestKey:crypto.randomUUID(),tableId:table.id,tableName:table.name,locationCode:'CAFE-JKT',lines:JSON.stringify([{productSku:'COF-LATT-HOT',quantity:1}])}});
+  await assert.rejects(()=>kitchenAction('ticketStatus',{id:ticket.id,status:'READY'},kitchen));await kitchenAction('ticketStatus',{id:ticket.id,status:'ACCEPTED'},kitchen);await kitchenAction('ticketStatus',{id:ticket.id,status:'PREPARING'},kitchen);await kitchenAction('ticketStatus',{id:ticket.id,status:'READY'},kitchen);await assert.rejects(()=>kitchenAction('ticketStatus',{id:ticket.id,status:'COMPLETED'},kitchen));pass('Kitchen enforces status sequence and cannot complete unpaid orders');
+- const before=await prisma.posOrder.count();await kitchenAction('payTicket',{id:ticket.id,sessionId:session.id,paymentMethod:'QRIS'},owner);await kitchenAction('payTicket',{id:ticket.id,sessionId:session.id,paymentMethod:'QRIS'},owner);assert.equal(await prisma.posOrder.count(),before+1);await kitchenAction('ticketStatus',{id:ticket.id,status:'COMPLETED'},kitchen);assert.equal(await prisma.kitchenTicket.count({where:{tableId:table.id}}),1);pass('QR checkout posts POS once and keeps original ticket lifecycle');
+- await kitchenAction('disableTable',{id:table.id},owner);assert.equal((await publicMenu(new NextRequest('http://localhost/'),{params})).status,404);pass('Disabled QR link cannot retrieve menu');
++ const before=await prisma.posOrder.count();await kitchenAction('payTicket',{id:ticket.id,sessionId:session.id,paymentMethod:'QRIS'},owner);await kitchenAction('payTicket',{id:ticket.id,sessionId:session.id,paymentMethod:'QRIS'},owner);assert.equal(await prisma.posOrder.count(),before+1);await kitchenAction('ticketStatus',{id:ticket.id,status:'COMPLETED'},kitchen);assert.equal(await prisma.kitchenTicket.count({where:{tableId:table.id}}),1);pass('Internal unpaid ticket checkout posts POS once and keeps original ticket lifecycle');
++ await kitchenAction('disableTable',{id:table.id},owner);assert.equal((await publicMenu()).status,410);pass('Disabled QR link cannot retrieve menu');
+  const cancelled:any=await advancedMutation('production',{recipeId:recipe.id,locationCode:'CAFE-JKT',plannedQty:1},owner).catch(()=>null);
+  // The recipe is backflush now, so stale production creation must be rejected.
+  assert.equal(cancelled,null);await advancedMutation('cancelProduction',{id:mo2.id},owner);assert.equal((await prisma.productionOrder.findUniqueOrThrow({where:{id:mo2.id}})).status,'CANCELLED');await assert.rejects(()=>advancedMutation('finishProduction',{id:mo2.id,actualQty:1,inputs:[{productSku:'RAW-TEST',quantity:2}]},owner));pass('Cancelled draft cannot consume ingredients; backflush recipes cannot create production orders');
+  assert.throws(()=>validatePublicLines([{productSku:'COF-LATT-HOT',quantity:101}]));assert.throws(()=>validatePublicLines([{productSku:'COF-LATT-HOT',quantity:0}]));pass('QR quantities are bounded to 1–100 per variant');
+- await advancedMutation('rule',{productSku:'COOKIE-CHO-1',locationCode:'WH-JKT',minimum:1000,target:1100},owner);const rejected=await prisma.purchaseRequest.findFirstOrThrow({where:{productSku:'COOKIE-CHO-1',status:'PENDING'}});await advancedMutation('rejectRequest',{id:rejected.id},owner);const rule=await prisma.reorderRule.findFirstOrThrow({where:{productSku:'COOKIE-CHO-1'}});assert.equal(rule.active,false);await advancedMutation('evaluateRules',{},owner);assert.equal(await prisma.purchaseRequest.count({where:{productSku:'COOKIE-CHO-1',status:'PENDING'}}),0);pass('Owner rejection pauses restocking and prevents immediate recreation');
++ await advancedMutation('rule',{productSku:'COOKIE-CHO-1',locationCode:'WH-JKT',minimum:1000,target:1100},owner);const rejected=await prisma.purchaseRequest.findFirstOrThrow({where:{productSku:'COOKIE-CHO-1',status:'PENDING'}});await advancedMutation('rejectRequest',{id:rejected.id},owner);const rule=await prisma.reorderRule.findFirstOrThrow({where:{productSku:'COOKIE-CHO-1'}});assert.equal(rule.active,false);await advancedMutation('evaluateRules',{},owner);assert.equal(await prisma.purchaseRequest.count({where:{productSku:'COOKIE-CHO-1',status:'PENDING'}}),0);pass('Head Admin rejection pauses restocking and prevents immediate recreation');
+  await advancedMutation('toggleRule',{id:rule.id,active:true},owner);assert.equal(await prisma.purchaseRequest.count({where:{productSku:'COOKIE-CHO-1',status:'PENDING'}}),1);pass('Reorder rules can be explicitly resumed');
+  const openingEntry=await prisma.journalEntry.findFirstOrThrow({where:{isOpening:true}});const openingDate=businessDate(openingEntry.date);const firstDay=await financialStatements(openingDate,openingDate);assert(firstDay.cashFlow.openingAdjustments>0);assert.equal(firstDay.cashFlow.flows.filter(f=>f.category==='OPENING').reduce((sum,f)=>sum+f.amount,0),firstDay.cashFlow.openingAdjustments);assert(Math.abs(firstDay.cashFlow.difference)<.01);pass('Opening journals inside the report period appear as migration adjustments');
+  const ownerHeaders={authorization:'Bearer '+await createSessionToken({...owner,companyId:'default'})};const cashierHeaders={authorization:'Bearer '+await createSessionToken({...cashier,companyId:'default'})};
+  await prisma.warehouseLocation.create({data:{code:'CAFE-BDG',name:'Gerai uji Bandung',type:'Internal',usage:'Warehouse'}});await adjustStock({sku:'RAW-TEST',locationCode:'CAFE-BDG',newOnHand:3,reason:'Third location fixture',actor:owner});const detail=await productDetails(new NextRequest('http://localhost/api/products/RAW-TEST',{headers:ownerHeaders}),{params:Promise.resolve({sku:'RAW-TEST'})});assert.equal(detail.status,200);const detailData=await detail.json();assert.equal(detailData.product.locations.find((l:any)=>l.locationCode==='CAFE-BDG').onHand,3);assert.equal(detailData.product.companyOnHand,(await stock('RAW-TEST'))+(await stock('RAW-TEST','WH-JKT'))+3);pass('Product details include a third location in physical totals');
+  const scoped=await productList(new NextRequest('http://localhost/api/products',{headers:cashierHeaders}));assert.equal(scoped.status,200);const scopedData=await scoped.json();assert(scopedData.products.every((p:any)=>p.stockLevels.every((l:any)=>l.locationCode==='WH-JKT')&&!('cafeStock' in p)&&!('standardCost' in p)));const overview=await operationalOverview(prisma as any,cashier);assert(overview.tasks.filter(t=>t.id.startsWith('stock:')).every(t=>t.reason.includes('WH-JKT')));pass('Cashier product and work lists respect assigned outlets without exposing costs');
+- const kitchenOverview=await operationalOverview(prisma as any,kitchen);assert.equal(typeof kitchenOverview.counts.kitchenOrders,'number');assert.equal(typeof kitchenOverview.counts.productionDrafts,'number');pass('Kitchen role receives its own operational priorities');
++ const kitchenOverview=await operationalOverview(prisma as any,kitchen);assert.equal(kitchenOverview.role,'KITCHEN');assert(kitchenOverview.tasks.every(task=>!task.href.startsWith('/operations/')));assert(!('overdueInvoices' in kitchenOverview.counts));pass('Kitchen overview preserves role isolation and omits retired operations pages');
+  const statements=await financialStatements();assert(Math.abs(statements.balanceSheet.difference)<.01);assert(Math.abs(statements.cashFlow.difference)<.01);pass('Balance sheet and cash flow reconcile after production, waste, sales and refunds');
+  for(const j of await prisma.journalEntry.findMany({include:{items:true}}))assert(Math.abs(j.items.reduce((n,i)=>n+i.debit-i.credit,0))<.001);pass('All generated journals balanced');
+ }
+--- a/scripts/test_integrity.ts
++++ b/scripts/test_integrity.ts
+@@ -3,6 +3,7 @@
+ import os from 'node:os';
+ import path from 'node:path';
+ import { PrismaClient } from '@prisma/client';
++import { POST as pay } from '../src/app/api/accounting/payments/route';
+ import { NextRequest } from 'next/server';
+ import { prisma } from '../src/lib/prisma';
+ import { executeSeed } from '../src/lib/seedData';
+@@ -30,6 +31,28 @@
+ async function check(name:string,fn:()=>Promise<void>){await reset();await fn();console.log('[PASS]',name);}
+ async function main(){
+  const cwd=realpathSync(process.cwd());assert(cwd.startsWith(realpathSync(os.tmpdir())+path.sep));assert(realpathSync((process.env.DATABASE_URL||'').replace(/^file:/,'')).startsWith(cwd+path.sep));
++ await check('Seed orders prepare exactly one warehouse draft across concurrent attempts', async () => {
++   const so=await prisma.salesOrder.findUniqueOrThrow({where:{orderNumber:'S00006'}});
++   const po=await prisma.purchaseOrder.findUniqueOrThrow({where:{poNumber:'P00006'}});
++   const counts=async()=>[await prisma.journalEntry.count(),await prisma.stockMove.count(),(await s()).reserved,(await s()).onHand];
++   const before=await counts();
++   const prepare=(kind:string,id:string,actor:any)=>documentAction(kind,id,{action:'prepare',version:0},actor);
++   await Promise.all([prepare('sales',so.id,a.SALES),prepare('sales',so.id,a.SALES)]);
++   await Promise.all([prepare('purchase',po.id,a.PROCUREMENT),prepare('purchase',po.id,a.PROCUREMENT)]);
++   const deliveries=await prisma.deliveryOrder.findMany({where:{salesOrderId:so.id},include:{lines:true}});
++   const receipts=await prisma.goodsReceipt.findMany({where:{purchaseOrderId:po.id},include:{lines:true}});
++   assert.deepEqual(deliveries.map(d=>[d.status,d.lines[0].orderedQty]),[['DRAFT',6]]);
++   assert.deepEqual(receipts.map(r=>[r.status,r.lines[0].demandQty]),[['DRAFT',10]]);
++   assert.deepEqual(await counts(), before);
++   const d=deliveries[0],r=receipts[0];
++   await validateDeliveryOrder({deliveryOrderId:d.id,items:[{lineId:d.lines[0].id,productSku:d.lines[0].productSku,deliveredQty:4}],actor:a.WAREHOUSE});
++   await validateGoodsReceipt({receiptId:r.id,items:[{lineId:r.lines[0].id,productSku:r.lines[0].productSku,acceptedQty:8,rejectedQty:2,rejectionReason:'Kemasan rusak'}],actor:a.WAREHOUSE});
++   const after=await counts();
++   await confirmSalesOrder(so.id,a.SALES);await confirmPurchaseOrder(po.id,a.PROCUREMENT);
++   assert.equal(await prisma.deliveryOrder.count({where:{salesOrderId:so.id}}),2);
++   assert.equal(await prisma.goodsReceipt.count({where:{purchaseOrderId:po.id}}),2);
++   assert.deepEqual(await counts(),after);
++ });
+  await check('Origin validation accepts actual loopback Host and rejects cross-site writes',async()=>{
+   assert(hasAllowedOrigin(new NextRequest('http://127.0.0.1:3107/api/master/units',{method:'POST',headers:{host:'127.0.0.1:3107',origin:'http://127.0.0.1:3107'}})));
+   assert(!hasAllowedOrigin(new NextRequest('http://localhost:3107/api/master/units',{method:'POST',headers:{host:'localhost:3107',origin:'https://attacker.example'}})));
+@@ -40,6 +63,32 @@
+   await documentAction('sales',order.id,{action:'confirm',version:1},a.SALES);assert.equal((await s()).reserved,13);
+   await documentAction('sales',order.id,{action:'cancel',version:2},a.SALES);assert.equal((await s()).reserved,6);assert.equal((await s()).onHand,40);
+   assert.equal(await prisma.deliveryOrder.count({where:{salesOrderId:order.id,status:'CANCELLED'}}),1);
++ });
++ await check('Finance posts two equal vendor installments and replays a lost response only once', async () => {
++   const b = await bill(12000);
++   const token = await createSessionToken(a.FINANCE);
++   const requestPayment = (key?: string, amount=30000) => {
++     return pay(new NextRequest('http://localhost/api/accounting/payments', {
++       method: 'POST', headers: {authorization: 'Bearer '+token, ...(key ? {'Idempotency-Key':key} : {})},
++       body: JSON.stringify({billId:b.id, amount, paymentMethod:'BANK', paymentDate:'2026-11-19'}),
++     }));
++   };
++   const submit = async (key:string) => {
++     const response = await requestPayment(key);
++     assert.equal(response.status, 200);
++     return response.json();
++   };
++   const bank = await balance('1010'), ap = await balance('2010');
++   assert.equal((await requestPayment()).status,400);
++   const [first,replay] = await Promise.all([submit('installment-one'),submit('installment-one')]);
++   assert.equal((await requestPayment('installment-one',10000)).status,409);
++   const second = await submit('installment-two');
++   assert.equal(first.payment.id, replay.payment.id);
++   assert.notEqual(first.payment.id, second.payment.id);
++   assert.deepEqual([first.remainingBalance, replay.remainingBalance, second.remainingBalance], [66000,66000,36000]);
++   assert.equal(await prisma.payment.count({where:{billId:b.id}}),2);
++   assert.equal(await prisma.journalEntry.count({where:{sourceDocument:{in:[first.payment.paymentNumber,second.payment.paymentNumber]}}}),2);
++   assert.deepEqual([await balance('1010'), await balance('2010')],[bank-60000, ap-60000]);
+  });
+  await check('Vendor payments, price variance and controlled bill reversal reconcile',async()=>{
+   const b=await bill();assert.equal(await balance('1040'),0);assert.equal(await balance('5020'),24000);assert.equal(await balance('2010'),1120000);
+--- a/scripts/test_pdf_cases.ts
++++ b/scripts/test_pdf_cases.ts
+@@ -29,6 +29,14 @@
+ const account=async(code:string)=>(await prisma.account.findUniqueOrThrow({where:{code}})).currentBalance;
+ const counts=async()=>({journals:await prisma.journalEntry.count(),moves:await prisma.stockMove.count(),payments:await prisma.payment.count()});
+ async function rejected(label:string,fn:()=>Promise<unknown>){await assert.rejects(fn);observations.push({label,actual:'rejected',expected:'rejected'});}
++async function auditEvent(action:string, actor:any, documentId:string) {
++  const events = await prisma.auditLog.findMany({where:{action,actorId:actor.id,documentId}});
++  equal('jumlah audit '+action, events.length, 1);
++  const event = events[0];
++  equal('identitas pelaku '+action, [event.actorName,event.actorRole], [actor.name,actor.role]);
++  assert(event.notes && event.timestamp instanceof Date);
++  observations.push({label:action,actual:{documentId,timestamp:event.timestamp.toISOString(),reason:event.notes}});
++}
+ async function fresh(){await executeSeed(prisma);actors={};for(const u of await prisma.user.findMany())actors[u.role]=u;}
+ async function run(id:string,fn:()=>Promise<void>){observations=[];try{await fresh();await fn();evidence.push({id,status:'PASS',scope:'service/API handler; fresh baseline',observations});console.log('[PASS]',id);}catch(e){evidence.push({id,status:'FAIL',error:String(e),observations});console.error('[FAIL]',id,e);}}
+ async function sale(qty=8, discountPercent=0){return createSalesQuotation({contactId:'C01',lines:[{productSku:'RICE-CHICK-S',quantity:qty,unitPrice:48000,discountPercent}],actor:actors.SALES});}
+@@ -37,22 +45,27 @@
+ async function purchased(){return createPurchaseQuotation({vendorId:'V03',lines:[{productSku:'COF-LATT-HOT',orderedQty:10,unitPrice:12000}],actor:actors.PROCUREMENT});}
+ async function received(){const po=await purchased();const confirmed=await confirmPurchaseOrder(po.id,actors.PROCUREMENT);const receipt=confirmed.receipt!;const result=await validateGoodsReceipt({receiptId:receipt.id,items:[{lineId:receipt.lines[0].id,productSku:'COF-LATT-HOT',acceptedQty:8,rejectedQty:2,rejectionReason:'Damaged packaging'}],actor:actors.WAREHOUSE});return {po,receipt,result};}
+ async function billed(){const r=await received();const bill=await createVendorBill({purchaseOrderId:r.po.id,receiptId:r.receipt.id,lines:[{productSku:'COF-LATT-HOT',quantity:8}],actor:actors.FINANCE});await postVendorBill(bill.id,actors.FINANCE);return {...r,bill};}
+-async function pos(){const session=await openPosSession({sessionCode:'POS01',cashierId:actors.CASHIER.id,openingCash:0,actor:actors.CASHIER});const result=await createPosOrder({sessionId:session.id,paymentMethod:'CASH',lines:[{productSku:'COF-LATT-HOT',quantity:2},{productSku:'COOKIE-CHO-1',quantity:1}],actor:actors.CASHIER});return {session,result};}
++async function pos(){const session=await openPosSession({sessionCode:'POS01',cashierId:actors.CASHIER.id,openingCash:0,actor:actors.CASHIER});const result=await createPosOrder({sessionId:session.id,paymentMethod:'QRIS / Bank',lines:[{productSku:'COF-LATT-HOT',quantity:2},{productSku:'COOKIE-CHO-1',quantity:1}],actor:actors.CASHIER});return {session,result};}
+ 
+ async function main(){
+  const cwd=realpathSync(process.cwd()),temp=realpathSync(os.tmpdir());assert(cwd.startsWith(temp+path.sep));assert(realpathSync((process.env.DATABASE_URL||'').replace(/^file:/,'')).startsWith(cwd+path.sep));
+- await run('T01',async()=>{const owner=actors.HEAD_ADMIN;equal('Owner apps',['sales','crm','purchase','inventory','accounting','invoicing','pos','dashboard'].filter(x=>canAccessModule(owner.role,x)).length,8);equal('valid owner token',typeof await createSessionToken(owner),'string');});
++ await run('T01',async()=>{const owner=actors.OWNER;equal('Owner apps',['sales','crm','purchase','inventory','accounting','invoicing','pos','dashboard'].filter(x=>canAccessModule(owner.role,x)).length,8);equal('valid owner token',typeof await createSessionToken(owner),'string');});
+  await run('T02',async()=>{const request=new NextRequest('http://localhost/api/accounting/general-ledger',{headers:{authorization:'Bearer '+await createSessionToken(actors.CASHIER)}});equal('real GL handler denial',(await ledgerAPI(request)).status,403);equal('denied audit persisted',await prisma.auditLog.count({where:{actorId:actors.CASHIER.id,action:'ACCESS_DENIED'}}),1);});
+  await run('T03',async()=>{for(const [id,expected] of [['C01',[3000000,1200000,1800000]],['C02',[350000,300000,50000]]] as const){const c=await calculateCustomerCreditStatus(id);equal(id,[c.creditLimit,c.openReceivable,c.creditHeadroom],expected);}});
+- await run('T04',async()=>{const order=await createSalesQuotation({contactId:'C02',lines:[{productSku:'RICE-CHICK-S',quantity:2,unitPrice:48000}],actor:actors.SALES});equal('gross',order.totalGross,105600);await rejected('credit confirmation',()=>confirmSalesOrder(order.id,actors.SALES));equal('headroom unchanged',(await calculateCustomerCreditStatus('C02')).creditHeadroom,50000);});
++ await run('T04',async()=>{const order=await createSalesQuotation({contactId:'C02',lines:[{productSku:'RICE-CHICK-S',quantity:2,unitPrice:48000}],actor:actors.SALES});equal('gross',order.totalGross,105600);await rejected('credit confirmation',()=>confirmSalesOrder(order.id,actors.SALES));equal('headroom unchanged',(await calculateCustomerCreditStatus('C02')).creditHeadroom,50000);await auditEvent('CREDIT_LIMIT_EXCEEDED',actors.SALES,order.orderNumber);});
+  await run('T05',async()=>{const p=await prisma.productVariant.findUniqueOrThrow({where:{sku:'RICE-CHICK-S'}});const w=await stock(),c=await stock('RICE-CHICK-S','CAFE-JKT');equal('variant stock and cost',[p.salesPrice,p.standardCost,w.onHand,w.reserved,w.onHand-w.reserved,c.onHand,w.onHand+c.onHand],[48000,26000,40,6,34,12,52]);});
+  await run('T06',async()=>{await adjustStock({sku:'COF-LATT-HOT',locationCode:'WH-JKT',newOnHand:25,reason:'Verified count for SKU independence',actor:actors.WAREHOUSE});equal('Hot/iced independent',[(await stock('COF-LATT-HOT')).onHand,(await stock('COF-LATT-ICE')).onHand],[25,25]);equal('inventory adjustment ledger',await account('1030'),12214000+60000);});
+  await run('T07',async()=>{const l=await prisma.crmLead.findUniqueOrThrow({where:{id:'LD0003'},include:{contact:true}});equal('qualified lead',[l.contactId,l.contact.name,l.stage,l.expectedRevenue],['C03','Klinik Harmoni','QUALIFIED',1200000]);});
+- await run('T08',async()=>{const l:any=await createMaster('leads',{name:'Incomplete lead',contactId:'C01',expectedRevenue:0,stage:'NEW'},actors.SALES);await rejected('Proposition requires revenue',()=>changeMaster('leads',l.id,{version:0,stage:'PROPOSITION'},actors.SALES));equal('stage unchanged',(await prisma.crmLead.findUniqueOrThrow({where:{id:l.id}})).stage,'NEW');});
++ await run('T08',async()=>{const l:any=await createMaster('leads',{name:'Incomplete lead',contactId:'C01',expectedRevenue:0,stage:'NEW'},actors.SALES);await rejected('Proposition requires revenue',()=>changeMaster('leads',l.id,{version:0,stage:'PROPOSITION'},actors.SALES));equal('stage unchanged',(await prisma.crmLead.findUniqueOrThrow({where:{id:l.id}})).stage,'NEW');await auditEvent('STAGE_REJECTED',actors.SALES,l.id);await rejected('Proposition requires customer',()=>createMaster('leads',{name:'No customer',stage:'PROPOSITION',expectedRevenue:5000},actors.SALES));await auditEvent('STAGE_REJECTED',actors.SALES,'DRAFT');});
+  await run('T09',async()=>{const s=await createSalesQuotation({contactId:'C01',lines:[{productSku:'RICE-CHICK-S',quantity:4,unitPrice:48000},{productSku:'RICE-CHICK-L',quantity:2,unitPrice:62000}],actor:actors.SALES});equal('quotation',[s.subtotalNet,s.pbjtTax,s.totalGross,s.projectedCost],[316000,31600,347600,172000]);await confirmSalesOrder(s.id,actors.SALES);const c=await calculateCustomerCreditStatus('C01');equal('confirmed exposure',[c.creditExposure,c.creditHeadroom],[1547600,1452400]);});
+- await run('T10',async()=>{const s=await sale(2,20);equal('discount',[s.subtotalNet,s.pbjtTax,s.discountApproved],[76800,7680,false]);await rejected('unapproved confirmation',()=>confirmSalesOrder(s.id,actors.SALES));await approveOrderDiscount(s.id,actors.HEAD_ADMIN);await confirmSalesOrder(s.id,actors.SALES);await rejected('confirmed price lock',()=>updateSalesOrderLine({orderId:s.id,lineId:s.lines[0].id,unitPrice:50000,actor:actors.SALES}));});
++ await run('T10',async()=>{const s=await sale(2,20);equal('discount',[s.subtotalNet,s.pbjtTax,s.discountApproved],[76800,7680,false]);await rejected('unapproved confirmation',()=>confirmSalesOrder(s.id,actors.SALES));await approveOrderDiscount(s.id,actors.OWNER);await confirmSalesOrder(s.id,actors.SALES);await rejected('confirmed price lock',()=>updateSalesOrderLine({orderId:s.id,lineId:s.lines[0].id,unitPrice:50000,actor:actors.SALES}));await auditEvent('APPROVE_DISCOUNT',actors.OWNER,s.orderNumber);await auditEvent('CONFIRM_BLOCKED_DISCOUNT',actors.SALES,s.orderNumber);await auditEvent('ILLEGAL_PRICE_EDIT_ATTEMPT',actors.SALES,s.orderNumber);});
+  await run('T11',async()=>{const {result}=await delivered();const w=await stock();equal('independent physical/reserved/available',[w.onHand,w.reserved,w.onHand-w.reserved],[35,9,26]);equal('backorder',result.backorderDoc!.lines[0].orderedQty,3);equal('COGS and invoice eligibility',[result.totalCogs,result.totalDeliveredValueGross],[130000,264000]);});
+- await run('T12',async()=>{const s=await createSalesQuotation({contactId:'C03',lines:[{productSku:'RICE-CHICK-S',quantity:38,unitPrice:48000}],actor:actors.SALES});await assert.rejects(confirmSalesOrder(s.id,actors.SALES),/SR-04|Available|available|Stok/);observations.push({label:'38 exceeds available 34, sufficient customer credit',actual:'stock guard rejected',expected:'stock guard rejected'});equal('physical/reserved protected',[(await stock()).onHand,(await stock()).reserved],[40,6]);});
++ await run('T12',async()=>{const s=await createSalesQuotation({contactId:'C03',lines:[{productSku:'RICE-CHICK-S',quantity:38,unitPrice:48000}],actor:actors.SALES});await assert.rejects(confirmSalesOrder(s.id,actors.SALES),/SR-04|Available|available|Stok/);observations.push({label:'38 exceeds available 34, sufficient customer credit',actual:'stock guard rejected',expected:'stock guard rejected'});equal('physical/reserved protected',[(await stock()).onHand,(await stock()).reserved],[40,6]);
++   const allowed=await sale(8);const confirmed:any=await confirmSalesOrder(allowed.id,actors.SALES);
++   const d=confirmed.deliveryOrder, before=await stock(), entries=await counts();
++   await rejected('delivery of 38 rejected by DO validation',()=>validateDeliveryOrder({deliveryOrderId:d.id,items:[{lineId:d.lines[0].id,productSku:'RICE-CHICK-S',deliveredQty:38}],actor:actors.WAREHOUSE}));
++   equal('no extra movements or journals',await counts(),entries);const after=await stock();equal('physical and reservations intact on DO',[after.onHand,after.reserved],[before.onHand,before.reserved]);
++ });
+  await run('T13',async()=>{const t=await createInternalTransfer({lines:[{productSku:'COF-LATT-ICE',quantity:4}],actor:actors.WAREHOUSE});await validateInternalTransfer(t.id,actors.WAREHOUSE);equal('location/company totals',[(await stock('COF-LATT-ICE')).onHand,(await stock('COF-LATT-ICE','CAFE-JKT')).onHand],[21,22]);equal('valuation unchanged',await account('1030'),12214000);equal('permanent transfer moves',await prisma.stockMove.count({where:{documentRef:t.transferNumber}}),1);});
+  await run('T14',async()=>{const t=await createInternalTransfer({lines:[{productSku:'COF-LATT-ICE',quantity:28}],actor:actors.WAREHOUSE});await rejected('transfer over available',()=>validateInternalTransfer(t.id,actors.WAREHOUSE));equal('stock unchanged',(await stock('COF-LATT-ICE')).onHand,25);});
+  await run('T15',async()=>{const p=await purchased();equal('PO quantity price tax total',[p.lines[0].orderedQty,p.lines[0].unitPrice,p.taxAmount,p.total],[10,12000,0,120000]);equal('RFQ has no physical effect',(await stock('COF-LATT-HOT')).onHand,20);});
+@@ -60,14 +73,14 @@
+  await run('T17',async()=>{const r=await received();equal('accepted stock/value/GRNI',[(await stock('COF-LATT-HOT')).onHand,await account('1030'),await account('1040')],[28,12310000,96000]);equal('rejected replacement backorder',r.result.backorderReceipt!.lines[0].demandQty,2);});
+  await run('T18',async()=>{const r=await received();await rejected('bill cannot include rejected units',()=>createVendorBill({purchaseOrderId:r.po.id,lines:[{productSku:'COF-LATT-HOT',quantity:10}],actor:actors.FINANCE}));equal('no bill posted',await prisma.vendorBill.count(),0);});
+  await run('T19',async()=>{const i=await invoiced();equal('invoice',[i.invoice.subtotalNet,i.invoice.pbjtTax,i.invoice.totalGross],[240000,24000,264000]);equal('AR ledger',await account('1020'),1764000);});
+- await run('T20',async()=>{const d=await delivered();await rejected('invoice cannot exceed 5 delivered',()=>createCustomerInvoice({salesOrderId:d.so.id,lines:[{productSku:'RICE-CHICK-S',quantity:8}],actor:actors.FINANCE}));equal('no invoice',await prisma.customerInvoice.count(),0);});
++ await run('T20',async()=>{const d=await delivered();await rejected('invoice cannot exceed 5 delivered',()=>createCustomerInvoice({salesOrderId:d.so.id,lines:[{productSku:'RICE-CHICK-S',quantity:8}],actor:actors.FINANCE}));equal('no invoice',await prisma.customerInvoice.count(),0);await auditEvent('INVOICE_QUANTITY_REJECTED',actors.FINANCE,d.so.orderNumber);});
+  await run('T21',async()=>{const b=await billed();equal('matched bill',[b.bill.totalGross,await account('1040'),await account('2010')],[96000,0,1096000]);equal('AP not double counted',(await getOperationalDashboardMetrics()).payables.totalAP,1096000);});
+  await run('T22',async()=>{const b=await billed(),before=await counts();await postVendorBill(b.bill.id,actors.FINANCE);await rejected('duplicate billed quantities',()=>createVendorBill({purchaseOrderId:b.po.id,lines:[{productSku:'COF-LATT-HOT',quantity:8}],actor:actors.FINANCE}));equal('no duplicate posting',await counts(),before);});
+  await run('T23',async()=>{const i=await invoiced();const p=await registerCustomerPayment({invoiceId:i.invoice.id,amount:100000,paymentMethod:'BANK',actor:actors.FINANCE});equal('partial payment',[p.remainingBalance,await account('1010'),await account('1020')],[164000,20100000,1664000]);});
+- await run('T24',async()=>{const i=await invoiced(),before=await counts();await rejected('overpayment 300000',()=>registerCustomerPayment({invoiceId:i.invoice.id,amount:300000,paymentMethod:'BANK',actor:actors.FINANCE}));equal('no partial payment effects',await counts(),before);});
++ await run('T24',async()=>{const i=await invoiced(),before=await counts();await rejected('overpayment 300000',()=>registerCustomerPayment({invoiceId:i.invoice.id,amount:300000,paymentMethod:'BANK',actor:actors.FINANCE}));equal('no partial payment effects',await counts(),before);await auditEvent('OVERPAYMENT_REJECTED',actors.FINANCE,i.invoice.invoiceNumber);});
+  await run('T25',async()=>{await invoiced();const entries=await prisma.journalEntry.findMany({where:{isOpening:false},include:{items:true}});equal('two source journals',entries.length,2);for(const j of entries)equal('balanced '+j.sourceDocument,j.items.reduce((s,l)=>s+l.debit-l.credit,0),0);equal('journal debit 130000 + 264000',entries.reduce((s,j)=>s+j.items.reduce((n,l)=>n+l.debit,0),0),394000);});
+  await run('T26',async()=>{const i=await invoiced(),before=await counts();await validateDeliveryOrder({deliveryOrderId:i.delivery.id,items:[{lineId:i.delivery.lines[0].id,productSku:'RICE-CHICK-S',deliveredQty:5}],actor:actors.WAREHOUSE});await postCustomerInvoice(i.invoice.id,actors.FINANCE);equal('repeat validation/post unchanged',await counts(),before);});
+- await run('T27',async()=>{await pos();const p=await prisma.posOrder.findFirstOrThrow();equal('POS totals',[p.subtotalNet,p.pbjtTax,p.totalAmount,p.totalCost],[80000,8000,88000,33000]);equal('cafe stock',[(await stock('COF-LATT-HOT','CAFE-JKT')).onHand,(await stock('COOKIE-CHO-1','CAFE-JKT')).onHand],[22,19]);equal('bank',await account('1010'),20088000);equal('permanent source moves',await prisma.stockMove.count({where:{documentRef:p.orderNumber}}),2);});
++ await run('T27',async()=>{await pos();const p=await prisma.posOrder.findFirstOrThrow();equal('POS payment method',p.paymentMethod,'QRIS / Bank');equal('POS totals',[p.subtotalNet,p.pbjtTax,p.totalAmount,p.totalCost],[80000,8000,88000,33000]);equal('cafe stock',[(await stock('COF-LATT-HOT','CAFE-JKT')).onHand,(await stock('COOKIE-CHO-1','CAFE-JKT')).onHand],[22,19]);equal('bank',await account('1010'),20088000);equal('permanent source moves',await prisma.stockMove.count({where:{documentRef:p.orderNumber}}),2);});
+  await run('T28',async()=>{const session=await openPosSession({cashierId:actors.CASHIER.id,actor:actors.CASHIER});await rejected('25 Hot exceeds cafe24',()=>createPosOrder({sessionId:session.id,lines:[{productSku:'COF-LATT-HOT',quantity:25}],actor:actors.CASHIER}));const a=await closePosSession(session.id,0,actors.CASHIER),before=await counts(),b=await closePosSession(session.id,100,actors.CASHIER);equal('close retry preserves summary',b.difference,a.difference);equal('close retry no posting',await counts(),before);});
+  await run('T29',async()=>{const i=await invoiced();const r=await createReturnRequest({invoiceId:i.invoice.id,lines:[{productSku:'RICE-CHICK-S',returnedQty:1}],actor:actors.WAREHOUSE});await inspectReturnRequest(r.id,[{productSku:'RICE-CHICK-S',acceptedQty:1,rejectedQty:0}],actors.WAREHOUSE);await processReturnAndCreditNote(r.id,actors.FINANCE);const c=await prisma.creditNote.findFirstOrThrow({include:{lines:true}});equal('credit net tax gross cost',[c.subtotalNet,c.pbjtTax,c.totalGross,c.lines.reduce((n,l)=>n+l.quantity*l.standardCost,0)],[48000,4800,52800,26000]);equal('restock and AR',[(await stock()).onHand,await account('1020')],[36,1711200]);});
+  await run('T30',async()=>{const i=await invoiced(),before=await counts();const r=await createReturnRequest({invoiceId:i.invoice.id,lines:[{productSku:'RICE-CHICK-S',returnedQty:2}],actor:actors.WAREHOUSE});await rejected('pending QC cannot post',()=>processReturnAndCreditNote(r.id,actors.FINANCE));equal('no stock/ledger credit effects',await counts(),before);equal('stock protected',(await stock()).onHand,35);equal('no credit note',await prisma.creditNote.count(),0);});
+--- a/scripts/test_phase2_3.ts
++++ b/scripts/test_phase2_3.ts
+@@ -84,9 +84,10 @@
+   // 2. Authentication & 6 Roles
+   console.log("\n--- 2. Testing 6 User Accounts & Roles ---");
+   const users = await prisma.user.findMany();
+-  assert(users.length === 6, "AUTH-01", `All 6 required role accounts exist (Found: ${users.length})`);
+ 
+-  const roles = [Role.HEAD_ADMIN, Role.SALES, Role.WAREHOUSE, Role.PROCUREMENT, Role.FINANCE, Role.CASHIER];
++
++  const roles = [Role.OWNER, Role.SALES, Role.WAREHOUSE, Role.PROCUREMENT, Role.FINANCE, Role.CASHIER];
++  assert(roles.every(role => users.some(u => u.role === role && u.active)), 'AUTH-01', 'All six required PDF roles are active');
+   for (const r of roles) {
+     const u = users.find((usr) => usr.role === r);
+     const pwdOk = u ? await bcrypt.compare("Password123!", u.passwordHash) : false;
+@@ -95,7 +96,7 @@
+ 
+   // 3. T-01: Owner Login & 8 Navigation Points
+   console.log("\n--- 3. Testing T-01: Alur Normal Owner (Fitur F-01) ---");
+-  const ownerUser = users.find((u) => u.role === Role.HEAD_ADMIN)!;
++  const ownerUser = users.find((u) => u.role === Role.OWNER)!;
+   const ownerToken = await createSessionToken({
+     id: ownerUser.id,
+     email: ownerUser.email,
+@@ -103,10 +104,10 @@
+     role: ownerUser.role,
+   });
+   const verifiedOwner = await verifySessionToken(ownerToken);
+-  assert(verifiedOwner !== null && verifiedOwner.role === Role.HEAD_ADMIN, "T-01-A", "Owner session token verified");
++  assert(verifiedOwner !== null && verifiedOwner.role === Role.OWNER, "T-01-A", "Owner session token verified");
+ 
+   const appKeys = ["sales", "crm", "purchase", "inventory", "accounting", "invoicing", "pos", "dashboard"];
+-  const ownerAccessibleApps = appKeys.filter((app) => canAccessModule(Role.HEAD_ADMIN, app));
++  const ownerAccessibleApps = appKeys.filter((app) => canAccessModule(Role.OWNER, app));
+   assert(
+     ownerAccessibleApps.length === 8,
+     "T-01",
+--- a/scripts/test_phase4.ts
++++ b/scripts/test_phase4.ts
+@@ -28,11 +28,11 @@
+   console.log("--- 0. Restoring Fresh Baseline Seed ---");
+   await executeSeed(prisma, "Test Runner Phase 4", Role.HEAD_ADMIN);
+ 
+-  const ownerUser = (await prisma.user.findFirst({ where: { role: Role.HEAD_ADMIN } }))!;
++  const ownerUser = (await prisma.user.findFirst({ where: { role: Role.OWNER } }))!;
+   const salesUser = (await prisma.user.findFirst({ where: { role: Role.SALES } }))!;
+   const whUser = (await prisma.user.findFirst({ where: { role: Role.WAREHOUSE } }))!;
+ 
+-  const actorOwner = { id: ownerUser.id, name: ownerUser.name, role: Role.HEAD_ADMIN };
++  const actorOwner = { id: ownerUser.id, name: ownerUser.name, role: Role.OWNER };
+   const actorSales = { id: salesUser.id, name: salesUser.name, role: Role.SALES };
+   const actorWarehouse = { id: whUser.id, name: whUser.name, role: Role.WAREHOUSE };
+ 
+--- a/scripts/test_phase8.ts
++++ b/scripts/test_phase8.ts
+@@ -191,6 +191,18 @@
+       "Integritas Database Terjaga (Zero Artificial Journal)",
+       `Jumlah jurnal sebelum: ${initialJournalCount}, sesudah: ${finalJournalCount} (Tidak ada modifikasi ilegal)`
+     );
++
++    const actual = reconNormal.inventoryReconciliation;
++    assert(actual.postingSources.some(entry => entry.sourceDocument && entry.id)
++      && actual.ledgerBalance === actual.cachedBalance, "T-32.8", "Dokumen sumber dan saldo posted", "Akun 1030 memiliki jurnal sumber pada dataset PDF.");
++    await prisma.account.update({where:{code:'1030'},data:{currentBalance:{increment:1}}});
++    try {
++      const drift = (await getFinancialReconciliation()).inventoryReconciliation;
++      assert(drift.status === "MISMATCH" && drift.ledgerBalance === actual.ledgerBalance
++        && drift.cachedBalance === actual.ledgerBalance + 1, "T-32.9", "Deteksi selisih saldo tersimpan", "Saldo jurnal posted tetap berasal dari JournalItem.");
++    } finally {
++      await prisma.account.update({where:{code:'1030'},data:{currentBalance:{decrement:1}}});
++    }
+ 
+     console.log("\n================================================================================");
+     console.log(`HASIL AKHIR PENGUJIAN TAHAP 8: ${passed} PASS, ${failed} FAIL`);
+--- a/scripts/test_role_access.ts
++++ b/scripts/test_role_access.ts
+@@ -27,9 +27,9 @@
+         return new NextRequest('http://localhost:3000' + path, { headers: { cookie: `rasa_aruna_company=default; rasa_aruna_session=${token}` } });
+       };
+       assert.equal((await me(await requestFor('OWNER', '/api/auth/me'))).status, 200);
+-      assert.equal((await metrics(await requestFor('OWNER', '/api/dashboard/metrics'))).status, 403);
++      assert.equal((await metrics(await requestFor('OWNER', '/api/dashboard/metrics'))).status, 200);
+       assert.equal((await users(await requestFor('OWNER', '/api/users'))).status, 403);
+-      assert.equal((await invoices(await requestFor('OWNER', '/api/accounting/invoices'))).status, 403);
++      assert.equal((await invoices(await requestFor('OWNER', '/api/accounting/invoices'))).status, 200);
+       const report = await profit(await requestFor('OWNER', '/api/dashboard/profit?start=2026-11-01&end=2026-11-18'));
+       assert.equal(report.status, 200);
+       const payload = await report.json();
+@@ -44,12 +44,13 @@
+       assert.equal((await profit(await requestFor('FINANCE', '/api/dashboard/profit'))).status, 200);
+       assert.equal(removed().status, 410); assert.equal(removedPost().status, 410);
+       const nav = NAVIGATION_GROUPS.flatMap(g => g.items);
+-      assert.deepEqual(nav.filter(i => i.roles.includes('OWNER')).map(i => i.href), ['/dashboard']);
++      const ownerPaths = nav.filter(i => i.roles.includes('OWNER')).map(i => i.href);
++      for (const path of ['/sales/orders','/crm/leads','/purchase/orders','/inventory/products','/accounting/reports','/accounting/invoices','/pos','/dashboard']) assert(ownerPaths.includes(path));
+       assert(nav.every(i => i.roles.includes('HEAD_ADMIN')));
+       assert(!nav.some(i => i.href.startsWith('/operations')));
+       assert.throws(() => permit({ name: 'Owner', role: 'OWNER' }, ['HEAD_ADMIN']));
+       permit({ name: 'Admin', role: 'HEAD_ADMIN' }, ['FINANCE']);
+-      console.log('PASS: Owner read-only, Admin, Finance, Sales, Cashier, ledger totals, navigation and removed modules.');
++      console.log('PASS: Owner module access with restricted administration, Admin, Finance, Sales, Cashier, ledger totals, navigation and removed modules.');
+     });
+   } finally { await db.$disconnect(); rmSync(dir, { recursive: true, force: true }); }
+ }
+--- a/scripts/verify_isolated.py
++++ b/scripts/verify_isolated.py
+@@ -3,25 +3,42 @@
+ Never changes a database in the application directory. Reuses installed packages.
+ """
+ from pathlib import Path
+-import argparse, hashlib, json, os, shutil, sqlite3, subprocess, tempfile
++from contextlib import closing
++import argparse, hashlib, json, os, re, shutil, sqlite3, subprocess, tempfile
+ 
+ parser = argparse.ArgumentParser()
+ parser.add_argument('--suites', nargs='*', default=['test_phase2_3', 'test_phase4', 'test_phase5', 'test_phase6', 'test_phase7', 'test_phase8', 'test_charts'])
+-parser.add_argument('--audit-probes', action='store_true')
++parser.add_argument('--audit-probes', action='store_true', help='Run the maintained PDF and transaction-integrity probes')
+ parser.add_argument('--build', action='store_true')
+ args = parser.parse_args()
+ root = Path(__file__).resolve().parents[1]
+ scratch = Path(tempfile.mkdtemp(prefix='rasa-aruna-verification-'))
+-originals = list((root/'prisma').rglob('*.db')) + [root/'prisma/companies.json']
+-before = {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in originals if p.exists()}
+-for folder in ['src', 'scripts', 'prisma']:
++prisma_dir = root/'prisma'
++registry = prisma_dir/'companies.json'
++companies = json.loads(registry.read_text())
++snapshots = {db.relative_to(prisma_dir): db for db in prisma_dir.rglob('*.db')}
++for index, company in enumerate(companies):
++    raw = Path(company.get('dbFile') or 'erp.db')
++    source = (prisma_dir/raw).resolve()
++    local = source.relative_to(prisma_dir) if source.is_relative_to(prisma_dir) else Path('companies')/f'external-{index}.db'
++    if local in snapshots and snapshots[local].resolve() != source:
++        raise SystemExit('Conflicting tenant snapshot path')
++    snapshots[local] = source
++    company['dbFile'] = str(local)
++originals = [*snapshots.values(), registry]
++before = {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in originals}
++for folder in ['src', 'scripts']:
+     shutil.copytree(root/folder, scratch/folder)
++shutil.copytree(prisma_dir, scratch/'prisma', ignore=shutil.ignore_patterns('*.db','*-wal','*-shm','*-journal'))
++(scratch/'prisma/companies.json').write_text(json.dumps(companies, ensure_ascii=False))
++for relative, source in snapshots.items():
++    destination = scratch/'prisma'/relative
++    destination.parent.mkdir(parents=True, exist_ok=True)
++    with closing(sqlite3.connect(source.as_uri()+'?mode=ro', uri=True)) as reader, closing(sqlite3.connect(destination)) as writer:
++        reader.backup(writer)
+ for name in ['package.json', 'tsconfig.json', 'next-env.d.ts', 'next.config.mjs', 'tailwind.config.ts', 'postcss.config.mjs']:
+     shutil.copy2(root/name, scratch/name)
+ (scratch/'node_modules').symlink_to(root/'node_modules', target_is_directory=True)
+-source = sqlite3.connect((root/'prisma/erp.db').as_uri()+'?mode=ro', uri=True)
+-target = sqlite3.connect(scratch/'prisma/erp.db')
+-source.backup(target); target.close(); source.close()
+ subprocess.run(['python3', str(scratch/'scripts/migrate_loyalty.py'), '--apply', '--database', str(scratch/'prisma/erp.db')], check=True, cwd=scratch)
+ subprocess.run(['python3', str(scratch/'scripts/migrate_advanced.py'), '--apply', '--database', str(scratch/'prisma/erp.db')], check=True, cwd=scratch)
+ env = os.environ.copy()
+@@ -33,19 +50,15 @@
+     result = subprocess.run(command, cwd=scratch, env=env, capture_output=True, text=True)
+     output = result.stdout+result.stderr
+     (scratch/(name+'.log')).write_text(output)
+-    item = dict(suite=name, exit=result.returncode, passes=output.count('[PASS]'), failures=output.count('[FAIL]'))
++    passes = output.count('[PASS]') + len(re.findall(r'^(?:ok \d+ -|✔ |PASS:)', output, re.MULTILINE))
++    failures = output.count('[FAIL]') + len(re.findall(r'^(?:not ok \d+ -|✖ |FAIL:)', output, re.MULTILINE))
++    item = dict(suite=name, exit=result.returncode, passes=passes, failures=failures)
+     results.append(item); print(json.dumps(item), flush=True)
+-for name in args.suites:
++suites = list(dict.fromkeys(args.suites + (['test_pdf_cases', 'test_integrity'] if args.audit_probes else [])))
++for name in suites:
+     if not name.replace('_', '').isalnum() or not (scratch/'scripts'/(name+'.ts')).exists():
+         raise SystemExit('Unknown suite')
+     run(name, ['node', '--import', 'tsx', 'scripts/'+name+'.ts'])
+-if args.audit_probes:
+-    folder = scratch/'docs/compliance-audit'; folder.mkdir(parents=True)
+-    shutil.copy2(root/'docs/compliance-audit/probe.ts', folder/'probe.ts')
+-    run('audit-probes', ['node', '--import', 'tsx', 'docs/compliance-audit/probe.ts'])
+-    probes = json.loads((folder/'probe-results.json').read_text())
+-    results.append(dict(suite='audit-expectations', passes=sum(p['status']=='PASS' for p in probes), failures=sum(p['status']!='PASS' for p in probes)))
+-    print(json.dumps(results[-1]), flush=True)
+ run('typecheck', ['node', 'node_modules/typescript/bin/tsc', '--noEmit', '--incremental', 'false'])
+ if args.build:
+     env['NEXT_TELEMETRY_DISABLED'] = '1'

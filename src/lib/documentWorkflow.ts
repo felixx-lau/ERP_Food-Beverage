@@ -10,7 +10,7 @@ import { validateDeliveryOrder } from './deliveryEngine';
 import { validateGoodsReceipt } from './purchaseEngine';
 import { validateInternalTransfer } from './transferEngine';
 
-const definitions:any={sales:{model:'salesOrder',roles:['OWNER','SALES'],include:{lines:true,deliveryOrders:true,invoices:true}},purchase:{model:'purchaseOrder',roles:['OWNER','PROCUREMENT'],include:{lines:true,receipts:true,bills:true}},invoices:{model:'customerInvoice',roles:['OWNER','FINANCE'],include:{lines:true,payments:true,returns:true}},bills:{model:'vendorBill',roles:['OWNER','FINANCE'],include:{lines:true,payments:true}},deliveries:{model:'deliveryOrder',roles:['OWNER','WAREHOUSE'],include:{lines:true}},receipts:{model:'goodsReceipt',roles:['OWNER','WAREHOUSE'],include:{lines:true}},transfers:{model:'internalTransfer',roles:['OWNER','WAREHOUSE'],include:{lines:true}}};
+const definitions:any={sales:{model:'salesOrder',roles:['HEAD_ADMIN','SALES'],include:{lines:true,deliveryOrders:true,invoices:true}},purchase:{model:'purchaseOrder',roles:['HEAD_ADMIN','PROCUREMENT'],include:{lines:true,receipts:true,bills:true}},invoices:{model:'customerInvoice',roles:['HEAD_ADMIN','FINANCE'],include:{lines:true,payments:true,returns:true}},bills:{model:'vendorBill',roles:['HEAD_ADMIN','FINANCE'],include:{lines:true,payments:true}},deliveries:{model:'deliveryOrder',roles:['HEAD_ADMIN','WAREHOUSE'],include:{lines:true}},receipts:{model:'goodsReceipt',roles:['HEAD_ADMIN','WAREHOUSE'],include:{lines:true}},transfers:{model:'internalTransfer',roles:['HEAD_ADMIN','WAREHOUSE'],include:{lines:true}}};
 export function documentRoles(kind:string): string[] { const d=Object.hasOwn(definitions,kind)?definitions[kind]:null; if(!d)throw new BusinessError("Jenis dokumen tidak valid.",404);return d.roles; }
 export async function documentAction(kind:string,id:string,input:any,actor:Actor) {
   const definition=Object.hasOwn(definitions,kind)?definitions[kind]:null;if(!definition)throw new BusinessError('Jenis dokumen tidak valid.',404);permit(actor,definition.roles);
@@ -19,6 +19,12 @@ export async function documentAction(kind:string,id:string,input:any,actor:Actor
     if(!before)throw new BusinessError('Dokumen tidak ditemukan.',404);
     if(before.version!==undefined){numberValue(input.version,'Versi',0,true);if(before.version!==input.version)throw new BusinessError('Dokumen berubah. Muat ulang terlebih dahulu.',409);}
     const actorWithId=actor as {id:string;name:string;role:any};
+    if(input.action==='prepare'){
+      if(before.status!=='CONFIRMED') throw new BusinessError('Hanya pesanan terkonfirmasi yang dapat disiapkan.',409);
+      if(kind==='sales')return confirmSalesOrder(id,actorWithId);
+      if(kind==='purchase')return confirmPurchaseOrder(id,actorWithId,textValue(input.destLocation??'WH-JKT','Gudang penerimaan'));
+      throw new BusinessError('Persiapan ini hanya tersedia untuk pesanan.');
+    }
     if(input.action==='confirm')return kind==='sales'?confirmSalesOrder(id,actorWithId,input.sourceLocation===undefined?undefined:textValue(input.sourceLocation,'Gudang pemenuhan')):kind==='purchase'?confirmPurchaseOrder(id,actorWithId,input.destLocation===undefined?undefined:textValue(input.destLocation,'Gudang penerimaan')):Promise.reject(new BusinessError('Dokumen tidak dapat dikonfirmasi.'));
     if(input.action==='approve'&&kind==='sales')return approveOrderDiscount(id,actorWithId);
     if(input.action==='post')return kind==='invoices'?postCustomerInvoice(id,actorWithId):kind==='bills'?postVendorBill(id,actorWithId):Promise.reject(new BusinessError('Dokumen tidak dapat diposting.'));

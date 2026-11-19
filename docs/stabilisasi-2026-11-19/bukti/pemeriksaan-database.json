@@ -1,0 +1,21 @@
+{
+  "baseline": "snapshot pra-seed runner A1",
+  "current": "read-only",
+  "comparedTables": 54,
+  "differences_currentOnly_baselineOnly": {
+    "AuditLog": [
+      2,
+      0
+    ]
+  },
+  "newAuditEvents": [
+    [
+      "LOGOUT",
+      "WAREHOUSE"
+    ],
+    [
+      "LOGIN",
+      "SALES"
+    ]
+  ]
+}

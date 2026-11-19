@@ -23,7 +23,7 @@ let passed=0;
 const check=(name:string,fn:()=>Promise<void>)=>fn().then(()=>{passed++;console.log('[PASS]',name);});
 async function main(){
   isolated();await executeSeed(prisma);
-  const owner=(await prisma.user.findFirst({where:{role:'OWNER'}}))!,sales=(await prisma.user.findFirst({where:{role:'SALES'}}))!,cashier=(await prisma.user.findFirst({where:{role:'CASHIER'}}))!;
+  const owner=(await prisma.user.findFirst({where:{role:'HEAD_ADMIN'}}))!,sales=(await prisma.user.findFirst({where:{role:'SALES'}}))!,cashier=(await prisma.user.findFirst({where:{role:'CASHIER'}}))!;
   await check('Contact create persists communication fields and terms',async()=>{
     const c:any=await createMaster('customers',{name:'Dynamic Customer',email:'buyer@example.test',phone:'08123456789',address:'Jalan Uji 1',city:'Jakarta',customerType:'INDIVIDUAL',paymentTerms:'NET7',creditLimit:500000},owner);
     const connection=new PrismaClient({datasourceUrl:process.env.DATABASE_URL});const stored=await connection.contact.findUnique({where:{id:c.id}});await connection.$disconnect();

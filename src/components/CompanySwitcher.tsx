@@ -36,7 +36,7 @@ export default function CompanySwitcher({ currentUser }: CompanySwitcherProps) {
     const escape = (e: KeyboardEvent) => { if (e.key === "Escape") setDropdownOpen(false); };
     document.addEventListener("keydown", escape);
     document.addEventListener("mousedown", handleClickOutside);
-    return () => { document.removeEventListener("mousedown", handleClickOutside); document.removeEventListener("keydown", escape); };
+  return () => { document.removeEventListener("mousedown", handleClickOutside); document.removeEventListener("keydown", escape); };
   }, []);
 
   const getInitials = (name?: string) => {
@@ -53,7 +53,7 @@ export default function CompanySwitcher({ currentUser }: CompanySwitcherProps) {
       setDropdownOpen(false);
       return;
     }
-    if (currentUser?.role !== "OWNER") return;
+    if (currentUser?.role !== "HEAD_ADMIN") return;
     setDropdownOpen(false);
     await switchCompany(company.id);
   };
@@ -72,6 +72,8 @@ export default function CompanySwitcher({ currentUser }: CompanySwitcherProps) {
   const activeName = activeCompany?.name || "PT Rasa Aruna Bersama";
   const activeBrand = activeCompany?.brand || "Rasa Aruna Kitchen";
   const initials = getInitials(activeName);
+
+  if (currentUser?.role !== "HEAD_ADMIN") return <span className="text-sm font-semibold">{activeCompany?.name}</span>;
 
   return (
     <>
@@ -173,7 +175,7 @@ export default function CompanySwitcher({ currentUser }: CompanySwitcherProps) {
             {/* Actions Divider */}
             <div className="border-t border-black/5 my-1 pt-1.5 px-2 space-y-1">
               <button
-                hidden={currentUser?.role !== "OWNER"}
+                hidden={currentUser?.role !== "HEAD_ADMIN"}
                 type="button"
                 onClick={() => {
                   setDropdownOpen(false);
@@ -188,7 +190,7 @@ export default function CompanySwitcher({ currentUser }: CompanySwitcherProps) {
               </button>
 
               <button
-                hidden={currentUser?.role !== "OWNER"}
+                hidden={currentUser?.role !== "HEAD_ADMIN"}
                 type="button"
                 onClick={() => {
                   setDropdownOpen(false);

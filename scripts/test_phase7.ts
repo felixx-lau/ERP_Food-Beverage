@@ -32,7 +32,7 @@ async function runPhase7Tests() {
   const cashierActor = { id: cashierUser!.id, name: cashierUser!.name, role: Role.CASHIER };
   const financeActor = { id: financeUser!.id, name: financeUser!.name, role: Role.FINANCE };
   const salesActor = { id: salesUser!.id, name: salesUser!.name, role: Role.SALES };
-  const ownerActor = { id: ownerUser!.id, name: ownerUser!.name, role: Role.OWNER };
+  const ownerActor = { id: ownerUser!.id, name: ownerUser!.name, role: Role.HEAD_ADMIN };
 
   let passedAssertions = 0;
   let totalAssertions = 0;
@@ -246,7 +246,8 @@ async function runPhase7Tests() {
   }
 
   assert(
-    posExcessBlocked && posExcessMsg.includes("melebihi stok fisik On-Hand"),
+    posExcessBlocked && /stok/i.test(posExcessMsg) &&
+      (await prisma.stockLevel.findUniqueOrThrow({ where: { productSku_locationCode: { productSku: "COF-LATT-HOT", locationCode: "CAFE-JKT" } } })).onHand === 22,
     "T-28-STOCK-EVAL",
     `SR-04 verified: POS checkout 25 units when on-hand is 22 blocked: "${posExcessMsg}".`
   );

@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const orders = await prisma.posOrder.findMany({
-      where: user.role === "OWNER" ? {} : { session: { cashierId: user.id } },
+      where: ["HEAD_ADMIN","OWNER"].includes(user.role) ? {} : { session: { cashierId: user.id } },
       include: {
         session: true,
         lines: { include: { product: true } },

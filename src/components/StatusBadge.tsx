@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { statusLabel } from "@/lib/statusLabels";
 
 export type StatusType =
   | "DRAFT"
@@ -43,7 +44,7 @@ export default function StatusBadge({
   dot = true,
 }: StatusBadgeProps) {
   const norm = String(status || "").toUpperCase();
-  const displayLabel = label || status;
+  const displayLabel = label || statusLabel(status);
 
   // Determine translucent tinted glass styling based on semantic meaning
   let glassClass = "glass-badge-default";
@@ -97,7 +98,7 @@ export default function StatusBadge({
   ) {
     glassClass = "glass-badge-info";
     dotColor = "bg-blue-500";
-  } else if (["ACTIVE", "PRIMARY", "OWNER"].includes(norm)) {
+  } else if (["ACTIVE", "PRIMARY", "HEAD_ADMIN"].includes(norm)) {
     glassClass = "glass-badge-success";
     dotColor = "bg-emerald-600";
   }

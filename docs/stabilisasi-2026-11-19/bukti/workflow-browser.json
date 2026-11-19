@@ -1,0 +1,26 @@
+[
+  {
+    "case": "T31/T32",
+    "role": "OWNER",
+    "warning": "Hasil simulasi +1 unit\n\nSR-20 / T-32 · Simulasi perubahan 1 unit. Selisih valuasi stok terhadap jurnal posted Rp 19.728. Saldo akun tersimpan Rp 12.310.000. Periksa dokumen sumber sebelum mengusulkan koreksi.\n\nStok dan jurnal tetap pada nilai aktual.\n\nTutup simulasi",
+    "journal": {
+      "id": "cmwn1x38x003noz2ahvj370f0",
+      "entryNumber": "JE/2026/0001",
+      "sourceDocument": "WH/IN/0007"
+    }
+  },
+  {
+    "case": "A6",
+    "role": "sales",
+    "source": "S00006",
+    "child": "WH/OUT/0007",
+    "status": "DRAFT"
+  },
+  {
+    "case": "A6",
+    "role": "procurement",
+    "source": "P00006",
+    "child": "WH/IN/0008",
+    "status": "DRAFT"
+  }
+]

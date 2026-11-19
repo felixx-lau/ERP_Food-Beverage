@@ -1,0 +1,27 @@
+import assert from 'node:assert/strict';
+import { contactView, documentNextStep, canCancelDocument } from '../src/lib/uxFlows';
+assert.equal(contactView(null,'PROCUREMENT'),'vendors');
+assert.equal(contactView('customers','PROCUREMENT'),'customers');
+assert.equal(contactView('vendors','SALES'),'vendors');
+assert.equal(contactView('unknown','SALES'),'customers');
+const draft=documentNextStep('sales',{status:'DRAFT',discountPercent:20,discountApproved:false});
+assert(draft?.text.includes('Head Admin'));assert(!draft.href);
+const confirmed=documentNextStep('sales',{status:'CONFIRMED'});
+assert.equal(confirmed?.href,'/inventory/delivery');assert(!confirmed.roles?.includes('SALES'));assert(confirmed.roles?.includes('WAREHOUSE'));
+const purchase=documentNextStep('purchase',{status:'CONFIRMED'});
+assert.equal(purchase?.href,'/inventory/receipts');assert(!purchase.roles?.includes('PROCUREMENT'));
+const shipped=documentNextStep('deliveries',{status:'DONE'});
+assert.equal(shipped?.href,'/accounting/invoices');assert(!shipped.roles?.includes('WAREHOUSE'));
+const unpaid=documentNextStep('invoices',{status:'POSTED',isPosted:true,outstandingAmount:50000});
+assert.equal(unpaid?.href,'/accounting/payments');
+assert(!documentNextStep('invoices',{status:'PAID',isPosted:true,outstandingAmount:0})?.href);
+assert.equal(documentNextStep('invoices',{status:'CANCELLED',isPosted:true,outstandingAmount:50000}),null);
+
+const fulfilled={status:'CONFIRMED',lines:[{productSku:'A',quantity:2,deliveredQty:2}],invoices:[{status:'POSTED',isPosted:true,outstandingAmount:500,lines:[{productSku:'A',quantity:2}]}]};
+assert.equal(documentNextStep('sales',fulfilled)?.href,'/accounting/payments');
+assert(!canCancelDocument('sales',fulfilled));
+assert.equal(documentNextStep('sales',{...fulfilled,invoices:[{...fulfilled.invoices[0],isPosted:false,status:'DRAFT'}]})?.href,'/accounting/invoices');
+assert(!documentNextStep('sales',{...fulfilled,invoices:[{...fulfilled.invoices[0],outstandingAmount:0}]})?.href);
+assert.equal(documentNextStep('sales',{...fulfilled,invoices:[]})?.href,'/accounting/invoices');
+assert(!canCancelDocument('purchase',{lines:[{receivedQty:1}]}));
+console.log('PASS: contact view persists by URL, Procurement defaults to vendors, approvals and document handoffs follow role and payment state.');

@@ -30,7 +30,7 @@ export interface InspectReturnLineInput {
  */
 async function createReturnRequestImpl(input: CreateReturnRequestInput) {
   const { invoiceId, lines, actor } = input;
-  permit(actor, ["OWNER","WAREHOUSE"]);
+  permit(actor, ["HEAD_ADMIN","WAREHOUSE"]);
   uniqueLines(lines, l => l.productSku); lines.forEach(l => quantity(l.returnedQty));
 
   return await prisma.$transaction(async (tx) => {
@@ -130,7 +130,7 @@ async function inspectReturnRequestImpl(
   inspections: InspectReturnLineInput[],
   actor: { id?: string; name: string; role: Role | string }
 ) {
-  permit(actor, ["OWNER","WAREHOUSE"]);
+  permit(actor, ["HEAD_ADMIN","WAREHOUSE"]);
   uniqueLines(inspections, l => l.productSku);
   inspections.forEach(i => { quantity(i.acceptedQty, true); quantity(i.rejectedQty, true); });
   return await prisma.$transaction(async (tx) => {
@@ -217,7 +217,7 @@ async function processReturnAndCreditNoteImpl(
   returnRequestId: string,
   actor: { id?: string; name: string; role: Role | string }
 ) {
-  permit(actor, ["OWNER","FINANCE"]);
+  permit(actor, ["HEAD_ADMIN","FINANCE"]);
   return await prisma.$transaction(async (tx) => {
     const returnReq = await tx.returnRequest.findUnique({
       where: { id: returnRequestId },

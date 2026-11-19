@@ -40,7 +40,8 @@ export default function VendorBillsPage() {
         const data = await res.json();
         setBills(data.bills || []);
         if (data.bills?.length > 0 && !selectedBill) {
-          setSelectedBill(data.bills.find((r: any) => r.id === new URLSearchParams(window.location.search).get("id")) || data.bills[0]);
+          const requested = data.bills.find((r: any) => r.id === new URLSearchParams(window.location.search).get("id"));
+          if(requested) setSelectedBill(requested);
         }
       }
     } finally {
@@ -179,7 +180,7 @@ export default function VendorBillsPage() {
       wireframe="Wireframe S-11"
       actions={
         <div className="flex items-center space-x-2">
-          {["OWNER","FINANCE"].includes(user?.role)&&<button className="btn-primary" onClick={()=>setCreatingBill(true)}>+ Buat tagihan</button>}
+          {["HEAD_ADMIN","FINANCE"].includes(user?.role)&&<button className="btn-primary" onClick={()=>setCreatingBill(true)}>+ Buat tagihan</button>}
           <span className="text-xs font-bold text-slate-700 hidden sm:inline">Pilih Tagihan Vendor:</span>
           <select
             value={selectedBill?.id || ""}
@@ -195,9 +196,9 @@ export default function VendorBillsPage() {
         </div>
       }
     >
-      {["OWNER","FINANCE"].includes(user?.role) && selectedBill?.isPosted && selectedBill?.status !== "CANCELLED" && <FinancialCorrection kind="bills" record={selectedBill} onChanged={async()=>{await fetchBills();await fetchBillDetail(selectedBill.id);}}/>}
+      {["HEAD_ADMIN","FINANCE"].includes(user?.role) && selectedBill?.isPosted && selectedBill?.status !== "CANCELLED" && <FinancialCorrection kind="bills" record={selectedBill} onChanged={async()=>{await fetchBills();await fetchBillDetail(selectedBill.id);}}/>}
 
-      <DocumentList records={bills} selectedId={selectedBill?.id} onSelect={fetchBillDetail}/>
+      <DocumentList loading={loading} records={bills} selectedId={selectedBill?.id} onClearSelection={()=>setSelectedBill(null)} onSelect={fetchBillDetail}/>
 
       {selectedBill && <DocumentControls kind="bills" record={selectedBill} role={user?.role} onChanged={async () => { await fetchBills(); await fetchBillDetail(selectedBill.id); }} />}
 
@@ -423,7 +424,7 @@ export default function VendorBillsPage() {
           )}
         </div>
       </details>
-      {selectedBill && <DocumentTrail kind="bills" record={selectedBill}/>}
+      {selectedBill && <DocumentTrail kind="bills" record={selectedBill} role={user?.role}/>}
     </AppLayout>
   );
 }

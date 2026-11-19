@@ -36,7 +36,8 @@ export default function GoodsReceiptsPage() {
         const data = await res.json();
         setReceipts(data.receipts || []);
         if (data.receipts?.length > 0 && !selectedReceipt) {
-          await fetchReceiptDetail((data.receipts.find((r: any) => r.id === new URLSearchParams(window.location.search).get("id")) || data.receipts[0]).id);
+          const requested = data.receipts.find((r: any) => r.id === new URLSearchParams(window.location.search).get("id"));
+          if (requested) await fetchReceiptDetail(requested.id);
         }
       }
     } finally {
@@ -181,25 +182,14 @@ export default function GoodsReceiptsPage() {
       wireframe="Wireframe S-09"
       actions={
         <div className="flex items-center space-x-2">
-          <span className="text-xs font-semibold text-[#64748b] hidden sm:inline">Pilih Dokumen Receipt:</span>
-          <select
-            value={selectedReceipt?.id || ""}
-            onChange={(e) => fetchReceiptDetail(e.target.value)}
-            className="text-xs font-mono font-medium bg-white border border-[#E5E9E4] text-[#0f172a] rounded-lg px-3 py-1.5 shadow-2xs focus:ring-1 focus:ring-[#1d4ed8] focus-brand-ring"
-          >
-            {receipts.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.receiptNumber} — PO: {r.purchaseOrder?.poNumber} ({r.status})
-              </option>
-            ))}
-          </select>
+
         </div>
       }
     >
 
       {selectedReceipt && <DocumentControls kind="receipts" record={selectedReceipt} role={user?.role} onChanged={async () => { await fetchReceipts(); await fetchReceiptDetail(selectedReceipt.id); }} />}
 
-      <DocumentList loading={loading} records={receipts} selectedId={selectedReceipt?.id} onSelect={fetchReceiptDetail}/>
+      <DocumentList loading={loading} records={receipts} selectedId={selectedReceipt?.id} onClearSelection={()=>setSelectedReceipt(null)} onSelect={fetchReceiptDetail}/>
 
 
       {/* Selected Receipt Detail */}
@@ -394,7 +384,7 @@ export default function GoodsReceiptsPage() {
           )}
         </div>
       </details>
-      {selectedReceipt && <DocumentTrail kind="receipts" record={selectedReceipt}/>}
+      {selectedReceipt && <DocumentTrail kind="receipts" record={selectedReceipt} role={user?.role}/>}
     </AppLayout>
   );
 }

@@ -26,11 +26,20 @@ def request(method,path,body=None,status=200,key=None):
 def passed(name): evidence.append({'name':name,'status':'PASS'});print('[PASS]',name,flush=True)
 
 request('GET','/api/master/customers',status=401);passed('Anonymous master API denied')
-login,headers=request('POST','/api/auth/login',{'email':'owner@rasaaruna.com','password':'Password123!'})
-cookie=SimpleCookie();cookie.load(headers['set-cookie']);assert all(c['httponly'] for c in cookie.values())
-# Production secure cookies are sent explicitly to the fixed loopback test host.
-cookies='; '.join(k+'='+v.value for k,v in cookie.items())
-me,_=request('GET','/api/auth/me');assert me['user']['role']=='OWNER';passed('Real HTTP login and authenticated session')
+def login_as(email,role):
+    global cookies
+    cookies=''
+    _,headers=request('POST','/api/auth/login',{'email':email,'password':'Password123!'})
+    cookie=SimpleCookie();cookie.load(headers['set-cookie'])
+    assert cookie and all(c['httponly'] for c in cookie.values())
+    cookies='; '.join(k+'='+v.value for k,v in cookie.items())
+    me,_=request('GET','/api/auth/me');assert me['user']['role']==role
+login_as('owner@rasaaruna.com','OWNER')
+request('GET','/api/dashboard/metrics')
+request('POST','/api/master/customers',{'name':'Denied'},status=403)
+passed('Owner reads company metrics and cannot create master customers')
+login_as('admin@rasaaruna.com','HEAD_ADMIN')
+passed('Head Admin starts authenticated administration session')
 if args.verify_restart:
     probe=json.loads((project/'http-persistence-checkpoint.json').read_text())
     detail,_=request('GET','/api/master/customers/'+probe['id']);assert detail['record']['name']==probe['name']
@@ -54,13 +63,10 @@ for resource,body,field in cases:
 order,_=request('POST','/api/sales/orders',{'contactId':'C01','lines':[{'productSku':'RICE-CHICK-S','quantity':2,'unitPrice':48000}]},key=uuid.uuid4().hex);so=order['order'];workflow='/api/workflow/sales/'+so['id']
 edit,_=request('POST',workflow,{'action':'edit','version':0,'lines':[{'productSku':'RICE-CHICK-S','quantity':3,'unitPrice':48000,'discountPercent':0}]});assert edit['record']['totalGross']==158400
 request('POST',workflow,{'action':'cancel','version':1});passed('Sales HTTP draft edit and safe cancellation')
-cashier,headers=request('POST','/api/auth/login',{'email':'cashier@rasaaruna.com','password':'Password123!'})
-cookie=SimpleCookie();cookie.load(headers['set-cookie']);cookies='; '.join(k+'='+v.value for k,v in cookie.items())
+login_as('cashier@rasaaruna.com','CASHIER')
 request('GET','/api/accounting/general-ledger',status=403);request('POST','/api/master/customers',{'name':'Denied'},status=403);passed('Cashier is denied GL and master mutations over HTTP')
 # Leave one disposable checkpoint for a separate process-restart check.
-cookies=''
-_,owner_headers=request('POST','/api/auth/login',{'email':'owner@rasaaruna.com','password':'Password123!'})
-owner_cookie=SimpleCookie();owner_cookie.load(owner_headers['set-cookie']);cookies='; '.join(k+'='+v.value for k,v in owner_cookie.items())
+login_as('admin@rasaaruna.com','HEAD_ADMIN')
 checkpoint,_=request('POST','/api/master/customers',{'name':'HTTP persistence '+suffix,'city':'Jakarta'})
 (project/'http-persistence-checkpoint.json').write_text(json.dumps({'id':checkpoint['record']['id'],'name':checkpoint['record']['name']}))
 Path(project/'http-smoke-results.json').write_text(json.dumps(evidence,indent=2))

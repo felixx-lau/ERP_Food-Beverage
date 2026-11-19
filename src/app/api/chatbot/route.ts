@@ -1,9 +1,10 @@
+import { answerWebsiteQuestion, websiteReply } from "@/lib/agent/websiteData";
 import { createHash } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { authorizeApi } from "@/lib/apiAuthorization";
 import { getCurrentUser } from "@/lib/auth";
 import { financialReply } from "@/lib/agent/financialReply";
-import { extractChatReply } from "@/lib/chatbot";
+import { chatConnectionMessage, extractChatReply } from "@/lib/chatbot";
 import { beginAgentRun, finishAgentRun } from "@/lib/agent/capabilities";
 import { listOwnProposals } from "@/lib/agent/proposals";
 import { getActivePrismaClient } from "@/lib/prisma";
@@ -39,6 +40,19 @@ export async function POST(request: NextRequest) {
     return error("Sesi percakapan tidak valid. Mulai percakapan baru.", 400);
   }
 
+  // Read common data questions from the authenticated company's database on every request.
+  // These answers remain available even if the optional language model is offline.
+  try {
+    const db = await getActivePrismaClient();
+    const context = await verifiedPageContext(db, user, body.context);
+    const grounded = await answerWebsiteQuestion({db, user, companyId:user.companyId || 'default', runId:'direct-read'}, body.message.trim(), context);
+    if (grounded) return NextResponse.json(grounded, {headers:{'Cache-Control':'no-store'}});
+  } catch (cause) {
+    if (cause instanceof BusinessError) return error(cause.message,cause.status);
+    console.error('ERP chatbot data read failed', {name:cause instanceof Error ? cause.name : 'Unknown'});
+    return error('Data perusahaan belum berhasil dibaca. Coba kembali; belum ada angka yang dapat dikonfirmasi.',503);
+  }
+
   const apiKey = process.env.LANGFLOW_API_KEY;
   const endpoint = process.env.LANGFLOW_API_URL;
   if (!apiKey || !endpoint) return error("Chatbot belum dikonfigurasi. Hubungi administrator.", 503);
@@ -59,6 +73,7 @@ export async function POST(request: NextRequest) {
     const agentId = process.env.LANGFLOW_AGENT_COMPONENT_ID;
     if (!toolId || !agentId) return error("Flow agent belum dikonfigurasi.", 503);
     stage = "langflow_request";
+    const gatewayUrl = process.env.AGENT_GATEWAY_URL || (process.env.APP_URL ? new URL("/api/agent/tools", process.env.APP_URL).toString() : "http://127.0.0.1:3000/api/agent/tools");
     const response = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-api-key": apiKey },
@@ -67,7 +82,7 @@ export async function POST(request: NextRequest) {
         input_type: "chat",
         input_value: body.message.trim(),
         session_id: sessionId,
-        tweaks: { [toolId]: { capability: agent.token, gateway_url: process.env.AGENT_GATEWAY_URL || "http://127.0.0.1:3000/api/agent/tools" }, [agentId]: { system_prompt: prompt } },
+        tweaks: { [toolId]: { capability: agent.token, gateway_url: gatewayUrl }, [agentId]: { system_prompt: prompt } },
       }),
       cache: "no-store",
       signal: AbortSignal.timeout(210_000),
@@ -82,7 +97,11 @@ export async function POST(request: NextRequest) {
     if (!reply) return error("Chatbot belum mengirim jawaban. Silakan coba lagi.", 502);
     stage = "proposal_response";
     const completed = finishAgentRun(agent.id);
-    const verifiedReply = completed?.financialReports?.length && completed.tools.every(tool => ["profile","financial_summary"].includes(tool)) ? financialReply(completed.financialReports) : reply;
+    const readReply = websiteReply(completed?.readResults || []);
+    const hasProposal = !!completed?.proposals.length;
+    const verifiedReply = hasProposal
+      ? 'Proposal sudah disiapkan dari data ERP. Tinjau rincian pada kartu sebelum menekan Simpan draft.'
+      : readReply || (completed?.financialReports?.length ? financialReply(completed.financialReports) : 'Saya belum berhasil membaca data yang sesuai untuk pertanyaan ini. Sebutkan modul, nama produk atau nomor dokumen, serta periode yang ingin diperiksa. Saya tidak dapat mengonfirmasi angka tanpa sumber ERP.');
     return NextResponse.json({ reply: verifiedReply, proposals: listOwnProposals(user, completed?.proposals || []), toolsUsed: completed?.tools || [], asOf: new Date().toISOString() }, { headers: { "Cache-Control": "no-store" } });
   } catch (cause) {
     if (cause instanceof BusinessError) return error(cause.message, cause.status);
@@ -91,6 +110,6 @@ export async function POST(request: NextRequest) {
     const timeout = cause instanceof Error && ["TimeoutError", "AbortError"].includes(cause.name);
     return error(timeout
       ? "Waktu tunggu chatbot habis. Silakan coba lagi."
-      : "Chatbot tidak dapat dihubungi. Silakan coba lagi nanti.", timeout ? 504 : 502);
+      : chatConnectionMessage(endpoint, cause), timeout ? 504 : 502);
   } finally { if (runId) finishAgentRun(runId); }
 }

@@ -72,7 +72,7 @@ async function main() {
     fs.mkdirSync(dir, { recursive: true });
   });
 
-  const user = await prisma.user.findFirst({ where: { role: "OWNER" } });
+  const user = await prisma.user.findFirst({ where: { role: "HEAD_ADMIN" } });
   if (!user) {
     throw new Error("No owner found in database");
   }

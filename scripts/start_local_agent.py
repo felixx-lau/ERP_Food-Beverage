@@ -61,7 +61,7 @@ env = os.environ.copy()
 env.update(LANGFLOW_DATABASE_URL="sqlite:///" + str(langflow_data / "database.db"), LANGFLOW_CONFIG_DIR=str(langflow_data), LANGFLOW_HOST="127.0.0.1", LANGFLOW_PORT="7870", LANGFLOW_AUTO_LOGIN="true", LANGFLOW_DO_NOT_TRACK="true", DO_NOT_TRACK="true")
 start("Langflow", [str(langflow_python), "-m", "langflow", "run", "--host", "127.0.0.1", "--port", "7870", "--workers", "1", "--no-open-browser"], ROOT, env, "http://127.0.0.1:7870/health", 7870, 150)
 
-if not (ROOT / ".next/BUILD_ID").exists():
+if not ready("http://127.0.0.1:3000/login") and not (ROOT / ".next/BUILD_ID").exists():
     raise SystemExit("Aplikasi perlu dibangun dahulu: npm run build")
 node = shutil.which("node")
 if not node:

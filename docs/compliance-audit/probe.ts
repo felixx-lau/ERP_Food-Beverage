@@ -32,7 +32,9 @@ async function probe(id: string, title: string, run: () => Promise<any>) {
 }
 async function req(path: string, actor: any, body?: any) {
   const token = await createSessionToken(actor);
-  return new NextRequest("http://localhost"+path,{method:body ? "POST" : "GET",headers:{authorization:`Bearer ${token}`,"content-type":"application/json"},...(body ? {body:JSON.stringify(body)} : {})});
+  const baseUrl = process.env.APP_URL || "http://localhost";
+  const targetUrl = new URL(path.startsWith("/") ? path.slice(1) : path, baseUrl.endsWith("/") ? baseUrl : baseUrl + "/").toString();
+  return new NextRequest(targetUrl,{method:body ? "POST" : "GET",headers:{authorization:`Bearer ${token}`,"content-type":"application/json"},...(body ? {body:JSON.stringify(body)} : {})});
 }
 async function deliveryFixture(discountPercent = 0, qty = 5) {
   const order = await createSalesQuotation({contactId:"C01",lines:[{productSku:"RICE-CHICK-S",quantity:8,unitPrice:48000,discountPercent}],actor:owner});

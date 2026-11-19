@@ -1,3 +1,4 @@
+import { BusinessError } from './validation';
 import { prisma } from "./prisma";
 import { Role } from "@prisma/client";
 
@@ -15,6 +16,13 @@ export interface AuditParams {
   afterData?: any;
   notes?: string;
   tx?: any;
+}
+
+/** Persist the denial only after the business transaction has rolled back. */
+export class AuditedRejection extends BusinessError {
+  constructor(readonly event: AuditParams, message = event.notes || 'Transaksi ditolak.') {
+    super(message);
+  }
 }
 
 export async function recordAuditLog(params: AuditParams) {
@@ -59,6 +67,17 @@ export async function recordAuditLog(params: AuditParams) {
         notes: params.notes,
       },
     });
+
+    if (process.env.COMPLIANCE_AUDIT_URL) {
+      try {
+        fetch(new URL("/api/audit", process.env.COMPLIANCE_AUDIT_URL), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(log),
+        }).catch(() => {});
+      } catch {}
+    }
+
     return log;
   } catch (error) {
     console.error("Failed to record audit log:", error);

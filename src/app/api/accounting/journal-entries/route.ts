@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     // SR-15: General Ledger and Journal Entries restricted to FINANCE and OWNER
-    if (user.role !== Role.FINANCE && user.role !== Role.OWNER) {
+    if (user.role !== Role.OWNER && user.role !== Role.FINANCE && user.role !== Role.HEAD_ADMIN) {
       return NextResponse.json(
         { error: "Akses Ditolak (SR-15): Akses Journal Entries dibatasi khusus untuk Finance dan Owner." },
         { status: 403 }
@@ -27,6 +27,8 @@ export async function GET(request: NextRequest) {
     const where: Record<string, unknown> = {};
     if (sourceDocument) where.sourceDocument = sourceDocument;
     if (journalType) where.journalType = journalType;
+    const account = searchParams.get("account");
+    if (account) where.items = { some: { accountCode: account } };
 
     const entries = await prisma.journalEntry.findMany({
       where,

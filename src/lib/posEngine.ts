@@ -1,3 +1,5 @@
+import { consumeLots } from "./lotEngine";
+import { requireOutlet } from "./outlets";
 import { atomic } from "./atomic";
 import { permit, quantity, money, discount, uniqueLines, editable } from "./validation";
 import { prisma } from "./prisma";
@@ -5,8 +7,8 @@ import { getNextSequence } from "./sequences";
 import { logAudit } from "./audit";
 import { Role } from "@prisma/client";
 
-function checkPosLocation(actor: OpenSessionInput["actor"], locationCode: string) {
-  if (actor.role === "CASHIER" && locationCode !== "CAFE-JKT") throw new Error("Kasir hanya dapat bertransaksi dari gerai CAFE-JKT (SR-03).");
+async function checkPosLocation(actor: OpenSessionInput["actor"], locationCode: string) {
+  await requireOutlet(actor, locationCode);
 }
 
 export interface OpenSessionInput {
@@ -45,9 +47,9 @@ export interface CreatePosOrderInput {
  */
 async function openPosSessionImpl(input: OpenSessionInput) {
   const { cashierId, locationCode = "CAFE-JKT", openingCash = 0, actor } = input;
-  permit(actor, ["OWNER", "CASHIER"]); money(openingCash);
-  checkPosLocation(actor, locationCode);
-  if (actor.role !== "OWNER" && cashierId !== actor.id) throw new Error("Kasir sesi harus sesuai pengguna.");
+  permit(actor, ["HEAD_ADMIN", "CASHIER"]); money(openingCash);
+  await checkPosLocation(actor, locationCode);
+  if (actor.role !== "HEAD_ADMIN" && cashierId !== actor.id) throw new Error("Kasir sesi harus sesuai pengguna.");
   if (!await prisma.warehouseLocation.findFirst({ where: { code: locationCode, archivedAt: null } })) throw new Error("Lokasi tidak terdaftar.");
 
   return await prisma.$transaction(async (tx) => {
@@ -57,14 +59,14 @@ async function openPosSessionImpl(input: OpenSessionInput) {
     });
 
     if (existingOpen) {
-      if (actor.role !== "OWNER" && existingOpen.cashierId !== actor.id) throw new Error("Lokasi mempunyai sesi kasir lain yang masih terbuka.");
+      if (actor.role !== "HEAD_ADMIN" && existingOpen.cashierId !== actor.id) throw new Error("Lokasi mempunyai sesi kasir lain yang masih terbuka.");
       return existingOpen;
     }
 
     const sessionCode = input.sessionCode || (await getNextSequence("SESSION", tx));
 
     const userExists = await tx.user.findUnique({ where: { id: cashierId } });
-    if (!userExists?.active || !['OWNER','CASHIER'].includes(userExists.role)) throw new Error('Akun kasir tidak aktif atau tidak sesuai role.');
+    if (!userExists?.active || !['HEAD_ADMIN','CASHIER'].includes(userExists.role)) throw new Error('Akun kasir tidak aktif atau tidak sesuai role.');
 
     const session = await tx.posSession.create({
       data: {
@@ -108,8 +110,8 @@ async function createPosOrderImpl(input: CreatePosOrderInput) {
     actor,
   } = input;
 
-  permit(actor, ["OWNER", "CASHIER"]);
-  checkPosLocation(actor, locationCode);
+  permit(actor, ["HEAD_ADMIN", "CASHIER"]);
+  await checkPosLocation(actor, locationCode);
   uniqueLines(lines, l => l.productSku);
   lines.forEach(l => { quantity(l.quantity); if (l.unitPrice !== undefined) money(l.unitPrice); });
   if (!["QRIS / Bank","QRIS","BANK","CASH"].includes(paymentMethod)) throw new Error("Metode pembayaran tidak valid.");
@@ -127,7 +129,7 @@ async function createPosOrderImpl(input: CreatePosOrderInput) {
       throw new Error(`Sesi POS ${sessionId} tidak aktif atau sudah ditutup.`);
     }
 
-    if (session.locationCode !== locationCode || (actor.role !== "OWNER" && session.cashierId !== actor.id)) throw new Error("Lokasi atau pemilik sesi POS tidak sesuai.");
+    if (session.locationCode !== locationCode || (actor.role !== "HEAD_ADMIN" && session.cashierId !== actor.id)) throw new Error("Lokasi atau pemilik sesi POS tidak sesuai.");
     const loyalty = loyaltyAccountId ? await tx.loyaltyAccount.findUnique({ where: { id: loyaltyAccountId } }) : null;
     if (loyaltyAccountId && !loyalty) throw new Error("Akun loyalitas tidak ditemukan.");
     const coupon = couponCode?.trim() ? await tx.promotionCoupon.findUnique({ where: { code: couponCode.trim().toUpperCase() } }) : null;
@@ -139,7 +141,7 @@ async function createPosOrderImpl(input: CreatePosOrderInput) {
     let totalGross = 0;
     let totalCost = 0;
     const orderLinesData = [];
-    const stockMovements = [];
+    const stockMovements: {sku:string;before:number;after:number;qty:number;unitCost:number;backflush:boolean}[] = [];
 
     for (const item of lines) {
       if (item.quantity <= 0) {
@@ -154,21 +156,21 @@ async function createPosOrderImpl(input: CreatePosOrderInput) {
         throw new Error(`Produk dengan SKU ${item.productSku} tidak ditemukan.`);
       }
 
-      // Validasi Stok On-Hand di CAFE-JKT (SR-04 / T-28)
-      const stock = await tx.stockLevel.findUnique({
-        where: {
-          productSku_locationCode: {
-            productSku: item.productSku,
-            locationCode,
-          },
-        },
-      });
-
-      const onHand = stock?.onHand || 0;
-      if (item.quantity > onHand - (stock?.reserved || 0)) {
-        throw new Error(
-          `Validasi POS Gagal (SR-04 / T-28): Kuantitas pesanan (${item.quantity}) melebihi stok fisik On-Hand (${onHand}) di ${locationCode}. Stok minus dilarang.`
-        );
+      const recipe = await tx.recipe.findFirst({ where: { productSku: product.sku, mode: 'BACKFLUSH', active: true } });
+      const required: { productSku: string; quantity: number }[] = recipe
+        ? JSON.parse(recipe.lines).map((l: any) => ({ productSku:l.productSku, quantity:l.quantity*item.quantity/recipe.outputQty }))
+        : [{ productSku:product.sku,quantity:item.quantity }];
+      let ingredientCost = 0;
+      for (const need of required) {
+        quantity(need.quantity);
+        const material = await tx.productVariant.findFirst({ where:{sku:need.productSku,archivedAt:null} });
+        if(!material)throw new Error('Bahan resep tidak aktif.');
+        const stock = await tx.stockLevel.findUnique({where:{productSku_locationCode:{productSku:need.productSku,locationCode}}});
+        const previous=stockMovements.filter(m=>m.sku===need.productSku).reduce((n,m)=>n+m.qty,0);
+        const onHand=stock?.onHand||0;
+        if(need.quantity+previous>onHand-(stock?.reserved||0))throw new Error(`Stok tersedia ${need.productSku} di ${locationCode} tidak cukup. Stok minus dilarang.`);
+        stockMovements.push({sku:need.productSku,before:onHand,after:onHand-need.quantity-previous,qty:need.quantity,unitCost:material.standardCost,backflush:!!recipe});
+        ingredientCost+=need.quantity*material.standardCost;
       }
 
       if (item.unitPrice !== undefined && item.unitPrice !== product.salesPrice) throw new Error("Harga POS harus sesuai harga SKU.");
@@ -180,7 +182,7 @@ async function createPosOrderImpl(input: CreatePosOrderInput) {
       // PBJT 10% round half-up per baris (SR-18)
       const pbjtLine = Math.round(netLine * 0.1);
       const totalLine = netLine + pbjtLine;
-      const costLine = item.quantity * product.standardCost;
+      const costLine = ingredientCost;
 
       totalSubtotalNet += netLine;
       totalPbjt += pbjtLine;
@@ -194,15 +196,10 @@ async function createPosOrderImpl(input: CreatePosOrderInput) {
         netPrice: netLine,
         pbjtAmount: pbjtLine,
         totalAmount: totalLine,
-        standardCost: product.standardCost,
+        standardCost: ingredientCost / item.quantity,
       });
 
-      stockMovements.push({
-        sku: item.productSku,
-        before: onHand,
-        after: onHand - item.quantity,
-        qty: item.quantity,
-      });
+
     }
 
     if (coupon && remainingDiscount > 0) throw new Error("Nilai kupon melebihi subtotal belanja.");
@@ -241,6 +238,7 @@ async function createPosOrderImpl(input: CreatePosOrderInput) {
 
     // 4. Potong Stok Fisik di Lokasi CAFE-JKT
     for (const mov of stockMovements) {
+      await consumeLots(tx,mov.sku,locationCode,mov.qty,orderNumber);
       await tx.stockLevel.update({
         where: {
           productSku_locationCode: {
@@ -255,9 +253,10 @@ async function createPosOrderImpl(input: CreatePosOrderInput) {
     }
 
     for (const mov of stockMovements) {
-      const product = orderLinesData.find(l => l.productSku === mov.sku)!;
-      await tx.stockMove.create({ data: { moveNumber: `SM/POS/${crypto.randomUUID()}`, productSku: mov.sku, sourceLocation: locationCode, destLocation: 'Customer/Output', quantity: mov.qty, unitCost: product.standardCost, totalValue: mov.qty * product.standardCost, documentType: 'POS', actorId: actor.id, reason: 'POS', documentRef: orderNumber } });
+
+      await tx.stockMove.create({ data: { moveNumber: `SM/POS/${crypto.randomUUID()}`, productSku: mov.sku, sourceLocation: locationCode, destLocation: 'Customer/Output', quantity: mov.qty, unitCost: mov.unitCost, totalValue: mov.qty * mov.unitCost, documentType: 'POS', actorId: actor.id, reason: mov.backflush ? 'BACKFLUSH' : 'POS', documentRef: orderNumber } });
     }
+    await tx.kitchenTicket.create({data:{number:`KDS/${orderNumber}`,tableName:tableInfo||'Takeaway',locationCode,status:'ACCEPTED',lines:JSON.stringify(orderLinesData.map(l=>({productSku:l.productSku,quantity:l.quantity}))),posOrderId:posOrder.id,requestKey:`pos:${posOrder.id}`}});
     // 5. Update Akumulasi Sesi POS
     await tx.posSession.update({
       where: { id: session.id },
@@ -358,7 +357,7 @@ async function closePosSessionImpl(
   closingCash: number,
   actor: { id?: string; name: string; role: Role | string }
 ) {
-  permit(actor, ["OWNER","CASHIER"]); money(closingCash);
+  permit(actor, ["HEAD_ADMIN","CASHIER"]); money(closingCash);
   return await prisma.$transaction(async (tx) => {
     const session = await tx.posSession.findUnique({
       where: { id: sessionId },
@@ -371,7 +370,8 @@ async function closePosSessionImpl(
       throw new Error(`Sesi POS ${sessionId} tidak ditemukan.`);
     }
 
-    if (actor.role !== "OWNER" && session.cashierId !== actor.id) throw new Error("Sesi bukan milik kasir ini.");
+    if (actor.role !== "HEAD_ADMIN" && session.cashierId !== actor.id) throw new Error("Sesi bukan milik kasir ini.");
+    await requireOutlet(actor,session.locationCode);
     // SR-13 & SR-14: Idempotensi Penutupan Sesi
     if (session.status === "CLOSED" || session.isClosed) {
       const log = await tx.auditLog.findFirst({where:{action:"CLOSE_POS_SESSION",documentId:session.id},orderBy:{timestamp:"desc"}});

@@ -28,74 +28,74 @@ interface AppSwitcherModalProps {
 export const APPS_CATALOG = [
   {
     key: "sales",
-    name: "Sales",
-    desc: "Penawaran harga, sales order, persetujuan diskon & penguncian harga",
+    name: "Penjualan",
+    desc: "Buat penawaran pelanggan dan pantau pesanan penjualan",
     icon: ShoppingCart,
     color: "bg-blue-600/10 text-blue-600 border border-blue-600/20",
-    roles: ["OWNER", "SALES"],
+    roles: ["OWNER", "HEAD_ADMIN", "SALES"],
     destination: "Penawaran & Pesanan (SO)",
   },
   {
     key: "crm",
-    name: "CRM",
-    desc: "Pipeline prospek kanban & pelacakan peluang bisnis",
+    name: "Peluang penjualan",
+    desc: "Pantau calon pelanggan dan peluang penjualan",
     icon: Users2,
     color: "bg-blue-600/10 text-blue-600 border border-blue-600/20",
-    roles: ["OWNER", "SALES"],
+    roles: ["OWNER", "HEAD_ADMIN", "SALES"],
     destination: "Papan Prospek (Leads CRM)",
   },
   {
     key: "purchase",
-    name: "Purchase",
-    desc: "Permintaan penawaran (RFQ), PO vendor & komitmen pengadaan",
+    name: "Pembelian",
+    desc: "Buat pesanan vendor dan pantau penerimaan barang",
     icon: Truck,
     color: "bg-blue-600/10 text-blue-600 border border-blue-600/20",
-    roles: ["OWNER", "PROCUREMENT"],
+    roles: ["OWNER", "HEAD_ADMIN", "PROCUREMENT"],
     destination: "Permintaan Penawaran (RFQ) & PO",
   },
   {
     key: "inventory",
-    name: "Inventory",
-    desc: "15 varian SKU, stok multi-lokasi, surat jalan & transfer",
+    name: "Persediaan",
+    desc: "Stok barang per lokasi, pengiriman, dan transfer gudang",
     icon: Package,
     color: "bg-blue-600/10 text-blue-600 border border-blue-600/20",
-    roles: ["OWNER", "WAREHOUSE", "PROCUREMENT"],
+    roles: ["OWNER", "HEAD_ADMIN", "WAREHOUSE", "PROCUREMENT"],
     destination: "Stok & Operasional",
   },
   {
     key: "accounting",
-    name: "Accounting",
-    desc: "Buku besar double-entry, bagan akun (CoA) & COGS",
+    name: "Keuangan",
+    desc: "Laporan keuangan, jurnal, serta pencatatan biaya dan pendapatan",
     icon: BookOpen,
     color: "bg-blue-600/10 text-blue-600 border border-blue-600/20",
-    roles: ["OWNER", "FINANCE"],
+    roles: ["OWNER", "HEAD_ADMIN", "FINANCE"],
     destination: "Buku Besar & Jurnal",
   },
   {
     key: "invoicing",
-    name: "Invoicing",
-    desc: "Faktur pengiriman, tagihan vendor, 3-way match & PBJT 10%",
+    name: "Tagihan pelanggan",
+    desc: "Buat tagihan pelanggan dari barang yang sudah dikirim",
     icon: Receipt,
     color: "bg-blue-600/10 text-blue-600 border border-blue-600/20",
-    roles: ["OWNER", "FINANCE", "SALES"],
+    roles: ["OWNER", "HEAD_ADMIN", "FINANCE", "SALES"],
     destination: "Faktur & Tagihan",
   },
   {
     key: "pos",
-    name: "Point of Sale",
-    desc: "Kasir gerai CAFE-JKT, sesi POS, QRIS & pencatatan pesanan",
+    name: "Kasir",
+    desc: "Buka sesi kasir dan catat transaksi gerai",
     icon: Store,
     color: "bg-blue-600/10 text-blue-600 border border-blue-600/20",
-    roles: ["OWNER", "CASHIER"],
+    roles: ["OWNER", "HEAD_ADMIN", "CASHIER"],
     destination: "Sesi Kasir POS",
   },
   {
     key: "dashboard",
     name: "Dashboard",
-    desc: "KPI operasional, ringkasan valuasi persediaan & rekonsiliasi",
+    desc: "Laba/rugi, grafik penjualan, dan ringkasan perusahaan",
     icon: BarChart3,
     color: "bg-blue-600/10 text-blue-600 border border-blue-600/20",
-    roles: ["OWNER", "FINANCE", "SALES", "WAREHOUSE", "PROCUREMENT"],
+    roles: ["HEAD_ADMIN", "FINANCE", "OWNER"],
     destination: "Laporan & KPI",
   },
 ];
@@ -120,7 +120,7 @@ export default function AppSwitcherModal({
     else if (appKey === "inventory") router.push("/inventory/products");
     else if (appKey === "purchase") router.push("/purchase/orders");
     else if (appKey === "invoicing") router.push("/accounting/invoices");
-    else if (appKey === "accounting") router.push("/accounting/journal-entries");
+    else if (appKey === "accounting") router.push("/accounting/reports");
     else if (appKey === "pos") router.push("/pos");
     else if (appKey === "dashboard") router.push("/dashboard");
     else if (onSelectApp) onSelectApp(appKey);
@@ -157,7 +157,7 @@ export default function AppSwitcherModal({
 
         {/* Apps Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
-          {APPS_CATALOG.map((app) => {
+          {APPS_CATALOG.filter(app => app.roles.includes(userRole || "")).map((app) => {
             const hasAccess = userRole ? app.roles.includes(userRole) : false;
             const IconComponent = app.icon;
 

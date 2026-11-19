@@ -26,7 +26,7 @@ export default function ResetSeedModal({
   if (!isOpen) return null;
 
   const role = currentUserRole || userRole;
-  const isOwner = role === "OWNER";
+  const isOwner = role === "HEAD_ADMIN";
 
   const handleConfirmReset = async () => {
     setLoading(true);

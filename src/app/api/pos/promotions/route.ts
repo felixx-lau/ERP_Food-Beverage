@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const denied = await authorizeApi(request); if (denied) return denied;
   const user = await getCurrentUser(request);
-  if (user?.role !== 'OWNER') return NextResponse.json({error:'Hanya owner dapat membuat akun dan kupon.'},{status:403});
+  if (user?.role !== 'HEAD_ADMIN') return NextResponse.json({error:'Hanya owner dapat membuat akun dan kupon.'},{status:403});
   try {
     const body = await request.json();
     const result = await atomic(async () => {

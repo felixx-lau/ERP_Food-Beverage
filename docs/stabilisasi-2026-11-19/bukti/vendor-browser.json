@@ -1,0 +1,42 @@
+[
+  {
+    "attempt": 1,
+    "expected": {
+      "outstanding": 66000,
+      "payments": 1
+    },
+    "actual": {
+      "outstanding": 66000,
+      "payments": 1,
+      "notice": "Pembayaran PAY/2026/44d3cda3-3012-41ba-b905-6e99acdc52c9 tercatat. Sisa tagihan Rp66.000."
+    }
+  },
+  {
+    "attempt": 2,
+    "expected": {
+      "outstanding": 36000,
+      "payments": 2
+    },
+    "actual": {
+      "outstanding": 36000,
+      "payments": 2,
+      "notice": "Pembayaran PAY/2026/9ba19b87-3af0-40de-8e3b-b13e144eb609 tercatat. Sisa tagihan Rp36.000."
+    }
+  },
+  {
+    "scenario": "Final installment committed; response lost; reload; same request replayed",
+    "submitted": "36000",
+    "recovered": true,
+    "actual": {
+      "status": "PAID",
+      "outstanding": 0,
+      "payments": [
+        "PAY/2026/44d3cda3-3012-41ba-b905-6e99acdc52c9",
+        "PAY/2026/9ba19b87-3af0-40de-8e3b-b13e144eb609",
+        "PAY/2026/672386e5-d76c-44bc-aac0-634b5cc54284"
+      ],
+      "journals": 3,
+      "notice": "Pembayaran PAY/2026/672386e5-d76c-44bc-aac0-634b5cc54284 tercatat. Sisa tagihan Rp0."
+    }
+  }
+]
