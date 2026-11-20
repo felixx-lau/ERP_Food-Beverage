@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import PurchaseOrderDispatch from "@/components/PurchaseOrderDispatch";
 import DocumentControls from "@/components/DocumentControls";
 import DocumentList from "@/components/DocumentList";
 import DocumentTrail from "@/components/DocumentTrail";
@@ -17,6 +18,7 @@ export default function PurchaseOrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const [refreshingReceipt, setRefreshingReceipt] = useState(false);
   const [savedNotice, setSavedNotice] = useState("");
   const [createModalOpen, setCreateModalOpen] = useState(false);
 
@@ -69,6 +71,12 @@ export default function PurchaseOrdersPage() {
     fetchSession();
     fetchOrders();
   }, []);
+
+  useEffect(() => {
+    if (selectedOrder?.id && window.location.hash === '#status-penerimaan') {
+      document.getElementById('status-penerimaan')?.scrollIntoView({ block: 'start' });
+    }
+  }, [selectedOrder?.id]);
 
   const handleSwitchRole = async (targetRole: string) => {
     const res = await fetch("/api/auth/switch-role", {
@@ -185,7 +193,62 @@ export default function PurchaseOrdersPage() {
       <DocumentList loading={loading} records={orders} selectedId={selectedOrder?.id} onClearSelection={()=>setSelectedOrder(null)} onSelect={fetchOrderDetail}/>
 
 
+      {selectedOrder?.purchaseRequest && ['HEAD_ADMIN', 'PROCUREMENT', 'OWNER'].includes(user?.role) && (
+        <PurchaseOrderDispatch key={selectedOrder.id} order={selectedOrder} role={user.role} onChanged={() => fetchOrderDetail(selectedOrder.id)} />
+      )}
+
       {/* Selected PO Detail */}
+      {selectedOrder && ['CONFIRMED', 'DONE'].includes(selectedOrder.status) && (
+        <section id="status-penerimaan" className="surface-card scroll-mt-36 space-y-4 p-5" aria-labelledby="receipt-status-title">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 id="receipt-status-title" className="font-semibold">Status penerimaan</h2>
+              <p className="text-sm text-slate-600">Gudang memvalidasi barang masuk. Procurement memantau jadwal dan sisa pesanan di sini.</p>
+            </div>
+            <button className="btn-secondary" disabled={refreshingReceipt} onClick={async () => {
+              setRefreshingReceipt(true);
+              try { await fetchOrderDetail(selectedOrder.id); }
+              finally { setRefreshingReceipt(false); }
+            }}>{refreshingReceipt ? 'Memuat…' : 'Perbarui status'}</button>
+          </div>
+          {selectedOrder.receipts?.length ? <ul className="space-y-2">
+            {selectedOrder.receipts.map((receipt: any) => (
+              <li key={receipt.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-slate-50 px-3 py-2 text-sm">
+                <strong>{receipt.receiptNumber}</strong>
+                <StatusBadge status={receipt.status} />
+                <span>{receipt.destLocation} · Jadwal {new Date(receipt.scheduledDate).toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta' })}</span>
+                {['HEAD_ADMIN', 'WAREHOUSE'].includes(user?.role) && <Link className="text-indigo-700 underline" href={`/inventory/receipts?id=${encodeURIComponent(receipt.id)}`}>Buka penerimaan</Link>}
+              </li>
+            ))}
+          </ul> : <p className="text-sm text-slate-600">Belum ada dokumen penerimaan untuk pesanan ini.</p>}
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-slate-50"><tr>
+                <th className="p-2" scope="col">Barang</th>
+                <th className="p-2 text-right" scope="col">Dipesan</th>
+                <th className="p-2 text-right" scope="col">Diterima</th>
+                <th className="p-2 text-right" scope="col">Ditolak saat inspeksi</th>
+                <th className="p-2 text-right" scope="col">Sisa PO</th>
+              </tr></thead>
+              <tbody>{selectedOrder.lines?.map((line: any) => {
+                const rejected = (selectedOrder.receipts ?? [])
+                  .filter((receipt: any) => receipt.status === 'DONE')
+                  .flatMap((receipt: any) => receipt.lines)
+                  .filter((receiptLine: any) => receiptLine.productSku === line.productSku)
+                  .reduce((total: number, receiptLine: any) => total + receiptLine.rejectedQty, 0);
+                return <tr key={line.id} className="border-t border-slate-100">
+                  <th scope="row" className="p-2 font-medium">{line.productSku} · {line.product?.name || line.productSku}</th>
+                  <td className="p-2 text-right">{line.orderedQty}</td>
+                  <td className="p-2 text-right">{line.receivedQty}</td>
+                  <td className="p-2 text-right">{rejected}</td>
+                  <td className="p-2 text-right font-semibold">{Math.max(0, line.orderedQty - line.receivedQty)}</td>
+                </tr>;
+              })}</tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
       {selectedOrder && (
         <div className="glass-2 rounded-2xl shadow-glass-2 border border-white/80 overflow-hidden">
           {/* Status Bar */}

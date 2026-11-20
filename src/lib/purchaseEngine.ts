@@ -1,9 +1,10 @@
 import { atomic } from "./atomic";
-import { permit, quantity, money, discount, uniqueLines, editable } from "./validation";
+import { permit, quantity, money, discount, uniqueLines, editable, textValue, BusinessError } from "./validation";
 import { prisma } from "./prisma";
 import { OrderStatus, Role } from "@prisma/client";
 import { recordAuditLog } from "./audit";
 import { getNextSequence } from "./sequences";
+import { businessDayEnd } from "./businessDate";
 
 export interface PurchaseLineInput {
   productSku: string;
@@ -115,7 +116,7 @@ async function draftReceipt(po: {id:string; scheduledDate:Date}, destLocation:st
   });
 }
 
-async function confirmPurchaseOrderImpl(poId: string, actor: { id: string; name: string; role: Role }, destLocation = "WH-JKT") {
+async function confirmPurchaseOrderImpl(poId: string, actor: { id: string; name: string; role: Role }, requestedLocation?: string) {
   // Role check: PROCUREMENT or HEAD_ADMIN
   if (actor.role !== Role.PROCUREMENT && actor.role !== Role.HEAD_ADMIN) {
     throw new Error("Akses ditolak (SR-15): Hanya Procurement atau Head Admin yang dapat mengonfirmasi Purchase Order.");
@@ -127,6 +128,12 @@ async function confirmPurchaseOrderImpl(poId: string, actor: { id: string; name:
   });
 
   if (!po) throw new Error("Purchase Order tidak ditemukan.");
+  const purchaseRequest = await prisma.purchaseRequest.findUnique({ where: { purchaseOrderId: po.id } });
+  if (purchaseRequest && requestedLocation && requestedLocation !== purchaseRequest.locationCode
+      && (po.status === 'DRAFT' || !po.receipts.length)) {
+    throw new Error(`Lokasi penerimaan harus sesuai pengajuan ${purchaseRequest.number} (${purchaseRequest.locationCode}).`);
+  }
+  const destLocation = purchaseRequest?.locationCode ?? requestedLocation ?? "WH-JKT";
 
   // Idempotency Check (SR-13 / T-16):
   // If already confirmed, do not create duplicate receipt or commit twice
@@ -195,6 +202,8 @@ export interface ReceiptValidationItem {
   acceptedQty: number;
   rejectedQty: number;
   rejectionReason?: string;
+  lotCode?: string;
+  expiresAt?: string;
 }
 
 async function validateGoodsReceiptImpl(params: {
@@ -229,8 +238,9 @@ async function validateGoodsReceiptImpl(params: {
   if (receipt.purchaseOrder.status !== "CONFIRMED" || !["DRAFT","CONFIRMED"].includes(receipt.status)) throw new Error("PO atau receipt tidak aktif.");
   for (const item of items) if (!receipt.lines.some(l=>l.id===item.lineId&&l.productSku===item.productSku)) throw new Error('Baris receipt tidak sesuai SKU.');
   if (!items.some(i=>i.acceptedQty+i.rejectedQty>0)) throw new Error('Isi minimal satu hasil penerimaan.');
-  const completeItems = receipt.lines.map(l=>items.find(i=>i.lineId===l.id)||{lineId:l.id,productSku:l.productSku,acceptedQty:0,rejectedQty:0,rejectionReason:undefined});
+  const completeItems: ReceiptValidationItem[] = receipt.lines.map(l=>items.find(i=>i.lineId===l.id)||{lineId:l.id,productSku:l.productSku,acceptedQty:0,rejectedQty:0,rejectionReason:undefined});
   const destLocation = receipt.destLocation || "WH-JKT";
+  const fromPurchaseRequest = await prisma.purchaseRequest.findUnique({ where: { purchaseOrderId: receipt.purchaseOrderId }, select: { id: true } });
 
   const result = await prisma.$transaction(async (tx) => {
     let totalValuationAdded = 0;
@@ -258,6 +268,18 @@ async function validateGoodsReceiptImpl(params: {
       if (line.demandQty - accepted > 0) remainingLines.push({productSku:item.productSku,demandQty:line.demandQty-accepted});
       // 1. Update stock level at destination location: ONLY acceptedQty increases on-hand stock! (SR-06 / F-12 / T-17)
       if (accepted > 0) {
+        if (line.product.trackLots && (fromPurchaseRequest || item.lotCode || item.expiresAt)) {
+          const code = textValue(item.lotCode, 'Kode batch');
+          const expiresAt = businessDayEnd(textValue(item.expiresAt, 'Tanggal kedaluwarsa'));
+          if (expiresAt < new Date()) throw new BusinessError('Batch yang diterima sudah kedaluwarsa.');
+          const lot = await tx.stockLot.upsert({
+            where: { productSku_locationCode_code: { productSku: item.productSku, locationCode: destLocation, code } },
+            create: { productSku: item.productSku, locationCode: destLocation, code, onHand: accepted, expiresAt, sourceRef: receipt.receiptNumber },
+            update: { onHand: { increment: accepted } },
+          });
+          if (lot.expiresAt.getTime() !== expiresAt.getTime()) throw new BusinessError('Kode batch sudah terdaftar dengan tanggal kedaluwarsa berbeda.');
+          await tx.lotMovement.create({ data: { lotId: lot.id, quantity: accepted, reference: receipt.receiptNumber } });
+        }
         await tx.stockLevel.upsert({
           where: {
             productSku_locationCode: {

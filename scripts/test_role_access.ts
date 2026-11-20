@@ -47,7 +47,9 @@ async function main() {
       const ownerPaths = nav.filter(i => i.roles.includes('OWNER')).map(i => i.href);
       for (const path of ['/sales/orders','/crm/leads','/purchase/orders','/inventory/products','/accounting/reports','/accounting/invoices','/pos','/dashboard']) assert(ownerPaths.includes(path));
       assert(nav.every(i => i.roles.includes('HEAD_ADMIN')));
-      assert(!nav.some(i => i.href.startsWith('/operations')));
+      assert.deepEqual(nav.filter(i => i.href.startsWith('/operations')).map(i => i.href).sort(), ['/operations/production','/operations/purchase']);
+      assert(ownerPaths.includes('/operations/purchase'));
+      assert(!ownerPaths.includes('/operations/production'));
       assert.throws(() => permit({ name: 'Owner', role: 'OWNER' }, ['HEAD_ADMIN']));
       permit({ name: 'Admin', role: 'HEAD_ADMIN' }, ['FINANCE']);
       console.log('PASS: Owner module access with restricted administration, Admin, Finance, Sales, Cashier, ledger totals, navigation and removed modules.');

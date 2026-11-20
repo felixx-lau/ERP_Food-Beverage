@@ -2,10 +2,11 @@ import type { PrismaClient } from '@prisma/client';
 import type { SessionUser } from './auth';
 import { permit } from './validation';
 import { businessDate, businessDayStart } from './businessDate';
+import { invoiceChoices } from './invoiceChoices';
 import { STOCK_POLICY, availableStock } from './stockPolicy';
 
 export type WorkItem = { id: string; department: string; title: string; reason: string; href: string; priority: 'HIGH' | 'NORMAL'; dueAt?: string };
-const ALL = ['HEAD_ADMIN','SALES','PROCUREMENT','WAREHOUSE','FINANCE','CASHIER','KITCHEN'];
+const ALL = ['OWNER','HEAD_ADMIN','SALES','PROCUREMENT','WAREHOUSE','FINANCE','CASHIER','KITCHEN'];
 /** Read-only exceptions from source documents, scoped to the authenticated company client. */
 export async function operationalOverview(db: PrismaClient, user: Pick<SessionUser,'id'|'name'|'role'>) {
   permit(user, ALL);
@@ -21,7 +22,34 @@ export async function operationalOverview(db: PrismaClient, user: Pick<SessionUs
     const where = { status: { in: ['DRAFT','CONFIRMED'] as ('DRAFT'|'CONFIRMED')[] }, purchaseOrder:{status:'CONFIRMED' as const} };
     counts.receipts = await db.goodsReceipt.count({where});
     const rows = await db.goodsReceipt.findMany({where,orderBy:{scheduledDate:'asc'},take:6});
-    for (const r of rows) tasks.push({id:r.id,department:'Procurement → Gudang',title:`Tindak lanjuti ${r.receiptNumber}`,reason:`Rencana penerimaan di ${r.destLocation}. Cocokkan kedatangan dan hasil inspeksi.`,href:`/inventory/receipts?id=${encodeURIComponent(r.id)}`,priority:r.scheduledDate<today?'HIGH':'NORMAL',dueAt:r.scheduledDate.toISOString()});
+    const monitoring = user.role === 'PROCUREMENT';
+    for (const receipt of rows) tasks.push({
+      id: receipt.id,
+      department: monitoring ? 'Procurement' : 'Gudang',
+      title: `${monitoring ? 'Pantau' : 'Proses'} penerimaan ${receipt.receiptNumber}`,
+      reason: monitoring
+        ? `Periksa jadwal dan sisa penerimaan di ${receipt.destLocation} dari pesanan pembelian.`
+        : `Periksa barang di ${receipt.destLocation}, lalu catat hasil inspeksi saat validasi.`,
+      href: monitoring
+        ? `/purchase/orders?id=${encodeURIComponent(receipt.purchaseOrderId)}#status-penerimaan`
+        : `/inventory/receipts?id=${encodeURIComponent(receipt.id)}`,
+      priority: receipt.scheduledDate < today ? 'HIGH' : 'NORMAL',
+      dueAt: receipt.scheduledDate.toISOString(),
+    });
+  }
+  if (['HEAD_ADMIN','OWNER','PROCUREMENT'].includes(user.role)) {
+    const pendingStatus = user.role === 'PROCUREMENT' ? 'APPROVED' : 'PENDING';
+    const where = { status: pendingStatus };
+    counts.purchaseRequests = await db.purchaseRequest.count({ where });
+    const requests = await db.purchaseRequest.findMany({ where, orderBy: { createdAt: 'asc' }, take: 4 });
+    for (const request of requests) tasks.push({
+      id: `purchase-request:${request.id}`,
+      department: 'Pengadaan',
+      title: `${pendingStatus === 'APPROVED' ? 'Siapkan PO dari' : 'Tinjau'} ${request.number}`,
+      reason: `${request.productSku} · ${request.locationCode} · ${pendingStatus === 'APPROVED' ? 'Pengajuan sudah disetujui.' : 'Stok mencapai batas pengadaan.'}`,
+      href: `/operations/purchase?id=${encodeURIComponent(request.id)}`,
+      priority: 'NORMAL',
+    });
   }
   if (['HEAD_ADMIN','FINANCE','SALES'].includes(user.role)) {
     const where={isPosted:true,outstandingAmount:{gt:0},dueDate:{lt:today}};
@@ -29,17 +57,33 @@ export async function operationalOverview(db: PrismaClient, user: Pick<SessionUs
     for(const r of await db.customerInvoice.findMany({where,orderBy:{dueDate:'asc'},take:6,include:{customer:{select:{name:true}}}})) tasks.push({id:r.id,department:'Finance → Sales',title:`Tagih ${r.invoiceNumber}`,reason:`${r.customer.name} · lewat jatuh tempo; siapkan tindak lanjut pelanggan.`,href:`/accounting/invoices?id=${encodeURIComponent(r.id)}`,priority:'HIGH',dueAt:r.dueDate?.toISOString()});
   }
   if (['HEAD_ADMIN','FINANCE'].includes(user.role)) {
-    const where={deliveredQty:{gt:db.salesOrderLine.fields.invoicedQty},salesOrder:{status:{in:['CONFIRMED','DONE'] as ('CONFIRMED'|'DONE')[]}}};
-    counts.uninvoicedLines=await db.salesOrderLine.count({where});
-    const rows=await db.salesOrderLine.findMany({where,orderBy:{salesOrder:{orderDate:'asc'}},take:10,select:{salesOrder:{select:{id:true,orderNumber:true}}}});
-    for(const r of new Map(rows.map(r=>[r.salesOrder.id,r.salesOrder])).values())tasks.push({id:`invoice:${r.id}`,department:'Gudang → Finance',title:`Siapkan invoice ${r.orderNumber}`,reason:'Ada barang terkirim yang belum masuk invoice. Tinjau pengiriman dan buat tagihan dari dokumen sumber.',href:`/sales/orders?id=${encodeURIComponent(r.id)}`,priority:'NORMAL'});
+    const candidates = await db.salesOrder.findMany({
+      where: { status: 'CONFIRMED', lines: { some: { deliveredQty: { gt: db.salesOrderLine.fields.invoicedQty } } } },
+      orderBy: [{ orderDate: 'asc' }, { id: 'asc' }],
+      select: {
+        id: true, orderNumber: true,
+        lines: { select: { productSku: true, quantity: true, deliveredQty: true } },
+        invoices: {
+          where: { status: { not: 'CANCELLED' } },
+          select: { status: true, lines: { select: { productSku: true, quantity: true } } },
+        },
+      },
+    });
+    const ready = candidates.map(order => ({ order, lines: invoiceChoices(order).filter(line => line.billable > 0) }))
+      .filter(item => item.lines.length);
+    counts.uninvoicedLines = ready.reduce((sum, item) => sum + item.lines.length, 0);
+    for (const { order } of ready.slice(0, 10)) tasks.push({
+      id: `invoice:${order.id}`, department: 'Finance', title: `Siapkan invoice ${order.orderNumber}`,
+      reason: 'Ada barang terkirim yang masih siap ditagih. Pesanan sudah dipilih saat formulir dibuka.',
+      href: `/accounting/invoices?salesOrderId=${encodeURIComponent(order.id)}`, priority: 'NORMAL',
+    });
     counts.draftInvoices=await db.customerInvoice.count({where:{status:'DRAFT'}});
     for(const r of await db.customerInvoice.findMany({where:{status:'DRAFT'},orderBy:{invoiceDate:'asc'},take:4}))tasks.push({id:r.id,department:'Finance',title:`Periksa draft ${r.invoiceNumber}`,reason:'Invoice belum diposting. Cocokkan pengiriman, pajak dan jumlah sebelum posting.',href:`/accounting/invoices?id=${encodeURIComponent(r.id)}`,priority:'NORMAL'});
   }
-  if (['HEAD_ADMIN','SALES'].includes(user.role)) {
+  if (['HEAD_ADMIN','SALES','OWNER'].includes(user.role)) {
     const where={status:'DRAFT' as const,discountPercent:{gt:10},discountApproved:false};
     counts.discountApprovals=await db.salesOrder.count({where});
-    for(const r of await db.salesOrder.findMany({where,orderBy:{orderDate:'asc'},take:4})) tasks.push({id:r.id,department:'Sales → Owner / Head Admin',title:`Tinjau diskon ${r.orderNumber}`,reason:`Diskon ${r.discountPercent}% menunggu persetujuan Owner atau Head Admin sebelum konfirmasi.`,href:`/sales/orders?id=${encodeURIComponent(r.id)}`,priority:'NORMAL'});
+    for(const r of await db.salesOrder.findMany({where,orderBy:{orderDate:'asc'},take:4})) tasks.push({id:r.id,department:'Sales → Owner / Head Admin',title:`${user.role === 'SALES' ? 'Pantau' : 'Tinjau'} diskon ${r.orderNumber}`,reason:`Diskon ${r.discountPercent}% menunggu persetujuan Owner atau Head Admin sebelum konfirmasi.`,href:`/sales/orders?id=${encodeURIComponent(r.id)}`,priority:'NORMAL'});
   }
   if (['HEAD_ADMIN','WAREHOUSE','PROCUREMENT','CASHIER'].includes(user.role)) {
     const assignments=user.role==='CASHIER'?await db.outletAccess.findMany({where:{userId:user.id}}):[];

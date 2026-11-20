@@ -42,6 +42,8 @@ export default function AppLayout({
 }: AppLayoutProps) {
   const pathname = usePathname();
   const [user, setUser] = useState(initialUser || null);
+  const [sessionError, setSessionError] = useState(false);
+  const [sessionAttempt, setSessionAttempt] = useState(0);
   const [isCollapsed, setIsCollapsed] = useState(false);
   useEffect(() => { try { setIsCollapsed(localStorage.getItem("erp-sidebar-collapsed") === "true"); } catch {} }, []);
   const toggleSidebar = () => { setIsCollapsed(prev => { try { localStorage.setItem("erp-sidebar-collapsed", String(!prev)); } catch {} return !prev; }); };
@@ -57,25 +59,29 @@ export default function AppLayout({
     }
   }, [initialUser]);
 
-  const fetchSession = async () => {
-    try {
-      const res = await fetch("/api/auth/me");
-      if (res.ok) {
-        const data = await res.json();
-        setUser(data.user);
-      } else if (res.status === 401) {
-        window.location.href = "/login";
-      }
-    } catch (err) {
-      console.error("Failed to fetch session:", err);
-    }
-  };
-
   useEffect(() => {
-    if (!initialUser) {
-      fetchSession();
+    if (initialUser) return;
+    const controller = new AbortController();
+    const { signal } = controller;
+    async function loadSession() {
+      setSessionError(false);
+      try {
+        const response = await fetch("/api/auth/me", { signal });
+        if (signal.aborted) return;
+        if (response.status === 401) {
+          window.location.assign("/login");
+          return;
+        }
+        if (!response.ok) throw new Error("Sesi gagal dimuat.");
+        const data = await response.json();
+        if (!signal.aborted) setUser(data.user);
+      } catch {
+        if (!signal.aborted) setSessionError(true);
+      }
     }
-  }, []);
+    void loadSession();
+    return () => controller.abort();
+  }, [initialUser, sessionAttempt]);
 
   const handleSwitchRole = async (targetRole: string, userId?: string) => {
     if (initialSwitchRole) {
@@ -103,12 +109,17 @@ export default function AppLayout({
     window.location.reload();
   };
 
-  const pageAllowed = !!user && !pathname.startsWith('/operations') && (
+  const pageAllowed = !!user && (
     user.role === 'HEAD_ADMIN' || NAVIGATION_GROUPS.some(group => group.items.some(item =>
       (pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href + '/'))) && item.roles.includes(user.role)))
   );
 
-  if (!user) return <p role="status" className="p-8">Memuat akun…</p>;
+  if (!user) return sessionError
+    ? <div role="alert" className="space-y-3 p-8">
+      <p>Akun belum dapat dimuat.</p>
+      <button className="btn-secondary" onClick={() => setSessionAttempt(attempt => attempt + 1)}>Coba lagi</button>
+    </div>
+    : <p role="status" className="p-8">Memuat akun…</p>;
   if (!pageAllowed) return <div className="p-8 space-y-4"><h1 className="text-xl font-semibold">Halaman tidak tersedia untuk akun ini</h1><a className="btn-primary" href="/">Kembali ke beranda</a></div>;
 
   return (

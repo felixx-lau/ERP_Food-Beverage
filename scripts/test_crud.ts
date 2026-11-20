@@ -8,10 +8,10 @@ import { prisma } from '../src/lib/prisma';
 import { executeSeed } from '../src/lib/seedData';
 import { createSessionToken } from '../src/lib/auth';
 import { createMaster,changeMaster,getMaster,listMaster } from '../src/lib/masterData';
-import { createSalesQuotation } from '../src/lib/salesEngine';
+import { approveOrderDiscount, confirmSalesOrder, createSalesQuotation } from '../src/lib/salesEngine';
 import { adjustStock } from '../src/lib/inventoryEngine';
-import { POST as createLeadAPI } from '../src/app/api/crm/leads/route';
-import { PATCH as editLeadAPI } from '../src/app/api/crm/leads/[id]/route';
+import { POST as createLeadAPI, GET as listLeadsAPI } from '../src/app/api/crm/leads/route';
+import { PATCH as editLeadAPI, DELETE as deleteLeadAPI } from '../src/app/api/crm/leads/[id]/route';
 import { POST as createAPI } from '../src/app/api/master/[resource]/route';
 import { PATCH as editAPI,DELETE as deleteAPI } from '../src/app/api/master/[resource]/[id]/route';
 
@@ -54,7 +54,9 @@ async function main(){
     for(const [resource,input,key] of cases){
       const record:any=await createMaster(resource,input,owner);const id=record[key];
       await changeMaster(resource,id,{version:0,...(resource==='vendor-prices'?{price:10500}:{name:'Diubah'})},owner);
-      await changeMaster(resource,id,{version:1,action:'archive'},owner);await changeMaster(resource,id,{version:2,action:'restore'},owner);await changeMaster(resource,id,{version:3},owner,true);
+      await changeMaster(resource,id,{version:1,action:'archive'},owner);await changeMaster(resource,id,{version:2,action:'restore'},owner);
+      if (resource === 'leads') await changeMaster(resource,id,{version:3,action:'cancel'},owner);
+      await changeMaster(resource,id,{version:resource === 'leads' ? 4 : 3},owner,true);
     }
   });
   await check('Products persist metadata and protect valued stock/history',async()=>{
@@ -88,6 +90,48 @@ async function main(){
     assert.equal((await editLeadAPI(patch({version:0,expectedRevenue:-1}),context)).status,400);
     assert.equal((await editLeadAPI(patch({version:0,stage:'PROPOSITION'}),context)).status,200);
     assert.equal((await editLeadAPI(patch({version:0,name:'Stale'}),context)).status,409);
+    const remove = (version: number) => deleteLeadAPI(new NextRequest(`http://localhost/api/crm/leads/${lead.id}?version=${version}`, { method: 'DELETE', headers }), context);
+    assert.equal((await remove(1)).status, 409);
+    assert.equal((await editLeadAPI(patch({version:1,action:'cancel'}),context)).status,200);
+    const active = await listLeadsAPI(new NextRequest('http://localhost/api/crm/leads', {headers})).then(r=>r.json());
+    const all = await listLeadsAPI(new NextRequest('http://localhost/api/crm/leads?status=all', {headers})).then(r=>r.json());
+    assert(!active.leads.some((item:any)=>item.id===lead.id));
+    assert(all.leads.find((item:any)=>item.id===lead.id).archivedAt);
+    const quote = () => createSalesQuotation({contactId:'C01',leadId:lead.id,lines:[{productSku:'RICE-CHICK-S',quantity:1,unitPrice:48000}],actor:sales});
+    await assert.rejects(quote, /dibatalkan/);
+    assert.equal((await remove(2)).status, 200);
+    assert.equal(await prisma.crmLead.count({where:{id:lead.id}}),0);
+    const linked:any = await createMaster('leads', {name:'Lead dengan penawaran',contactId:'C01',expectedRevenue:48000},sales);
+    const order = await createSalesQuotation({contactId:'C01',leadId:linked.id,lines:[{productSku:'RICE-CHICK-S',quantity:1,unitPrice:48000}],actor:sales});
+    assert.equal(order.lead?.stage,'PROPOSITION');
+    await changeMaster('leads',linked.id,{version:order.lead!.version,action:'cancel'},sales);
+    await assert.rejects(changeMaster('leads',linked.id,{version:order.lead!.version+1},sales,true),/terkait/);
+    assert.equal((await prisma.salesOrder.findUniqueOrThrow({where:{id:order.id}})).leadId,linked.id);
+  });
+  await check('Lead advances automatically from qualification to proposal and confirmed order',async()=>{
+    const lead:any = await createMaster('leads',{name:'Otomatis',contactId:'C03'},sales);
+    assert.equal(lead.stage,'NEW');
+    const qualified:any = await changeMaster('leads',lead.id,{version:0,expectedRevenue:48000},sales);
+    assert.equal(qualified.stage,'QUALIFIED');
+    const createQuote = () => createSalesQuotation({contactId:'C03',leadId:lead.id,
+      lines:[{productSku:'RICE-CHICK-S',quantity:1,unitPrice:48000,discountPercent:20}],actor:sales,
+    });
+    const order = await createQuote();
+    assert.equal(order.lead?.stage,'PROPOSITION');
+    await assert.rejects(confirmSalesOrder(order.id,sales),/Diskon/);
+    await approveOrderDiscount(order.id,owner);
+    assert.equal((await prisma.crmLead.findUniqueOrThrow({where:{id:lead.id}})).stage,'PROPOSITION');
+    await confirmSalesOrder(order.id,sales);
+    await confirmSalesOrder(order.id,sales);
+    assert.equal((await prisma.crmLead.findUniqueOrThrow({where:{id:lead.id}})).stage,'WON');
+    assert.equal((await createQuote()).lead?.stage,'WON');
+    assert.equal(await prisma.auditLog.count({where:{documentId:lead.id,action:'ADVANCE_LEAD_STAGE'}}),2);
+    const withoutEstimate:any = await createMaster('leads',{name:'Nilai mengikuti quotation',contactId:'C03'},sales);
+    const quote = await createSalesQuotation({contactId:'C03',leadId:withoutEstimate.id,
+      lines:[{productSku:'RICE-CHICK-S',quantity:1,unitPrice:48000}],actor:sales,
+    });
+    assert.equal(quote.lead?.stage,'PROPOSITION');
+    assert.equal(quote.lead?.expectedRevenue,48000);
   });
   await check('Core account/location archival is forbidden and audit is preserved',async()=>{
     await assert.rejects(changeMaster('accounts','1010',{version:0,action:'archive'},owner),/sistem/);

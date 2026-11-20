@@ -7,7 +7,7 @@ import { prisma, getActivePrismaClient } from "../src/lib/prisma";
 import { executeSeed } from "../src/lib/seedData";
 import { createInternalTransfer, validateInternalTransfer } from "../src/lib/transferEngine";
 import { openPosSession, createPosOrder } from "../src/lib/posEngine";
-import { createSalesQuotation, confirmSalesOrder } from "../src/lib/salesEngine";
+import { createSalesQuotation, confirmSalesOrder, approveOrderDiscount } from "../src/lib/salesEngine";
 import { createPurchaseQuotation, confirmPurchaseOrder } from "../src/lib/purchaseEngine";
 import { adjustStock } from "../src/lib/inventoryEngine";
 import { getDashboardChartMetrics } from "../src/lib/dashboardEngine";
@@ -19,6 +19,12 @@ import { businessDate, businessDayStart, businessDayEnd } from "../src/lib/busin
 import { productChoiceLabel, resolveProductChoice } from "../src/lib/productChoice";
 import { validateDeliveryOrder } from "../src/lib/deliveryEngine";
 import { validateGoodsReceipt } from "../src/lib/purchaseEngine";
+import { createCustomerInvoice } from "../src/lib/accountingEngine";
+import { createSessionToken } from "../src/lib/auth";
+import { NextRequest } from "next/server";
+import { GET as operationsRoute } from "../src/app/api/operations/route";
+import { GET as salesOrderDetail } from "../src/app/api/sales/orders/[id]/route";
+import { GET as purchaseOrderDetail } from "../src/app/api/purchase/orders/[id]/route";
 import { dispatchAgentTool } from "../src/lib/agent/tools";
 
 if (!path.basename(process.cwd()).startsWith("rasa-aruna-verification-") || path.dirname(fs.realpathSync(process.cwd())) !== fs.realpathSync(os.tmpdir())) throw new Error("Use verify_isolated.py; never run this against a business database.");
@@ -137,6 +143,47 @@ async function main() {
   const context=await verifiedPageContext(db,owner,{path:"/sales/orders",documentId:quote.id});assert.equal(context?.document?.reference,quote.orderNumber);
   const missing=await verifiedPageContext(db,owner,{path:"/sales/orders",documentId:"foreign-id"});assert.equal(missing?.document,undefined);
   observed("Worklist and page context respect role and source-record scope", "PASS", "No finance context for cashier", "Verified");
+  const finance = await db.user.findFirstOrThrow({ where: { role: "FINANCE" } });
+  const procurement = await db.user.findFirstOrThrow({ where: { role: "PROCUREMENT" } });
+  const companyOwner = await db.user.findFirstOrThrow({ where: { role: "OWNER" } });
+  const requestFor = async (actor: typeof finance, target: string) => {
+    const token = await createSessionToken({ ...actor, companyId: 'default' });
+    return new NextRequest('http://localhost:3000' + target, {
+      headers: { cookie: `rasa_aruna_company=default; rasa_aruna_session=${token}` },
+    });
+  };
+  const worklist = async (actor: typeof finance): Promise<Awaited<ReturnType<typeof operationalOverview>>> => {
+    const response = await operationsRoute(await requestFor(actor, '/api/operations'));
+    assert.equal(response.status, 200);
+    return response.json();
+  };
+  const financeQueue = await worklist(finance);
+  const newInvoice = financeQueue.tasks.find(task => task.id === `invoice:${quote.id}`);
+  assert.equal(newInvoice?.href, `/accounting/invoices?salesOrderId=${quote.id}`);
+  const invoice = await createCustomerInvoice({
+    salesOrderId: quote.id, lines: [{ productSku: 'AUDIT-ALLOCATION', quantity: 1 }], actor: finance,
+  });
+  const draftQueue = await worklist(finance);
+  assert(!draftQueue.tasks.some(task => task.id === newInvoice?.id));
+  assert.equal(draftQueue.tasks.find(task => task.id === invoice.id)?.href, `/accounting/invoices?id=${invoice.id}`);
+  const procurementQueue = await worklist(procurement);
+  const inboundTask = procurementQueue.tasks.find(task => task.id === partial.backorderReceipt!.id);
+  assert.equal(inboundTask?.href, `/purchase/orders?id=${po2.id}#status-penerimaan`);
+  const poDetail = await purchaseOrderDetail(await requestFor(procurement, `/api/purchase/orders/${po2.id}`), { params: Promise.resolve({ id: po2.id }) });
+  assert.equal(poDetail.status, 200);
+  assert.equal((await poDetail.json()).order.receipts.find((receipt: { status: string }) => receipt.status === 'DONE').lines[0].acceptedQty, 5);
+  const discount = await createSalesQuotation({
+    contactId: customer.id, lines: [{ productSku: 'AUDIT-ALLOCATION', quantity: 1, unitPrice: 10000, discountPercent: 20 }], actor: owner,
+  });
+  assert((await worklist(companyOwner)).tasks.some(task => task.id === discount.id && task.href === `/sales/orders?id=${discount.id}`));
+  await approveOrderDiscount(discount.id, owner);
+  assert(!(await worklist(companyOwner)).tasks.some(task => task.id === discount.id));
+  const approved = await salesOrderDetail(await requestFor(companyOwner, `/api/sales/orders/${discount.id}`), { params: Promise.resolve({ id: discount.id }) });
+  assert.equal(approved.status, 200);
+  const approvedOrder = (await approved.json()).order;
+  assert.equal(approvedOrder.discountApprovedBy, owner.name);
+  assert.equal(approvedOrder.discountApprovalRole, 'HEAD_ADMIN');
+  observed("Role-specific handoffs navigate to invoice creation or draft, PO monitoring, and Owner discount approval", "PASS", "Authorized deep links and actual approval role", "Verified through authenticated routes");
   const income=await db.account.findFirstOrThrow({where:{type:"INCOME"}}),asset=await db.account.findFirstOrThrow({where:{type:"ASSET"}});
   for(const [suffix,date,amount,state] of [["inside","2026-02-01T00:30:00+07:00",123456,"POSTED"],["outside","2026-01-31T23:30:00+07:00",222222,"POSTED"],["draft","2026-02-01T01:30:00+07:00",333333,"DRAFT"]] as const) await db.journalEntry.create({data:{entryNumber:`EXPO-${suffix}`,documentRef:`EXPO-${suffix}`,sourceDocument:"EXPO",journalType:"GENERAL",state,date:new Date(date),items:{create:[{accountCode:income.code,label:"test",credit:amount},{accountCode:asset.code,label:"test",debit:amount}]}}});
   const summary=await financialSummary(db,"2026-02-01","2026-02-01");assert.equal(summary.revenue,123456);assert.equal(summary.profit,123456);

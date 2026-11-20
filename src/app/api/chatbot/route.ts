@@ -1,4 +1,5 @@
-import { answerWebsiteQuestion, websiteReply } from "@/lib/agent/websiteData";
+import { answerWebsiteQuestion, websiteActions, websiteReply } from "@/lib/agent/websiteData";
+import { loadVerifiedRead, rememberVerifiedRead, verifiedRead } from "@/lib/agent/conversation";
 import { createHash } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { authorizeApi } from "@/lib/apiAuthorization";
@@ -40,13 +41,23 @@ export async function POST(request: NextRequest) {
     return error("Sesi percakapan tidak valid. Mulai percakapan baru.", 400);
   }
 
+  // Keep conversation history separate for every company, user and new chat.
+  const sessionId = createHash("sha256")
+    .update(JSON.stringify([user.companyId, user.id, body.sessionId]))
+    .digest("hex");
+
   // Read common data questions from the authenticated company's database on every request.
   // These answers remain available even if the optional language model is offline.
   try {
     const db = await getActivePrismaClient();
     const context = await verifiedPageContext(db, user, body.context);
-    const grounded = await answerWebsiteQuestion({db, user, companyId:user.companyId || 'default', runId:'direct-read'}, body.message.trim(), context);
-    if (grounded) return NextResponse.json(grounded, {headers:{'Cache-Control':'no-store'}});
+    const previous = loadVerifiedRead(user, sessionId);
+    const grounded = await answerWebsiteQuestion({db, user, companyId:user.companyId || 'default', runId:'direct-read'}, body.message.trim(), context, previous);
+    if (grounded) {
+      const { conversation, ...payload } = grounded;
+      if (conversation !== undefined) rememberVerifiedRead(user, sessionId, conversation);
+      return NextResponse.json(payload, {headers:{'Cache-Control':'no-store'}});
+    }
   } catch (cause) {
     if (cause instanceof BusinessError) return error(cause.message,cause.status);
     console.error('ERP chatbot data read failed', {name:cause instanceof Error ? cause.name : 'Unknown'});
@@ -56,11 +67,6 @@ export async function POST(request: NextRequest) {
   const apiKey = process.env.LANGFLOW_API_KEY;
   const endpoint = process.env.LANGFLOW_API_URL;
   if (!apiKey || !endpoint) return error("Chatbot belum dikonfigurasi. Hubungi administrator.", 503);
-
-  // Keep conversation history separate for every company, user and new chat.
-  const sessionId = createHash("sha256")
-    .update(JSON.stringify([user.companyId, user.id, body.sessionId]))
-    .digest("hex");
 
   let runId: string | undefined;
   let stage = "start";
@@ -97,12 +103,14 @@ export async function POST(request: NextRequest) {
     if (!reply) return error("Chatbot belum mengirim jawaban. Silakan coba lagi.", 502);
     stage = "proposal_response";
     const completed = finishAgentRun(agent.id);
-    const readReply = websiteReply(completed?.readResults || []);
+    const reads = completed?.readResults ?? [];
+    const readReply = websiteReply(reads);
     const hasProposal = !!completed?.proposals.length;
     const verifiedReply = hasProposal
       ? 'Proposal sudah disiapkan dari data ERP. Tinjau rincian pada kartu sebelum menekan Simpan draft.'
       : readReply || (completed?.financialReports?.length ? financialReply(completed.financialReports) : 'Saya belum berhasil membaca data yang sesuai untuk pertanyaan ini. Sebutkan modul, nama produk atau nomor dokumen, serta periode yang ingin diperiksa. Saya tidak dapat mengonfirmasi angka tanpa sumber ERP.');
-    return NextResponse.json({ reply: verifiedReply, proposals: listOwnProposals(user, completed?.proposals || []), toolsUsed: completed?.tools || [], asOf: new Date().toISOString() }, { headers: { "Cache-Control": "no-store" } });
+    if (reads.length || hasProposal) rememberVerifiedRead(user, sessionId, hasProposal ? null : verifiedRead(reads));
+    return NextResponse.json({ reply: verifiedReply, actions: hasProposal ? [] : websiteActions(reads), proposals: listOwnProposals(user, completed?.proposals || []), toolsUsed: completed?.tools || [], asOf: new Date().toISOString() }, { headers: { "Cache-Control": "no-store" } });
   } catch (cause) {
     if (cause instanceof BusinessError) return error(cause.message, cause.status);
     // Log diagnosis only; credentials, prompts, and business payloads stay private.

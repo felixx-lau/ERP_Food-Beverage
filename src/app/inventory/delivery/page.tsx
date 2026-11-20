@@ -15,52 +15,72 @@ export default function DeliveryPage() {
   const [deliveries, setDeliveries] = useState<any[]>([]);
   const [selectedDelivery, setSelectedDelivery] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [sessionError, setSessionError] = useState(false);
+  const [sessionAttempt, setSessionAttempt] = useState(0);
 
   // Test Runner state
   const [testResult, setTestResult] = useState<any>(null);
   const [testing, setTesting] = useState(false);
 
-  const fetchSession = async () => {
-    const res = await fetch("/api/auth/me");
-    if (res.ok) {
+  const fetchDeliveryDetail = async (id: string, signal?: AbortSignal) => {
+    try {
+      const res = await fetch(`/api/inventory/deliveries/${encodeURIComponent(id)}`, { signal });
+      if (!res.ok) throw new Error();
       const data = await res.json();
-      setUser(data.user);
-    }
-  };
-
-  const fetchDeliveries = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/inventory/deliveries");
-      if (res.ok) {
-        const data = await res.json();
-        setDeliveries(data.deliveries || []);
-        if (data.deliveries?.length > 0 && !selectedDelivery) {
-          const requested = data.deliveries.find((r: any) => r.id === new URLSearchParams(window.location.search).get("id"));
-          if (requested) await fetchDeliveryDetail(requested.id);
-        }
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchDeliveryDetail = async (id: string) => {
-    try {
-      const res = await fetch(`/api/inventory/deliveries/${id}`);
-      if (res.ok) {
-        const data = await res.json();
+      if (!signal?.aborted) {
         setSelectedDelivery(data.delivery);
+        setLoadError("");
       }
-    } catch (e) {
-      console.error(e);
+    } catch {
+      if (!signal?.aborted) setLoadError("Detail pengiriman belum dapat dimuat.");
+    }
+  };
+
+  const fetchDeliveries = async (signal?: AbortSignal) => {
+    setLoading(true);
+    setLoadError("");
+    try {
+      const res = await fetch("/api/inventory/deliveries", { signal });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      if (signal?.aborted) return;
+      setDeliveries(data.deliveries || []);
+      const id = new URLSearchParams(window.location.search).get("id");
+      if (!selectedDelivery && data.deliveries?.some((delivery: { id: string }) => delivery.id === id) && id) {
+        await fetchDeliveryDetail(id, signal);
+      }
+    } catch {
+      if (!signal?.aborted) setLoadError("Daftar pengiriman belum dapat dimuat.");
+    } finally {
+      if (!signal?.aborted) setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchSession();
-    fetchDeliveries();
-  }, []);
+    const controller = new AbortController();
+    const { signal } = controller;
+    setSessionError(false);
+    async function loadSession() {
+      try {
+        const res = await fetch("/api/auth/me", { signal });
+        if (signal.aborted) return;
+        if (res.status === 401) {
+          window.location.assign("/login");
+          return;
+        }
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        if (signal.aborted) return;
+        setUser(data.user);
+        await fetchDeliveries(signal);
+      } catch {
+        if (!signal.aborted) setSessionError(true);
+      }
+    }
+    void loadSession();
+    return () => controller.abort();
+  }, [sessionAttempt]);
 
   const handleSwitchRole = async (targetRole: string) => {
     const res = await fetch("/api/auth/switch-role", {
@@ -160,6 +180,13 @@ export default function DeliveryPage() {
     }
   };
 
+  if (!user) return sessionError
+    ? <div role="alert" className="space-y-3 p-8">
+      <p>Akun belum dapat dimuat.</p>
+      <button className="btn-secondary" onClick={() => setSessionAttempt(attempt => attempt + 1)}>Coba lagi</button>
+    </div>
+    : <p role="status" className="p-8">Memuat akun…</p>;
+
   return (
     <AppLayout
       currentUser={user}
@@ -175,6 +202,10 @@ export default function DeliveryPage() {
       }
     >
 
+      {loadError && <div role="alert" className="surface-card space-y-2 p-4 text-sm text-rose-800">
+        <p>{loadError}</p>
+        <button className="font-semibold underline" onClick={() => void fetchDeliveries()}>Muat ulang daftar</button>
+      </div>}
       {selectedDelivery && <DocumentControls kind="deliveries" record={selectedDelivery} role={user?.role} onChanged={async () => { await fetchDeliveries(); await fetchDeliveryDetail(selectedDelivery.id); }} />}
 
       <DocumentList loading={loading} records={deliveries} selectedId={selectedDelivery?.id} onClearSelection={()=>setSelectedDelivery(null)} onSelect={fetchDeliveryDetail}/>

@@ -19,6 +19,14 @@ export default function VendorBillsPage() {
   const [loading, setLoading] = useState(true);
 
   const [creatingBill,setCreatingBill] = useState(false);
+  const [initialOrderId, setInitialOrderId] = useState('');
+  const closeBillModal = () => {
+    setCreatingBill(false);
+    setInitialOrderId('');
+    const url = new URL(window.location.href);
+    url.searchParams.delete('purchaseOrderId');
+    window.history.replaceState(null, '', url);
+  };
 
   // Test Runner state
   const [testResult, setTestResult] = useState<any>(null);
@@ -62,7 +70,8 @@ export default function VendorBillsPage() {
   };
 
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("purchaseOrderId")) setCreatingBill(true);
+    const orderId = new URLSearchParams(window.location.search).get('purchaseOrderId');
+    if (orderId) { setInitialOrderId(orderId); setCreatingBill(true); }
   }, []);
 
   useEffect(() => {
@@ -202,7 +211,11 @@ export default function VendorBillsPage() {
 
       {selectedBill && <DocumentControls kind="bills" record={selectedBill} role={user?.role} onChanged={async () => { await fetchBills(); await fetchBillDetail(selectedBill.id); }} />}
 
-      {creatingBill&&<CreateVendorBillModal initialOrderId={new URLSearchParams(window.location.search).get("purchaseOrderId") || ""} onClose={()=>setCreatingBill(false)} onCreated={async bill=>{setCreatingBill(false);await fetchBills();await fetchBillDetail(bill.id);}}/>}
+      {creatingBill && ['HEAD_ADMIN', 'FINANCE'].includes(user?.role) && <CreateVendorBillModal
+        initialOrderId={initialOrderId}
+        onClose={closeBillModal}
+        onCreated={async bill => { closeBillModal(); await fetchBills(); await fetchBillDetail(bill.id); }}
+      />}
       {selectedBill?.status==='POSTED'&&<Link className="btn-primary inline-flex" href={`/accounting/payments?billId=${selectedBill.id}`}>Bayar tagihan vendor</Link>}
       {/* Selected Bill Detail */}
       {selectedBill && (

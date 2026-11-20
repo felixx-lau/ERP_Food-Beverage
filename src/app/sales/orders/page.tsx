@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import DocumentControls from "@/components/DocumentControls";
 import DocumentList from "@/components/DocumentList";
+import { discountApprovalLabel } from "@/lib/uxFlows";
 import DocumentTrail from "@/components/DocumentTrail";
 import AppLayout from "@/components/AppLayout";
 import StatusBadge from "@/components/StatusBadge";
@@ -28,6 +29,7 @@ export default function SalesOrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const [pendingApprovalsOnly, setPendingApprovalsOnly] = useState(false);
   const [savedNotice, setSavedNotice] = useState("");
   const [createModalOpen, setCreateModalOpen] = useState(false);
 
@@ -77,6 +79,7 @@ export default function SalesOrdersPage() {
   };
 
   useEffect(() => {
+    setPendingApprovalsOnly(new URLSearchParams(window.location.search).get("approval") === "pending");
     fetchSession();
     fetchOrders();
   }, []);
@@ -202,10 +205,10 @@ export default function SalesOrdersPage() {
     <AppLayout
       currentUser={user}
       onSwitchRole={handleSwitchRole}
-      breadcrumbs={[{ label: "Penjualan & CRM" }, { label: "Sales Orders" }]}
-      title="Pesanan penjualan"
+      breadcrumbs={[{ label: "Penjualan & CRM" }, { label: "Penawaran & pesanan" }]}
+      title="Penawaran & pesanan penjualan"
       subtitle="Penerbitan Penawaran, Konfirmasi Pesanan, Otorisasi Diskon & Kunci Harga (F-05, F-06, F-10, SR-07, SR-08)"
-      wireframe="Wireframe S-04"
+      wireframe="Wireframe S-05"
       actions={
         <div className="flex items-center space-x-2">
           <button
@@ -213,7 +216,7 @@ export default function SalesOrdersPage() {
             className="flex items-center space-x-1.5 px-3.5 py-2 text-xs font-bold btn-glass-primary rounded-xl shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus-brand-ring"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>Pesanan Baru</span>
+            <span>Buat penawaran</span>
           </button>
 
         </div>
@@ -224,7 +227,20 @@ export default function SalesOrdersPage() {
 
       {loadError && <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800"><p>{loadError}</p><button className="font-semibold mt-2" onClick={() => void fetchOrders()}>Muat ulang daftar</button></div>}
       {savedNotice && <div role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900 flex flex-wrap items-center justify-between gap-2"><p>{savedNotice}</p><button className="font-semibold" onClick={() => setSavedNotice("")}>Tutup pesan</button></div>}
-      <DocumentList loading={loading} records={orders} selectedId={selectedOrder?.id} onClearSelection={()=>setSelectedOrder(null)} onSelect={fetchOrderDetail}/>
+      <label className="surface-card flex items-center gap-2 p-4 text-sm">
+        <input type="checkbox" checked={pendingApprovalsOnly} onChange={event => {
+          const enabled = event.target.checked;
+          const url = new URL(window.location.href);
+          if (enabled) url.searchParams.set('approval', 'pending');
+          else url.searchParams.delete('approval');
+          window.history.replaceState(null, '', url);
+          setPendingApprovalsOnly(enabled);
+        }} />
+        Diskon menunggu persetujuan
+      </label>
+      <DocumentList loading={loading} records={pendingApprovalsOnly
+        ? orders.filter(order => order.status === 'DRAFT' && order.discountPercent > 10 && !order.discountApproved)
+        : orders} selectedId={selectedOrder?.id} onClearSelection={()=>setSelectedOrder(null)} onSelect={fetchOrderDetail}/>
 
 
       {/* Selected Order Form View */}
@@ -244,7 +260,7 @@ export default function SalesOrdersPage() {
                         : "bg-white/60 text-slate-700"
                     }`}
                   >
-                    {st}
+                    {st === "DRAFT" ? "Penawaran (draft)" : st}
                   </span>
                 ))}
               </div>
@@ -292,7 +308,7 @@ export default function SalesOrdersPage() {
                 Maks Diskon: {selectedOrder.discountPercent}%
               </p>
               <span className={`text-[11px] font-bold ${selectedOrder.discountPercent <= 10 || selectedOrder.discountApproved ? "text-emerald-800" : "text-amber-800"}`}>
-                {selectedOrder.discountPercent <= 10 ? "Tidak memerlukan persetujuan tambahan" : selectedOrder.discountApproved ? "✓ Disetujui Owner" : "⏳ Menunggu persetujuan Owner"}
+                {discountApprovalLabel(selectedOrder)}
               </span>
             </div>
           </div>
@@ -442,7 +458,7 @@ export default function SalesOrdersPage() {
         onClose={() => setCreateModalOpen(false)}
         onOrderCreated={async (newOrder) => {
           await fetchOrders();
-          if (newOrder) { setSelectedOrder(newOrder); setSavedNotice(`Pesanan ${newOrder.orderNumber || newOrder.poNumber} tersimpan sebagai draft. Periksa rincian, lalu konfirmasi melalui Tindakan dokumen.`); }
+          if (newOrder) { setSelectedOrder(newOrder); setSavedNotice(`Penawaran ${newOrder.orderNumber} tersimpan sebagai draft. Periksa rincian, lalu konfirmasi melalui Tindakan dokumen.`); }
         }}
       />
       {selectedOrder && <DocumentTrail kind="sales" record={selectedOrder} role={user?.role}/>}

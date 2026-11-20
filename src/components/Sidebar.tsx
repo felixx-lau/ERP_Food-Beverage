@@ -73,6 +73,7 @@ export const NAVIGATION_GROUPS: NavGroup[] = [
   {
     group: "Pengadaan",
     items: [
+      { name: "Pengajuan & minimum stok", href: "/operations/purchase", icon: FileText, roles: ["HEAD_ADMIN", "OWNER", "PROCUREMENT", "WAREHOUSE"] },
       { name: "Pesanan pembelian", href: "/purchase/orders", icon: ShoppingBag, roles: ["OWNER", "HEAD_ADMIN", "PROCUREMENT"], wireframe: "S-08" },
     ],
   },
@@ -89,7 +90,8 @@ export const NAVIGATION_GROUPS: NavGroup[] = [
   {
     group: "Data Master",
     items: [
-      { name: "Data Produk & Harga", href: "/master/products", icon: Package, roles: ["HEAD_ADMIN","WAREHOUSE","PROCUREMENT","SALES","FINANCE"] },
+      { name: "Resep & produksi", href: "/operations/production", icon: BookOpen, roles: ["HEAD_ADMIN", "WAREHOUSE", "KITCHEN"] },
+      { name: "Bahan baku & menu", href: "/master/products", icon: Package, roles: ["HEAD_ADMIN","WAREHOUSE","PROCUREMENT","SALES","FINANCE"] },
       { name: "Kategori & Menu", href: "/master/categories", icon: Package, roles: ["HEAD_ADMIN","WAREHOUSE","PROCUREMENT"] },
       { name: "Satuan Produk", href: "/master/units", icon: Package, roles: ["HEAD_ADMIN","WAREHOUSE","PROCUREMENT"] },
       { name: "Gudang & Lokasi", href: "/master/locations", icon: Package, roles: ["HEAD_ADMIN","WAREHOUSE","PROCUREMENT"] },

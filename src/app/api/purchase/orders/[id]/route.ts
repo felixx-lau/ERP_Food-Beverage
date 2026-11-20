@@ -31,7 +31,10 @@ export async function GET(
       return NextResponse.json({ error: "Purchase Order tidak ditemukan." }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, order });
+    const purchaseRequest = await prisma.purchaseRequest.findUnique({
+      where: { purchaseOrderId: order.id }, select: { id: true, number: true, locationCode: true },
+    });
+    return NextResponse.json({ success: true, order: { ...order, purchaseRequest } });
   } catch (error) {
     console.error("Fetch PO detail error:", error);
     return NextResponse.json({ error: "Failed to fetch PO detail" }, { status: 500 });

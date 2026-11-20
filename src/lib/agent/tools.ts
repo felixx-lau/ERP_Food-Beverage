@@ -1,4 +1,4 @@
-import { businessDayStart, businessDayEnd } from "@/lib/businessDate";
+import { businessDate, businessDayStart, businessDayEnd } from "@/lib/businessDate";
 import { getOperationalDashboardMetrics } from "@/lib/dashboardEngine";
 import type { Role } from "@prisma/client";
 import { BusinessError, permit } from "@/lib/validation";
@@ -34,6 +34,38 @@ function limit(args: Record<string, unknown>) {
   if (!Number.isInteger(args.limit) || Number(args.limit) < 1 || Number(args.limit) > 10) throw new BusinessError("Batas hasil 1–10.");
   return Number(args.limit);
 }
+function selections(value: unknown, label: string) {
+  if (value === undefined) return undefined;
+  if (!Array.isArray(value) || value.length === 0 || value.length > 10 || value.some(item => typeof item !== 'string' || !item.trim() || item.length > 100)) {
+    throw new BusinessError(`Pilih 1–10 ${label} yang valid.`);
+  }
+  return [...new Set(value as string[])];
+}
+
+export async function permittedInventoryLocations({ db, user }: AgentContext) {
+  if (user.role !== 'CASHIER') return undefined;
+  const assigned = await db.outletAccess.findMany({ where: { userId: user.id }, select: { locationCode: true } });
+  return assigned.length ? assigned.map(row => row.locationCode) : ['CAFE-JKT'];
+}
+
+function accessibleDetail(role: Role, kind: string, id: string, purchaseOrderId?: string) {
+  if (kind === 'receipts' && role === 'PROCUREMENT' && purchaseOrderId) {
+    return `/purchase/orders?id=${encodeURIComponent(purchaseOrderId)}#status-penerimaan`;
+  }
+  const pages: Record<string, [string, Role[]]> = {
+    sales_orders: ['/sales/orders', ['SALES']],
+    purchase_orders: ['/purchase/orders', ['PROCUREMENT']],
+    invoices: ['/accounting/invoices', ['FINANCE', 'SALES']],
+    vendor_bills: ['/accounting/vendor-bills', ['FINANCE']],
+    deliveries: ['/inventory/delivery', ['WAREHOUSE']],
+    receipts: ['/inventory/receipts', ['WAREHOUSE']],
+    transfers: ['/inventory/transfers', ['WAREHOUSE']],
+    leads: ['/crm/leads', ['SALES']],
+  };
+  const page = pages[kind];
+  return page && (role === 'HEAD_ADMIN' || page[1].includes(role)) ? `${page[0]}?id=${encodeURIComponent(id)}` : undefined;
+}
+
 const guides = [
   { topic: "sales", title: "Penjualan", text: "Pilih pelanggan aktif dan SKU, isi kuantitas serta harga. Simpan quotation DRAFT. Periksa PBJT 10% dan diskon. Diskon di atas 10% membutuhkan persetujuan Head Admin. Konfirmasi sales order melalui modul Sales. Gudang memproses delivery; invoice hanya untuk barang yang sudah dikirim. Pembayaran dicatat Finance.", href: "/sales/orders" },
   { topic: "purchase", title: "Pembelian", text: "Pilih vendor aktif, SKU, kuantitas, dan harga. Simpan RFQ DRAFT, tinjau lalu konfirmasi PO di modul Purchase. Gudang menerima barang dan mencatat hasil inspeksi. Finance mencocokkan tagihan vendor dengan penerimaan dan PO sebelum posting/pembayaran.", href: "/purchase/orders" },
@@ -47,6 +79,12 @@ export async function dispatchAgentTool(ctx: AgentContext, action: string, args:
   permit(ctx.user, permissions[action]);
   const { db, user } = ctx;
   const q = query(args), take = limit(args);
+  const reference = args.reference;
+  if (reference !== undefined && (typeof reference !== 'string' || !/^[A-Z0-9][A-Z0-9/-]{0,99}$/i.test(reference))) {
+    throw new BusinessError('Nomor dokumen tidak valid.');
+  }
+  const exactReference = typeof reference === 'string' ? reference.toUpperCase() : undefined;
+  const contextArgs = { query: q || undefined, reference: exactReference, start: args.start, end: args.end, limit: take };
   const range = args.start || args.end ? { ...(typeof args.start === 'string' ? {gte:businessDayStart(args.start)} : {}), ...(typeof args.end === 'string' ? {lte:businessDayEnd(args.end)} : {}) } : undefined;
   if (range?.gte && range?.lte && range.gte > range.lte) throw new BusinessError('Periode tidak valid.');
   const costAccess = ["HEAD_ADMIN", "FINANCE", "PROCUREMENT"].includes(user.role);
@@ -61,10 +99,30 @@ export async function dispatchAgentTool(ctx: AgentContext, action: string, args:
     const kind=String(args.kind||'');
     if (!Object.hasOwn(configs,kind)) throw new BusinessError('Jenis dokumen tidak tersedia.');
     const c=configs[kind];permit(user,c.roles);
-    const where={...(kind==='leads'?{archivedAt:null}:{}),...(range?{[c.date]:range}:{}),...(q?{[c.number]:{contains:q}}:{})};
-    const model=(db as any)[c.model];
-    const rows=await model.findMany({where,take:take+1,orderBy:{[c.date]:'desc'},select:{[c.number]:true,[c.status]:true,...(kind==='leads'?{name:true}:{}),...(kind==='vendor_bills'?{totalGross:true,outstandingAmount:true}:{})}});
-    return {title:c.title,source:c.href,totalCount:await model.count({where}),hasMore:rows.length>take,records:rows.slice(0,take).map((r:any)=>({reference:r[c.number],status:r[c.status],name:r.name,total:r.totalGross,outstanding:r.outstandingAmount}))};
+    const where = {
+      ...(kind === 'leads' ? { archivedAt: null } : {}),
+      ...(range ? { [c.date]: range } : {}),
+      ...(exactReference ? { [c.number]: exactReference } : q ? { [c.number]: { contains: q } } : {}),
+    };
+    const progress = kind === 'receipts'
+      ? { purchaseOrderId: true, destLocation: true, lines: { take: 11, select: { productSku: true, demandQty: true, acceptedQty: true, rejectedQty: true } } }
+      : kind === 'deliveries'
+        ? { sourceLocation: true, lines: { take: 11, select: { productSku: true, orderedQty: true, deliveredQty: true } } }
+        : {};
+    const model = (db as any)[c.model];
+    const [rows, totalCount] = await Promise.all([
+      model.findMany({where,take:take+1,orderBy:{[c.date]:'desc'},select:{id:true,[c.number]:true,[c.status]:true,...(kind==='leads'?{name:true}:{}),...(kind==='vendor_bills'?{totalGross:true,outstandingAmount:true}:{}),...progress}}),
+      model.count({where}),
+    ]);
+    return {
+      title: c.title, source: c.href, totalCount, hasMore: rows.length > take, reference: exactReference,
+      contextArgs: { ...contextArgs, kind },
+      records: rows.slice(0,take).map((row:any) => ({
+        reference: row[c.number], status: row.status ?? row[c.status], name: row.name, total: row.totalGross, outstanding: row.outstandingAmount,
+        location: row.sourceLocation ?? row.destLocation, lines: row.lines,
+        href: accessibleDetail(user.role, kind, row.id, row.purchaseOrderId),
+      })),
+    };
   }
   if (action === "worklist") { const data=await operationalOverview(db,user); return {...data,tasks:data.tasks.slice(0,take),hasMore:data.tasks.length>take}; }
   if (action === "dashboard_summary") return getOperationalDashboardMetrics(db, ctx.companyId);
@@ -76,15 +134,41 @@ export async function dispatchAgentTool(ctx: AgentContext, action: string, args:
     return { source: "Panduan alur ERP bawaan, bukan SOP khusus perusahaan", guides: (relevant.length ? relevant : guides).slice(0, 5) };
   }
   if (action === "inventory") {
-    const assigned = user.role === "CASHIER" ? await db.outletAccess.findMany({where:{userId:user.id},select:{locationCode:true}}) : [];
-    const location = user.role === "CASHIER" ? undefined : typeof args.location === "string" ? args.location.slice(0, 100) : undefined;
-    const scope = user.role === "CASHIER" ? {locationCode:{in:assigned.length ? assigned.map(a=>a.locationCode) : ['CAFE-JKT']}} : location ? {locationCode:location} : {};
-    const productWhere = {archivedAt:null,...(q ? {OR:[{sku:{contains:q}},{name:{contains:q}}]} : {})};
-    const totalProducts = await db.productVariant.count({where:productWhere});
-    const totals = await db.stockLevel.aggregate({where:{product:productWhere,location:{archivedAt:null},...scope},_sum:{onHand:true,reserved:true}});
-    const products = await db.productVariant.findMany({ where: { archivedAt: null, ...(q ? { OR: [{ sku: { contains: q } }, { name: { contains: q } }] } : {}) }, orderBy: { sku: "asc" }, take: take + 1,
-      select: { sku: true, name: true, unit: true, salesPrice: true, ...(costAccess ? { standardCost: true, defaultVendorId: true } : {}), stockLevels: { where: { location: { archivedAt: null }, ...scope }, select: { locationCode: true, onHand: true, reserved: true } } } });
-    return { currency: "IDR", totalProducts, totals:{onHand:totals._sum.onHand||0,reserved:totals._sum.reserved||0,available:(totals._sum.onHand||0)-(totals._sum.reserved||0)}, location:location || (user.role === "CASHIER" ? "Outlet yang ditugaskan" : "Semua lokasi aktif"), hasMore: products.length > take, products: products.slice(0, take).map(p => ({ ...p, stockLevels: p.stockLevels.map(s => ({ ...s, available: s.onHand - s.reserved })) })) };
+    const skus = selections(args.skus, 'SKU');
+    const requested = selections(args.locations ?? (typeof args.location === 'string' ? [args.location] : undefined), 'lokasi');
+    const permitted = await permittedInventoryLocations(ctx);
+    if (permitted && requested?.some(code => !permitted.includes(code))) throw new BusinessError('Lokasi yang diminta tidak tersedia untuk akun Anda.', 403);
+    const locations = await db.warehouseLocation.findMany({
+      where: { archivedAt: null, ...((requested ?? permitted) ? { code: { in: requested ?? permitted } } : {}) },
+      select: { code: true, name: true },
+      orderBy: { code: 'asc' },
+    });
+    if (requested && locations.length !== requested.length) throw new BusinessError('Lokasi yang diminta tidak ditemukan.');
+    const scope = { locationCode: { in: locations.map(row => row.code) } };
+    const productWhere = { archivedAt: null, ...(skus ? { sku: { in: skus } } : q ? { OR: [{ sku: { contains: q } }, { name: { contains: q } }] } : {}) };
+    const [totalProducts, totals, products] = await Promise.all([
+      db.productVariant.count({where:productWhere}),
+      db.stockLevel.aggregate({where:{product:productWhere,...scope},_sum:{onHand:true,reserved:true}}),
+      db.productVariant.findMany({where:productWhere,orderBy:{sku:'asc'},take:take+1,
+        select:{sku:true,name:true,unit:true,salesPrice:true,...(costAccess?{standardCost:true,defaultVendorId:true}:{}),
+          stockLevels:{where:scope,select:{locationCode:true,onHand:true,reserved:true}}}}),
+    ]);
+    const onHand = totals._sum.onHand ?? 0;
+    const reserved = totals._sum.reserved ?? 0;
+    return {
+      currency: 'IDR', totalProducts, totals: { onHand, reserved, available: onHand - reserved },
+      location: requested ? locations.map(row => row.code).join(', ') : permitted ? 'Outlet yang ditugaskan' : 'Semua lokasi aktif',
+      contextArgs: { query: q || undefined, skus, locations: requested, limit: take },
+      hasMore: products.length > take,
+      products: products.slice(0,take).map(product => {
+        const byLocation = new Map(product.stockLevels.map(row => [row.locationCode, row]));
+        return { ...product, stockLevels: locations.map(({code, name}) => {
+          const row = byLocation.get(code);
+          const physical = row?.onHand ?? 0, allocated = row?.reserved ?? 0;
+          return { locationCode:code, locationName:name, onHand:physical, reserved:allocated, available:physical-allocated };
+        }) };
+      }),
+    };
   }
   if (action === "contacts") {
     const type = args.type;
@@ -93,19 +177,34 @@ export async function dispatchAgentTool(ctx: AgentContext, action: string, args:
     return { totalCount:await db.contact.count({where:{archivedAt:null,...(type?{type:type as "CUSTOMER"|"VENDOR"}:{}),...(q?{OR:[{id:{contains:q}},{name:{contains:q}}]}:{})}}), type: type || "CUSTOMER_AND_VENDOR", hasMore: rows.length > take, contacts: rows.slice(0, take) };
   }
   if (action === "sales_orders") {
-    const where = {...(range?{orderDate:range}:{}),...(q ? { OR: [{ orderNumber: { contains: q } }, { contact: { name: { contains: q } } }] } : {})};
-    const rows = await db.salesOrder.findMany({ where, take: take + 1, orderBy: { orderDate: "desc" }, select: { id: true, orderNumber: true, status: true, orderDate: true, contact: { select: { name: true } }, ...(["HEAD_ADMIN", "SALES", "FINANCE"].includes(user.role) ? { totalGross: true } : {}), lines: { take: 10, select: { productSku: true, quantity: true, deliveredQty: true } } } });
-    return { totalCount:await db.salesOrder.count({where}), currency: "IDR", hasMore: rows.length > take, orders: rows.slice(0, take) };
+    const where = {...(range?{orderDate:range}:{}),...(exactReference ? { orderNumber: exactReference } : q ? { OR: [{ orderNumber: { contains: q } }, { contact: { name: { contains: q } } }] } : {})};
+    const rows = await db.salesOrder.findMany({ where, take: take + 1, orderBy: { orderDate: "desc" }, select: { id: true, orderNumber: true, status: true, orderDate: true, contact: { select: { name: true } }, ...(["HEAD_ADMIN", "SALES", "FINANCE"].includes(user.role) ? { totalGross: true } : {}), lines: { take: 11, select: { productSku: true, quantity: true, deliveredQty: true } } } });
+    return { totalCount:await db.salesOrder.count({where}), currency: "IDR", hasMore: rows.length > take, orders: rows.slice(0, take).map(order => ({ ...order, href: accessibleDetail(user.role, action, order.id) })), reference: exactReference, contextArgs };
   }
   if (action === "purchase_orders") {
-    const where = {...(range?{orderDate:range}:{}),...(q ? { OR: [{ poNumber: { contains: q } }, { vendor: { name: { contains: q } } }] } : {})};
-    const rows = await db.purchaseOrder.findMany({ where, take: take + 1, orderBy: { orderDate: "desc" }, select: { id: true, poNumber: true, status: true, scheduledDate: true, vendor: { select: { name: true } }, ...(costAccess ? { total: true } : {}), lines: { take: 10, select: { productSku: true, orderedQty: true, receivedQty: true } } } });
-    return { totalCount:await db.purchaseOrder.count({where}), currency: "IDR", hasMore: rows.length > take, orders: rows.slice(0, take) };
+    const where = {...(range?{orderDate:range}:{}),...(exactReference ? { poNumber: exactReference } : q ? { OR: [{ poNumber: { contains: q } }, { vendor: { name: { contains: q } } }] } : {})};
+    const rows = await db.purchaseOrder.findMany({ where, take: take + 1, orderBy: { orderDate: "desc" }, select: { id: true, poNumber: true, status: true, scheduledDate: true, vendor: { select: { name: true } }, ...(costAccess ? { total: true } : {}), lines: { take: 11, select: { productSku: true, orderedQty: true, receivedQty: true } } } });
+    return { totalCount:await db.purchaseOrder.count({where}), currency: "IDR", hasMore: rows.length > take, orders: rows.slice(0, take).map(order => ({ ...order, href: accessibleDetail(user.role, action, order.id) })), reference: exactReference, contextArgs };
   }
   if (action === "invoices") {
-    const where = { ...(range?{invoiceDate:range}:{}), ...(args.outstandingOnly === false ? {} : { isPosted: true, outstandingAmount: { gt: 0 } }), ...(q ? { OR: [{ invoiceNumber: { contains: q } }, { customer: { name: { contains: q } } }] } : {}) };
-    const rows = await db.customerInvoice.findMany({ where, orderBy: [{ dueDate: "asc" }, { invoiceDate: "desc" }], take: take + 1, select: { id: true, invoiceNumber: true, status: true, dueDate: true, isPosted: true, totalGross: true, outstandingAmount: true, customer: { select: { name: true } } } });
-    return { totalCount:await db.customerInvoice.count({where}), outstandingOnly:args.outstandingOnly!==false, currency: "IDR", hasMore: rows.length > take, invoices: rows.slice(0, take), note: "Hasil dibatasi; bukan total seluruh piutang. Pesan penagihan hanya draft dan belum terkirim." };
+    const overdueOnly = args.overdueOnly === true;
+    const outstandingOnly = overdueOnly || args.outstandingOnly !== false;
+    const where = {
+      ...(range ? { invoiceDate: range } : {}),
+      ...(outstandingOnly ? { status: 'POSTED' as const, isPosted:true, outstandingAmount:{gt:0} } : {}),
+      ...(overdueOnly ? { dueDate: { lt: businessDayStart() } } : {}),
+      ...(exactReference ? { invoiceNumber: exactReference } : q ? { OR: [{ invoiceNumber: { contains:q } }, { customer: { name:{contains:q} } }] } : {}),
+    };
+    const [rows, totalCount] = await Promise.all([
+      db.customerInvoice.findMany({where,orderBy:[{dueDate:'asc'},{invoiceDate:'desc'}],take:take+1,
+        select:{id:true,invoiceNumber:true,status:true,dueDate:true,isPosted:true,totalGross:true,outstandingAmount:true,customer:{select:{name:true}}}}),
+      db.customerInvoice.count({where}),
+    ]);
+    return {
+      totalCount, outstandingOnly, overdueOnly, reference: exactReference, currency: 'IDR', hasMore: rows.length > take,
+      contextArgs: { ...contextArgs, outstandingOnly, overdueOnly },
+      invoices: rows.slice(0,take).map(invoice => ({ ...invoice, href: accessibleDetail(user.role, action, invoice.id), dueDate: invoice.dueDate ? businessDate(invoice.dueDate) : null })),
+    };
   }
   if (action === "pos_sessions") {
     const rows = await db.posSession.findMany({ where: user.role === "CASHIER" ? { cashierId: user.id } : {}, orderBy: { openedAt: "desc" }, take, select: { sessionCode: true, status: true, openedAt: true, closedAt: true, totalSales: true, totalOrders: true, openingCash: true, closingCash: true, cashier: { select: { name: true } } } });
@@ -125,7 +224,7 @@ export async function dispatchAgentTool(ctx: AgentContext, action: string, args:
     if (permissions.sales_orders.includes(user.role)) tasks.sales = { draft: await db.salesOrder.count({ where: { status: "DRAFT" } }), confirmed: await db.salesOrder.count({ where: { status: "CONFIRMED" } }) };
     if (permissions.purchase_orders.includes(user.role)) tasks.purchase = { draft: await db.purchaseOrder.count({ where: { status: "DRAFT" } }), confirmed: await db.purchaseOrder.count({ where: { status: "CONFIRMED" } }) };
     if (permissions.invoices.includes(user.role)) {
-      const overdue = await db.customerInvoice.aggregate({ where: { isPosted: true, outstandingAmount: { gt: 0 }, dueDate: { lt: new Date() } }, _count: true, _sum: { outstandingAmount: true } });
+      const overdue = await db.customerInvoice.aggregate({ where: { isPosted: true, outstandingAmount: { gt: 0 }, dueDate: { lt: businessDayStart() }, status: 'POSTED' }, _count: true, _sum: { outstandingAmount: true } });
       tasks.overdueInvoices = { count: overdue._count, outstanding: overdue._sum.outstandingAmount || 0, currency: "IDR" };
     }
     if (permissions.restock_plan.includes(user.role)) tasks.stockPlan = await dispatchAgentTool(ctx, "restock_plan", { limit: 5 });

@@ -99,7 +99,7 @@ export default function PointOfSalePage() {
       const [resSess, resOrd, resProd] = await Promise.all([
         fetch("/api/pos/sessions"),
         fetch("/api/pos/orders"),
-        fetch("/api/products"),
+        fetch("/api/products?purpose=sale"),
       ]);
 
       if(!resSess.ok || !resOrd.ok || !resProd.ok) throw new Error("Data kasir belum dapat diperbarui. Periksa koneksi lalu segarkan.");

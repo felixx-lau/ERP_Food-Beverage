@@ -4,17 +4,18 @@ import { useEffect, useId, useRef, useState } from "react";
 import { ArrowUpRight, Bot, ChevronDown, RotateCcw, Send, Sparkles, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import Link from "next/link";
+import type { ChatAction } from "@/lib/agent/websiteData";
 import type { AgentProposal } from "@/lib/agent/proposals";
 import { publishDataRefresh } from "./ui/useDataRefresh";
 import styles from "./ChatbotWidget.module.css";
 
-type Message = { id: string; role: "user" | "assistant"; text: string; tools?: string[]; asOf?: string };
+type Message = { id: string; role: "user" | "assistant"; text: string; tools?: string[]; asOf?: string; actions?: ChatAction[] };
 const roleSuggestions: Record<string, string[]> = {
   HEAD_ADMIN: ["Buat briefing pekerjaan yang perlu saya tindak lanjuti", "Periksa stok dan usulkan rencana restock", "Tampilkan invoice yang masih harus ditagih"],
   SALES: ["Tampilkan order penjualan terbaru", "Bantu siapkan penawaran untuk pelanggan", "Tampilkan invoice yang masih harus ditagih"],
   PROCUREMENT: ["Periksa stok dan usulkan rencana restock", "Tampilkan PO terbaru", "Bantu siapkan RFQ untuk vendor"],
   WAREHOUSE: ["Buat briefing pekerjaan gudang", "Periksa stok di WH-JKT", "Bantu siapkan transfer stok ke kafe"],
-  FINANCE: ["Tampilkan invoice yang masih harus ditagih", "Buat briefing pekerjaan Finance", "Bantu susun draft pesan penagihan"],
+  FINANCE: ["Invoice mana yang lewat jatuh tempo?", "Buat briefing pekerjaan Finance", "Berapa HPP dan laba kotor bulan ini?"],
   CASHIER: ["Tampilkan ringkasan sesi kasir saya", "Periksa stok di kafe", "Jelaskan langkah tutup sesi POS"],
 };
 const rupiah = (value: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(value);
@@ -131,7 +132,7 @@ export default function ChatbotWidget({ role, identity }: { role: string; identi
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || "Pesan belum terkirim. Silakan coba lagi.");
       if (typeof data.reply !== "string" || !data.reply.trim()) throw new Error("Chatbot belum mengirim jawaban.");
-      setMessages((previous) => [...previous, { id: crypto.randomUUID(), role: "assistant", text: data.reply, tools: data.toolsUsed, asOf: data.asOf }]);
+      setMessages((previous) => [...previous, { id: crypto.randomUUID(), role: "assistant", text: data.reply, tools: data.toolsUsed, asOf: data.asOf, actions: data.actions }]);
     } catch (cause) {
       setError(activeController.signal.aborted
         ? "Waktu tunggu habis. Silakan coba lagi."
@@ -200,6 +201,13 @@ export default function ChatbotWidget({ role, identity }: { role: string; identi
                     ) : (
                       <div className={styles.markdownBody}>
                         <ReactMarkdown>{message.text}</ReactMarkdown>
+                        {Array.isArray(message.actions) && message.actions.filter(action => /^\/(?:sales|purchase|inventory|accounting)\/|^\/pos(?:[?#]|$)/.test(action.href)).map(action => (
+                          <Link key={action.id} href={action.href} className="mt-2 block rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-2">
+                            <span className="block text-xs font-semibold text-indigo-700">{action.department}</span>
+                            <span className="block text-sm font-semibold">{action.title}</span>
+                            <span className="block text-xs text-slate-700">{action.reason}</span>
+                          </Link>
+                        ))}
                       </div>
                     )}
                   </div>

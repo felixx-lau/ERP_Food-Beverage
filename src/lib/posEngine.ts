@@ -152,7 +152,7 @@ async function createPosOrderImpl(input: CreatePosOrderInput) {
         where: { sku: item.productSku },
       });
 
-      if (!product || product.archivedAt) {
+      if (!product || product.archivedAt || product.kind !== 'MENU') {
         throw new Error(`Produk dengan SKU ${item.productSku} tidak ditemukan.`);
       }
 

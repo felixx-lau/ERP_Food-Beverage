@@ -8,9 +8,10 @@ import { TableSearch, TablePagination, SortLabel } from './ui/TableControls';
 const number = (r: any) => r.orderNumber || r.poNumber || r.invoiceNumber || r.billNumber || r.deliveryNumber || r.receiptNumber || r.transferNumber || r.returnNumber || r.entryNumber || r.id;
 const party = (r: any) => r.contact?.name || r.vendor?.name || r.customer?.name || r.sourceDocument || r.salesOrder?.orderNumber || r.purchaseOrder?.poNumber || '—';
 const date = (r: any) => r.invoiceDate || r.billDate || r.orderDate || r.date || r.createdAt;
-export default function DocumentList({ records, selectedId, onSelect, onClearSelection, loading = false }: { records: any[]; selectedId?: string; onSelect: (id: string) => void; onClearSelection?:()=>void; loading?: boolean }) {
+export default function DocumentList({ records, selectedId, onSelect, onClearSelection, loading = false, initialStatus = 'ALL' }: { records: any[]; selectedId?: string; onSelect: (id: string) => void; onClearSelection?:()=>void; loading?: boolean; initialStatus?: string }) {
   useEffect(() => { if (selectedId) { const url = new URL(window.location.href); url.searchParams.set('id', selectedId); window.history.replaceState(null, '', url); } }, [selectedId]);
-  const [status, setStatus] = useState('ALL');
+  const [status, setStatus] = useState(initialStatus);
+  useEffect(() => setStatus(initialStatus), [initialStatus]);
   const table = useTableView(records.filter(r => status === 'ALL' || (r.status || r.state) === status), r => `${number(r)} ${party(r)} ${r.salesOrder?.contact?.name || r.purchaseOrder?.vendor?.name || ''}`, (r, key) => key === 'number' ? number(r) : key === 'date' ? new Date(date(r)).getTime() : r.totalGross ?? r.total ?? 0);
   const formattedDate = (r: any) => date(r) ? new Date(date(r)).toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta' }) : '—';
   const selected = records.find(r => r.id === selectedId);
@@ -18,7 +19,7 @@ export default function DocumentList({ records, selectedId, onSelect, onClearSel
     <div className="p-4 flex flex-wrap gap-3 items-center">
       <div className="mr-auto"><h2 className="font-semibold">Daftar dokumen</h2><p className="text-xs text-slate-500 mt-1">Pilih Detail untuk melihat isi dan langkah berikutnya.</p></div>
       <TableSearch value={table.query} onChange={table.setQuery} label="Cari nomor, mitra, atau sumber" />
-      <select aria-label="Filter status dokumen" value={status} onChange={e => setStatus(e.target.value)} className="input-glass p-2 text-sm"><option value="ALL">Semua status</option>{Array.from(new Set(records.map(r => r.status || r.state).filter(Boolean))).map(s => <option key={s} value={s}>{statusLabel(s)}</option>)}</select>
+      <select aria-label="Filter status dokumen" value={status} onChange={e => setStatus(e.target.value)} className="input-glass p-2 text-sm"><option value="ALL">Semua status</option>{Array.from(new Set([...(status !== 'ALL' ? [status] : []), ...records.map(r => r.status || r.state).filter(Boolean)])).map(s => <option key={s} value={s}>{statusLabel(s)}</option>)}</select>
     </div>
     <div className="hidden sm:block overflow-x-auto"><table className="w-full text-sm text-left"><thead className="bg-slate-50"><tr>
       <th scope="col" className="p-3"><SortLabel active={table.sort.key === 'number'} direction={table.sort.direction} onClick={() => table.toggleSort('number')}>Nomor</SortLabel></th>

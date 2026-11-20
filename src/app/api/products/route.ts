@@ -21,8 +21,12 @@ export async function GET(request: NextRequest) {
     }
 
     const allowedCodes=user.role==="CASHIER"?(await permittedOutlets(user)).map(l=>l.code):null;
+    const sellableOnly = request.nextUrl.searchParams.get('purpose') === 'sale';
     const products = await prisma.productVariant.findMany({
-      where: request.nextUrl.searchParams.get("status") === "all" ? {} : { archivedAt: null },
+      where: {
+        ...(request.nextUrl.searchParams.get("status") === "all" && !sellableOnly ? {} : { archivedAt: null }),
+        ...(sellableOnly ? { kind: 'MENU' } : {}),
+      },
       include: {
         stockLevels: {
           include: {

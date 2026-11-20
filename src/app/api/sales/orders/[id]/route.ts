@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { updateSalesOrderLine } from "@/lib/salesEngine";
+import { availableStock } from "@/lib/stockPolicy";
 import { calculateCustomerCreditStatus } from "@/lib/creditControl";
 
 export async function GET(
@@ -34,11 +35,47 @@ export async function GET(
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    const creditStatus = await calculateCustomerCreditStatus(order.contactId);
+    if (request.nextUrl.searchParams.get("stockPreview") === "1") {
+      const [locations, stock] = await Promise.all([
+        prisma.warehouseLocation.findMany({
+          where: { archivedAt: null }, select: { code: true, name: true }, orderBy: { name: "asc" },
+        }),
+        prisma.stockLevel.findMany({
+          where: { productSku: { in: order.lines.map(line => line.productSku) } },
+          select: { productSku: true, locationCode: true, onHand: true, reserved: true },
+        }),
+      ]);
+      const byLocation = new Map(stock.map(level => [JSON.stringify([level.locationCode, level.productSku]), level]));
+      const fulfillment = locations.map(location => {
+        const lines = order.lines.map(line => {
+          const level = byLocation.get(JSON.stringify([location.code, line.productSku])) ?? { onHand: 0, reserved: 0 };
+          return {
+            sku: line.productSku, name: line.product.name, unit: line.product.unit,
+            quantity: line.quantity, available: availableStock(level),
+          };
+        });
+        return { ...location, lines, sufficient: lines.length > 0 && lines.every(line => line.available >= line.quantity) };
+      });
+      return NextResponse.json({ success: true, fulfillment });
+    }
+
+    const [creditStatus, approval] = await Promise.all([
+      calculateCustomerCreditStatus(order.contactId),
+      order.discountPercent > 10 && order.discountApproved && order.discountApprovedBy
+        ? prisma.auditLog.findFirst({
+          where: {
+            documentType: 'SO', documentId: order.orderNumber, action: 'APPROVE_DISCOUNT',
+            actorName: order.discountApprovedBy, actorRole: { in: ['OWNER', 'HEAD_ADMIN'] },
+          },
+          orderBy: [{ timestamp: 'desc' }, { id: 'desc' }],
+          select: { actorRole: true },
+        })
+        : null,
+    ]);
 
     return NextResponse.json({
       success: true,
-      order,
+      order: { ...order, discountApprovalRole: approval?.actorRole ?? null },
       creditStatus,
     });
   } catch (error) {

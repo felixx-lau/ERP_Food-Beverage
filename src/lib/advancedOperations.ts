@@ -7,12 +7,15 @@ import { getNextSequence } from './sequences';
 import { consumeLots } from './lotEngine';
 import { businessDayEnd } from './businessDate';
 import { createPurchaseQuotation } from './purchaseEngine';
-import { evaluateReorderRules } from './reorderRules';
 
 type Ingredient = { productSku: string; quantity: number };
 const operators = ['HEAD_ADMIN','WAREHOUSE','KITCHEN'];
-async function product(sku: string) { const p = await prisma.productVariant.findFirst({ where: { sku, archivedAt: null } }); if (!p) throw new BusinessError('SKU aktif tidak ditemukan.'); return p; }
-async function location(code: string) { if (!await prisma.warehouseLocation.findFirst({ where: { code, archivedAt: null } })) throw new BusinessError('Lokasi aktif tidak ditemukan.'); }
+async function product(sku: string) { const p = await prisma.productVariant.findFirst({ where: { sku: textValue(sku, 'SKU'), archivedAt: null } }); if (!p) throw new BusinessError('SKU aktif tidak ditemukan.'); return p; }
+async function location(code: string) {
+  const record = await prisma.warehouseLocation.findFirst({ where: { code: textValue(code, 'Lokasi'), archivedAt: null } });
+  if (!record) throw new BusinessError('Lokasi aktif tidak ditemukan.');
+  return record;
+}
 async function audit(actor: Actor, action: string, id: string, data: unknown) { await recordAuditLog({ actorId:actor.id, actorName:actor.name, actorRole:actor.role as any, action, documentType:'ADVANCED_FNB', documentId:id, afterData:data }); }
 async function journal(reference: string, debits: [string, number][], credits: [string, number][]) {
  const entries = [...debits.map(([accountCode,debit]) => ({accountCode,debit,credit:0,label:reference})), ...credits.map(([accountCode,credit]) => ({accountCode,credit,debit:0,label:reference}))].filter(x => x.debit || x.credit);
@@ -27,15 +30,66 @@ async function move(sku: string, loc: string, qty: number, ref: string, actor: A
 export async function advancedMutation(action: string, input: any, actor: SessionUser) {
  return atomic(async () => {
   if (action === 'recipe') {
-   permit(actor,operators); const p=await product(input.productSku); const name=textValue(input.name,'Nama resep'); const outputQty=quantity(input.outputQty);
-   if(!['PRODUCTION','BACKFLUSH'].includes(input.mode))throw new BusinessError('Pilih mode produksi atau konsumsi bahan saat POS.');
-   if(!Array.isArray(input.lines)||!input.lines.length||input.lines.length>50)throw new BusinessError('Isi 1–50 bahan.');
-   const seen=new Set<string>(); const lines:Ingredient[]=[];
-   for(const l of input.lines){await product(l.productSku);quantity(l.quantity);if(l.productSku===p.sku||seen.has(l.productSku))throw new BusinessError('Bahan duplikat atau sama dengan hasil resep.');seen.add(l.productSku);if(await prisma.recipe.findFirst({where:{productSku:l.productSku,active:true,mode:'BACKFLUSH'}}))throw new BusinessError('Bahan harus berupa stok fisik, bukan menu backflush.');lines.push({productSku:l.productSku,quantity:l.quantity});}
-   if(input.mode==='BACKFLUSH' && await prisma.recipe.findFirst({where:{active:true,NOT:{productSku:p.sku},lines:{contains:p.sku}}}))throw new BusinessError('SKU ini masih dipakai sebagai bahan resep lain.');
-   const old=await prisma.recipe.findUnique({where:{productSku:p.sku}});
-   if(old && old.version!==input.version)throw new BusinessError('Resep sudah berubah. Muat ulang.',409);
-   const r=await prisma.recipe.upsert({where:{productSku:p.sku},create:{productSku:p.sku,name,outputQty,mode:input.mode,lines:JSON.stringify(lines)},update:{name,outputQty,mode:input.mode,lines:JSON.stringify(lines),version:{increment:1}}});await audit(actor,'SAVE_RECIPE',r.id,r);return r;
+   permit(actor,operators);
+   const output = await product(input.productSku);
+   const name = textValue(input.name, 'Nama resep');
+   const outputQty = quantity(input.outputQty);
+   const mode = input.mode;
+   if (!['PRODUCTION','BACKFLUSH'].includes(mode)) throw new BusinessError('Pilih mode produksi atau konsumsi bahan saat POS.');
+   if (!Array.isArray(input.lines) || input.lines.length < 1 || input.lines.length > 50) throw new BusinessError('Isi 1–50 bahan.');
+   const recipes = await prisma.recipe.findMany({ where: { active: true } });
+   const bySku = new Map(recipes.map(recipe => [recipe.productSku, recipe]));
+   const lines: Ingredient[] = [];
+   const seen = new Set<string>();
+   for (const line of input.lines) {
+     const ingredient = await product(line?.productSku);
+     if (seen.has(ingredient.sku)) throw new BusinessError('SKU bahan duplikat.');
+     seen.add(ingredient.sku);
+     if (bySku.get(ingredient.sku)?.mode === 'BACKFLUSH') throw new BusinessError('Bahan harus memiliki stok fisik.');
+     const amount = quantity(line.quantity);
+     if (mode === 'BACKFLUSH' && amount % outputQty !== 0) throw new BusinessError('Takaran per menu harus bulat dalam satuan dasar bahan untuk pemakaian saat POS.');
+     lines.push({ productSku: ingredient.sku, quantity: amount });
+   }
+
+   const visited = new Set<string>();
+   function dependsOnOutput(sku: string): boolean {
+     if (sku === output.sku) return true;
+     if (visited.has(sku)) return false;
+     visited.add(sku);
+     const recipe = bySku.get(sku);
+     return !!recipe && (JSON.parse(recipe.lines) as Ingredient[]).some(line => dependsOnOutput(line.productSku));
+   }
+   if (lines.some(line => dependsOnOutput(line.productSku))) throw new BusinessError('Komposisi resep membentuk siklus.');
+   if (mode === 'BACKFLUSH') {
+     if (output.kind !== 'MENU') throw new BusinessError('Konsumsi saat POS hanya berlaku untuk menu.');
+     if (recipes.some(recipe => recipe.productSku !== output.sku && (JSON.parse(recipe.lines) as Ingredient[]).some(line => line.productSku === output.sku))) {
+       throw new BusinessError('SKU ini masih dipakai sebagai bahan resep lain.');
+     }
+     if (await prisma.reorderRule.count({ where: { productSku: output.sku, active: true } })) {
+       throw new BusinessError('Jeda aturan stok menu ini, lalu atur minimum stok untuk bahan pada resepnya.');
+     }
+   }
+   const old = await prisma.recipe.findUnique({ where: { productSku: output.sku } });
+   if (old && old.version !== input.version) throw new BusinessError('Resep sudah berubah. Muat ulang.',409);
+   const data = { name, outputQty, mode, lines: JSON.stringify(lines), active: true };
+   const recipe = await prisma.recipe.upsert({
+     where: { productSku: output.sku },
+     create: { productSku: output.sku, ...data },
+     update: { ...data, version: { increment: 1 } },
+   });
+   await audit(actor,'SAVE_RECIPE',recipe.id,recipe);
+   return recipe;
+  }
+  if (action === 'deactivateRecipe') {
+   permit(actor, operators);
+   const recipe = await prisma.recipe.findUniqueOrThrow({ where: { id: textValue(input.id, 'Resep') } });
+   if (recipe.version !== input.version) throw new BusinessError('Resep sudah berubah. Muat ulang.', 409);
+   if (await prisma.productionOrder.count({ where: { recipeId: recipe.id, status: 'DRAFT' } })) {
+     throw new BusinessError('Selesaikan atau batalkan rencana produksi yang masih terbuka.');
+   }
+   const record = await prisma.recipe.update({ where: { id: recipe.id }, data: { active: false, version: { increment: 1 } } });
+   await audit(actor, 'DEACTIVATE_RECIPE', record.id, record);
+   return record;
   }
   if(action==='production'){
    permit(actor,operators); const recipe=await prisma.recipe.findUniqueOrThrow({where:{id:input.recipeId}});if(!recipe.active||recipe.mode!=='PRODUCTION')throw new BusinessError('Pilih resep produksi aktif.');await location(input.locationCode);const plannedQty=quantity(input.plannedQty);
@@ -74,16 +128,66 @@ export async function advancedMutation(action: string, input: any, actor: Sessio
    const r=await prisma.wasteRecord.create({data:{number:ref,productSku:p.sku,locationCode:input.locationCode,lotId:input.lotId||null,quantity:qty,cost:value,reason,journalId:j.id,actorId:actor.id!}});await audit(actor,'POST_WASTE',r.id,r);return r;
   }
   if(action==='rule'){
-   permit(actor,['HEAD_ADMIN','PROCUREMENT']);await product(input.productSku);await location(input.locationCode);const minimum=quantity(input.minimum,true),target=quantity(input.target);if(target<=minimum)throw new BusinessError('Target harus lebih besar dari minimum.');return prisma.reorderRule.upsert({where:{productSku_locationCode:{productSku:input.productSku,locationCode:input.locationCode}},create:{productSku:input.productSku,locationCode:input.locationCode,minimum,target},update:{minimum,target,active:true}});
+   permit(actor, ['HEAD_ADMIN','PROCUREMENT']);
+   const item = await product(input.productSku);
+   const { code: locationCode } = await location(input.locationCode);
+   if (await prisma.recipe.count({ where: { productSku: item.sku, mode: 'BACKFLUSH', active: true } })) {
+     throw new BusinessError('Atur minimum stok untuk bahan pada resep menu ini.');
+   }
+   const minimum = quantity(input.minimum, true);
+   const target = quantity(input.target);
+   if (target <= minimum) throw new BusinessError('Target harus lebih besar dari minimum.');
+   const rule = await prisma.reorderRule.upsert({
+     where: { productSku_locationCode: { productSku: item.sku, locationCode } },
+     create: { productSku: item.sku, locationCode, minimum, target },
+     update: { minimum, target, active: true },
+   });
+   await audit(actor, 'SAVE_REORDER_RULE', rule.id, rule);
+   return rule;
   }
-  if(action==='toggleRule'){permit(actor,['HEAD_ADMIN','PROCUREMENT']);if(typeof input.active!=='boolean')throw new BusinessError('Status aturan tidak valid.');const r=await prisma.reorderRule.update({where:{id:input.id},data:{active:input.active}});await audit(actor,'TOGGLE_REORDER_RULE',r.id,r);return r;}
-  if(action==='evaluateRules'){permit(actor,['HEAD_ADMIN','PROCUREMENT','WAREHOUSE']);await evaluateReorderRules(prisma);return {message:'Aturan stok diperiksa.'};}
-  if(action==='approveRequest'||action==='rejectRequest'){
-   permit(actor,['HEAD_ADMIN']);const r=await prisma.purchaseRequest.findUniqueOrThrow({where:{id:input.id}});if(r.status!=='PENDING')throw new BusinessError('Permintaan sudah diproses.',409);const next=await prisma.purchaseRequest.update({where:{id:r.id},data:{status:action==='approveRequest'?'APPROVED':'REJECTED',approvedBy:actor.id}});if(action==='rejectRequest')await prisma.reorderRule.updateMany({where:{productSku:r.productSku,locationCode:r.locationCode},data:{active:false}});await audit(actor,action,r.id,next);return next;
+  if (action === 'toggleRule') {
+   permit(actor, ['HEAD_ADMIN','PROCUREMENT']);
+   if (typeof input.active !== 'boolean') throw new BusinessError('Status aturan tidak valid.');
+   const rule = await prisma.reorderRule.findUniqueOrThrow({ where: { id: textValue(input.id, 'Aturan') } });
+   if (input.active) {
+     await product(rule.productSku);
+     await location(rule.locationCode);
+     if (await prisma.recipe.count({ where: { productSku: rule.productSku, mode: 'BACKFLUSH', active: true } })) {
+       throw new BusinessError('Atur minimum stok untuk bahan pada resep menu ini.');
+     }
+   }
+   const updated = await prisma.reorderRule.update({ where: { id: rule.id }, data: { active: input.active } });
+   await audit(actor, 'TOGGLE_REORDER_RULE', updated.id, updated);
+   return updated;
   }
-  if(action==='requestToPO'){
-   permit(actor,['HEAD_ADMIN','PROCUREMENT']);const r=await prisma.purchaseRequest.findUniqueOrThrow({where:{id:input.id}});if(r.purchaseOrderId)return r;if(r.status!=='APPROVED')throw new BusinessError('Permintaan harus disetujui Owner.');
-   const order=await createPurchaseQuotation({vendorId:input.vendorId,lines:[{productSku:r.productSku,orderedQty:r.quantity}],actor});const result=await prisma.purchaseRequest.update({where:{id:r.id},data:{status:'CONVERTED',purchaseOrderId:order.id}});await audit(actor,'REQUEST_TO_PO',r.id,result);return result;
+  if (action === 'evaluateRules') {
+   permit(actor, ['HEAD_ADMIN','PROCUREMENT','WAREHOUSE']);
+   return { message: 'Aturan stok diperiksa.' }; // Evaluated once before the atomic transaction commits.
+  }
+  if (action === 'approveRequest' || action === 'rejectRequest') {
+   permit(actor, ['HEAD_ADMIN','OWNER']);
+   const request = await prisma.purchaseRequest.findUniqueOrThrow({ where: { id: textValue(input.id, 'Pengajuan') } });
+   if (request.status !== 'PENDING') throw new BusinessError('Permintaan sudah diproses.', 409);
+   const status = action === 'approveRequest' ? 'APPROVED' : 'REJECTED';
+   const updated = await prisma.purchaseRequest.update({ where: { id: request.id }, data: { status, approvedBy: actor.id } });
+   if (status === 'REJECTED') await prisma.reorderRule.updateMany({ where: { productSku: request.productSku, locationCode: request.locationCode }, data: { active: false } });
+   await audit(actor, action, request.id, updated);
+   return updated;
+  }
+  if (action === 'requestToPO') {
+   permit(actor, ['HEAD_ADMIN','PROCUREMENT']);
+   const request = await prisma.purchaseRequest.findUniqueOrThrow({ where: { id: textValue(input.id, 'Pengajuan') } });
+   if (request.purchaseOrderId) return request;
+   if (request.status !== 'APPROVED') throw new BusinessError('Permintaan harus disetujui Owner atau Head Admin.');
+   const item = await product(request.productSku);
+   await location(request.locationCode);
+   const vendorId = textValue(input.vendorId ?? item.defaultVendorId, 'Vendor');
+   const order = await createPurchaseQuotation({
+     vendorId, lines: [{ productSku: request.productSku, orderedQty: request.quantity }], actor,
+   });
+   const result = await prisma.purchaseRequest.update({ where: { id: request.id }, data: { status: 'CONVERTED', purchaseOrderId: order.id } });
+   await audit(actor, 'REQUEST_TO_PO', request.id, result);
+   return result;
   }
   if(action==='outletAccess'){
    permit(actor,['HEAD_ADMIN']);await location(input.locationCode);const user=await prisma.user.findUniqueOrThrow({where:{id:input.userId}});if(user.role!=='CASHIER')throw new BusinessError('Pilih pengguna Kasir.');const r=await prisma.outletAccess.upsert({where:{userId_locationCode:{userId:user.id,locationCode:input.locationCode}},create:{userId:user.id,locationCode:input.locationCode},update:{}});await audit(actor,'GRANT_OUTLET',r.id,r);return r;

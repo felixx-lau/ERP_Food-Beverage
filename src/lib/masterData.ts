@@ -29,6 +29,23 @@ export function canReadMaster(actor: Actor, resource: string) {
   permit(actor, read);
 }
 
+async function countBackflushRecipes(sku: string | undefined) {
+  return sku ? prisma.recipe.count({ where: { productSku: sku, active: true, mode: 'BACKFLUSH' } }) : 0;
+}
+
+async function usesRecipeSku(sku: string, activeOnly: boolean) {
+  const recipes = await prisma.recipe.findMany({
+    where: { ...(activeOnly ? { active: true } : {}), OR: [{ productSku: sku }, { lines: { contains: JSON.stringify(sku) } }] },
+    select: { productSku: true, lines: true },
+  });
+  if (recipes.some(recipe => recipe.productSku === sku || (JSON.parse(recipe.lines) as {productSku: string}[]).some(line => line.productSku === sku))) return true;
+  const orders = await prisma.productionOrder.findMany({
+    where: { ...(activeOnly ? { status: 'DRAFT' } : {}), recipeSnapshot: { contains: sku } },
+    select: { productSku: true, recipeSnapshot: true },
+  });
+  return orders.some(order => order.productSku === sku || (JSON.parse(JSON.parse(order.recipeSnapshot).lines) as {productSku: string}[]).some(line => line.productSku === sku));
+}
+
 async function referenced(resource: string, record: any): Promise<boolean> {
   const count = async (model: string, where: any) => (prisma as any)[model].count({ where });
   if (['customers','vendors'].includes(resource)) {
@@ -37,7 +54,8 @@ async function referenced(resource: string, record: any): Promise<boolean> {
     return (await Promise.all(dependencies.map(([m,w]) => count(m,w)))).some(Boolean);
   }
   if (resource === 'products') {
-    const models = ['stockMove','salesOrderLine','purchaseOrderLine','deliveryOrderLine','goodsReceiptLine','customerInvoiceLine','vendorBillLine','posOrderLine','returnRequestLine','creditNoteLine','internalTransferLine','vendorPrice'];
+    if (await usesRecipeSku(record.sku, false)) return true;
+    const models = ['reorderRule','purchaseRequest','productionOrder','stockMove','salesOrderLine','purchaseOrderLine','deliveryOrderLine','goodsReceiptLine','customerInvoiceLine','vendorBillLine','posOrderLine','returnRequestLine','creditNoteLine','internalTransferLine','vendorPrice'];
     if ((await Promise.all(models.map(m => count(m,{productSku:record.sku})))) .some(Boolean)) return true;
     return !!await count('stockLevel',{productSku:record.sku,OR:[{onHand:{not:0}},{reserved:{not:0}}]});
   }
@@ -48,13 +66,13 @@ async function referenced(resource: string, record: any): Promise<boolean> {
   if (resource === 'locations') {
     if (protectedMaster(resource,record)) return true;
     if (await count('stockLevel',{locationCode:record.code,OR:[{onHand:{not:0}},{reserved:{not:0}}]})) return true;
-    return (await Promise.all([count('stockMove',{OR:[{sourceLocation:record.code},{destLocation:record.code}]}),count('deliveryOrder',{sourceLocation:record.code}),count('goodsReceipt',{destLocation:record.code}),count('internalTransfer',{OR:[{sourceLocation:record.code},{destLocation:record.code}]}),count('posSession',{locationCode:record.code})])).some(Boolean);
+    return (await Promise.all([count('reorderRule',{locationCode:record.code}),count('purchaseRequest',{locationCode:record.code}),count('productionOrder',{locationCode:record.code}),count('stockMove',{OR:[{sourceLocation:record.code},{destLocation:record.code}]}),count('deliveryOrder',{sourceLocation:record.code}),count('goodsReceipt',{destLocation:record.code}),count('internalTransfer',{OR:[{sourceLocation:record.code},{destLocation:record.code}]}),count('posSession',{locationCode:record.code})])).some(Boolean);
   }
   return false;
 }
 async function decorate(resource: string, record: any, actor: Actor) {
   const allowed = (masterConfig(resource).roles as readonly string[]).includes(actor.role);
-  return { ...record, capabilities: { edit: allowed, archive: allowed && !protectedMaster(resource,record) && !record.archivedAt, restore: allowed && !!record.archivedAt, delete: allowed && !await referenced(resource,record) && !protectedMaster(resource,record) } };
+  return { ...record, capabilities: { edit: allowed, archive: allowed && !protectedMaster(resource,record) && !record.archivedAt, restore: allowed && !!record.archivedAt, delete: allowed && (resource !== 'leads' || !!record.archivedAt) && !await referenced(resource,record) && !protectedMaster(resource,record) } };
 }
 async function active(model: string, key: string, value: string, label: string) {
   const record = await (prisma as any)[model].findUnique({ where: { [key]: value } });
@@ -80,7 +98,11 @@ async function validated(resource: string, input: any, actor: Actor, before?: an
   } else if (resource==='products') {
     for (const field of ['size','color','unit']) data[field]=textValue(value[field] ?? ({size:'Regular',color:'Original',unit:'porsi'} as any)[field],field);
     await active('unitOfMeasure','code',data.unit,'Satuan');
-    data.salesPrice=money(value.salesPrice); data.standardCost=money(value.standardCost);
+    data.kind = value.kind ?? 'MENU';
+    if (!['MENU', 'MATERIAL'].includes(data.kind)) throw new BusinessError('Jenis produk tidak valid.');
+    if (data.kind === 'MATERIAL' && await countBackflushRecipes(value.sku)) throw new BusinessError('SKU dengan resep yang dipakai di POS harus terdaftar sebagai menu.', 409);
+    data.salesPrice = data.kind === 'MATERIAL' ? 0 : money(value.salesPrice);
+    data.standardCost = money(value.standardCost);
     if (before && before.unit!==data.unit && await referenced("products",before)) throw new BusinessError("Satuan SKU yang memiliki stok/riwayat tidak boleh diubah.",409);
     data.description=textValue(value.description ?? '','Deskripsi',false,4000);
     data.categoryCode=value.categoryCode || null; data.defaultVendorId=value.defaultVendorId || null;
@@ -98,8 +120,9 @@ async function validated(resource: string, input: any, actor: Actor, before?: an
     await active('productVariant','sku',data.productSku,'SKU');
     data.price=money(value.price); data.minimumQty=quantity(value.minimumQty ?? 1); data.currency='IDR';
   } else if (resource==='leads') {
-    data.stage = value.stage ?? 'NEW';
     data.expectedRevenue = money(value.expectedRevenue ?? 0);
+    const currentStage = before?.stage ?? 'NEW';
+    data.stage = input.stage ?? (currentStage === 'NEW' && data.expectedRevenue > 0 ? 'QUALIFIED' : currentStage);
     const advanced = ['PROPOSITION','WON'].includes(data.stage);
     if (!['NEW','QUALIFIED','PROPOSITION','WON'].includes(data.stage) ||
         (advanced && (!data.expectedRevenue || typeof value.contactId !== 'string' || !value.contactId.trim()))) {
@@ -162,6 +185,7 @@ export async function changeMaster(resource: string, id: string, input: any, act
     numberValue(input.version,'Versi',0,true);
     if (input.version!==before.version) throw new BusinessError('Data telah diubah pengguna lain. Muat ulang sebelum menyimpan.',409);
     if (remove) {
+      if (resource === 'leads' && !before.archivedAt) throw new BusinessError('Batalkan lead sebelum menghapusnya.', 409);
       if (await referenced(resource,before) || protectedMaster(resource,before)) throw new BusinessError('Record mempunyai stok, saldo, atau dokumen terkait. Gunakan Arsip.',409);
       if (resource==='products') await prisma.stockLevel.deleteMany({where:{productSku:id}});
       if (resource==='locations') await prisma.stockLevel.deleteMany({where:{locationCode:id}});
@@ -170,10 +194,21 @@ export async function changeMaster(resource: string, id: string, input: any, act
       return {deleted:true};
     }
     let data:any;
-    if (input.action==='archive' || input.action==='restore') {
+    const action = resource === 'leads' && input.action === 'cancel' ? 'archive' : input.action;
+    if (action==='archive' || action==='restore') {
       if (protectedMaster(resource,before)) throw new BusinessError('Record sistem tidak dapat diarsipkan.',409);
       if (input.action==='archive' && resource==='locations' && await prisma.stockLevel.count({where:{locationCode:id,OR:[{onHand:{not:0}},{reserved:{not:0}}]}})) throw new BusinessError('Pindahkan stok sebelum mengarsipkan lokasi.',409);
-      data={archivedAt:input.action==='archive'?new Date():null};
+      if (input.action === 'archive' && resource === 'products' && await usesRecipeSku(id, true)) throw new BusinessError('SKU masih digunakan dalam resep aktif atau rencana produksi.', 409);
+      if (input.action === 'archive' && ['products','locations'].includes(resource)) {
+        const filter = resource === 'products' ? { productSku: id } : { locationCode: id };
+        if (await prisma.reorderRule.count({ where: { ...filter, active: true } })) throw new BusinessError('Jeda aturan stok yang aktif sebelum mengarsipkan.', 409);
+        const requests = await prisma.purchaseRequest.findMany({ where: { ...filter, status: { in: ['PENDING','APPROVED','CONVERTED'] } }, select: { purchaseOrderId: true } });
+        if (requests.some(request => !request.purchaseOrderId) || await prisma.purchaseOrder.count({
+          where: { id: { in: requests.flatMap(request => request.purchaseOrderId ? [request.purchaseOrderId] : []) },
+            OR: [{ status: 'DRAFT' }, { status: 'CONFIRMED', lines: { some: { receivedQty: { lt: prisma.purchaseOrderLine.fields.orderedQty } } } }] },
+        })) throw new BusinessError('Selesaikan pengajuan pembelian terbuka sebelum mengarsipkan.', 409);
+      }
+      data={archivedAt:action==='archive'?new Date():null};
     } else {
       if (before.archivedAt) throw new BusinessError('Pulihkan record sebelum mengubahnya.',409);
       data=await validated(resource,input,actor,before);

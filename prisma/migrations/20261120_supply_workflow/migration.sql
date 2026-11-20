@@ -1,0 +1,3 @@
+ALTER TABLE "ProductVariant" ADD COLUMN "kind" TEXT NOT NULL DEFAULT 'MENU' CHECK ("kind" IN ('MENU','MATERIAL'));
+ALTER TABLE "PurchaseOrder" ADD COLUMN "sentAt" DATETIME;
+ALTER TABLE "PurchaseOrder" ADD COLUMN "sentTo" TEXT;

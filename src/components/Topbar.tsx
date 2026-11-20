@@ -58,7 +58,6 @@ export default function Topbar({
   const [manageTeamOpen, setManageTeamOpen] = useState(false);
   const { activeCompany } = useCompany();
   const [switching, setSwitching] = useState(false);
-  const [customUsers, setCustomUsers] = useState<any[]>([]);
 
   const profileRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -68,34 +67,6 @@ export default function Topbar({
     document.addEventListener("mousedown", dismiss); document.addEventListener("keydown", key);
     return () => { document.removeEventListener("mousedown", dismiss); document.removeEventListener("keydown", key); };
   }, [roleMenuOpen]);
-  const fetchUsers = async () => {
-    try {
-      const res = await fetch("/api/users");
-      if (res.ok) {
-        const data = await res.json();
-        // filter out baseline 6 scenario emails to display custom team members cleanly
-        const baselineEmails = [
-          "owner@rasaaruna.com",
-          "sales@rasaaruna.com",
-          "warehouse@rasaaruna.com",
-          "procurement@rasaaruna.com",
-          "finance@rasaaruna.com",
-          "cashier@rasaaruna.com",
-        ];
-        const customs = (data.users || []).filter(
-          (u: any) => !baselineEmails.includes(u.email.toLowerCase())
-        );
-        setCustomUsers(customs);
-      }
-    } catch (e) {
-      console.error("Fetch users error:", e);
-    }
-  };
-
-  useEffect(() => {
-    if (currentUser?.role === "HEAD_ADMIN") void fetchUsers();
-  }, [currentUser?.role]);
-
   const handleSelectRole = async (targetRole: string, userId?: string) => {
     setSwitching(true);
     try {
@@ -266,7 +237,6 @@ export default function Topbar({
         isOpen={manageTeamOpen}
         onClose={() => setManageTeamOpen(false)}
         currentUser={currentUser}
-        onUserChanged={fetchUsers}
       />
     </>
   );

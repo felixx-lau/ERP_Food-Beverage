@@ -1,17 +1,23 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import useTableView from "@/components/ui/useTableView";
 import { TableSearch, SortLabel, TablePagination } from "@/components/ui/TableControls";
 import ActionButton from "@/components/ui/ActionButton";
 import AppLayout from "@/components/AppLayout";
-import StatusBadge from "@/components/StatusBadge";
-import KPICard from "@/components/KPICard";
 import CreateProductModal from "@/components/CreateProductModal";
-import { Package, Play, Layers, Building, RefreshCw, MapPin, Tag, Plus, List, LayoutGrid, AlertTriangle, CheckCircle2, ArrowRight } from "lucide-react";
+import { Package, Play, Building, MapPin, Tag, Plus, List, LayoutGrid, AlertTriangle, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import useDataRefresh from "@/components/ui/useDataRefresh";
 import { STOCK_POLICY, availableStock } from "@/lib/stockPolicy";
+
+const stockViews = [
+  { kind: "all", label: "Semua stok" },
+  { kind: "MATERIAL", label: "Bahan baku" },
+  { kind: "MENU", label: "Produk siap jual" },
+] as const;
+type StockView = typeof stockViews[number]["kind"];
+const stockLabel = (kind: string) => kind === "MATERIAL" ? "Bahan baku" : "Produk siap jual";
 
 function StockStatus({ available, unit }: { available: number; unit: string }) {
   const shortage = STOCK_POLICY.minimum - available;
@@ -24,13 +30,15 @@ export default function ProductsPage() {
   const [user, setUser] = useState<any>(null);
   const [locations, setLocations] = useState<Array<{code:string;name:string}>>([]);
   const [location, setLocation] = useState("ALL");
-  useEffect(() => { const chosen = new URLSearchParams(window.location.search).get("location"); if(chosen) setLocation(chosen); }, []);
+  const [stockView, setStockView] = useState<StockView>("all");
   const [onlyLow, setOnlyLow] = useState(false);
   const [updatedAt, setUpdatedAt] = useState("");
   const [loadError, setLoadError] = useState("");
   const [products, setProducts] = useState<any[]>([]);
-  const [selectedSku, setSelectedSku] = useState<string>("RICE-CHICK-S");
+  const [selectedSku, setSelectedSku] = useState("");
   const [productDetail, setProductDetail] = useState<any>(null);
+  const detailRequest = useRef(0);
+  const [detailError, setDetailError] = useState("");
   const [loading, setLoading] = useState(true);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"table" | "detail">("table");
@@ -54,33 +62,23 @@ export default function ProductsPage() {
       if (res.ok) {
         const data = await res.json();
         setLocations(data.locations || []); setUpdatedAt(data.asOf || new Date().toISOString()); setLoadError("");
-        const list = data.products || [];
-        setProducts(list);
-        if (list.length > 0) {
-          if (!selectedSku || !list.find((p: any) => p.sku === selectedSku)) {
-            setSelectedSku(list[0].sku);
-          }
-        } else {
-          setSelectedSku("");
-          setProductDetail(null);
-        }
+        setProducts(data.products || []);
       }
     } catch (error) { setLoadError(error instanceof Error ? error.message : "Persediaan gagal dimuat."); } finally {
       setLoading(false);
     }
   };
 
-  useDataRefresh(async () => { await fetchProducts(); if (selectedSku) await fetchProductDetail(selectedSku); });
-
   const fetchProductDetail = async (sku: string) => {
+    const request = ++detailRequest.current;
+    setDetailError("");
     try {
-      const res = await fetch(`/api/products/${sku}`);
-      if (res.ok) {
-        const data = await res.json();
-        setProductDetail(data.product);
-      }
-    } catch (e) {
-      console.error(e);
+      const res = await fetch(`/api/products/${encodeURIComponent(sku)}`, {cache: "no-store"});
+      if (!res.ok) throw new Error("Detail stok belum dapat dimuat.");
+      const data = await res.json();
+      if (request === detailRequest.current) setProductDetail(data.product);
+    } catch {
+      if (request === detailRequest.current) setDetailError("Detail stok belum dapat dimuat.");
     }
   };
 
@@ -88,12 +86,6 @@ export default function ProductsPage() {
     fetchSession();
     fetchProducts();
   }, []);
-
-  useEffect(() => {
-    if (selectedSku) {
-      fetchProductDetail(selectedSku);
-    }
-  }, [selectedSku]);
 
   const handleSwitchRole = async (targetRole: string) => {
     const res = await fetch("/api/auth/switch-role", {
@@ -188,29 +180,78 @@ export default function ProductsPage() {
     }
   };
 
-  const visibleLocations = locations.filter(item => location === "ALL" || item.code === location);
+  const selectedLocation = locations.find(item => item.code === location);
+  const visibleLocations = selectedLocation ? [selectedLocation] : locations;
+  const locationName = selectedLocation?.name ?? "Semua lokasi";
+  const locationOptions = [{ code: "ALL", name: "Semua lokasi" }, ...locations];
+  const detailAtLocation = selectedLocation && productDetail?.locations?.find((item: {locationCode: string}) => item.locationCode === selectedLocation.code);
+  const detailOnHand = selectedLocation ? detailAtLocation?.onHand ?? 0 : productDetail?.companyOnHand ?? 0;
+  const detailValuation = selectedLocation ? detailAtLocation?.valuation ?? 0 : productDetail?.totalValuation ?? 0;
   const stockAt = (product: any, code: string): { onHand: number; reserved: number } =>
     product.stockLevels?.find((stock: { locationCode: string }) => stock.locationCode === code) ?? { onHand: 0, reserved: 0 };
   const shortages = (product: any) => visibleLocations.map(item => ({
     ...item,
     available: availableStock(stockAt(product, item.code)),
   })).filter(item => item.available < STOCK_POLICY.minimum);
-  const table = useTableView(onlyLow ? products.filter(p => shortages(p).length) : products,
+  const materialCount = products.filter(p => p.kind === "MATERIAL").length;
+  const counts = { all: products.length, MATERIAL: materialCount, MENU: products.length - materialCount };
+  const productsInView = stockView === "all" ? products : products.filter(p => p.kind === stockView);
+  const detailSku = productsInView.find(p => p.sku === selectedSku)?.sku ?? productsInView[0]?.sku ?? "";
+  const isMaterialDetail = productDetail?.kind === "MATERIAL";
+  const showSellingColumns = stockView !== "MATERIAL";
+
+  const table = useTableView(onlyLow ? productsInView.filter(p => shortages(p).length) : productsInView,
     p => `${p.sku} ${p.name} ${p.size} ${p.color}`,
-    (p, key) => key === "totalAvailable" ? (location === "ALL" ? p.totalAvailable : availableStock(stockAt(p, location))) : p[key] ?? 0);
+    (p, key) => key === "totalAvailable" ? (selectedLocation ? availableStock(stockAt(p, selectedLocation.code)) : p.totalAvailable) : p[key] ?? 0);
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
-    if (query.get("sku")) table.setQuery(query.get("sku")!);
+    const kind = stockViews.find(view => view.kind === query.get("kind"));
+    if (kind) setStockView(kind.kind);
+    const code = query.get("location");
+    if (code) setLocation(code);
+    const sku = query.get("sku");
+    if (sku) {
+      table.setQuery(sku);
+      setSelectedSku(sku);
+    }
     if (query.get("lowStock") === "1") setOnlyLow(true);
   }, []);
+  useEffect(() => {
+    if (viewMode === "detail" && detailSku) void fetchProductDetail(detailSku);
+  }, [viewMode, detailSku]);
+  useDataRefresh(async () => {
+    await fetchProducts();
+    if (viewMode === "detail" && detailSku) await fetchProductDetail(detailSku);
+  });
+
+  function changeStockLocation(code: string) {
+    setLocation(code);
+    table.setPage(1);
+    const url = new URL(window.location.href);
+    if (code === "ALL") url.searchParams.delete("location");
+    else url.searchParams.set("location", code);
+    window.history.replaceState(null, "", url);
+  }
+
+  function changeStockView(kind: StockView) {
+    setStockView(kind);
+    table.setPage(1);
+    if (kind === "MATERIAL" && table.sort.key === "salesPrice") table.toggleSort("name");
+    const url = new URL(window.location.href);
+    if (kind === "all") url.searchParams.delete("kind");
+    else url.searchParams.set("kind", kind);
+    window.history.replaceState(null, "", url);
+  }
+
   const canAdjust = ["HEAD_ADMIN", "WAREHOUSE"].includes(user?.role);
+  const createLabel = stockView === "MATERIAL" ? "Tambah bahan baku" : "Tambah produk";
   return (
     <AppLayout
       currentUser={user}
       onSwitchRole={handleSwitchRole}
       breadcrumbs={[{ label: "Persediaan & Gudang" }, { label: "Produk & lokasi" }]}
       title="Stok & ketersediaan"
-      subtitle="Kelola menu, harga, dan ketersediaan stok di setiap lokasi."
+      subtitle="Pantau persediaan bahan baku dan produk siap jual per gudang atau gerai."
       wireframe="Wireframe S-03"
       actions={
         <div className="flex items-center flex-wrap gap-2">
@@ -247,16 +288,17 @@ export default function ProductsPage() {
             className="flex items-center space-x-1.5 px-3.5 py-2 text-xs font-bold btn-glass-primary rounded-xl shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus-brand-ring"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>Produk Baru</span>
+            <span>{createLabel}</span>
           </button>
 
-          {viewMode === "detail" && (
+          {viewMode === "detail" && productsInView.length > 0 && (
             <select
-              value={selectedSku}
+              aria-label="Pilih SKU untuk detail stok"
+              value={detailSku}
               onChange={(e) => setSelectedSku(e.target.value)}
               className="text-xs font-mono font-medium input-glass rounded-xl px-3 py-1.5 shadow-xs focus:ring-2 focus:ring-[#1d4ed8] focus-brand-ring"
             >
-              {products.map((p) => (
+              {productsInView.map((p) => (
                 <option key={p.sku} value={p.sku}>
                   {p.sku} — {p.name} ({p.size})
                 </option>
@@ -268,18 +310,46 @@ export default function ProductsPage() {
     >
       {/* Empty State when clean company */}
       {loadError && <p role="alert" className="rounded-xl bg-rose-50 p-4 text-rose-800">{loadError}</p>}
-      <div className="surface-card p-4 text-sm text-slate-600"><strong className="text-slate-900">Stok tersedia = stok fisik − stok dipesan.</strong><p className="text-xs mt-1">Stok dipesan sudah dialokasikan ke pesanan pelanggan. Minimum {STOCK_POLICY.minimum} berlaku untuk setiap SKU di setiap lokasi. Stok tersedia tepat {STOCK_POLICY.minimum} sudah memenuhi minimum.</p><Link href="/master/products" className="inline-flex mt-2 text-xs font-semibold text-indigo-700">Kelola data produk & harga →</Link></div>
-      {loading && !products.length ? <p role="status" className="surface-card p-6 text-slate-600">Memuat persediaan…</p> : !loadError && products.length === 0 ? (
+      <div className="surface-card p-4 flex flex-wrap items-center justify-between gap-3">
+        <div role="group" aria-label="Jenis persediaan" className="flex flex-wrap gap-2">
+          {stockViews.map(view => (
+            <button key={view.kind} type="button" aria-pressed={stockView === view.kind}
+              className={stockView === view.kind ? "btn-primary" : "btn-secondary"}
+              onClick={() => changeStockView(view.kind)}>
+              {view.label} <span className="ml-1 tabular-nums">{counts[view.kind]}</span>
+            </button>
+          ))}
+        </div>
+        {canAdjust && <Link href="/master/products" className="text-sm font-semibold text-indigo-700 underline">Kelola jenis SKU</Link>}
+        {["HEAD_ADMIN", "OWNER", "WAREHOUSE", "PROCUREMENT"].includes(user?.role) &&
+          <Link href="/operations/purchase" className="text-sm font-semibold text-indigo-700 underline">Aturan pengadaan per lokasi</Link>}
+      </div>
+      {locations.length > 0 && (
+        <section className="surface-card p-4 space-y-2" aria-labelledby="stock-location-heading">
+          <h2 id="stock-location-heading" className="text-sm font-semibold">Cek stok di lokasi</h2>
+          <div role="group" aria-labelledby="stock-location-heading" className="flex flex-wrap gap-2">
+            {locationOptions.map(option => {
+              const active = (selectedLocation?.code ?? "ALL") === option.code;
+              return <button key={option.code} type="button" aria-pressed={active}
+                className={active ? "btn-primary" : "btn-secondary"}
+                onClick={() => changeStockLocation(option.code)}>
+                {option.name}{option.code !== "ALL" && <span className="ml-1.5 text-xs">({option.code})</span>}
+              </button>;
+            })}
+          </div>
+        </section>
+      )}
+      {loading && !products.length ? <p role="status" className="surface-card p-6 text-slate-600">Memuat persediaan…</p> : !loadError && productsInView.length === 0 ? (
         <div className="glass-2 rounded-2xl border border-dashed border-slate-300 p-12 text-center space-y-4">
           <div className="w-16 h-16 rounded-2xl bg-amber-500/15 text-[#6d28d9] flex items-center justify-center mx-auto shadow-xs border border-amber-500/30">
             <Package className="w-8 h-8" />
           </div>
           <div className="max-w-md mx-auto space-y-1">
             <h3 className="text-base font-bold text-slate-900">
-              Belum Ada Produk Terdaftar di Perusahaan Ini
+              {stockView === "all" ? "Belum ada SKU terdaftar" : `Belum ada ${stockLabel(stockView).toLowerCase()}`}
             </h3>
             <p className="text-xs text-slate-600 font-normal leading-relaxed">
-              Ruang kerja perusahaan ini masih bersih. Anda dapat mulai mendaftarkan menu dan produk buatan Anda sendiri beserta harga jual, modal awal, dan stok gudang.
+              Daftarkan SKU untuk mulai mencatat stok per lokasi.
             </p>
           </div>
           <button
@@ -288,7 +358,7 @@ export default function ProductsPage() {
             className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl btn-glass-primary text-xs font-bold shadow-md transition-all duration-200 hover:-translate-y-0.5 focus-brand-ring"
           >
             <Plus className="w-4 h-4" />
-            <span>Tambah Produk Pertama Anda</span>
+            <span>{createLabel}</span>
           </button>
         </div>
       ) : viewMode === "table" ? (
@@ -300,49 +370,57 @@ export default function ProductsPage() {
               <div className="flex items-center space-x-2">
                 <Package className="w-4 h-4 text-[#1d4ed8]" />
                 <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">
-                  Katalog produk
+                  {stockView === "all" ? "Ringkasan stok" : stockLabel(stockView)} · {locationName}
                 </h3>
               </div>
               <p className="text-xs text-slate-600 font-medium mt-0.5">
-                Stok tersedia = fisik dikurangi cadangan pesanan. Periksa setiap lokasi sebelum menjanjikan barang.
+                Stok tersedia adalah stok fisik dikurangi cadangan pesanan.
               </p>
             </div>
             <div className="flex items-center space-x-2 text-xs font-bold">
               <span className="px-2.5 py-1 rounded-full bg-white/70 text-slate-900 border border-white/60 shadow-xs">
-                Total {products.length} SKU
+                {productsInView.length} SKU
               </span>
               <span className="px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-950 border border-amber-500/40 flex items-center space-x-1 backdrop-blur-xs">
                 <AlertTriangle className="w-3.5 h-3.5 text-amber-700" />
-                <span>Minimum {STOCK_POLICY.minimum} per SKU / lokasi</span>
+                <span>Patokan minimum {STOCK_POLICY.minimum} per SKU / lokasi</span>
               </span>
             </div>
           </div>
 
-          <div className="px-5 flex flex-wrap items-end gap-3"><TableSearch value={table.query} onChange={table.setQuery} label="Cari nama produk atau SKU…" /><label className="text-sm text-slate-700">Lokasi<select aria-label="Lokasi persediaan" value={location} onChange={e=> { setLocation(e.target.value); table.setPage(1); }} className="input-glass ml-2 p-2"><option value="ALL">Semua lokasi</option>{locations.map(l=><option key={l.code} value={l.code}>{l.code} · {l.name}</option>)}</select></label><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={onlyLow} onChange={e => { setOnlyLow(e.target.checked); table.setPage(1); }} /> Perlu tambah stok</label><p className="text-xs text-slate-600 ml-auto">{updatedAt && `Diperiksa ${new Date(updatedAt).toLocaleTimeString('id-ID')}`} · diperbarui tiap 15 detik</p></div>
+          <div className="px-5 flex flex-wrap items-end gap-3">
+            <TableSearch value={table.query} onChange={table.setQuery} label="Cari nama atau SKU…" />
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={onlyLow} onChange={e => { setOnlyLow(e.target.checked); table.setPage(1); }} />
+              Perlu tambah stok
+            </label>
+            {updatedAt && <p className="text-xs text-slate-600 ml-auto">Diperiksa {new Date(updatedAt).toLocaleTimeString('id-ID')} · diperbarui tiap 15 detik</p>}
+          </div>
           {/* Table Container */}
           <div className="overflow-x-auto glass-3 border-t border-white/80">
             <table className="w-full text-left text-xs text-slate-900">
               <thead className="bg-white/60 text-slate-900 font-bold uppercase tracking-wider text-[11px] border-b border-black/10">
                 <tr>
-                  <th scope="col" className="px-5 py-3.5" aria-sort={table.sort.key === "name" ? table.sort.direction === "asc" ? "ascending" : "descending" : "none"}><SortLabel active={table.sort.key === "name"} direction={table.sort.direction} onClick={() => table.toggleSort("name")}>SKU &amp; Nama Produk</SortLabel></th>
+                  <th scope="col" className="px-5 py-3.5" aria-sort={table.sort.key === "name" ? table.sort.direction === "asc" ? "ascending" : "descending" : "none"}><SortLabel active={table.sort.key === "name"} direction={table.sort.direction} onClick={() => table.toggleSort("name")}>SKU &amp; Nama</SortLabel></th>
                   <th scope="col" className="px-4 py-3.5">Varian &amp; Satuan</th>
                   <th scope="col" className="px-4 py-3.5 text-right">Fisik</th>
                   <th scope="col" className="px-4 py-3.5 text-right">Dicadangkan</th>
                   <th scope="col" className="px-4 py-3.5 text-right" aria-sort={table.sort.key === "totalAvailable" ? table.sort.direction === "asc" ? "ascending" : "descending" : "none"}><SortLabel active={table.sort.key === "totalAvailable"} direction={table.sort.direction} onClick={() => table.toggleSort("totalAvailable")}>Tersedia</SortLabel></th>
                   <th scope="col" className="px-4 py-3.5 text-center">Status Stok</th>
-                  <th scope="col" className="px-4 py-3.5 text-right" aria-sort={table.sort.key === "salesPrice" ? table.sort.direction === "asc" ? "ascending" : "descending" : "none"}><SortLabel active={table.sort.key === "salesPrice"} direction={table.sort.direction} onClick={() => table.toggleSort("salesPrice")}>Harga Jual</SortLabel></th>
-                  <th scope="col" className="px-4 py-3.5 text-right">Biaya HPP</th>
-                  <th scope="col" className="px-4 py-3.5 text-right">Margin</th>
+                  {showSellingColumns && <th scope="col" className="px-4 py-3.5 text-right" aria-sort={table.sort.key === "salesPrice" ? table.sort.direction === "asc" ? "ascending" : "descending" : "none"}><SortLabel active={table.sort.key === "salesPrice"} direction={table.sort.direction} onClick={() => table.toggleSort("salesPrice")}>Harga jual</SortLabel></th>}
+                  <th scope="col" className="px-4 py-3.5 text-right">Biaya standar</th>
+                  {showSellingColumns && <th scope="col" className="px-4 py-3.5 text-right">Margin</th>}
                   <th scope="col" className="px-4 py-3.5 text-center">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-black/5 tabular-nums">
-                {table.total === 0 && <tr><td colSpan={10} className="text-center py-12 text-slate-500">{onlyLow ? "Tidak ada stok di bawah minimum pada filter ini." : "Tidak ada produk yang cocok dengan pencarian."}</td></tr>}
+                {table.total === 0 && <tr><td colSpan={showSellingColumns ? 10 : 8} className="text-center py-12 text-slate-500">{onlyLow ? "Tidak ada stok di bawah minimum pada filter ini." : "Tidak ada SKU yang cocok dengan pencarian."}</td></tr>}
                 {table.rows.map((p) => {
-                  const current = location === "ALL" ? { onHand: p.totalOnHand ?? 0, reserved: p.totalReserved ?? 0 } : p.stockLevels?.find((l:any)=>l.locationCode===location) || {onHand:0,reserved:0};
+                  const current = selectedLocation ? stockAt(p, selectedLocation.code) : { onHand: p.totalOnHand ?? 0, reserved: p.totalReserved ?? 0 };
                   const available = current.onHand-current.reserved;
                   const low = shortages(p);
                   const isLow = low.length > 0;
+                  const isMaterial = p.kind === "MATERIAL";
                   const marginPct = p.salesPrice > 0 ? Math.round(((p.salesPrice - p.standardCost) / p.salesPrice) * 100) : 0;
 
                   return (
@@ -350,19 +428,20 @@ export default function ProductsPage() {
                       <td className="px-5 py-3.5 font-sans font-bold text-slate-900">
                         <span className="font-mono text-[#1d4ed8] block text-[11px] font-bold">{p.sku}</span>
                         <span>{p.name}</span>
+                        {stockView === "all" && <span className={`block text-[11px] font-medium mt-0.5 ${isMaterial ? "text-amber-900" : "text-indigo-800"}`}>{stockLabel(p.kind)}</span>}
                       </td>
                       <td className="px-4 py-3.5 font-sans text-slate-800">
                         <span className="font-semibold text-slate-900">{p.size}</span>
                         <span className="text-slate-600 block text-[10px] font-medium">{p.color} · {p.unit}</span>
                       </td>
-                      <td className="px-4 py-3.5 text-right font-bold text-slate-900">
-                        {current.onHand}
+                      <td className="px-4 py-3.5 text-right whitespace-nowrap font-bold text-slate-900">
+                        {current.onHand.toLocaleString("id-ID")} {p.unit}
                       </td>
-                      <td className="px-4 py-3.5 text-right font-bold text-slate-900">
-                        {current.reserved}
+                      <td className="px-4 py-3.5 text-right whitespace-nowrap font-bold text-slate-900">
+                        {current.reserved.toLocaleString("id-ID")} {p.unit}
                       </td>
-                      <td className="px-4 py-3.5 text-right font-bold text-slate-900 text-sm">
-                        {available}
+                      <td className="px-4 py-3.5 text-right whitespace-nowrap font-bold text-slate-900 text-sm">
+                        {available.toLocaleString("id-ID")} {p.unit}
                       </td>
                       <td className="px-4 py-3.5 min-w-56 font-sans">
                         {isLow ? (
@@ -379,17 +458,17 @@ export default function ProductsPage() {
                           <StockStatus available={STOCK_POLICY.minimum} unit={p.unit} />
                         ) : "—"}
                       </td>
-                      <td className="px-4 py-3.5 text-right font-bold text-slate-900">
-                        Rp {p.salesPrice?.toLocaleString("id-ID")}
-                      </td>
+                      {showSellingColumns && <td className="px-4 py-3.5 text-right font-bold text-slate-900">
+                        {isMaterial ? "—" : `Rp ${p.salesPrice?.toLocaleString("id-ID")}`}
+                      </td>}
                       <td className="px-4 py-3.5 text-right text-slate-700 font-medium">
                         Rp {p.standardCost?.toLocaleString("id-ID")}
                       </td>
-                      <td className="px-4 py-3.5 text-right font-bold text-emerald-800">
-                        {marginPct}%
-                      </td>
+                      {showSellingColumns && <td className="px-4 py-3.5 text-right font-bold text-emerald-800">
+                        {isMaterial ? "—" : `${marginPct}%`}
+                      </td>}
                       <td className="px-4 py-3.5 text-center font-sans">
-                        <ActionButton action="detail" onClick={() => {
+                        <ActionButton action="detail" aria-label={`Detail stok ${p.name}`} onClick={() => {
                           setSelectedSku(p.sku);
                           setViewMode("detail");
                         }} />
@@ -402,25 +481,20 @@ export default function ProductsPage() {
           </div>
           <TablePagination {...table} onChange={table.setPage} />
         </div>
-      ) : productDetail && (
+      ) : productDetail?.sku === detailSku ? (
         <div className="glass-2 rounded-2xl shadow-glass-2 border border-white/80 overflow-hidden">
           <div className="p-6 border-b border-black/5 grid grid-cols-1 md:grid-cols-2 gap-6 bg-white/40">
             <div>
-              <div className="flex items-center space-x-2">
-                <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider">
-                  Variant SKU (SR-17)
-                </span>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-950 border border-emerald-500/40 backdrop-blur-xs">
-                  Independent Stock
-                </span>
-              </div>
+              <span className={`text-xs font-semibold ${isMaterialDetail ? "text-amber-900" : "text-indigo-800"}`}>
+                {stockLabel(productDetail.kind)}
+              </span>
               <h2 className="text-2xl font-bold text-[#1d4ed8] font-mono mt-1">
                 {productDetail.sku}
               </h2>
 
               <div className="mt-3">
                 <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider block">
-                  Nama Produk
+                  {isMaterialDetail ? "Nama bahan" : "Nama produk"}
                 </span>
                 <p className="text-base font-bold text-slate-900 mt-0.5">
                   {productDetail.name}
@@ -432,20 +506,20 @@ export default function ProductsPage() {
             </div>
 
             <div className="space-y-3">
-              <div className="flex justify-between items-center glass-3 p-3.5 rounded-xl border border-white/80 shadow-xs">
+              {!isMaterialDetail && <div className="flex justify-between items-center glass-3 p-3.5 rounded-xl border border-white/80 shadow-xs">
                 <div className="flex items-center space-x-2">
                   <Tag className="w-4 h-4 text-[#1d4ed8]" />
-                  <span className="text-xs font-semibold text-slate-800">Harga Jual (Sales Price):</span>
+                  <span className="text-xs font-semibold text-slate-800">Harga jual</span>
                 </div>
                 <span className="text-sm font-bold text-slate-900 font-mono">
                   Rp {productDetail.salesPrice.toLocaleString("id-ID")}
                 </span>
-              </div>
+              </div>}
 
               <div className="flex justify-between items-center glass-3 p-3.5 rounded-xl border border-white/80 shadow-xs">
                 <div className="flex items-center space-x-2">
                   <Package className="w-4 h-4 text-[#1d4ed8]" />
-                  <span className="text-xs font-semibold text-slate-800">Biaya Standar (Standard Cost):</span>
+                  <span className="text-xs font-semibold text-slate-800">Biaya standar</span>
                 </div>
                 <span className="text-sm font-bold text-[#1d4ed8] font-mono">
                   Rp {productDetail.standardCost.toLocaleString("id-ID")}
@@ -456,13 +530,13 @@ export default function ProductsPage() {
 
           {/* Section 4: Produk, Nilai dan Stok Lokasi */}
           <div className="p-6 space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide flex items-center space-x-2">
                 <Building className="w-4 h-4 text-[#1d4ed8]" />
                 <span>Distribusi stok per lokasi</span>
               </h3>
               <span className="text-xs text-slate-700 font-semibold font-mono">
-                Total Perusahaan: <strong className="text-[#1d4ed8] font-bold">{productDetail.companyOnHand} unit</strong> (Rp {productDetail.totalValuation.toLocaleString("id-ID")})
+                {selectedLocation ? locationName : "Total perusahaan"} <strong className="text-[#1d4ed8] font-bold">{detailOnHand.toLocaleString("id-ID")} {productDetail.unit}</strong> (Rp {detailValuation.toLocaleString("id-ID")})
               </span>
             </div>
 
@@ -479,7 +553,7 @@ export default function ProductsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-black/5 font-mono">
-                  {locations.map(item => {
+                  {visibleLocations.map(item => {
                     const loc = productDetail.locations.find((entry: any) => entry.locationCode === item.code)
                       ?? { locationCode: item.code, locationName: item.name, onHand: 0, reserved: 0, available: 0, valuation: 0 };
                     return (
@@ -488,10 +562,10 @@ export default function ProductsPage() {
                         <MapPin className="w-4 h-4 text-[#1d4ed8]" />
                         <span>{loc.locationCode} — {loc.locationName}</span>
                       </td>
-                      <td className="px-6 py-3.5 text-right font-bold text-slate-900">{loc.onHand}</td>
-                      <td className="px-6 py-3.5 text-right text-amber-800 font-bold">{loc.reserved}</td>
+                      <td className="px-6 py-3.5 text-right font-bold text-slate-900">{loc.onHand.toLocaleString("id-ID")} {productDetail.unit}</td>
+                      <td className="px-6 py-3.5 text-right text-amber-800 font-bold">{loc.reserved.toLocaleString("id-ID")} {productDetail.unit}</td>
                       <td className="px-6 py-3.5 text-right font-bold text-emerald-900 bg-emerald-500/15">
-                        {loc.available}
+                        {loc.available.toLocaleString("id-ID")} {productDetail.unit}
                       </td>
                       <td className="px-6 py-3.5 text-right text-slate-800 font-medium">
                         Rp {loc.valuation.toLocaleString("id-ID")}
@@ -508,7 +582,10 @@ export default function ProductsPage() {
             </div>
           </div>
         </div>
-      )}
+      ) : detailSku && (detailError ? <div role="alert" className="surface-card p-6 space-y-2 text-sm">
+        <p>{detailError}</p>
+        <button type="button" className="btn-secondary" onClick={() => void fetchProductDetail(detailSku)}>Muat ulang detail</button>
+      </div> : <p role="status" className="surface-card p-6 text-slate-600">Memuat detail stok…</p>)}
 
       {/* Collapsible QA Test Runner for T-05 & T-06 */}
       <details hidden className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
@@ -585,6 +662,7 @@ export default function ProductsPage() {
       {/* Modal Tambah Produk Baru */}
       <CreateProductModal
         isOpen={createModalOpen}
+        initialKind={stockView === "MATERIAL" ? "MATERIAL" : "MENU"}
         onClose={() => setCreateModalOpen(false)}
         onProductCreated={() => {
           fetchProducts();

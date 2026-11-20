@@ -2,8 +2,9 @@
 export function accessRestriction(role: string, path: string, method = 'GET'): boolean {
   if (path === '/api/advanced' || path.startsWith('/api/order/')) return true;
   if (role === 'OWNER') {
+    if (path === '/api/supply' && ['GET', 'POST'].includes(method)) return false;
     if (method === 'GET') {
-      const reports = ['/api/dashboard/metrics', '/api/dashboard/charts', '/api/dashboard/reconciliation',
+      const reports = ['/api/operations', '/api/dashboard/metrics', '/api/dashboard/charts', '/api/dashboard/reconciliation',
         '/api/accounting/reports', '/api/accounting/general-ledger', '/api/accounting/journal-entries',
         '/api/pos/orders', '/api/pos/sessions', '/api/master/options', '/api/inventory/movements'];
       if (reports.includes(path) || /^\/api\/accounting\/invoices\/[^/]+\/pdf$/.test(path)) return false;

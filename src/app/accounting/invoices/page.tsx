@@ -24,6 +24,15 @@ export default function CustomerInvoicesPage() {
 
   // New Invoice Modal
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [initialOrderId, setInitialOrderId] = useState('');
+  const [initialStatus, setInitialStatus] = useState('ALL');
+  const closeCreateModal = () => {
+    setShowCreateModal(false);
+    setInitialOrderId('');
+    const url = new URL(window.location.href);
+    url.searchParams.delete('salesOrderId');
+    window.history.replaceState(null, '', url);
+  };
   const [salesOrders, setSalesOrders] = useState<any[]>([]);
   const [selectedSoId, setSelectedSoId] = useState("");
   const [customInvoicedQty, setCustomInvoicedQty] = useState<number>(5);
@@ -86,7 +95,10 @@ export default function CustomerInvoicesPage() {
   };
 
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("salesOrderId")) setShowCreateModal(true);
+    const params = new URLSearchParams(window.location.search);
+    const orderId = params.get('salesOrderId');
+    if (orderId) { setInitialOrderId(orderId); setShowCreateModal(true); }
+    if (params.get('status') === 'DRAFT') setInitialStatus('DRAFT');
   }, []);
 
   useEffect(() => {
@@ -299,7 +311,7 @@ export default function CustomerInvoicesPage() {
 
       {loadError && <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800"><p>{loadError}</p><button className="font-semibold mt-2" onClick={() => void fetchInvoices()}>Muat ulang daftar</button></div>}
 
-      <DocumentList loading={loading} records={invoices} selectedId={selectedInvoice?.id} onClearSelection={()=>setSelectedInvoice(null)} onSelect={fetchInvoiceDetail}/>
+      <DocumentList loading={loading} initialStatus={initialStatus} records={invoices} selectedId={selectedInvoice?.id} onClearSelection={()=>setSelectedInvoice(null)} onSelect={fetchInvoiceDetail}/>
 
       {selectedInvoice && <DocumentControls kind="invoices" record={selectedInvoice} role={user?.role} onChanged={async () => { await fetchInvoices(); await fetchInvoiceDetail(selectedInvoice.id); }} />}
 
@@ -477,7 +489,11 @@ export default function CustomerInvoicesPage() {
         </div>
       )}
 
-      {showCreateModal&&<CreateInvoiceModal initialOrderId={new URLSearchParams(window.location.search).get("salesOrderId") || ""} onClose={()=>setShowCreateModal(false)} onCreated={async invoice=>{setShowCreateModal(false);await fetchInvoices();await fetchInvoiceDetail(invoice.id);}}/>}
+      {showCreateModal && ['HEAD_ADMIN', 'FINANCE'].includes(user?.role) && <CreateInvoiceModal
+        initialOrderId={initialOrderId}
+        onClose={closeCreateModal}
+        onCreated={async invoice => { closeCreateModal(); await fetchInvoices(); await fetchInvoiceDetail(invoice.id); }}
+      />}
       {/* Collapsible QA Test Runner for T-19 & T-20 */}
       <details hidden className="group bg-slate-900 text-white rounded-2xl p-5 border border-slate-800">
         <summary className="cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white select-none">

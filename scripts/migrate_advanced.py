@@ -4,7 +4,7 @@ import argparse, hashlib, json, sqlite3, tempfile
 from datetime import datetime, timezone
 
 root = Path(__file__).resolve().parents[1]
-migration_names = ('20261117_advanced_fnb', '20261119_stock_minimum')
+migration_names = ('20261117_advanced_fnb', '20261119_stock_minimum', '20261120_supply_workflow')
 migrations = [
     (name, (root/'prisma/migrations'/name/'migration.sql').read_text())
     for name in migration_names

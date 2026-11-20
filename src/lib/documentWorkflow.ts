@@ -19,10 +19,26 @@ export async function documentAction(kind:string,id:string,input:any,actor:Actor
     if(!before)throw new BusinessError('Dokumen tidak ditemukan.',404);
     if(before.version!==undefined){numberValue(input.version,'Versi',0,true);if(before.version!==input.version)throw new BusinessError('Dokumen berubah. Muat ulang terlebih dahulu.',409);}
     const actorWithId=actor as {id:string;name:string;role:any};
+    if (kind === 'purchase' && input.action === 'recordSent') {
+      if (!['CONFIRMED', 'DONE'].includes(before.status)) throw new BusinessError('Konfirmasi PO sebelum mencatat pengiriman.', 409);
+      const request = await prisma.purchaseRequest.findUnique({ where: { purchaseOrderId: id } });
+      if (!request) throw new BusinessError('Pengajuan pembelian tidak ditemukan.', 404);
+      if (before.sentAt) return { record: before };
+      const vendor = await prisma.contact.findUnique({ where: { id: before.vendorId } });
+      const recipient = textValue(input.recipient, 'Email vendor');
+      if (vendor?.email !== recipient || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient)) {
+        throw new BusinessError('Email vendor berubah atau belum valid. Perbarui data pemasok dan muat ulang.');
+      }
+      const record = await prisma.purchaseOrder.update({ where: { id }, data: {
+        sentAt: new Date(), sentTo: recipient, version: { increment: 1 },
+      } });
+      await audit(kind, before, record, actor, 'RECORD_VENDOR_DISPATCH');
+      return { record };
+    }
     if(input.action==='prepare'){
       if(before.status!=='CONFIRMED') throw new BusinessError('Hanya pesanan terkonfirmasi yang dapat disiapkan.',409);
       if(kind==='sales')return confirmSalesOrder(id,actorWithId);
-      if(kind==='purchase')return confirmPurchaseOrder(id,actorWithId,textValue(input.destLocation??'WH-JKT','Gudang penerimaan'));
+      if(kind==='purchase')return confirmPurchaseOrder(id,actorWithId,input.destLocation===undefined?undefined:textValue(input.destLocation,'Gudang penerimaan'));
       throw new BusinessError('Persiapan ini hanya tersedia untuk pesanan.');
     }
     if(input.action==='confirm')return kind==='sales'?confirmSalesOrder(id,actorWithId,input.sourceLocation===undefined?undefined:textValue(input.sourceLocation,'Gudang pemenuhan')):kind==='purchase'?confirmPurchaseOrder(id,actorWithId,input.destLocation===undefined?undefined:textValue(input.destLocation,'Gudang penerimaan')):Promise.reject(new BusinessError('Dokumen tidak dapat dikonfirmasi.'));
@@ -58,6 +74,10 @@ export async function documentAction(kind:string,id:string,input:any,actor:Actor
       const totals=await calculateOrderTotals(lines);
       data={contactId,paymentTerms:customer.paymentTerms,subtotalNet:totals.subtotalNet,pbjtTax:totals.pbjtTax,totalGross:totals.totalGross,projectedCost:totals.projectedCost,discountPercent:totals.maxDiscountPercent,discountApproved:totals.maxDiscountPercent<=10,discountApprovedBy:null,lines:{deleteMany:{},create:totals.lines}};
     } else if(kind==='purchase') {
+      const request = await prisma.purchaseRequest.findUnique({ where: { purchaseOrderId: id } });
+      if (request && (lines.length !== 1 || lines[0].productSku !== request.productSku || lines[0].orderedQty !== request.quantity)) {
+        throw new BusinessError('SKU dan jumlah PO harus sesuai pengajuan pembelian yang disetujui.', 409);
+      }
       const vendorId=input.vendorId||before.vendorId,vendor=await prisma.contact.findUnique({where:{id:vendorId}});
       if(!vendor||vendor.archivedAt||vendor.type!=='VENDOR')throw new BusinessError('Vendor tidak tersedia.');
       const prepared=[];for(const line of lines){quantity(line.orderedQty);money(line.unitPrice);const p=await prisma.productVariant.findUnique({where:{sku:line.productSku}});if(!p||p.archivedAt)throw new BusinessError('SKU tidak tersedia.');prepared.push({productSku:p.sku,orderedQty:line.orderedQty,unitPrice:line.unitPrice,subtotal:line.orderedQty*line.unitPrice});}

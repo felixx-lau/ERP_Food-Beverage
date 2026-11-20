@@ -136,6 +136,7 @@ model Contact {
 // 3. Products & Variant SKUs
 // -------------------------------------------------------------
 model ProductVariant {
+  kind String @default("MENU")
   trackLots Boolean @default(false)
   description String @default("")
   categoryCode String?
@@ -374,6 +375,8 @@ model DeliveryOrderLine {
 // 9. Purchasing & Vendor Receipts
 // -------------------------------------------------------------
 model PurchaseOrder {
+  sentAt DateTime?
+  sentTo String?
   version Int @default(0)
   id             String          @id @default(cuid())
   poNumber       String          @unique // P00006, P00007

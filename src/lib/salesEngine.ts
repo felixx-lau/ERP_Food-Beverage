@@ -1,3 +1,4 @@
+import { availableStock } from "./stockPolicy";
 import { atomic } from "./atomic";
 import { permit, quantity, money, discount, uniqueLines, editable } from "./validation";
 import { prisma } from "./prisma";
@@ -49,7 +50,7 @@ export async function calculateOrderTotals(items: LineItemInput[]): Promise<Calc
 
   const lines = items.map((item) => {
     const p = productMap.get(item.productSku);
-    if (!p || p.archivedAt) throw new Error(`Product ${item.productSku} not found`);
+    if (!p || p.archivedAt || p.kind !== 'MENU') throw new Error(`Product ${item.productSku} not found`);
 
     const qty = item.quantity;
     const price = item.unitPrice !== undefined ? item.unitPrice : p.salesPrice;
@@ -90,6 +91,32 @@ export async function calculateOrderTotals(items: LineItemInput[]): Promise<Calc
   };
 }
 
+async function advanceLeadForOrder(
+  order: { leadId: string | null; orderNumber: string; subtotalNet: number },
+  stage: 'PROPOSITION' | 'WON',
+  actor: { id: string; name: string; role: Role },
+) {
+  if (!order.leadId) return null;
+  const lead = await prisma.crmLead.findUnique({ where: { id: order.leadId } });
+  if (!lead || lead.archivedAt || lead.stage === 'WON' || lead.stage === stage) return lead;
+
+  const expectedRevenue = lead.expectedRevenue || order.subtotalNet;
+  if (expectedRevenue <= 0) return lead;
+
+  const updated = await prisma.crmLead.update({
+    where: { id: lead.id },
+    data: { stage, expectedRevenue, version: { increment: 1 } },
+  });
+  await recordAuditLog({
+    actorId: actor.id, actorName: actor.name, actorRole: actor.role,
+    action: 'ADVANCE_LEAD_STAGE', documentType: 'MASTER_leads', documentId: lead.id,
+    beforeState: { stage: lead.stage, expectedRevenue: lead.expectedRevenue },
+    afterState: { stage, expectedRevenue, orderNumber: order.orderNumber },
+    notes: stage === 'WON' ? 'Sales Order dikonfirmasi.' : 'Penawaran dibuat dari lead.',
+  });
+  return updated;
+}
+
 async function createSalesQuotationImpl(params: {
   contactId: string;
   leadId?: string;
@@ -102,7 +129,7 @@ async function createSalesQuotationImpl(params: {
   permit(actor, ['HEAD_ADMIN','SALES']);
   const customer = await prisma.contact.findUnique({ where: { id: contactId } });
   if (!customer || customer.archivedAt || customer.type !== 'CUSTOMER') throw new Error('Pelanggan tidak valid.');
-  if (leadId) { const lead = await prisma.crmLead.findUnique({ where: { id: leadId } }); if (!lead || lead.contactId !== contactId) throw new Error('Lead dan pelanggan harus sesuai.'); }
+  if (leadId) { const lead = await prisma.crmLead.findUnique({ where: { id: leadId } }); if (!lead || lead.contactId !== contactId) throw new Error('Lead dan pelanggan harus sesuai.'); if (lead.archivedAt) throw new Error('Pulihkan lead yang dibatalkan sebelum membuat penawaran.'); }
   // Validate discount limit: max allowed is 20%
   for (const l of lineInputs) {
     if ((l.discountPercent || 0) > 20) {
@@ -172,7 +199,7 @@ async function createSalesQuotationImpl(params: {
     notes: `Quotation ${order.orderNumber} dibuat. Total: Rp ${order.totalGross.toLocaleString("id-ID")}`,
   });
 
-  return order;
+  return { ...order, lead: await advanceLeadForOrder(order, 'PROPOSITION', actor) };
 }
 
 async function approveOrderDiscountImpl(orderId: string, actor: { id: string; name: string; role: Role }, version?: number) {
@@ -302,7 +329,10 @@ async function confirmSalesOrderImpl(orderId: string, actor: { id: string; name:
     // B. Reserve available stock (SR-04 / F-07).
     for (const line of order.lines) {
       const stock = await tx.stockLevel.findUnique({ where: { productSku_locationCode: { productSku: line.productSku, locationCode: sourceLocation } } });
-      if (!stock || stock.onHand - stock.reserved < line.quantity) throw new Error('Stok available tidak mencukupi untuk reservasi (SR-04).');
+      const available = stock ? availableStock(stock) : 0;
+      if (!stock || available < line.quantity) {
+        throw new Error(`Stok ${line.productSku} di ${sourceLocation} tidak mencukupi untuk reservasi (SR-04). Diperlukan ${line.quantity}, tersedia ${available}.`);
+      }
       await tx.stockLevel.update({ where: { id: stock.id }, data: { reserved: { increment: line.quantity } } });
       await tx.stockReservation.create({ data: { salesOrderLineId: line.id, locationCode: sourceLocation, quantity: line.quantity } });
     }
@@ -329,6 +359,7 @@ async function confirmSalesOrderImpl(orderId: string, actor: { id: string; name:
     notes: `Sales Order ${order.orderNumber} dikonfirmasi. Reservasi dibuat di ${sourceLocation} dan DO ${result.deliveryOrder.deliveryNumber} terbentuk.`,
   });
 
+  await advanceLeadForOrder(result.confirmedOrder, 'WON', actor);
   return result;
 }
 

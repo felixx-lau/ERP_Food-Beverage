@@ -51,7 +51,7 @@ export default function CreateSalesOrderModal({
     let active = true;
     setCatalogLoading(true); setErrorMsg(null); setSuccessMsg(null); setDirty(false); requestKey.current = "";
     setSelectedContactId(initialCustomerId || ""); setLines([{ productSku: "", productName: "", quantity: 1, unitPrice: 0, discountPercent: 0 }]);
-    Promise.all(["/api/contacts?type=CUSTOMER", "/api/products"].map(async url => {
+    Promise.all(["/api/contacts?type=CUSTOMER", "/api/products?purpose=sale"].map(async url => {
       const response = await fetch(url); const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Pilihan belum dapat dimuat.");
       return data;
@@ -194,7 +194,7 @@ export default function CreateSalesOrderModal({
       const data = await res.json();
       if (!res.ok) {
         if (res.status < 500 && res.status !== 409) requestKey.current = "";
-        setErrorMsg(data.error || "Gagal membuat Sales Order.");
+        setErrorMsg(data.error || "Gagal membuat penawaran.");
         return;
       }
 
@@ -227,7 +227,7 @@ export default function CreateSalesOrderModal({
               <ShoppingCart className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900 tracking-tight">Buat Pesanan Penjualan (Sales Order)</h2>
+              <h2 className="text-base font-bold text-slate-900 tracking-tight">Buat penawaran (Quotation)</h2>
               <p className="text-xs text-slate-600 font-medium">
                 Pilih SKU menu, kuantitas, dan harga sesuai pesanan
               </p>
@@ -423,7 +423,7 @@ export default function CreateSalesOrderModal({
               ) : (
                 <>
                   <Check className="w-4 h-4" />
-                  <span>Simpan Pesanan Penjualan</span>
+                  <span>Simpan penawaran</span>
                 </>
               )}
             </button>

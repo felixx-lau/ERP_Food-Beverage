@@ -15,11 +15,11 @@ const categories: Record<string, { label: string; department: string; icon: Luci
   deliveries: { label: 'Pengiriman menunggu', department: 'Gudang · Sales', icon: Truck, href: '/inventory/delivery', action: 'Lihat pengiriman' },
   receipts: { label: 'Penerimaan menunggu', department: 'Purchase · Gudang', icon: PackageCheck, href: '/inventory/receipts', action: 'Lihat penerimaan' },
   overdueInvoices: { label: 'Invoice lewat tempo', department: 'Finance · Sales', icon: FileClock, href: '/accounting/invoices', action: 'Periksa tagihan' },
-  discountApprovals: { label: 'Persetujuan diskon', department: 'Sales · Head Admin', icon: ShieldCheck, href: '/sales/orders', action: 'Tinjau penjualan' },
+  discountApprovals: { label: 'Diskon menunggu persetujuan', department: 'Sales · Head Admin', icon: ShieldCheck, href: '/sales/orders?approval=pending', action: 'Lihat pesanan' },
   lowStockLocations: { label: 'Stok rendah per lokasi', department: 'Inventory', icon: PackageSearch, href: '/inventory/products?lowStock=1', action: 'Periksa persediaan' },
   openSessions: { label: 'Sesi kasir aktif', department: 'Point of Sale', icon: ScanLine, href: '/pos', action: 'Buka kasir' },
-  uninvoicedLines: { label: 'Barang terkirim belum ditagih', department: 'Sales · Finance', icon: ReceiptText, href: '/sales/orders', action: 'Tinjau penjualan' },
-  draftInvoices: { label: 'Invoice draft menunggu', department: 'Invoicing', icon: FilePenLine, href: '/accounting/invoices', action: 'Periksa draft invoice' },
+  uninvoicedLines: { label: 'Barang terkirim belum ditagih', department: 'Sales · Finance', icon: ReceiptText, href: '/accounting/invoices', action: 'Buka tagihan pelanggan' },
+  draftInvoices: { label: 'Invoice draft menunggu', department: 'Invoicing', icon: FilePenLine, href: '/accounting/invoices?status=DRAFT', action: 'Periksa draft invoice' },
 };
 
 type Overview = { asOf: string; role: string; counts: Record<string, number>; tasks: WorkItem[] };
@@ -50,6 +50,9 @@ export default function OperationalOverview({ identity }: { identity: string }) 
   useEffect(() => { setData(null); void load(); }, [identity]);
   useDataRefresh(load);
 
+  const categoryFor = (key: string) => key === 'receipts' && data?.role === 'PROCUREMENT'
+    ? { ...categories.receipts, href: '/purchase/orders', action: 'Pantau pesanan pembelian' }
+    : categories[key];
   const allowed = (href: string) => NAVIGATION_GROUPS.some(g => g.items.some(i => i.href === href.split('?')[0] && i.roles.includes(data?.role || '')));
   const visibleTasks = data?.tasks.filter(t => allowed(t.href) && (!urgentOnly || t.priority === 'HIGH')) || [];
 
@@ -68,8 +71,8 @@ export default function OperationalOverview({ identity }: { identity: string }) 
       {error && <p role="alert" className="text-sm text-rose-800 bg-rose-50 p-3 rounded-xl">{error}{data ? ' Data terakhir tetap ditampilkan.' : ''}</p>}
       {!data && !error ? <p role="status" className="text-sm text-slate-600">Memuat prioritas pekerjaan…</p> : data && <>
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
-          {Object.entries(data.counts).filter(([key]) => categories[key] && allowed(key === 'lowStockLocations' && data.role === 'CASHIER' ? '/pos' : categories[key].href)).filter(([,value]) => showAllCounts || value > 0).sort((a, b) => Number(b[1] > 0) - Number(a[1] > 0)).map(([key, value]) => {
-            const category = categories[key] || { label: key, department: 'Operasional', icon: ClipboardList, href: '/', action: 'Buka ruang kerja' };
+          {Object.entries(data.counts).filter(([key]) => categoryFor(key) && allowed(key === 'lowStockLocations' && data.role === 'CASHIER' ? '/pos' : categoryFor(key).href)).filter(([,value]) => showAllCounts || value > 0).sort((a, b) => Number(b[1] > 0) - Number(a[1] > 0)).map(([key, value]) => {
+            const category = categoryFor(key) || { label: key, department: 'Operasional', icon: ClipboardList, href: '/', action: 'Buka ruang kerja' };
             const Icon = category.icon;
             const isCashierStock = key === 'lowStockLocations' && data.role === 'CASHIER';
             const action = isCashierStock ? 'Periksa stok kasir' : category.action;
@@ -111,7 +114,7 @@ export default function OperationalOverview({ identity }: { identity: string }) 
               <ArrowUpRight className="w-4 h-4 text-slate-500 shrink-0 mt-1" aria-hidden="true" />
             </Link>
           ))}
-          {urgentOnly && !data.tasks.some(t => t.priority === 'HIGH') && <p className="py-4 text-sm text-slate-600">Tidak ada tindak lanjut berprioritas tinggi saat ini.</p>}
+          {urgentOnly && !visibleTasks.length && <p className="py-4 text-sm text-slate-600">Tidak ada tindak lanjut berprioritas tinggi saat ini.</p>}
           {!urgentOnly && !visibleTasks.length && <p className="flex gap-2 items-center text-sm text-emerald-800 py-4"><CircleCheck className="w-5 h-5" aria-hidden="true" />Tidak ada tindak lanjut terdeteksi dari pemeriksaan saat ini.</p>}
         </div>
         <div className="flex flex-wrap justify-between items-center gap-3 text-xs text-slate-600">
