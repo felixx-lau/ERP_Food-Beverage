@@ -8,7 +8,7 @@ export default function NavigationSearch({ role }: { role?: string }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   useEffect(() => { const key = (e: KeyboardEvent) => { if ((e.metaKey || e.ctrlKey) && e.key === "k") { e.preventDefault(); setOpen(o => !o); } }; document.addEventListener("keydown", key); return () => document.removeEventListener("keydown", key); }, []);
-  const results = NAVIGATION_GROUPS.flatMap(g => g.items.map(i => ({ ...i, group: g.group }))).filter(i => i.roles.includes(role || "") && `${i.name} ${i.group}`.toLowerCase().includes(query.toLowerCase()));
+  const results = NAVIGATION_GROUPS.flatMap(g => g.items.map(i => ({ ...i, group: g.group }))).filter(i => i.roles.includes(role || "") && `${i.name} ${i.group} ${i.keywords || ""}`.toLowerCase().includes(query.trim().toLowerCase()));
   return <>
     <button onClick={() => { setQuery(""); setOpen(true); }} className="flex items-center gap-2 text-slate-500 hover:text-blue-700 rounded-lg p-2 xl:px-3 xl:bg-slate-50 xl:border xl:border-slate-200" aria-label="Cari halaman (Ctrl atau Command K)"><Search className="w-[18px] h-[18px]" /><span className="hidden xl:inline text-xs">Cari halaman…</span><kbd className="hidden xl:inline text-[10px] border border-slate-200 rounded px-1.5 ml-5">⌘ K</kbd></button>
     {open && <DialogFrame onClose={() => setOpen(false)} label="Cari halaman"><div className="bg-white w-full max-w-xl overflow-hidden">

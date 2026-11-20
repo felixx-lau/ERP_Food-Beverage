@@ -150,7 +150,7 @@ export default function ManageTeamModal({
               }`}
             >
               <UserPlus className="w-3.5 h-3.5" />
-              <span>+ Tambah Anggota</span>
+              <span>Tambah Anggota</span>
             </button>
           </div>
           <button

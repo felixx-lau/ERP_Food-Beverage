@@ -122,6 +122,16 @@ export default function AppLayout({
     : <p role="status" className="p-8">Memuat akun…</p>;
   if (!pageAllowed) return <div className="p-8 space-y-4"><h1 className="text-xl font-semibold">Halaman tidak tersedia untuk akun ini</h1><a className="btn-primary" href="/">Kembali ke beranda</a></div>;
 
+  const section = NAVIGATION_GROUPS.find(group => group.items.some(item => item.href === pathname));
+  const currentPage = section?.items.find(item => item.href === pathname);
+  const sectionLink = breadcrumbs?.[0]?.href;
+  const sectionHref = section?.items.find(item =>
+    item.href === sectionLink && item.href !== pathname && item.roles.includes(user.role)
+  )?.href;
+  const navigationPath = section && currentPage && pathname !== "/"
+    ? [{ label: section.group, href: sectionHref }, { label: currentPage.name }]
+    : breadcrumbs || (title ? [{ label: title }] : undefined);
+
   return (
     <div className="app-shell min-h-screen flex">
       <a href="#main-content" className="skip-link">Lewati navigasi</a>
@@ -148,7 +158,7 @@ export default function AppLayout({
           onOpenAuditDrawer={() => setAuditDrawerOpen(true)}
           onOpenAppSwitcher={() => setAppSwitcherOpen(true)}
           onToggleMobileSidebar={() => setIsOpenMobile(!isOpenMobile)}
-          breadcrumbs={breadcrumbs || (title ? [{label:title}] : undefined)}
+          breadcrumbs={navigationPath}
         />
 
         {/* Content Body */}

@@ -615,7 +615,7 @@ export default function PointOfSalePage() {
                     className="px-3 py-1.5 btn-glass-primary rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 shrink-0 focus-brand-ring"
                   >
                     <Plus className="w-3.5 h-3.5 text-[#7c3aed]" />
-                    <span>+ Ketik Menu</span>
+                    <span>Ketik Menu</span>
                   </button>
                 </div>
               </div>
@@ -762,7 +762,7 @@ export default function PointOfSalePage() {
                     className="text-[11px] font-semibold text-[#1d4ed8] bg-[#1d4ed8]/10 hover:bg-[#1d4ed8]/20 px-2.5 py-1 rounded-lg transition-colors flex items-center space-x-1 focus-brand-ring"
                   >
                     <Plus className="w-3 h-3" />
-                    <span>+ Ketik Manual</span>
+                    <span>Ketik Manual</span>
                   </button>
                   {cart.length > 0 && (
                     <button

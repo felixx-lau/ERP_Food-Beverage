@@ -293,7 +293,7 @@ export default function CreateSalesOrderModal({
                 className="text-sm font-semibold text-blue-700 flex items-center gap-1 shrink-0"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>+ Tambah Baris</span>
+                <span>Tambah Baris</span>
               </button>
             </div>
 

@@ -104,8 +104,8 @@ export default function Topbar({
             {/* App Switcher Button */}
             <button
               onClick={onOpenAppSwitcher}
-              aria-label="Buka Hub Aplikasi (App Switcher)"
-              title="Hub Aplikasi (▦ Apps)"
+              aria-label="Buka daftar modul"
+              title="Daftar modul"
               className="hidden sm:flex items-center justify-center w-8 h-8 rounded-lg bg-transparent hover:bg-slate-100/80 transition-colors text-slate-500 hover:text-slate-800 border-0 shadow-none focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none"
             >
               <LayoutGrid className="w-4 h-4" aria-hidden="true" />
@@ -193,7 +193,7 @@ export default function Topbar({
                       className="w-full py-2 px-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:from-blue-800 active:to-indigo-800 text-white rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 transition-all shadow-xs focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none"
                     >
                       <UserPlus className="w-3.5 h-3.5 text-violet-200" aria-hidden="true" />
-                      <span>+ Tambah / Kelola Anggota Tim</span>
+                      <span>Kelola anggota tim</span>
                     </button>
 
                     {/* Developer/Demo Tool: Reset Seed with confirmation dialog */}
