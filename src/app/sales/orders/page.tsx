@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import DocumentControls from "@/components/DocumentControls";
 import DocumentList from "@/components/DocumentList";
 import { discountApprovalLabel } from "@/lib/uxFlows";
+import { DISCOUNT_APPROVAL_LIMIT, mayViewQuotationMargin } from "@/lib/discountPolicy";
 import DocumentTrail from "@/components/DocumentTrail";
 import AppLayout from "@/components/AppLayout";
 import StatusBadge from "@/components/StatusBadge";
@@ -146,60 +147,7 @@ export default function SalesOrdersPage() {
     }
   };
 
-  // Run Test T-10
-  const runTestT10 = async () => {
-    setTesting(true);
-    try {
-      await handleSwitchRole("SALES");
 
-      const resCreate = await fetch("/api/sales/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contactId: "C01",
-          lines: [{ productSku: "RICE-CHICK-S", quantity: 2, unitPrice: 48000, discountPercent: 20 }],
-        }),
-      });
-      const dataCreate = await resCreate.json();
-      const orderId = dataCreate.order.id;
-
-      const resConfirmBlocked = await fetch(`/api/sales/orders/${orderId}/confirm`, {
-        method: "POST",
-      });
-      const dataBlocked = await resConfirmBlocked.json();
-      const blockedOk = resConfirmBlocked.status === 400 && dataBlocked.error.includes("Persetujuan Diperlukan");
-
-      await handleSwitchRole("HEAD_ADMIN");
-      await fetch(`/api/sales/orders/${orderId}/approve-discount`, { method: "POST" });
-
-      const resConfirmOk = await fetch(`/api/sales/orders/${orderId}/confirm`, { method: "POST" });
-      const dataConfirmOk = await resConfirmOk.json();
-
-      const resEditBlocked = await fetch(`/api/sales/orders/${orderId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          lineId: dataConfirmOk.confirmedOrder.lines[0].id,
-          unitPrice: 55000,
-        }),
-      });
-      const dataEditBlocked = await resEditBlocked.json();
-      const priceLockOk = resEditBlocked.status === 400 && dataEditBlocked.error.includes("dikunci");
-
-      setTestResult({
-        id: "T-10",
-        name: "Aturan / Edge Case: Diskon 20% & Price Lock (SR-07 / SR-08 / F-06)",
-        status: blockedOk && resConfirmOk.ok && priceLockOk ? "PASS" : "FAIL",
-        expected: "Diskon 20% butuh persetujuan Owner. Setelah Confirmed, harga dan diskon dikunci (price lock).",
-        actual: `Penolakan approval: "${dataBlocked.error}". Setelah disetujui Owner, SO Confirmed. Percobaan ubah harga: HTTP ${resEditBlocked.status} "${dataEditBlocked.error}".`,
-      });
-
-      await fetchOrders();
-      await fetchOrderDetail(orderId);
-    } finally {
-      setTesting(false);
-    }
-  };
 
   return (
     <AppLayout
@@ -239,7 +187,7 @@ export default function SalesOrdersPage() {
         Diskon menunggu persetujuan
       </label>
       <DocumentList loading={loading} records={pendingApprovalsOnly
-        ? orders.filter(order => order.status === 'DRAFT' && order.discountPercent > 10 && !order.discountApproved)
+        ? orders.filter(order => order.status === 'DRAFT' && order.discountPercent > DISCOUNT_APPROVAL_LIMIT && order.discountApprovalStatus === 'PENDING')
         : orders} selectedId={selectedOrder?.id} onClearSelection={()=>setSelectedOrder(null)} onSelect={fetchOrderDetail}/>
 
 
@@ -307,11 +255,33 @@ export default function SalesOrdersPage() {
               <p className="text-sm font-bold text-slate-900 mt-0.5">
                 Maks Diskon: {selectedOrder.discountPercent}%
               </p>
-              <span className={`text-[11px] font-bold ${selectedOrder.discountPercent <= 10 || selectedOrder.discountApproved ? "text-emerald-800" : "text-amber-800"}`}>
+              <span className={`text-[11px] font-bold ${selectedOrder.discountPercent <= DISCOUNT_APPROVAL_LIMIT || selectedOrder.discountApproved ? "text-emerald-800" : "text-amber-800"}`}>
                 {discountApprovalLabel(selectedOrder)}
               </span>
+              {selectedOrder.discountApprovalReason && <p className="mt-1 text-xs text-slate-700">
+                {selectedOrder.discountApprovalReason}
+                {selectedOrder.discountApprovalAt && <> · {new Date(selectedOrder.discountApprovalAt).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })} WIB</>}
+              </p>}
+              {selectedOrder.isPriceLocked && <p className="mt-1 text-xs text-slate-700">Harga dan diskon terkunci</p>}
             </div>
           </div>
+
+          {mayViewQuotationMargin(user?.role) && typeof selectedOrder.projectedCost === 'number' && (() => {
+            const net = selectedOrder.subtotalNet;
+            const cost = selectedOrder.projectedCost;
+            const profit = net - cost;
+            return <dl className="grid grid-cols-2 gap-3 border-y border-slate-200 px-6 py-4 sm:grid-cols-4">
+              {[
+                ['Penjualan neto', `Rp ${net.toLocaleString('id-ID')}`],
+                ['HPP', `Rp ${cost.toLocaleString('id-ID')}`],
+                ['Laba kotor', `Rp ${profit.toLocaleString('id-ID')}`],
+                ['Margin kotor', net ? `${(profit / net * 100).toLocaleString('id-ID', { maximumFractionDigits: 2 })}%` : '—'],
+              ].map(([title, value]) => <div key={title}>
+                <dt className="text-xs text-slate-600">{title}</dt>
+                <dd className="text-sm font-semibold text-slate-900">{value}</dd>
+              </div>)}
+            </dl>;
+          })()}
 
           {/* Lines Table */}
           <div className="p-6 space-y-4">
@@ -329,7 +299,7 @@ export default function SalesOrdersPage() {
                   <tr>
                     <th scope="col" className="px-6 py-3.5">SKU Varian & Nama Produk</th>
                     <th scope="col" className="px-6 py-3.5 text-right">Kuantitas</th>
-                    <th scope="col" className="px-6 py-3.5 text-right">Harga Satuan</th>
+                    <th scope="col" className="px-6 py-3.5 text-right">Harga Satuan Awal</th>
                     <th scope="col" className="px-6 py-3.5 text-right">Diskon %</th>
                     <th scope="col" className="px-6 py-3.5 text-right">Net Subtotal</th>
                     <th scope="col" className="px-6 py-3.5 text-right">PBJT (10%)</th>
@@ -410,14 +380,7 @@ export default function SalesOrdersPage() {
                 <Play className="w-3.5 h-3.5" />
                 <span>Jalankan T-09</span>
               </button>
-              <button
-                onClick={runTestT10}
-                disabled={testing}
-                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-rose-600 hover:bg-rose-500 text-white flex items-center space-x-1.5 shadow-xs transition-all"
-              >
-                <Play className="w-3.5 h-3.5" />
-                <span>Jalankan T-10</span>
-              </button>
+              <span className="text-xs text-slate-300">T-10 melalui npm test</span>
             </div>
           </div>
 

@@ -3,6 +3,7 @@ import ActionButton from "./ui/ActionButton";
 import DialogFrame from "./ui/DialogFrame";
 import {publishDataRefresh} from "./ui/useDataRefresh";
 import { productChoiceLabel, resolveProductChoice } from "@/lib/productChoice";
+import { purchasePriceLabel, suggestedPurchasePrice, type VendorPriceTier } from "@/lib/purchasePricing";
 
 import React, { useState, useEffect, useMemo, useRef, useId } from "react";
 import { ShoppingBag, Plus, X, Check, Building } from "lucide-react";
@@ -12,6 +13,7 @@ interface POLineItem {
   productName: string;
   orderedQty: number;
   unitPrice: number;
+  priceSource?: "VENDOR" | "COST" | "MANUAL";
 }
 
 interface CreatePurchaseOrderModalProps {
@@ -26,7 +28,7 @@ export default function CreatePurchaseOrderModal({
   onOrderCreated,
 }: CreatePurchaseOrderModalProps) {
   const [vendors, setVendors] = useState<any[]>([]);
-  const [vendorPrices, setVendorPrices] = useState<any[]>([]);
+  const [vendorPrices, setVendorPrices] = useState<VendorPriceTier[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [selectedVendorId, setSelectedVendorId] = useState("");
   const [lines, setLines] = useState<POLineItem[]>([]);
@@ -60,8 +62,14 @@ export default function CreatePurchaseOrderModal({
     return () => { active = false; };
   }, [isOpen]);
 
-  const priceFor = (sku: string, qty: number, vendorId: string) => vendorPrices.filter(p=>!p.archivedAt&&p.vendorId===vendorId&&p.productSku===sku&&p.minimumQty<=qty).sort((a,b)=>b.minimumQty-a.minimumQty)[0]?.price ?? products.find(p=>p.sku===sku)?.standardCost ?? 0;
-  useEffect(()=>{if(selectedVendorId) setLines(current=>current.map(line=>({...line,unitPrice:priceFor(line.productSku,line.orderedQty,selectedVendorId)})));},[selectedVendorId,vendorPrices]);
+  const priceFor = (sku: string, qty: number, vendorId = selectedVendorId) => {
+    const price = suggestedPurchasePrice(vendorPrices, vendorId, sku, qty, products.find(p => p.sku === sku)?.standardCost ?? 0);
+    return { unitPrice: price.amount, priceSource: price.source };
+  };
+  const selectVendor = (vendorId: string) => {
+    setSelectedVendorId(vendorId);
+    setLines(current => current.map(line => ({ ...line, ...priceFor(line.productSku, line.orderedQty, vendorId) })));
+  };
   const totalAmount = useMemo(() => {
     return lines.reduce((sum, item) => sum + item.orderedQty * item.unitPrice, 0);
   }, [lines]);
@@ -97,10 +105,11 @@ export default function CreatePurchaseOrderModal({
       if (match) {
         cur.productSku = match.sku;
         cur.productName = productChoiceLabel(match);
-        cur.unitPrice = priceFor(match.sku,cur.orderedQty,selectedVendorId);
+        Object.assign(cur, priceFor(match.sku, cur.orderedQty));
       } else {
         cur.productSku = "";
         cur.unitPrice = 0;
+        cur.priceSource = undefined;
       }
 
       updated[index] = cur;
@@ -115,9 +124,10 @@ export default function CreatePurchaseOrderModal({
 
       if (field === "orderedQty") {
         cur.orderedQty = Math.max(1, Number(val) || 1);
-        cur.unitPrice = priceFor(cur.productSku,cur.orderedQty,selectedVendorId);
+        Object.assign(cur, priceFor(cur.productSku, cur.orderedQty));
       } else if (field === "unitPrice") {
         cur.unitPrice = Math.max(0, Number(val) || 0);
+        cur.priceSource = "MANUAL";
       }
 
       updated[index] = cur;
@@ -162,7 +172,7 @@ export default function CreatePurchaseOrderModal({
             productSku: l.productSku || l.productName,
             productName: l.productName || l.productSku,
             orderedQty: Number(l.orderedQty),
-            unitPrice: Number(l.unitPrice),
+            unitPrice: l.priceSource === "MANUAL" ? l.unitPrice : undefined,
           })),
         }),
       });
@@ -242,7 +252,7 @@ export default function CreatePurchaseOrderModal({
             <select id={`${formId}-party`}
               required disabled={catalogLoading}
               value={selectedVendorId}
-              onChange={(e) => setSelectedVendorId(e.target.value)}
+              onChange={(e) => selectVendor(e.target.value)}
               className="w-full text-xs px-3.5 py-2.5 input-glass rounded-xl font-semibold text-slate-900"
             >
               <option value="">Pilih vendor…</option>
@@ -324,6 +334,7 @@ export default function CreatePurchaseOrderModal({
                       onChange={(e) => handleLineChange(idx, "unitPrice", e.target.value)}
                       className="w-full text-xs px-2.5 py-1.5 border border-slate-200 rounded-lg bg-white font-mono focus:ring-1 focus:ring-[#1d4ed8]"
                     />
+                    {line.productSku && selectedVendorId && <p className="mt-1 text-xs text-slate-600">{purchasePriceLabel(line.priceSource)}</p>}
                   </div>
 
                   <div className="sm:col-span-2 flex justify-end">

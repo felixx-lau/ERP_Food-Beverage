@@ -9,7 +9,7 @@ import CreateProductModal from '@/components/CreateProductModal';
 import CreateContactModal from '@/components/CreateContactModal';
 import CreateSalesOrderModal from '@/components/CreateSalesOrderModal';
 import CreatePurchaseOrderModal from '@/components/CreatePurchaseOrderModal';
-import { ModuleDirectory } from '@/components/AppSwitcherModal';
+import { ModuleDirectory, OwnerModuleCards } from '@/components/AppSwitcherModal';
 import { useCompany } from '@/context/CompanyContext';
 import { publishDataRefresh } from '@/components/ui/useDataRefresh';
 
@@ -41,8 +41,12 @@ export default function HomePage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"><div><h2 className="text-xl font-semibold">Selamat datang, {user?.name?.split(' ')[0]||'Pengguna'}.</h2><p className="text-sm text-slate-600 mt-2 max-w-2xl">{workspace.hint}</p></div><Link className="btn-primary self-start shrink-0" href={workspace.href}>{workspace.label}<ArrowRight className="w-4 h-4" aria-hidden="true"/></Link></div>
       {actions.length>0&&<div><h3 className="text-sm font-semibold mb-3">Mulai pekerjaan</h3><div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-3">{actions.map(a=><button key={a.key} onClick={()=>setModal(a.key)} className="rounded-xl border border-slate-200 p-4 text-left hover:bg-indigo-50 hover:border-indigo-200 focus-visible:outline-indigo-600"><a.icon className="w-5 h-5 text-indigo-600 mb-3" aria-hidden="true"/><span className="block text-sm font-semibold">{a.label}</span><span className="block text-xs text-slate-500 mt-1">{a.hint}</span></button>)}</div></div>}
     </section>
+    {user?.role === "OWNER" && <section className="surface-card space-y-4 p-5">
+      <h2 className="text-lg font-semibold">Aplikasi ERP</h2>
+      <OwnerModuleCards role={user.role} />
+    </section>}
     {user && <OperationalOverview identity={`${user.id}:${user.role}`}/>}
-    <details open={user?.role === "OWNER" || undefined} className="surface-card p-5"><summary className="cursor-pointer font-semibold text-sm">Lihat semua modul yang tersedia</summary><div className="mt-4"><ModuleDirectory role={user?.role} /></div></details>
+    <details className="surface-card p-5"><summary className="cursor-pointer font-semibold text-sm">Lihat semua halaman yang tersedia</summary><div className="mt-4"><ModuleDirectory role={user?.role} /></div></details>
     <CreateProductModal isOpen={modal==='product'} onClose={()=>setModal('')} onProductCreated={()=>saved('/master/products',null)}/>
     <CreateContactModal isOpen={modal==='contact'} onClose={()=>setModal('')} defaultType={user?.role==='PROCUREMENT'?'VENDOR':'CUSTOMER'} onContactCreated={record=>saved('/sales/contacts?type='+(user?.role==='PROCUREMENT'?'vendors':'customers'),null)}/>
     <CreateSalesOrderModal isOpen={modal==='sale'} onClose={()=>setModal('')} onOrderCreated={record=>saved('/sales/orders',record)}/>

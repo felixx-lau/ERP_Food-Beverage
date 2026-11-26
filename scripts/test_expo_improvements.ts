@@ -176,13 +176,14 @@ async function main() {
     contactId: customer.id, lines: [{ productSku: 'AUDIT-ALLOCATION', quantity: 1, unitPrice: 10000, discountPercent: 20 }], actor: owner,
   });
   assert((await worklist(companyOwner)).tasks.some(task => task.id === discount.id && task.href === `/sales/orders?id=${discount.id}`));
-  await approveOrderDiscount(discount.id, owner);
+  await assert.rejects(approveOrderDiscount(discount.id, owner, "Uji izin"), /Hanya Owner/);
+  await approveOrderDiscount(discount.id, companyOwner, "Dampak margin telah dievaluasi");
   assert(!(await worklist(companyOwner)).tasks.some(task => task.id === discount.id));
   const approved = await salesOrderDetail(await requestFor(companyOwner, `/api/sales/orders/${discount.id}`), { params: Promise.resolve({ id: discount.id }) });
   assert.equal(approved.status, 200);
   const approvedOrder = (await approved.json()).order;
-  assert.equal(approvedOrder.discountApprovedBy, owner.name);
-  assert.equal(approvedOrder.discountApprovalRole, 'HEAD_ADMIN');
+  assert.equal(approvedOrder.discountApprovedBy, companyOwner.name);
+  assert.equal(approvedOrder.discountApprovalRole, 'OWNER');
   observed("Role-specific handoffs navigate to invoice creation or draft, PO monitoring, and Owner discount approval", "PASS", "Authorized deep links and actual approval role", "Verified through authenticated routes");
   const income=await db.account.findFirstOrThrow({where:{type:"INCOME"}}),asset=await db.account.findFirstOrThrow({where:{type:"ASSET"}});
   for(const [suffix,date,amount,state] of [["inside","2026-02-01T00:30:00+07:00",123456,"POSTED"],["outside","2026-01-31T23:30:00+07:00",222222,"POSTED"],["draft","2026-02-01T01:30:00+07:00",333333,"DRAFT"]] as const) await db.journalEntry.create({data:{entryNumber:`EXPO-${suffix}`,documentRef:`EXPO-${suffix}`,sourceDocument:"EXPO",journalType:"GENERAL",state,date:new Date(date),items:{create:[{accountCode:income.code,label:"test",credit:amount},{accountCode:asset.code,label:"test",debit:amount}]}}});

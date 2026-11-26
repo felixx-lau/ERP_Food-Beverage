@@ -6,6 +6,8 @@
 
 **Pembaruan F&B 17 November 2026:** resep/BoM, produksi, batch FEFO, waste, pengajuan stok minimum, KDS/QR ordering, penugasan outlet kasir, neraca dan arus kas tersedia. Lihat [panduan fitur, data PDF dan batasan](docs/ux/FITUR_FNB_LANJUTAN_2026-11-17.md). Akun baseline PDF tetap enam; role tambahan KITCHEN dibuat lewat Kelola Tim.
 
+**Demo penilaian:** jalankan `python3 scripts/prepare_grading_demo.py` untuk membuat database demo terpisah yang berisi baseline PDF. Lihat [panduan demo](docs/reports/final-remediation/DEMO_WALKTHROUGH.md), [laporan remediasi](docs/reports/final-remediation/AUDIT_REMEDIATION_REPORT.md), dan [Decision Log](docs/reports/DECISION_LOG.md).
+
 ---
 
 ## 1. Ringkasan Proyek
@@ -198,7 +200,7 @@ Aplikasi memiliki 8 modul inti yang dapat diakses melalui Home App Switcher:
 ## 7. Catatan Penggunaan Alat Bantu AI (AI Disclosure)
 
 Sesuai ketentuan Bagian 13 Dokumen Tugas (*Integritas Akademik & Penggunaan AI*):
-* **Alat AI yang Digunakan:** Antigravity (Advanced Agentic AI Assistant berbasis Google DeepMind).
+* **Alat AI yang Digunakan:** Antigravity untuk implementasi awal. Codex membantu audit 25 November 2026, perubahan remediasi, pengujian lokal, dan dokumentasi bukti.
 * **Peran AI:** Pembuatan boilerplate antarmuka Odoo 17, skema Prisma ORM, penyusunan fungsi pembukuan berpasangan (*double-entry balancing*), dan otomasi script verifikasi *Given/When/Then*.
 * **Telaah & Kontrol Rekayasa Manusia:** Seluruh logika bisnis (*business rules* `SR-01` s.d. `SR-20`), penyelesaian konflik di [docs/reports/DECISION_LOG.md](./docs/reports/DECISION_LOG.md), penolakan stok negatif, Three-Way Matching engine, dan perhitungan pajak daerah PBJT 10% telah ditelaah, diuji, dan diverifikasi secara manual oleh tim mahasiswa untuk memastikan sistem tidak terjebak dalam *AI-generated traps* (seperti bypass validasi kredit atau manipulasi jurnal otomatis).
 

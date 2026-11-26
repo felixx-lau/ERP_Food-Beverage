@@ -6,7 +6,7 @@ assert.equal(contactView('vendors','SALES'),'vendors');
 assert.equal(contactView('unknown','SALES'),'customers');
 const documentNextStep = (kind: string, record: any) => documentNextSteps(kind, record)[0] ?? null;
 const draft=documentNextStep('sales',{status:'DRAFT',discountPercent:20,discountApproved:false});
-assert(draft?.owner?.includes('Head Admin'));assert(!draft.href);
+assert.equal(draft?.owner,'Owner');assert(!draft.href);
 const confirmed=documentNextStep('sales',{status:'CONFIRMED'});
 assert.equal(confirmed?.href,'/inventory/delivery');assert(!confirmed.roles?.includes('SALES'));assert(confirmed.roles?.includes('WAREHOUSE'));
 const purchase=documentNextStep('purchase',{status:'CONFIRMED'});

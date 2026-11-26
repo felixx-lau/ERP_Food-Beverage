@@ -476,6 +476,8 @@ export default function PointOfSalePage() {
     <AppLayout
       currentUser={currentUser}
       onSwitchRole={handleSwitchRole}
+      title={currentUser?.role === "OWNER" ? "Point of Sale" : undefined}
+      subtitle={currentUser?.role === "OWNER" ? "Pantau transaksi kasir dan buka struk yang tersimpan." : undefined}
       breadcrumbs={[
         { label: "Point of Sale", href: "/pos" },
         { label: "Kasir POS CAFE-JKT (S-14)" },

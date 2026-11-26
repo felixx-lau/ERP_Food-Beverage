@@ -1,3 +1,5 @@
+import { discountApproval, getDiscountDecisions } from './discountApproval';
+import { DISCOUNT_APPROVAL_LIMIT } from './discountPolicy';
 import type { PrismaClient } from '@prisma/client';
 import type { SessionUser } from './auth';
 import { permit } from './validation';
@@ -81,9 +83,19 @@ export async function operationalOverview(db: PrismaClient, user: Pick<SessionUs
     for(const r of await db.customerInvoice.findMany({where:{status:'DRAFT'},orderBy:{invoiceDate:'asc'},take:4}))tasks.push({id:r.id,department:'Finance',title:`Periksa draft ${r.invoiceNumber}`,reason:'Invoice belum diposting. Cocokkan pengiriman, pajak dan jumlah sebelum posting.',href:`/accounting/invoices?id=${encodeURIComponent(r.id)}`,priority:'NORMAL'});
   }
   if (['HEAD_ADMIN','SALES','OWNER'].includes(user.role)) {
-    const where={status:'DRAFT' as const,discountPercent:{gt:10},discountApproved:false};
-    counts.discountApprovals=await db.salesOrder.count({where});
-    for(const r of await db.salesOrder.findMany({where,orderBy:{orderDate:'asc'},take:4})) tasks.push({id:r.id,department:'Sales → Owner / Head Admin',title:`${user.role === 'SALES' ? 'Pantau' : 'Tinjau'} diskon ${r.orderNumber}`,reason:`Diskon ${r.discountPercent}% menunggu persetujuan Owner atau Head Admin sebelum konfirmasi.`,href:`/sales/orders?id=${encodeURIComponent(r.id)}`,priority:'NORMAL'});
+    const drafts = await db.salesOrder.findMany({
+      where: { status: 'DRAFT', discountPercent: { gt: DISCOUNT_APPROVAL_LIMIT } },
+      select: { id:true, orderNumber:true, status:true, version:true, discountPercent:true, discountApproved:true, discountApprovedBy:true },
+      orderBy: { orderDate: 'asc' },
+    });
+    const decisions = await getDiscountDecisions(db, drafts);
+    const pending = drafts.filter(order => discountApproval(order, decisions).discountApprovalStatus === 'PENDING');
+    counts.discountApprovals = pending.length;
+    for (const order of pending.slice(0, 4)) tasks.push({
+      id:order.id, department:'Sales → Owner', title:`Tinjau diskon ${order.orderNumber}`,
+      reason:`Diskon ${order.discountPercent}% menunggu persetujuan Owner sebelum konfirmasi.`,
+      href:`/sales/orders?id=${encodeURIComponent(order.id)}`, priority:'NORMAL',
+    });
   }
   if (['HEAD_ADMIN','WAREHOUSE','PROCUREMENT','CASHIER'].includes(user.role)) {
     const assignments=user.role==='CASHIER'?await db.outletAccess.findMany({where:{userId:user.id}}):[];

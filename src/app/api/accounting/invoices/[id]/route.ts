@@ -1,3 +1,4 @@
+import { quotationForRole } from '@/lib/discountApproval';
 import { authorizeApi } from "@/lib/apiAuthorization";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -33,7 +34,9 @@ export async function GET(
       return NextResponse.json({ error: "Customer Invoice tidak ditemukan." }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, invoice });
+    return NextResponse.json({ success: true, invoice: {
+      ...invoice, salesOrder: quotationForRole(invoice.salesOrder, user.role),
+    } });
   } catch (error) {
     console.error("Fetch invoice detail error:", error);
     return NextResponse.json({ error: "Failed to fetch invoice detail" }, { status: 500 });

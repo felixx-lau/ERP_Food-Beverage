@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { createSalesQuotation } from "@/lib/salesEngine";
+import { getDiscountDecisions, presentQuotation } from "@/lib/discountApproval";
 
 export async function GET(request: NextRequest) {
   const accessDenied = await authorizeApi(request);
@@ -23,7 +24,8 @@ export async function GET(request: NextRequest) {
       orderBy: { orderDate: "desc" },
     });
 
-    return NextResponse.json({ success: true, orders });
+    const decisions = await getDiscountDecisions(prisma, orders);
+    return NextResponse.json({ success: true, orders: orders.map(order => presentQuotation(order, user.role, decisions)) });
   } catch (error) {
     console.error("Fetch orders error:", error);
     return NextResponse.json({ error: "Failed to fetch orders" }, { status: 500 });

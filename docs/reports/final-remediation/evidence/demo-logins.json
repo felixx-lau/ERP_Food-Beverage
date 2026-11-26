@@ -1,0 +1,26 @@
+[
+  {
+    "role": "OWNER",
+    "status": 200
+  },
+  {
+    "role": "SALES",
+    "status": 200
+  },
+  {
+    "role": "PROCUREMENT",
+    "status": 200
+  },
+  {
+    "role": "WAREHOUSE",
+    "status": 200
+  },
+  {
+    "role": "FINANCE",
+    "status": 200
+  },
+  {
+    "role": "CASHIER",
+    "status": 200
+  }
+]

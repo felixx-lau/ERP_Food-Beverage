@@ -1,3 +1,4 @@
+import { quotationForRole } from '@/lib/discountApproval';
 import { authorizeApi } from "@/lib/apiAuthorization";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -23,7 +24,9 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json({ success: true, deliveries });
+    return NextResponse.json({ success: true, deliveries: deliveries.map(delivery => ({
+      ...delivery, salesOrder: quotationForRole(delivery.salesOrder, user.role),
+    })) });
   } catch (error) {
     console.error("Fetch deliveries error:", error);
     return NextResponse.json({ error: "Failed to fetch deliveries" }, { status: 500 });

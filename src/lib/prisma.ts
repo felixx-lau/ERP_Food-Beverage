@@ -28,22 +28,12 @@ export async function getActiveCompanyId(): Promise<string> {
 
 export function resolveDbFilePath(rawPath: string): string {
   const clean = rawPath.replace(/^file:/, "");
-  if (path.isAbsolute(clean) && fs.existsSync(clean)) {
-    return clean;
-  }
   const prismaDir = getPrismaDir();
-  const candidatePrismaRelative = path.join(prismaDir, clean);
-  if (fs.existsSync(candidatePrismaRelative)) {
-    return candidatePrismaRelative;
-  }
-  const candidatePrismaBasename = path.join(prismaDir, path.basename(clean));
-  if (fs.existsSync(candidatePrismaBasename)) {
-    return candidatePrismaBasename;
-  }
-  const candidateDirect = path.resolve(clean);
-  if (fs.existsSync(candidateDirect)) {
-    return candidateDirect;
-  }
+  const relative = path.normalize(clean);
+  const candidate = path.isAbsolute(clean) ? clean
+    : relative.startsWith(`prisma${path.sep}`) ? path.resolve(path.dirname(prismaDir), relative)
+    : path.resolve(prismaDir, relative);
+  if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) return fs.realpathSync(candidate);
   throw new Error(`Database tidak ditemukan: ${path.basename(clean)}. Tidak beralih ke perusahaan lain.`);
 }
 

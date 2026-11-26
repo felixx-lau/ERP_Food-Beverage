@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { updateSalesOrderLine } from "@/lib/salesEngine";
 import { availableStock } from "@/lib/stockPolicy";
 import { calculateCustomerCreditStatus } from "@/lib/creditControl";
+import { getDiscountDecisions, presentQuotation } from "@/lib/discountApproval";
 
 export async function GET(
   request: NextRequest,
@@ -59,23 +60,13 @@ export async function GET(
       return NextResponse.json({ success: true, fulfillment });
     }
 
-    const [creditStatus, approval] = await Promise.all([
+    const [creditStatus, decisions] = await Promise.all([
       calculateCustomerCreditStatus(order.contactId),
-      order.discountPercent > 10 && order.discountApproved && order.discountApprovedBy
-        ? prisma.auditLog.findFirst({
-          where: {
-            documentType: 'SO', documentId: order.orderNumber, action: 'APPROVE_DISCOUNT',
-            actorName: order.discountApprovedBy, actorRole: { in: ['OWNER', 'HEAD_ADMIN'] },
-          },
-          orderBy: [{ timestamp: 'desc' }, { id: 'desc' }],
-          select: { actorRole: true },
-        })
-        : null,
+      getDiscountDecisions(prisma, [order]),
     ]);
-
     return NextResponse.json({
       success: true,
-      order: { ...order, discountApprovalRole: approval?.actorRole ?? null },
+      order: presentQuotation(order, user.role, decisions),
       creditStatus,
     });
   } catch (error) {

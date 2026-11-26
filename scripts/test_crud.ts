@@ -119,7 +119,8 @@ async function main(){
     const order = await createQuote();
     assert.equal(order.lead?.stage,'PROPOSITION');
     await assert.rejects(confirmSalesOrder(order.id,sales),/Diskon/);
-    await approveOrderDiscount(order.id,owner);
+    const companyOwner = await prisma.user.findFirstOrThrow({ where: { role:'OWNER' } });
+    await approveOrderDiscount(order.id,companyOwner,'Margin penawaran sudah diperiksa');
     assert.equal((await prisma.crmLead.findUniqueOrThrow({where:{id:lead.id}})).stage,'PROPOSITION');
     await confirmSalesOrder(order.id,sales);
     await confirmSalesOrder(order.id,sales);

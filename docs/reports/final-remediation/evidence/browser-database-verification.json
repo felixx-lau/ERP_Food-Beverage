@@ -1,0 +1,121 @@
+{
+  "journals": [
+    {
+      "entryNumber": "JE/2026/0001",
+      "sourceDocument": "WH/OUT/0007",
+      "documentRef": "DELIVERY_WH/OUT/0007",
+      "debit": 130000.0,
+      "credit": 130000.0
+    },
+    {
+      "entryNumber": "JE/2026/0002",
+      "sourceDocument": "INV/2026/0007",
+      "documentRef": "INV_INV/2026/0007",
+      "debit": 264000.0,
+      "credit": 264000.0
+    },
+    {
+      "entryNumber": "JE/2026/0003",
+      "sourceDocument": "PAY/2026/b2787ad2-3274-4178-a121-7288491e2822",
+      "documentRef": "PAY_PAY/2026/b2787ad2-3274-4178-a121-7288491e2822",
+      "debit": 100000.0,
+      "credit": 100000.0
+    },
+    {
+      "entryNumber": "JE/2026/0004",
+      "sourceDocument": "PAY/2026/beca0452-1894-4e75-9159-7efb59a633eb",
+      "documentRef": "PAY_PAY/2026/beca0452-1894-4e75-9159-7efb59a633eb",
+      "debit": 164000.0,
+      "credit": 164000.0
+    },
+    {
+      "entryNumber": "JE/2026/0005",
+      "sourceDocument": "WH/IN/0007",
+      "documentRef": "GR_WH/IN/0007",
+      "debit": 96000.0,
+      "credit": 96000.0
+    },
+    {
+      "entryNumber": "JE/2026/0006",
+      "sourceDocument": "BILL/2026/0007",
+      "documentRef": "BILL_BILL/2026/0007",
+      "debit": 96000.0,
+      "credit": 96000.0
+    },
+    {
+      "entryNumber": "JE/2026/0007",
+      "sourceDocument": "PAY/2026/df9c6234-0b41-45d0-a889-9b64ff0f12f2",
+      "documentRef": "PAY_PAY/2026/df9c6234-0b41-45d0-a889-9b64ff0f12f2",
+      "debit": 30000.0,
+      "credit": 30000.0
+    },
+    {
+      "entryNumber": "JE/2026/0008",
+      "sourceDocument": "PAY/2026/8ca065d1-a021-4c00-bb46-4e622621fd9d",
+      "documentRef": "PAY_PAY/2026/8ca065d1-a021-4c00-bb46-4e622621fd9d",
+      "debit": 66000.0,
+      "credit": 66000.0
+    },
+    {
+      "entryNumber": "JE/2026/0009",
+      "sourceDocument": "RET/2026/0007",
+      "documentRef": "RET_STOCK_RET/2026/0007",
+      "debit": 26000.0,
+      "credit": 26000.0
+    },
+    {
+      "entryNumber": "JE/2026/0010",
+      "sourceDocument": "RINV/2026/0007",
+      "documentRef": "RINV_RINV/2026/0007",
+      "debit": 52800.0,
+      "credit": 52800.0
+    },
+    {
+      "entryNumber": "JE/2026/0011",
+      "sourceDocument": "POS/2026/0001",
+      "documentRef": "POS_POS/2026/0001",
+      "debit": 121000.0,
+      "credit": 121000.0
+    },
+    {
+      "entryNumber": "JE/OPENING/0001",
+      "sourceDocument": "BASELINE_MIGRATION",
+      "documentRef": "BASELINE_OPENING_2026",
+      "debit": 33714000.0,
+      "credit": 33714000.0
+    }
+  ],
+  "inventoryValuation": 12173000.0,
+  "inventory1030": 12173000.0,
+  "grni1040": 0.0,
+  "payments": [
+    {
+      "scope": "vendor",
+      "amount": 66000.0,
+      "paymentNumber": "PAY/2026/8ca065d1-a021-4c00-bb46-4e622621fd9d"
+    },
+    {
+      "scope": "customer",
+      "amount": 100000.0,
+      "paymentNumber": "PAY/2026/b2787ad2-3274-4178-a121-7288491e2822"
+    },
+    {
+      "scope": "customer",
+      "amount": 164000.0,
+      "paymentNumber": "PAY/2026/beca0452-1894-4e75-9159-7efb59a633eb"
+    },
+    {
+      "scope": "vendor",
+      "amount": 30000.0,
+      "paymentNumber": "PAY/2026/df9c6234-0b41-45d0-a889-9b64ff0f12f2"
+    }
+  ],
+  "cashierGeneralLedgerDenial": [
+    {
+      "actorRole": "CASHIER",
+      "action": "ACCESS_DENIED",
+      "documentId": "/api/accounting/general-ledger",
+      "timestamp": 1795612697768
+    }
+  ]
+}

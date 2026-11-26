@@ -1,0 +1,11 @@
+{
+  "/login": {
+    "status": 200
+  },
+  "/api/auth/me": {
+    "status": 401
+  },
+  "/api/version": {
+    "status": 404
+  }
+}

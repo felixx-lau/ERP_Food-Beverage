@@ -1,11 +1,13 @@
 import { availableStock } from "./stockPolicy";
 import { atomic } from "./atomic";
-import { permit, quantity, money, discount, uniqueLines, editable } from "./validation";
+import { permit, quantity, money, discount, uniqueLines, editable, BusinessError, textValue } from "./validation";
 import { prisma } from "./prisma";
 import { OrderStatus, Role } from "@prisma/client";
 import { validateCreditCheck } from "./creditControl";
 import { AuditedRejection, recordAuditLog } from "./audit";
 import { getNextSequence } from "./sequences";
+import { discountApproval, getDiscountDecisions } from "./discountApproval";
+import { DISCOUNT_APPROVAL_LIMIT } from "./discountPolicy";
 
 export interface LineItemInput {
   productSku: string;
@@ -142,7 +144,7 @@ async function createSalesQuotationImpl(params: {
 
   // Determine initial status based on discount policy (SR-07 / SR-08)
   // Discount > 10% requires Owner approval
-  const needsOwnerApproval = totals.maxDiscountPercent > 10;
+  const needsOwnerApproval = totals.maxDiscountPercent > DISCOUNT_APPROVAL_LIMIT;
   const initialStatus = OrderStatus.DRAFT;
 
   const order = await prisma.salesOrder.create({
@@ -202,43 +204,49 @@ async function createSalesQuotationImpl(params: {
   return { ...order, lead: await advanceLeadForOrder(order, 'PROPOSITION', actor) };
 }
 
-async function approveOrderDiscountImpl(orderId: string, actor: { id: string; name: string; role: Role }, version?: number) {
-  if (actor.role !== Role.HEAD_ADMIN && actor.role !== Role.OWNER) {
-    throw new Error("Akses ditolak (SR-08): Hanya Owner atau Head Admin yang berwenang menyetujui diskon di atas 10%.");
+async function decideOrderDiscountImpl(
+  orderId: string, actor: { id: string; name: string; role: Role },
+  input: { decision: 'APPROVE' | 'REJECT'; reason: unknown; version?: number },
+) {
+  if (actor.role !== Role.OWNER) {
+    throw new BusinessError("Hanya Owner yang dapat memutuskan persetujuan diskon (SR-08).", 403);
   }
-
-  const order = await prisma.salesOrder.findUnique({
-    where: { id: orderId },
-  });
-
-  if (!order) throw new Error("Order tidak ditemukan.");
+  const reason = textValue(input.reason, "Alasan keputusan", true, 500);
+  const order = await prisma.salesOrder.findUnique({ where: { id: orderId } });
+  if (!order) throw new BusinessError("Pesanan tidak ditemukan.", 404);
   editable(order.status);
-  if (version !== undefined && version !== order.version) throw new Error("Pesanan berubah. Muat ulang sebelum memberi persetujuan.");
-  if (order.discountApproved) return order;
-
+  if (input.version !== undefined && input.version !== order.version) {
+    throw new BusinessError("Pesanan berubah. Muat ulang sebelum memberi keputusan.", 409);
+  }
+  if (order.discountPercent <= DISCOUNT_APPROVAL_LIMIT) {
+    throw new BusinessError("Diskon ini tidak memerlukan persetujuan Owner.", 409);
+  }
+  const previous = discountApproval(order, await getDiscountDecisions(prisma, [order]));
+  if (previous.discountApprovalStatus !== 'PENDING') {
+    throw new BusinessError("Keputusan sudah tercatat. Edit draft untuk mengajukan revisi.", 409);
+  }
+  const approved = input.decision === 'APPROVE';
   const updated = await prisma.salesOrder.update({
     where: { id: orderId },
     data: {
-      discountApproved: true,
+      discountApproved: approved,
       version: { increment: 1 },
-      discountApprovedBy: actor.name,
-      status: OrderStatus.DRAFT, // ready for confirmation
+      discountApprovedBy: approved ? actor.name : null,
     },
   });
-
-  await recordAuditLog({
+  const event = await recordAuditLog({
     actorId: actor.id,
     actorName: actor.name,
     actorRole: actor.role,
-    action: "APPROVE_DISCOUNT",
-    beforeData: order,
-    afterData: updated,
+    action: approved ? "APPROVE_DISCOUNT" : "REJECT_DISCOUNT",
+    beforeState: { version: order.version, discountApproved: order.discountApproved },
+    afterState: { version: updated.version, reason, discountPercent: order.discountPercent,
+      subtotalNet: order.subtotalNet, projectedCost: order.projectedCost, totalGross: order.totalGross },
     documentType: "SO",
     documentId: order.orderNumber,
-    notes: `Diskon ${order.discountPercent}% pada ${order.orderNumber} disetujui oleh ${actor.role} (${actor.name}).`,
+    notes: reason,
   });
-
-  return updated;
+  return { ...updated, ...discountApproval(updated, [event]) };
 }
 
 async function draftDelivery(salesOrderId: string, sourceLocation: string, lines: {productSku: string; quantity: number}[]) {
@@ -285,7 +293,8 @@ async function confirmSalesOrderImpl(orderId: string, actor: { id: string; name:
   uniqueLines(order.lines, l => l.productSku);
   for (const l of order.lines) { quantity(l.quantity); money(l.unitPrice); discount(l.discountPercent); }
   // 1. Discount Approval Check (SR-08 / T-10)
-  if (order.discountPercent > 10 && !order.discountApproved) {
+  if (order.discountPercent > DISCOUNT_APPROVAL_LIMIT &&
+      !discountApproval(order, await getDiscountDecisions(prisma, [order])).discountApproved) {
     throw new AuditedRejection({
       actorId: actor.id,
       actorName: actor.name,
@@ -293,8 +302,8 @@ async function confirmSalesOrderImpl(orderId: string, actor: { id: string; name:
       action: "CONFIRM_BLOCKED_DISCOUNT",
       documentType: "SO",
       documentId: order.orderNumber,
-      notes: `Konfirmasi ${order.orderNumber} ditolak: Diskon ${order.discountPercent}% memerlukan persetujuan Owner atau Head Admin (SR-08).`,
-    }, `Persetujuan Diperlukan (SR-08 / T-10): Diskon ${order.discountPercent}% melebihi batas 10%. Memerlukan persetujuan Owner atau Head Admin sebelum order dapat dikonfirmasi.`
+      notes: `Konfirmasi ${order.orderNumber} ditolak: Diskon ${order.discountPercent}% memerlukan persetujuan Owner (SR-08).`,
+    }, `Persetujuan Diperlukan (SR-08 / T-10): Diskon ${order.discountPercent}% melebihi batas 10%. Memerlukan persetujuan Owner sebelum order dapat dikonfirmasi.`
     );
   }
 
@@ -441,7 +450,7 @@ async function updateSalesOrderLineImpl(params: {
       projectedCost,
       version: { increment: 1 },
       discountPercent: maxDiscount,
-      discountApproved: maxDiscount <= 10,
+      discountApproved: maxDiscount <= DISCOUNT_APPROVAL_LIMIT,
       discountApprovedBy: null,
     },
     include: { lines: true },
@@ -453,7 +462,11 @@ async function updateSalesOrderLineImpl(params: {
 
 export const createSalesQuotation = (...args: Parameters<typeof createSalesQuotationImpl>) => atomic(() => createSalesQuotationImpl(...args));
 
-export const approveOrderDiscount = (...args: Parameters<typeof approveOrderDiscountImpl>) => atomic(() => approveOrderDiscountImpl(...args));
+export const decideOrderDiscount = (...args: Parameters<typeof decideOrderDiscountImpl>) => atomic(() => decideOrderDiscountImpl(...args));
+
+export function approveOrderDiscount(orderId: string, actor: Parameters<typeof decideOrderDiscountImpl>[1], reason: string) {
+  return decideOrderDiscount(orderId, actor, { decision: "APPROVE", reason });
+}
 
 export const confirmSalesOrder = (...args: Parameters<typeof confirmSalesOrderImpl>) => atomic(() => confirmSalesOrderImpl(...args));
 

@@ -194,7 +194,7 @@ export const SEED_ACCOUNTS = [
   { code: "8010", name: "Inventory Adjustment", type: AccountType.EXPENSE, openingBalance: 0 },
 ];
 
-export async function executeSeed(prisma: PrismaClient, actorName = "System", actorRole: Role = Role.HEAD_ADMIN) {
+export async function executeSeed(prisma: PrismaClient, actorName = "System", actorRole: Role = Role.HEAD_ADMIN, password = "Password123!") {
   // We execute all cleaning and seeding in a clean transaction or sequence
   // 1. Clean existing transactional and master data
   await prisma.$transaction(async (tx) => {
@@ -254,7 +254,7 @@ export async function executeSeed(prisma: PrismaClient, actorName = "System", ac
   });
 
   // 2. Seed Users with hashed password
-  const defaultPasswordHash = await bcrypt.hash("Password123!", 10);
+  const defaultPasswordHash = await bcrypt.hash(password, 10);
   for (const u of SEED_USERS) {
     await prisma.user.create({
       data: {

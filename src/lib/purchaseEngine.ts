@@ -5,6 +5,7 @@ import { OrderStatus, Role } from "@prisma/client";
 import { recordAuditLog } from "./audit";
 import { getNextSequence } from "./sequences";
 import { businessDayEnd } from "./businessDate";
+import { suggestedPurchasePrice } from "./purchasePricing";
 
 export interface PurchaseLineInput {
   productSku: string;
@@ -46,9 +47,8 @@ async function createPurchaseQuotationImpl(params: {
     const prod = productMap.get(item.productSku);
     if (!prod || prod.archivedAt) throw new Error(`Produk ${item.productSku} tidak ditemukan.`);
 
-    // Use vendor price or standard cost as default
-    const listed = priceList.find(p => p.productSku === item.productSku && p.minimumQty <= item.orderedQty);
-    const price = item.unitPrice !== undefined ? item.unitPrice : listed?.price ?? prod.standardCost;
+    const suggested = suggestedPurchasePrice(priceList, vendorId, item.productSku, item.orderedQty, prod.standardCost);
+    const price = item.unitPrice ?? suggested.amount;
     const lineSubtotal = item.orderedQty * price;
     subtotal += lineSubtotal;
 

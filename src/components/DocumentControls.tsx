@@ -6,6 +6,8 @@ import DocumentGuidance from './DocumentGuidance';
 import DialogFrame from './ui/DialogFrame';
 import { publishDataRefresh } from './ui/useDataRefresh';
 import { businessDate } from '@/lib/businessDate';
+import { purchasePriceLabel, suggestedPurchasePrice } from '@/lib/purchasePricing';
+import { DISCOUNT_APPROVAL_LIMIT } from '@/lib/discountPolicy';
 type FulfillmentLocation = {
   code: string;
   name: string;
@@ -55,7 +57,8 @@ export default function DocumentControls({kind,record,role,onChanged}:Props) {
   const pending=useRef(false),keys=useRef(new Map<string,string>()),base=useRef('');
   useEffect(()=>{fetch('/api/master/options').then(r=>r.json()).then(setOptions).catch(()=>{});},[]);
   const fromRequest = kind === 'purchase' && !!record?.purchaseRequest;
-  const dirty=dialog==='edit'||dialog==='validate'?JSON.stringify(form)!==base.current:false;
+  const deciding = dialog === 'approve' || dialog === 'reject';
+  const dirty=dialog==='edit'||dialog==='validate'||deciding?JSON.stringify(form)!==base.current:false;
   useEffect(()=>{const warn=(e:BeforeUnloadEvent)=>{if(dirty){e.preventDefault();e.returnValue='';}};window.addEventListener('beforeunload',warn);return()=>window.removeEventListener('beforeunload',warn);},[dirty]);
   if(!record)return null;
   if(!(kind==='sales' && role==='OWNER') && !roles[kind]?.includes(role||''))return <div className="surface-card p-4"><DocumentGuidance kind={kind} record={record} role={role}/></div>;
@@ -64,24 +67,37 @@ export default function DocumentControls({kind,record,role,onChanged}:Props) {
     setFulfillment(null);setStockError('');setForm(next);base.current=JSON.stringify(next);setError('');setDialog(action);
   };
   const close=()=>{if(!pending.current&&(!dirty||window.confirm('Perubahan belum disimpan. Tutup formulir?')))setDialog('');};
+  const repricePurchaseLine = (line:any, vendorId:string) => {
+    const product = options.products?.find((item:any) => item.sku === line.productSku);
+    if (!product) return { ...line, unitPrice: 0, priceSource: undefined };
+    const price = suggestedPurchasePrice(options.vendorPrices || [], vendorId, product.sku, line.orderedQty, product.standardCost);
+    return { ...line, unitPrice: price.amount, priceSource: price.source };
+  };
   const submit=async()=>{
     if(pending.current||stockBlocked)return;pending.current=true;setBusy(true);setError('');
     try{
-      const payload={action:dialog,version:record.version,...(dialog==='edit'?form:dialog==='validate'?{items:form.items}:dialog==='confirm'&&kind==='sales'?{sourceLocation:form.sourceLocation}:['confirm','prepare'].includes(dialog)&&kind==='purchase'?{destLocation:form.destLocation}:{})};const fingerprint=JSON.stringify(payload);if(!keys.current.has(fingerprint))keys.current.set(fingerprint,crypto.randomUUID());
-      const endpoint = dialog === "approve" ? `/api/sales/orders/${record.id}/approve-discount` : `/api/workflow/${kind}/${record.id}`;
+      const edited = kind === 'purchase' && dialog === 'edit'
+        ? { ...form, lines:form.lines.map(({ priceSource, ...line }:any) => ({
+          ...line, unitPrice: priceSource === 'VENDOR' || priceSource === 'COST' ? undefined : line.unitPrice,
+        })) }
+        : form;
+      const payload={action:dialog,version:record.version,...(dialog==='edit'?edited:dialog==='validate'?{items:form.items}:dialog==='confirm'&&kind==='sales'?{sourceLocation:form.sourceLocation}:['confirm','prepare'].includes(dialog)&&kind==='purchase'?{destLocation:form.destLocation}:deciding?{decision:dialog==='approve'?'APPROVE':'REJECT',reason:form.reason}:{})};const fingerprint=JSON.stringify(payload);if(!keys.current.has(fingerprint))keys.current.set(fingerprint,crypto.randomUUID());
+      const endpoint = deciding ? `/api/sales/orders/${record.id}/approve-discount` : `/api/workflow/${kind}/${record.id}`;
       const response=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json','Idempotency-Key':keys.current.get(fingerprint)!},body:JSON.stringify(payload)});const data=await response.json();if(!response.ok)throw new Error(data.error||'Operasi gagal.');setDialog('');publishDataRefresh();await onChanged();
     }catch(e){setError(e instanceof Error?e.message:'Operasi gagal.');}finally{pending.current=false;setBusy(false);}
   };
-  const field=(label:string,key:string,list:any[],idKey='id')=><label className="block text-sm space-y-1">{label}<select className="input-glass w-full px-3 py-2" value={form[key]||''} onChange={e=>setForm((f:any)=>({...f,[key]:e.target.value}))}>{list.map(o=><option key={o[idKey]} value={o[idKey]}>{o[idKey]} · {o.name}</option>)}</select></label>;
-  const labels:Record<string,string>={prepare:kind==='sales'?'Siapkan pengiriman':'Siapkan penerimaan',edit:'Edit draft',confirm:'Konfirmasi',approve:'Setujui diskon',post:'Posting ke pembukuan',validate:kind==='deliveries'?'Validasi pengiriman':kind==='receipts'?'Validasi penerimaan':'Validasi transfer',cancel:'Batalkan'};
-  const pendingDiscount = kind === 'sales' && record.discountPercent > 10 && !record.discountApproved;
+  const field=(label:string,key:string,list:any[],idKey='id')=><label className="block text-sm space-y-1">{label}<select className="input-glass w-full px-3 py-2" value={form[key]||''} onChange={e=>{
+    const value=e.target.value;
+    setForm((f:any)=>({...f,[key]:value,...(key==='vendorId'?{lines:f.lines.map((line:any)=>repricePurchaseLine(line,value))}:{})}));
+  }}>{list.map(o=><option key={o[idKey]} value={o[idKey]}>{o[idKey]} · {o.name}</option>)}</select></label>;
+  const labels:Record<string,string>={prepare:kind==='sales'?'Siapkan pengiriman':'Siapkan penerimaan',edit:'Edit draft',confirm:'Konfirmasi',approve:'Setujui diskon',reject:'Tolak diskon',post:'Posting ke pembukuan',validate:kind==='deliveries'?'Validasi pengiriman':kind==='receipts'?'Validasi penerimaan':'Validasi transfer',cancel:'Batalkan'};
+  const needsDiscountDecision = kind === 'sales' && record.discountPercent > DISCOUNT_APPROVAL_LIMIT && !record.discountApproved;
   const buttons:string[]=[];
   if(role==='OWNER'){
-    if(record.status==='DRAFT' && pendingDiscount) buttons.push('approve');
+    if(record.status==='DRAFT' && needsDiscountDecision && record.discountApprovalStatus!=='REJECTED') buttons.push('approve','reject');
   } else if(record.status==='DRAFT'){
     if(['sales','purchase','invoices','bills','transfers'].includes(kind))buttons.push('edit');
-    if(pendingDiscount&&role==='HEAD_ADMIN')buttons.push('approve');
-    if(['sales','purchase'].includes(kind)&&!pendingDiscount)buttons.push('confirm');
+    if(['sales','purchase'].includes(kind)&&!needsDiscountDecision)buttons.push('confirm');
     if(['invoices','bills'].includes(kind))buttons.push('post');
     if(['deliveries','receipts','transfers'].includes(kind))buttons.push('validate');
     if(!['deliveries','receipts'].includes(kind))buttons.push('cancel');
@@ -95,6 +111,10 @@ export default function DocumentControls({kind,record,role,onChanged}:Props) {
   return <><div className="surface-card p-4 flex flex-wrap items-center gap-3"><div className="flex-1 min-w-[200px]"><DocumentGuidance kind={kind} record={record} role={role}/></div>{buttons.map(action=>action==='edit'?<ActionButton key={action} action="edit" onClick={()=>open(action)}>Edit draft</ActionButton>:<button key={action} onClick={()=>open(action)} className={['confirm','post','validate','approve'].includes(action)?'btn-primary':'btn-secondary'}>{labels[action]}</button>)}</div>
     {dialog&&<DialogFrame onClose={close} label={labels[dialog]}><div className="bg-white w-full max-w-4xl rounded-2xl p-6 max-h-[90dvh] overflow-y-auto space-y-5"><h2 className="text-xl font-bold">{labels[dialog]} · {record.orderNumber||record.poNumber||record.invoiceNumber||record.billNumber||record.deliveryNumber||record.receiptNumber||record.transferNumber}</h2>
       {error&&<p role="alert" className="p-3 bg-rose-50 text-rose-800 rounded-xl text-sm">{error}</p>}
+      {deciding && <label className="block space-y-2 text-sm font-medium">Alasan keputusan
+        <textarea required maxLength={500} rows={3} className="input-glass w-full p-3" value={form.reason ?? ''}
+          onChange={event=>setForm((current:any)=>({...current,reason:event.target.value}))}/>
+      </label>}
       {salesConfirmation && <div className="space-y-3">
         {stockError && <p role="alert" className="text-sm text-rose-800">{stockError}</p>}
         {!fulfillment && !stockError && <p role="status" className="text-sm">Memeriksa stok tiap lokasi…</p>}
@@ -137,7 +157,7 @@ export default function DocumentControls({kind,record,role,onChanged}:Props) {
       {dialog==='edit'&&<>
         {kind==='sales'&&field('Pelanggan','contactId',options.customers||[])}{kind==='purchase'&&<div className="grid sm:grid-cols-2 gap-4">{field('Vendor','vendorId',options.vendors||[])}<label className="text-sm">Tanggal rencana<input aria-label="Tanggal rencana" type="date" value={form.scheduledDate} className="input-glass w-full px-3 py-2" onChange={e=>setForm((f:any)=>({...f,scheduledDate:e.target.value}))}/></label></div>}
         {kind==='transfers'&&<div className="grid sm:grid-cols-2 gap-4">{field('Lokasi asal','sourceLocation',options.locations||[],'code')}{field('Lokasi tujuan','destLocation',options.locations||[],'code')}</div>}
-        <div className="space-y-3">{form.lines?.map((line:any,index:number)=><div key={index} className="border rounded-xl p-4 grid sm:grid-cols-5 gap-3"><label className="sm:col-span-2 text-sm">SKU<select disabled={fromRequest} aria-label={`SKU baris ${index+1}`} value={line.productSku} className="input-glass w-full p-2" onChange={e=>{const p=options.products?.find((p:any)=>p.sku===e.target.value);setForm((f:any)=>({...f,lines:f.lines.map((l:any,i:number)=>i===index?{...l,productSku:e.target.value,unitPrice:kind==='purchase'?p?.standardCost:p?.salesPrice}:l)}));}}><option value="">Pilih SKU…</option>{(options.products||[]).filter((p:any)=>kind!=='sales'||p.kind==='MENU').map((p:any)=><option key={p.sku} value={p.sku}>{p.sku} · {p.name}</option>)}{line.productSku&&!options.products?.some((p:any)=>p.sku===line.productSku)&&<option value={line.productSku}>{line.productSku}</option>}</select></label><label className="text-sm">Kuantitas<input disabled={fromRequest} type="number" min={1} step={1} aria-label={`Kuantitas baris ${index+1}`} value={line[kind==='purchase'?'orderedQty':'quantity']??1} className="input-glass w-full p-2" onChange={e=>setForm((f:any)=>({...f,lines:f.lines.map((l:any,i:number)=>i===index?{...l,[kind==='purchase'?'orderedQty':'quantity']:Number(e.target.value)}:l)}))}/></label>{kind!=='transfers'&&<label className="text-sm">Harga (Rp)<input type="number" min={0} step={1} disabled={['invoices','bills'].includes(kind)} aria-label={`Harga baris ${index+1}`} value={line.unitPrice??0} className="input-glass w-full p-2" onChange={e=>setForm((f:any)=>({...f,lines:f.lines.map((l:any,i:number)=>i===index?{...l,unitPrice:Number(e.target.value)}:l)}))}/></label>}{kind==='sales'&&<label className="text-sm">Diskon %<input type="number" min={0} max={20} value={line.discountPercent} className="input-glass w-full p-2" onChange={e=>setForm((f:any)=>({...f,lines:f.lines.map((l:any,i:number)=>i===index?{...l,discountPercent:Number(e.target.value)}:l)}))}/></label>}<ActionButton action="delete" disabled={form.lines.length<=1} onClick={()=>setForm((f:any)=>({...f,lines:f.lines.filter((_:any,i:number)=>i!==index)}))}>Hapus baris</ActionButton></div>)}</div>
+        <div className="space-y-3">{form.lines?.map((line:any,index:number)=><div key={index} className="border rounded-xl p-4 grid sm:grid-cols-5 gap-3"><label className="sm:col-span-2 text-sm">SKU<select disabled={fromRequest} aria-label={`SKU baris ${index+1}`} value={line.productSku} className="input-glass w-full p-2" onChange={e=>{const p=options.products?.find((p:any)=>p.sku===e.target.value);setForm((f:any)=>({...f,lines:f.lines.map((l:any,i:number)=>i!==index?l:kind==='purchase'?repricePurchaseLine({...l,productSku:e.target.value},f.vendorId):{...l,productSku:e.target.value,unitPrice:p?.salesPrice})}));}}><option value="">Pilih SKU…</option>{(options.products||[]).filter((p:any)=>kind!=='sales'||p.kind==='MENU').map((p:any)=><option key={p.sku} value={p.sku}>{p.sku} · {p.name}</option>)}{line.productSku&&!options.products?.some((p:any)=>p.sku===line.productSku)&&<option value={line.productSku}>{line.productSku}</option>}</select></label><label className="text-sm">Kuantitas<input disabled={fromRequest} type="number" min={1} step={1} aria-label={`Kuantitas baris ${index+1}`} value={line[kind==='purchase'?'orderedQty':'quantity']??1} className="input-glass w-full p-2" onChange={e=>setForm((f:any)=>({...f,lines:f.lines.map((l:any,i:number)=>i!==index?l:kind==='purchase'?repricePurchaseLine({...l,orderedQty:Number(e.target.value)},f.vendorId):{...l,quantity:Number(e.target.value)})}))}/></label>{kind!=='transfers'&&<label className="text-sm">Harga (Rp)<input type="number" min={0} step={1} disabled={['invoices','bills'].includes(kind)} aria-label={`Harga baris ${index+1}`} value={line.unitPrice??0} className="input-glass w-full p-2" onChange={e=>setForm((f:any)=>({...f,lines:f.lines.map((l:any,i:number)=>i===index?{...l,unitPrice:Number(e.target.value),...(kind==='purchase'?{priceSource:'MANUAL'}:{})}:l)}))}/>{kind==='purchase'&&line.productSku&&<span className="mt-1 block text-xs text-slate-600">{purchasePriceLabel(line.priceSource)}</span>}</label>}{kind==='sales'&&<label className="text-sm">Diskon %<input type="number" min={0} max={20} value={line.discountPercent} className="input-glass w-full p-2" onChange={e=>setForm((f:any)=>({...f,lines:f.lines.map((l:any,i:number)=>i===index?{...l,discountPercent:Number(e.target.value)}:l)}))}/></label>}<ActionButton action="delete" disabled={form.lines.length<=1} onClick={()=>setForm((f:any)=>({...f,lines:f.lines.filter((_:any,i:number)=>i!==index)}))}>Hapus baris</ActionButton></div>)}</div>
         {!fromRequest && <button className="btn-secondary" onClick={()=>setForm((f:any)=>({...f,lines:[...f.lines,{productSku:'',quantity:1,orderedQty:1,unitPrice:0,discountPercent:0}]}))}>+ Tambah baris</button>}
       </>}
       {dialog==='validate'&&kind!=='transfers'&&<div className="space-y-3"><p className="text-sm text-slate-600">{kind==='deliveries'?'Isi jumlah yang dikirim saat ini. Contoh: pesanan 8, dikirim 5, maka sisa 3 otomatis menjadi backorder. Stok dan jumlah yang dapat ditagih diperbarui setelah validasi.':'Isi jumlah diterima dan ditolak sesuai pemeriksaan. Hanya barang diterima yang masuk stok dan menjadi dasar tagihan vendor.'}</p>{form.items?.map((item:any,index:number)=><div key={item.lineId} className="border rounded-xl p-4"><p className="font-medium mb-3">{item.productSku} · Permintaan {record.lines[index].orderedQty??record.lines[index].demandQty}</p><div className="grid sm:grid-cols-3 gap-3">{(kind==='deliveries'?['deliveredQty']:['acceptedQty','rejectedQty']).map(key=><label key={key} className="text-sm">{key==='deliveredQty'?'Dikirim':key==='acceptedQty'?'Diterima':'Ditolak'}<input aria-label={`${key==='deliveredQty'?'Jumlah dikirim':key==='acceptedQty'?'Jumlah diterima':'Jumlah ditolak'} ${item.productSku}`} type="number" min={0} max={record.lines[index].orderedQty??record.lines[index].demandQty} step={1} value={item[key]??0} className="input-glass w-full p-2" onChange={e=>setForm((f:any)=>({...f,items:f.items.map((l:any,i:number)=>i===index?{...l,[key]:Number(e.target.value)}:l)}))}/></label>)}{kind==='deliveries'&&<p className="text-sm text-slate-600 self-end pb-2">Sisa backorder: {Math.max(0,record.lines[index].orderedQty-(item.deliveredQty||0))} unit</p>}{kind==='receipts'&&record.lines[index].product?.trackLots&&item.acceptedQty>0&&<>
@@ -145,7 +165,7 @@ export default function DocumentControls({kind,record,role,onChanged}:Props) {
           <label className="text-sm">Kedaluwarsa batch<input className="input-glass w-full p-2" type="date" value={item.expiresAt??''} onChange={e=>setForm((f:any)=>({...f,items:f.items.map((l:any,i:number)=>i===index?{...l,expiresAt:e.target.value}:l)}))}/></label>
         </>}{kind==='receipts'&&<label className="text-sm">Alasan penolakan<input value={item.rejectionReason||''} className="input-glass w-full p-2" onChange={e=>setForm((f:any)=>({...f,items:f.items.map((l:any,i:number)=>i===index?{...l,rejectionReason:e.target.value}:l)}))}/></label>}</div></div>)}</div>}
       {!['edit','validate'].includes(dialog)&&<p className="text-sm text-slate-600">{dialog==='prepare'?'Gudang akan menerima dokumen draft untuk sisa pesanan. Stok fisik dan saldo buku besar baru berubah saat validasi.':dialog==='cancel'?'Pembatalan menjaga riwayat dokumen. Order yang sudah dipenuhi atau diposting memerlukan alur retur/reversal.':dialog==='approve'?'Persetujuan Anda akan tercatat bersama identitas dan waktu.':'Status, stok, saldo, dan audit diperiksa serta disimpan sebagai satu transaksi. Harga dokumen yang dikonfirmasi/diposting akan dikunci.'}</p>}
-      <div className="flex justify-end gap-3 border-t pt-4"><button className="btn-secondary" disabled={busy} onClick={close}>Batal</button><button className="btn-primary" disabled={busy || stockBlocked} onClick={submit}>{busy?'Memproses…':dialog==='edit'?'Simpan perubahan':labels[dialog]}</button></div>
+      <div className="flex justify-end gap-3 border-t pt-4"><button className="btn-secondary" disabled={busy} onClick={close}>Batal</button><button className="btn-primary" disabled={busy || stockBlocked || (deciding && !form.reason?.trim())} onClick={submit}>{busy?'Memproses…':dialog==='edit'?'Simpan perubahan':labels[dialog]}</button></div>
     </div></DialogFrame>}
   </>;
 }

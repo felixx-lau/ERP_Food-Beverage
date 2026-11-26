@@ -1,0 +1,224 @@
+[
+  {
+    "name": "Fresh fixture and running build",
+    "result": "PASS",
+    "build": {
+      "version": "1.0.0",
+      "revision": "2005b7b-dirty"
+    },
+    "fixture": {
+      "units": 616,
+      "valuation": 12214000
+    }
+  },
+  {
+    "name": "roles-and-screens",
+    "result": "PASS",
+    "details": [
+      {
+        "role": "owner",
+        "route": "/",
+        "heading": "Beranda"
+      },
+      {
+        "role": "owner",
+        "route": "/dashboard",
+        "heading": "Laporan perusahaan"
+      },
+      {
+        "role": "sales",
+        "route": "/sales/contacts",
+        "heading": "Pelanggan"
+      },
+      {
+        "role": "sales",
+        "route": "/crm/leads",
+        "heading": "Pipeline CRM"
+      },
+      {
+        "role": "sales",
+        "route": "/sales/orders",
+        "heading": "Penawaran & pesanan penjualan"
+      },
+      {
+        "role": "warehouse",
+        "route": "/inventory/products",
+        "heading": "Stok & ketersediaan"
+      },
+      {
+        "role": "warehouse",
+        "route": "/inventory/delivery",
+        "heading": "Pengiriman barang"
+      },
+      {
+        "role": "warehouse",
+        "route": "/inventory/transfers",
+        "heading": "Transfer stok"
+      },
+      {
+        "role": "warehouse",
+        "route": "/inventory/receipts",
+        "heading": "Penerimaan barang"
+      },
+      {
+        "role": "warehouse",
+        "route": "/inventory/returns",
+        "heading": "Return Inspection & Credit Note"
+      },
+      {
+        "role": "procurement",
+        "route": "/purchase/orders",
+        "heading": "Pesanan pembelian"
+      },
+      {
+        "role": "finance",
+        "route": "/accounting/invoices",
+        "heading": "Faktur pelanggan"
+      },
+      {
+        "role": "finance",
+        "route": "/accounting/vendor-bills",
+        "heading": "Tagihan vendor"
+      },
+      {
+        "role": "finance",
+        "route": "/accounting/payments",
+        "heading": "Register Payment & Cash Receipt"
+      },
+      {
+        "role": "finance",
+        "route": "/accounting/journal-entries",
+        "heading": "Journal Entries & General Ledger"
+      },
+      {
+        "role": "cashier",
+        "route": "/pos",
+        "heading": "Point of Sale · CAFE-JKT"
+      }
+    ]
+  },
+  {
+    "name": "T01-owner-navigation",
+    "result": "PASS",
+    "details": [
+      [
+        "Sales",
+        "/sales/orders"
+      ],
+      [
+        "CRM",
+        "/crm/leads"
+      ],
+      [
+        "Purchase",
+        "/purchase/orders"
+      ],
+      [
+        "Inventory",
+        "/inventory/products"
+      ],
+      [
+        "Accounting",
+        "/accounting/journal-entries"
+      ],
+      [
+        "Invoicing",
+        "/accounting/invoices"
+      ],
+      [
+        "POS",
+        "/pos"
+      ],
+      [
+        "Dashboard",
+        "/dashboard"
+      ]
+    ]
+  },
+  {
+    "name": "T02-cashier-ledger",
+    "result": "PASS",
+    "details": {
+      "status": 403
+    }
+  },
+  {
+    "name": "T31-T32-dashboard-reconciliation",
+    "result": "PASS",
+    "details": {
+      "units": 616,
+      "valuation": 12214000
+    }
+  },
+  {
+    "name": "order-to-cash",
+    "result": "PASS",
+    "details": {
+      "lead": "LD0003",
+      "so": "S00007",
+      "invoice": "INV/2026/0007",
+      "net": 240000,
+      "tax": 24000,
+      "total": 264000,
+      "stock": {
+        "physical": 35,
+        "reserved": 9,
+        "available": 26
+      },
+      "journalDebitAndCredit": 394000,
+      "partial": 100000,
+      "outstanding": 164000,
+      "reauthenticated": true,
+      "settled": 0
+    }
+  },
+  {
+    "name": "T10-discount-owner-browser",
+    "result": "PASS",
+    "details": {
+      "so": "S00008",
+      "discount": 20,
+      "net": 76800,
+      "cogs": 52000,
+      "profit": 24800,
+      "margin": 32.29,
+      "tax": 7680,
+      "gross": 84480
+    }
+  },
+  {
+    "name": "procure-to-pay",
+    "result": "PASS",
+    "details": {
+      "po": "P00007",
+      "bill": "BILL/2026/0007",
+      "accepted": 8,
+      "rejected": 2,
+      "total": 96000,
+      "partial": 30000,
+      "outstanding": 66000,
+      "reauthenticated": true,
+      "settled": 0,
+      "networkTimeoutReplay": true
+    }
+  },
+  {
+    "name": "return-credit-note",
+    "result": "PASS",
+    "details": {
+      "return": "RET/2026/0007",
+      "credit": "RINV/2026/0007",
+      "total": 52800
+    }
+  },
+  {
+    "name": "POS-session",
+    "result": "PASS",
+    "details": {
+      "order": "POS/2026/0001",
+      "paid": 88000,
+      "cashIncrease": 0,
+      "closed": true
+    }
+  }
+]

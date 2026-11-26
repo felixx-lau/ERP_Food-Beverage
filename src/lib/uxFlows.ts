@@ -1,5 +1,6 @@
 import { invoiceChoices } from './invoiceChoices';
 import { vendorBillChoices } from './vendorBillChoices';
+import { DISCOUNT_APPROVAL_LIMIT } from './discountPolicy';
 
 /** Presentation decisions shared by contact navigation and document handoffs. */
 export function contactView(value: string | null, role: string, initial = 'customers') {
@@ -23,8 +24,10 @@ export function documentNextSteps(kind: string, record: any): NextStep[] {
       ? [{ owner: 'Finance', text: 'Tagihan tercatat di pembukuan dan masih memiliki sisa pembayaran.', href: '/accounting/payments', label: 'Buka pembayaran', roles: financeRoles }]
       : [{ text: 'Tagihan lunas. Riwayat pembayaran tersedia untuk diperiksa.' }];
   }
-  if (kind === 'sales' && record.status === 'DRAFT' && record.discountPercent > 10 && !record.discountApproved) {
-    return [{ owner: 'Owner atau Head Admin', text: 'Diskon di atas 10% perlu disetujui. Setelah itu, Sales dapat mengonfirmasi pesanan.' }];
+  if (kind === 'sales' && record.status === 'DRAFT' && record.discountPercent > DISCOUNT_APPROVAL_LIMIT && !record.discountApproved) {
+    return record.discountApprovalStatus === 'REJECTED'
+      ? [{ owner: 'Sales', text: 'Owner menolak diskon. Periksa alasannya, lalu edit penawaran sebelum mengajukan revisi.' }]
+      : [{ owner: 'Owner', text: 'Keputusan Owner diperlukan untuk diskon di atas 10%. Setelah disetujui, Sales dapat mengonfirmasi pesanan.' }];
   }
   if (['sales', 'purchase'].includes(kind) && ['CONFIRMED', 'DONE'].includes(record.status)) {
     const sales = kind === 'sales';
@@ -93,9 +96,12 @@ export function discountApprovalLabel(order: {
   discountApproved: boolean;
   discountApprovedBy?: string | null;
   discountApprovalRole?: string | null;
+  discountApprovalStatus?: string;
+  discountDecisionBy?: string | null;
 }) {
-  if (order.discountPercent <= 10) return 'Tidak memerlukan persetujuan tambahan';
-  if (!order.discountApproved) return 'Menunggu persetujuan Owner atau Head Admin';
+  if (order.discountPercent <= DISCOUNT_APPROVAL_LIMIT) return 'Tidak memerlukan persetujuan tambahan';
+  if (order.discountApprovalStatus === 'REJECTED') return `Ditolak oleh ${order.discountDecisionBy || 'Owner'}`;
+  if (!order.discountApproved) return 'Menunggu persetujuan Owner';
   const role = order.discountApprovalRole === 'HEAD_ADMIN' ? 'Head Admin' : order.discountApprovalRole === 'OWNER' ? 'Owner' : '';
   const approver = [order.discountApprovedBy, role].filter(Boolean).join(' · ');
   return approver ? `Disetujui oleh ${approver}` : 'Diskon disetujui';

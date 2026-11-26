@@ -106,7 +106,7 @@ export default function Topbar({
               onClick={onOpenAppSwitcher}
               aria-label="Buka daftar modul"
               title="Daftar modul"
-              className="hidden sm:flex items-center justify-center w-8 h-8 rounded-lg bg-transparent hover:bg-slate-100/80 transition-colors text-slate-500 hover:text-slate-800 border-0 shadow-none focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none"
+              className="flex shrink-0 items-center justify-center w-8 h-8 rounded-lg bg-transparent hover:bg-slate-100/80 transition-colors text-slate-500 hover:text-slate-800 border-0 shadow-none focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:outline-none"
             >
               <LayoutGrid className="w-4 h-4" aria-hidden="true" />
             </button>

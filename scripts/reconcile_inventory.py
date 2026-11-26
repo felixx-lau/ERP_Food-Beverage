@@ -26,19 +26,68 @@ def inspect(db_file):
             ) posted ON posted.accountCode = a.code
             WHERE a.code = '1030'
         """)]
+        sources = {
+            name: [dict(row) for row in db.execute(sql)]
+            for name, sql in {
+                'openingJournal': """
+                    SELECT entryNumber,sourceDocument,state FROM JournalEntry WHERE isOpening=1 ORDER BY entryNumber
+                """,
+                'inventoryPostings': """
+                    SELECT j.entryNumber,j.sourceDocument,j.documentRef,
+                           SUM(CASE WHEN i.accountCode='1030' THEN i.debit-i.credit ELSE 0 END) inventoryDelta,
+                           SUM(CASE WHEN i.accountCode='5010' THEN i.debit-i.credit ELSE 0 END) costOfGoodsDelta
+                    FROM JournalEntry j JOIN JournalItem i ON i.journalEntryId=j.id
+                    WHERE j.state='POSTED' AND i.accountCode IN ('1030','5010')
+                    GROUP BY j.id ORDER BY j.entryNumber
+                """,
+                'movements': """
+                    SELECT moveNumber,documentType,documentRef,state,reason,productSku,
+                           sourceLocation,destLocation,quantity,totalValue FROM StockMove ORDER BY moveNumber
+                """,
+                'receipts': """
+                    SELECT r.receiptNumber,p.poNumber,r.status,r.destLocation,
+                           SUM(l.acceptedQty) accepted,SUM(l.rejectedQty) rejected
+                    FROM GoodsReceipt r JOIN PurchaseOrder p ON r.purchaseOrderId=p.id
+                    LEFT JOIN GoodsReceiptLine l ON l.receiptId=r.id GROUP BY r.id ORDER BY r.receiptNumber
+                """,
+                'deliveries': """
+                    SELECT d.deliveryNumber,s.orderNumber,d.status,d.sourceLocation,SUM(l.deliveredQty) delivered
+                    FROM DeliveryOrder d JOIN SalesOrder s ON d.salesOrderId=s.id
+                    LEFT JOIN DeliveryOrderLine l ON l.deliveryOrderId=d.id GROUP BY d.id ORDER BY d.deliveryNumber
+                """,
+                'returns': """
+                    SELECT r.returnNumber,r.status,r.inspectionStatus,i.invoiceNumber,c.creditNoteNumber
+                    FROM ReturnRequest r JOIN CustomerInvoice i ON r.invoiceId=i.id
+                    LEFT JOIN CreditNote c ON c.returnRequestId=r.id ORDER BY r.returnNumber
+                """,
+            }.items()
+        }
         journals = db.execute("SELECT COUNT(*) FROM JournalEntry WHERE state='POSTED'").fetchone()[0]
         value = sum(line["valuation"] for line in stock)
         account = accounts[0] if accounts else None
         stored = account["currentBalance"] if account else None
         posted = account["postedBalance"] if account else None
+        matched = value == stored == posted
+        explanation = "Valuasi fisik, saldo akun tersimpan dan jurnal posted seimbang."
+        if not matched:
+            if not sources['openingJournal'] and not sources['inventoryPostings']:
+                explanation = "Stok dan saldo akun tersimpan ada tanpa jurnal pembuka atau posting persediaan pendukung."
+            else:
+                explanation = "Bandingkan sumber mutasi dan jurnal untuk menemukan baris yang belum terhubung."
         return {
+            "physicalStockQuantity": sum(line["onHand"] for line in stock),
             "inventoryValuation": value, "stockByLocationAndSku": stock,
             "account1030": account, "postedJournalCount": journals,
             "physicalMinusCached": value - stored if account else None,
             "physicalMinusPosted": value - posted if account else None,
             "cachedMinusPosted": stored - posted if account else None,
-            "status": "MATCH" if value == stored == posted else "REVIEW",
-            "action": "No change" if value == stored == posted else "Require signed opening inventory and trial balance before proposing a posting",
+            "status": "MATCHED" if matched else "MISMATCH",
+            "explanation": explanation,
+            "sourceDocuments": sources,
+            "action": "Pertahankan saldo dan jejak dokumen." if matched else (
+                "Cari stok opname pembukaan dan neraca saldo yang disetujui. Rekonsiliasi per tenant "
+                "sebelum mengajukan koreksi melalui proses Finance."
+            ),
         }
 
 

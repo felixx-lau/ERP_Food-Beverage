@@ -1,3 +1,4 @@
+import { quotationForRole } from '@/lib/discountApproval';
 import { idempotent } from "@/lib/atomic";
 import { authorizeApi } from "@/lib/apiAuthorization";
 import { NextRequest, NextResponse } from "next/server";
@@ -23,7 +24,9 @@ export async function GET(request: NextRequest) {
       orderBy: { invoiceDate: "desc" },
     });
 
-    return NextResponse.json({ success: true, invoices });
+    return NextResponse.json({ success: true, invoices: invoices.map(invoice => ({
+      ...invoice, salesOrder: quotationForRole(invoice.salesOrder, user.role),
+    })) });
   } catch (error) {
     console.error("Fetch invoices error:", error);
     return NextResponse.json({ error: "Failed to fetch invoices" }, { status: 500 });

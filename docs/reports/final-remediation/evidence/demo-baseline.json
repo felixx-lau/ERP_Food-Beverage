@@ -1,0 +1,78 @@
+{
+  "activeSku": 15,
+  "customers": 6,
+  "vendors": 4,
+  "vendorPricelist": 15,
+  "stockByLocation": [
+    [
+      "CAFE-JKT",
+      206,
+      3614000.0,
+      0
+    ],
+    [
+      "WH-JKT",
+      410,
+      8600000.0,
+      6
+    ]
+  ],
+  "accounts": [
+    [
+      "1010",
+      20000000.0
+    ],
+    [
+      "1020",
+      1500000.0
+    ],
+    [
+      "1030",
+      12214000.0
+    ],
+    [
+      "2010",
+      1000000.0
+    ]
+  ],
+  "openingJournal": [
+    [
+      "JE/OPENING/0001",
+      33714000.0,
+      33714000.0
+    ]
+  ],
+  "lead": [
+    [
+      "QUALIFIED",
+      "C03",
+      1200000.0
+    ]
+  ],
+  "salesOrder": [
+    [
+      "CONFIRMED",
+      "RICE-CHICK-S",
+      6,
+      "WH-JKT",
+      6
+    ]
+  ],
+  "purchaseOrder": [
+    [
+      "CONFIRMED",
+      "V03",
+      "COF-LATT-HOT",
+      10,
+      12000.0,
+      0.0
+    ]
+  ],
+  "stockUnits": 616,
+  "inventoryValuation": 12214000.0,
+  "reconciliation": [
+    [
+      12214000.0
+    ]
+  ]
+}

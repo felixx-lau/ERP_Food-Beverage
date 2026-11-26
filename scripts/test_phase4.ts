@@ -275,7 +275,7 @@ async function runPhase4Tests() {
   assert(t10Blocked, "T-10-BLOCKED", "20% discount confirmation blocked successfully");
 
   // Owner approves discount
-  const approvedSo = await approveOrderDiscount(soT10.id, actorOwner);
+  const approvedSo = await approveOrderDiscount(soT10.id, actorOwner, "Margin diterima untuk kontrak pelanggan");
   assert(approvedSo.discountApproved === true, "T-10-APPROVED", "Owner approved discount successfully");
 
   // Now confirmation succeeds

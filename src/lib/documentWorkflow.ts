@@ -2,8 +2,10 @@ import { prisma } from './prisma';
 import { atomic } from './atomic';
 import { Actor,BusinessError,permit,editable,quantity,money,uniqueLines,textValue,numberValue } from './validation';
 import { recordAuditLog } from './audit';
-import { calculateOrderTotals,confirmSalesOrder,approveOrderDiscount } from './salesEngine';
+import { calculateOrderTotals,confirmSalesOrder } from './salesEngine';
 import { confirmPurchaseOrder } from './purchaseEngine';
+import { suggestedPurchasePrice } from './purchasePricing';
+import { DISCOUNT_APPROVAL_LIMIT } from './discountPolicy';
 import { postCustomerInvoice } from './accountingEngine';
 import { postVendorBill } from './purchaseEngine';
 import { validateDeliveryOrder } from './deliveryEngine';
@@ -42,7 +44,7 @@ export async function documentAction(kind:string,id:string,input:any,actor:Actor
       throw new BusinessError('Persiapan ini hanya tersedia untuk pesanan.');
     }
     if(input.action==='confirm')return kind==='sales'?confirmSalesOrder(id,actorWithId,input.sourceLocation===undefined?undefined:textValue(input.sourceLocation,'Gudang pemenuhan')):kind==='purchase'?confirmPurchaseOrder(id,actorWithId,input.destLocation===undefined?undefined:textValue(input.destLocation,'Gudang penerimaan')):Promise.reject(new BusinessError('Dokumen tidak dapat dikonfirmasi.'));
-    if(input.action==='approve'&&kind==='sales')return approveOrderDiscount(id,actorWithId);
+    if(kind==='sales'&&['approve','reject'].includes(input.action))throw new BusinessError('Gunakan persetujuan diskon oleh Owner.',403);
     if(input.action==='post')return kind==='invoices'?postCustomerInvoice(id,actorWithId):kind==='bills'?postVendorBill(id,actorWithId):Promise.reject(new BusinessError('Dokumen tidak dapat diposting.'));
     if(input.action==='validate') {
       if(kind==='deliveries')return validateDeliveryOrder({deliveryOrderId:id,items:input.items,actor:actorWithId});
@@ -72,7 +74,7 @@ export async function documentAction(kind:string,id:string,input:any,actor:Actor
       if(!customer||customer.archivedAt||customer.type!=='CUSTOMER')throw new BusinessError('Pelanggan tidak tersedia.');
       if(before.leadId){const lead=await prisma.crmLead.findUnique({where:{id:before.leadId}});if(lead?.contactId!==contactId)throw new BusinessError('Pelanggan harus sesuai lead.');}
       const totals=await calculateOrderTotals(lines);
-      data={contactId,paymentTerms:customer.paymentTerms,subtotalNet:totals.subtotalNet,pbjtTax:totals.pbjtTax,totalGross:totals.totalGross,projectedCost:totals.projectedCost,discountPercent:totals.maxDiscountPercent,discountApproved:totals.maxDiscountPercent<=10,discountApprovedBy:null,lines:{deleteMany:{},create:totals.lines}};
+      data={contactId,paymentTerms:customer.paymentTerms,subtotalNet:totals.subtotalNet,pbjtTax:totals.pbjtTax,totalGross:totals.totalGross,projectedCost:totals.projectedCost,discountPercent:totals.maxDiscountPercent,discountApproved:totals.maxDiscountPercent<=DISCOUNT_APPROVAL_LIMIT,discountApprovedBy:null,lines:{deleteMany:{},create:totals.lines}};
     } else if(kind==='purchase') {
       const request = await prisma.purchaseRequest.findUnique({ where: { purchaseOrderId: id } });
       if (request && (lines.length !== 1 || lines[0].productSku !== request.productSku || lines[0].orderedQty !== request.quantity)) {
@@ -80,7 +82,18 @@ export async function documentAction(kind:string,id:string,input:any,actor:Actor
       }
       const vendorId=input.vendorId||before.vendorId,vendor=await prisma.contact.findUnique({where:{id:vendorId}});
       if(!vendor||vendor.archivedAt||vendor.type!=='VENDOR')throw new BusinessError('Vendor tidak tersedia.');
-      const prepared=[];for(const line of lines){quantity(line.orderedQty);money(line.unitPrice);const p=await prisma.productVariant.findUnique({where:{sku:line.productSku}});if(!p||p.archivedAt)throw new BusinessError('SKU tidak tersedia.');prepared.push({productSku:p.sku,orderedQty:line.orderedQty,unitPrice:line.unitPrice,subtotal:line.orderedQty*line.unitPrice});}
+      const tiers=await prisma.vendorPrice.findMany({where:{vendorId,archivedAt:null}});
+      const prepared=[];
+      for(const line of lines){
+        quantity(line.orderedQty);
+        const p=await prisma.productVariant.findUnique({where:{sku:line.productSku}});
+        if(!p||p.archivedAt)throw new BusinessError('SKU tidak tersedia.');
+        const unitPrice=line.unitPrice===undefined
+          ? suggestedPurchasePrice(tiers,vendorId,p.sku,line.orderedQty,p.standardCost).amount
+          : line.unitPrice;
+        money(unitPrice);
+        prepared.push({productSku:p.sku,orderedQty:line.orderedQty,unitPrice,subtotal:line.orderedQty*unitPrice});
+      }
       const subtotal=prepared.reduce((s,l)=>s+l.subtotal,0);money(subtotal);
       const scheduledDate=new Date(input.scheduledDate||before.scheduledDate);if(!Number.isFinite(scheduledDate.getTime()))throw new BusinessError('Tanggal tidak valid.');
       data={vendorId,scheduledDate,subtotal,taxAmount:0,total:subtotal,lines:{deleteMany:{},create:prepared}};
